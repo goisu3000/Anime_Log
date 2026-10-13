@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.8 | アニメ視聴管理</title>
+<title>ANI:LOG v1.8.1 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -621,6 +621,40 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 .cards.saved-grid{display:block}
 @media(max-width:740px){#libraryView>.section-header{display:flex;flex-direction:row}.heading-actions{margin-top:0}.heading-actions>button{flex:0 0 auto}.searchbox input{font-size:16px}.searchbox input::placeholder{font-size:13px}.filter-panel{max-height:calc(100dvh - 230px);overflow-y:auto}}
 @media(max-width:360px){.stats{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}}
+
+/* v1.8.1 | targeted UI polish. Preserve Astra editorial look and original card layouts. */
+.sidebar div:has(> #statusNav){display:block}
+@media(min-width:741px){
+  .saved-mode:not(.view-detail):not(.view-ranking) .stats{display:none}
+}
+/* A readable, secondary memo action instead of an almost invisible text link. */
+.note-preview{
+  display:inline-flex;align-items:center;flex-wrap:wrap;gap:7px;
+  width:fit-content;max-width:100%;min-height:36px;
+  padding:8px 11px;border:1px solid #46535b;border-radius:8px;
+  background:#232b31;color:#d9e1e5;font-size:12px;font-weight:600;
+  line-height:1.4;text-align:left;transition:border-color .16s,background .16s
+}
+.note-preview:hover{background:#2b353a;border-color:#90a6a4;color:#f2f5f3}
+.note-preview:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.note-preview .ui-icon{width:15px;height:15px;flex:0 0 15px;margin:0}
+.note-preview-label{white-space:nowrap}
+.note-preview-excerpt{flex-basis:100%;display:-webkit-box;-webkit-box-orient:vertical;
+  -webkit-line-clamp:2;overflow:hidden;color:#b6c4cb;font-size:11px;font-weight:400;
+  line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.note-preview.has-note{border-color:#56645b;background:#24302d;color:#e0eddc}
+.note-preview.has-note:hover{background:#2b3a35;border-color:#9bb79c}
+/* Compact backup section; preserve simple export/import calls. */
+.sidebar-bottom{padding:15px 10px 0;border-top:1px solid #30373b;margin-top:auto}
+.backup-heading{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.backup-heading .ui-icon{width:16px;height:16px;color:#adbdbd}
+.sidebar-bottom .backup-heading strong{margin:0;color:#cdd6d6;font-size:12px;font-weight:600}
+.sidebar-bottom .side-actions{flex-wrap:nowrap;gap:7px}
+.sidebar-bottom .outline-btn{display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  padding:8px 5px;min-width:0;flex:1;color:#d1d9db;font-size:11px}
+.sidebar-bottom .outline-btn .ui-icon{width:13px;height:13px}
+.sidebar-bottom .backup-date{font-size:10px;line-height:1.4;margin:8px 0 0;color:#9baaaa;overflow-wrap:anywhere}
+@media(max-width:740px){.note-preview{min-height:40px;font-size:12px}}
 </style>
 </head>
 <body>
@@ -649,13 +683,13 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
       <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
     </nav></div>
     <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
-    <div class="sidebar-bottom"><div class="tiny-ico"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg></div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.8 · 記録はブラウザ内に保存</div>
+    <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
+    <div class="side-foot">ANI:LOG v1.8.1 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
 
-    <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription">放送年・シーズンから作品一覧を表示。タイトル検索もできます。</p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
+    <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
 <div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
 <details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
@@ -1274,7 +1308,7 @@ function readNote(a){
  return a?.review?.comment?{text:String(a.review.comment).slice(0,500),updatedAt:a.review.updatedAt||a.updatedAt||''}:null;
 }
 function carryLegacyNote(a){if(!a.note&&!a.noteDeletedAt){const n=readNote(a);if(n)a.note=n}}
-function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]);return `<button type="button" class="note-preview ${n?.text?'has-note':''}" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${n?.text?'編集':'追加'}">${uiIcon('edit')}<span>${n?.text?safeText(n.text):'メモを残す'}</span></button>`}
+function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]);return `<button type="button" class="note-preview ${n?.text?'has-note':''}" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${n?.text?'編集':'追加'}">${uiIcon('edit')}<span class="note-preview-label">${n?.text?'メモを編集':'メモを書く'}</span>${n?.text?`<span class="note-preview-excerpt">${safeText(n.text)}</span>`:''}</button>`}
 let noteItemId=null,noteOriginal=null;
 function openNote(id){if(!saved[id]||mode==='share')return;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();$('#noteText').focus()}
 async function saveNoteImpl(){const id=noteItemId,item=saved[id];if(!item)return;
@@ -1486,8 +1520,8 @@ function sortByBroadcast(a,b){
  return String(a.title||'').localeCompare(String(b.title||''),'ja');
 }
 function broadcastPeriod(a){
- if(!Number.isInteger(a.year))return '放送時期未登録';
- return `${a.year}年 ${seasonLabels[a.season]||'季節未登録'}`;
+ if(!Number.isInteger(a.year))return '放送年未登録';
+ return `${a.year}年`;
 }
 function readCollapsed(){try{const v=JSON.parse(localStorage.getItem(COLLAPSED_KEY)||'[]');return new Set(Array.isArray(v)?v.filter(x=>typeof x==='string').slice(0,300):[])}catch{return new Set()}}
 let collapsedPeriods=readCollapsed();
@@ -1530,9 +1564,10 @@ function render(){
  const isSaved=mode==='saved', exploreRegistered=!isSaved&&exploreStatusFilter!=='all';
  $('#breadcrumb').textContent=isSaved?'マイリスト':'アニメを探す';
  $('#sectionTitle').textContent=isSaved?'マイリスト':(query?`「${query}」の検索結果 · ${periodLabel()}`:currentScope()==='all'?'全年代のアニメ':currentScope().startsWith('decade:')?`${periodLabel()}のアニメ`:`${periodLabel()} ${$('#seasonSelect').value==='all'?'通年':seasonLabels[$('#seasonSelect').value]}アニメ`);
- $('#sectionDescription').textContent=isSaved?'観た時間を、あなたの記録に。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${periodLabel()}）。`:'放送時期や年代を選んで作品を探せます。';
- years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved);syncPeriodUI();
- $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'作品名・略称を入力すると全年代から検索します。年代・放送年で絞り込むこともできます。';
+ $('#sectionDescription').textContent=isSaved?'観た時間を、あなたの記録に。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${periodLabel()}）。`:'';
+ $('#sectionDescription').hidden=!(isSaved||exploreRegistered||query);
+ years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved||(!exploreRegistered&&!query));syncPeriodUI();
+ $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
  $('#searchSortWrap').classList.toggle('hidden',isSaved||exploreRegistered||!query);
  $('#searchBtn').innerHTML=isSaved||exploreRegistered?'検索':'検索 '+uiIcon('search');
