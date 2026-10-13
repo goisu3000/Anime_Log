@@ -656,7 +656,7 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 .sidebar-bottom .backup-date{font-size:10px;line-height:1.4;margin:8px 0 0;color:#9baaaa;overflow-wrap:anywhere}
 @media(max-width:740px){.note-preview{min-height:40px;font-size:12px}}
 
-/* ANI:LOG v1.9 | Pattern A my-list refinement. No change to discovery, detail or persisted records. */
+/* ANI:LOG v1.9.1 | Pattern A my-list refinement. No change to discovery, detail or persisted records. */
 .saved-mode #cards.saved-grid{display:block}
 .saved-mode #cards .pattern-a-year{margin:0 0 23px}
 .saved-mode #cards .pattern-a-year .saved-period-heading{margin:0 0 10px;padding:8px 1px;color:#e6ecea;font-size:14px;font-weight:750}
@@ -715,6 +715,131 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 @media(max-width:1000px){.saved-mode #cards .pattern-a-card{grid-template-columns:86px minmax(170px,1fr) minmax(170px,205px);grid-template-rows:auto auto;gap:8px 15px;align-items:center}.saved-mode #cards .pattern-a-card .record-poster{grid-row:1/3;width:86px;height:126px}.saved-mode #cards .pattern-a-card .record-main{grid-column:2;grid-row:1/3}.saved-mode #cards .pattern-a-watch-column{grid-column:3;grid-row:1;border-left:1px solid #303a41;padding:0 0 0 13px}.saved-mode #cards .pattern-a-personal-column{grid-column:3;grid-row:2;border-left:1px solid #303a41;padding:5px 0 0 13px}}
 @media(max-width:740px){.saved-mode #cards .pattern-a-card{grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto auto;gap:9px 12px;min-height:0;padding:12px;border-radius:10px}.saved-mode #cards .pattern-a-card .record-poster{width:76px;height:110px;grid-row:1;grid-column:1;align-self:start}.saved-mode #cards .pattern-a-card .record-main{grid-row:1;grid-column:2;align-self:center}.saved-mode #cards .pattern-a-card .card-title{font-size:14px;line-height:1.5;margin-bottom:6px}.saved-mode #cards .pattern-a-card .title-button{font-size:14px}.saved-mode #cards .pattern-a-card .pattern-a-meta{font-size:10px}.saved-mode #cards .pattern-a-card .pattern-a-date{font-size:10px}.saved-mode #cards .pattern-a-card .pattern-a-tags{margin-top:6px}.saved-mode #cards .pattern-a-watch-column{grid-column:1/3;grid-row:2;border-left:0;border-top:1px solid #313c41;display:flex;align-items:center;flex-direction:row;flex-wrap:wrap;gap:10px;padding:10px 0 0;min-width:0}.saved-mode #cards .pattern-a-card .pattern-a-status-menu{max-width:155px;flex:0 1 145px}.saved-mode #cards .pattern-a-progress{flex:1 1 155px}.saved-mode #cards .pattern-a-personal-column{grid-column:1/3;grid-row:3;border-left:0;border-top:1px solid #313c41;padding:9px 0 0;display:flex;flex-direction:row;align-items:center;gap:10px;justify-content:space-between}.saved-mode #cards .pattern-a-rating{flex:1;min-width:0}.saved-mode #cards .pattern-a-rating-line .review-stars-mini{font-size:14px}.saved-mode #cards .pattern-a-personal-column .note-preview{flex:0 1 150px;min-width:120px;max-width:55%;margin:0}.saved-mode #cards .pattern-a-personal-column .note-preview .note-preview-excerpt{display:none}.saved-mode #cards .pattern-a-progress .watch-progress-actions button{min-width:35px;min-height:35px}.saved-mode #cards .pattern-a-progress .watch-progress-entry input{min-height:35px;height:35px}.saved-mode #cards .pattern-a-list{gap:9px}.saved-mode #cards .pattern-a-year .saved-period-heading{font-size:13px}}
 @media(max-width:360px){.saved-mode #cards .pattern-a-card{grid-template-columns:68px minmax(0,1fr);gap:8px 10px;padding:10px}.saved-mode #cards .pattern-a-card .record-poster{width:68px;height:100px}.saved-mode #cards .pattern-a-personal-column{flex-wrap:wrap}.saved-mode #cards .pattern-a-personal-column .note-preview{max-width:100%;flex:1 1 100%}}
+
+/* v1.9.1: Pattern A reference fidelity, DESKTOP MY LIST MAIN COLUMN ONLY.
+   Deliberately leave .sidebar, discovery, ranking, detail and <=740px untouched. */
+@media (min-width:741px){
+  body.saved-mode:not(.view-detail):not(.view-ranking) .main{
+    padding-top:48px;
+    padding-left:clamp(36px,5.35vw,89px);
+    padding-right:clamp(26px,3.1vw,51px);
+    max-width:none;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView>.section-header{
+    margin-bottom:6px;align-items:center;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .collection-eyebrow,
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #sectionDescription{display:none!important}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #sectionTitle{
+    font-size:32px;font-weight:760;letter-spacing:-.045em;line-height:1.38;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView>.stats{
+    display:flex!important;gap:38px;align-items:center;
+    width:100%;min-height:51px;margin:0 0 18px;
+    padding:0 0 1px;border-bottom:1px solid #333e44;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView>.stats .stat{
+    min-height:51px;padding:11px 2px 15px;font-size:13px;
+    color:#aeb9c2;font-weight:600;gap:12px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView>.stats .stat[aria-current="true"]{color:#c4e995;box-shadow:inset 0 -2px #c4e995}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView>.stats .stat-count{font-size:12px;color:inherit}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{margin-bottom:12px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox{
+    background:#1c252b;border-radius:8px;border-color:#252e35;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox input{height:44px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
+    min-height:22px;margin:0 0 9px;display:flex;justify-content:flex-end;align-items:flex-end;gap:19px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #cards{margin-top:-12px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption .result-info{font-size:11px;color:#afbbc5}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint{display:none}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .saved-order-select{
+    height:33px;max-width:190px;padding:0 24px 0 11px;
+    font-size:11px;color:#c5d1d7;background:#141b20;border:1px solid #45515c;
+    border-radius:7px;cursor:pointer;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-year{margin:0 0 18px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-year .saved-period-heading{
+    font-size:15px;font-weight:720;color:#eef3f2;padding:5px 0;margin:0 0 10px;gap:9px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-year .saved-period-heading>span:not(.fold-symbol):not(.period-divider){font-size:11px;color:#9cabb4}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-list{gap:12px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card{
+    grid-template-columns:124px minmax(180px,1fr) minmax(220px,260px) minmax(264px,324px);
+    column-gap:22px;row-gap:10px;align-items:center;
+    min-height:148px;padding:9px 16px;border:1px solid #29343c;border-radius:12px;
+    background:linear-gradient(108deg,#1b252a 0%,#192228 55%,#1b252b 100%);
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card:hover{background:#202c32;border-color:#516257}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .record-poster{
+    grid-row:1;grid-column:1;width:124px;height:128px;border-radius:7px;align-self:center;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .record-poster img{
+    width:100%;height:100%;object-fit:cover;object-position:center 28%;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .record-main{grid-row:1;grid-column:2}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .card-title{
+    font-size:18px;font-weight:730;line-height:1.4;letter-spacing:.002em;margin:0 0 10px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-meta{font-size:12px;gap:10px;color:#b3c3ce}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-tags{margin-top:11px;gap:6px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-tags span{background:#263139;border:1px solid #36454c;color:#b5c4ce;font-size:11px;padding:4px 9px;border-radius:6px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .record-main>.pattern-a-date{display:none}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-watch-column{
+    grid-column:3;grid-row:1;min-height:116px;padding:6px 14px 6px 19px;gap:9px;
+    border-left:1px solid #303b43;align-self:stretch;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-status-menu{max-width:170px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-status-menu>summary{min-height:38px;background:#1a252b}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-date-watch{
+    font-size:11px;color:#b2c3cf;line-height:1.5;display:inline-flex;gap:6px;align-items:center;
+    border:0;background:transparent;cursor:pointer;text-align:left;padding:1px 0;margin:2px 0 0;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-date-watch:hover{text-decoration:underline;text-underline-offset:3px;color:#e3f2d3}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-date-watch .ui-icon{width:13px;height:13px;flex-shrink:0}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-progress .watch-progress-top{margin-bottom:4px;font-size:11px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-progress .watch-progress-track{margin:4px 0 7px;height:5px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-progress .watch-progress-actions button{height:24px;min-height:24px;width:26px;min-width:26px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-progress .watch-progress-actions button[data-progress-step="1"]{width:50px;min-width:50px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-progress .watch-progress-entry input{height:24px;min-height:24px;width:35px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column{
+    grid-column:4;grid-row:1;min-height:116px;padding:7px 0 6px 19px;
+    border-left:1px solid #303b43;gap:8px;align-self:stretch;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating{flex-direction:row;flex-wrap:wrap;align-items:center;gap:7px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini{font-size:18px;letter-spacing:1px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .pattern-a-rate-edit{font-size:10px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview{
+    min-height:38px;max-width:252px;background:#1e292e;border-color:#586771;
+    font-size:12px;flex-shrink:0;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .pattern-a-update{font-size:10px;color:#93a5b0;line-height:1.5}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview-excerpt{display:none}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .note-preview:not(.has-note) .note-preview-label{font-size:0}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .note-preview:not(.has-note) .note-preview-label::after{content:"メモを残す";font-size:12px}
+}
+/* 741–1280px: keep status/edit accessible without crushing the center. */
+@media (min-width:741px) and (max-width:1280px){
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView>.stats{gap:22px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card{
+    grid-template-columns:95px minmax(165px,1fr) minmax(185px,220px);
+    grid-template-rows:auto auto;min-height:148px;column-gap:16px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .record-poster{width:95px;height:128px;grid-column:1;grid-row:1/3}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .record-main{grid-column:2;grid-row:1/3}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .pattern-a-watch-column{grid-column:3;grid-row:1;min-height:0;align-self:end;padding:4px 0 6px 12px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .pattern-a-personal-column{grid-column:3;grid-row:2;min-height:0;align-self:start;padding:5px 0 3px 12px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-card .pattern-a-rating{gap:5px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .pattern-a-update{display:none}
+}
+@media (max-width:740px){
+  /* Keep v1.9 mobile styling, including the date beneath the title. */
+  .saved-mode #cards .pattern-a-date-watch,.saved-mode #cards .pattern-a-update{display:none!important}
+  .saved-mode #cards .record-main>.pattern-a-date{display:inline-flex}
+}
+
 </style>
 </head>
 <body>
@@ -744,7 +869,7 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
     </nav></div>
     <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.9 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.9.1 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -765,7 +890,7 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
         </div>
       </div>
       <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
-</div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
+</div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span><select id="savedOrder" class="saved-order-select hidden" aria-label="マイリストの年内の並び順"><option value="broadcast">放送時期が新しい順</option><option value="updated">更新が新しい順</option><option value="title">作品名順</option></select></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はこのブラウザに保存され、別端末には自動同期されません。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
     <section id="rankingView" class="hidden" aria-label="アニメランキング">
@@ -1581,7 +1706,7 @@ function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}
 }
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?patternAProgress(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?patternAProgress(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -1612,7 +1737,14 @@ function toggleFold(status,period){const key=foldKey(status,period);
 }
 // Pattern A: group by broadcast year first; status is shown inside each card.
 function savedGroups(list){
- const sorted=[...list].sort((a,b)=>sortByBroadcast(a,b)||savedStatusOrder.indexOf(a.status)-savedStatusOrder.indexOf(b.status));
+ const order=$('#savedOrder')?.value||'broadcast';
+ const sorted=[...list].sort((a,b)=>{
+  const ay=Number.isInteger(a.year)?a.year:-1,by=Number.isInteger(b.year)?b.year:-1;
+  if(ay!==by)return by-ay;
+  if(order==='updated')return (Date.parse(b.updatedAt||'')||0)-(Date.parse(a.updatedAt||'')||0)||sortByBroadcast(a,b);
+  if(order==='title')return String(a.title||'').localeCompare(String(b.title||''),'ja');
+  return sortByBroadcast(a,b)||savedStatusOrder.indexOf(a.status)-savedStatusOrder.indexOf(b.status);
+ });
  const periods=new Map();
  for(const a of sorted){const period=broadcastPeriod(a);if(!periods.has(period))periods.set(period,[]);periods.get(period).push(a)}
  const foldStatus=statusFilter==='all'?'all':statusFilter;
@@ -1629,6 +1761,7 @@ function render(){
  $('#cards').classList.toggle('saved-grid',mode==='saved');
  $('#collectionEyebrow').textContent=mode==='saved'?'YOUR ANIME JOURNAL':'DISCOVER ANIME';
  $('#listOrderHint').hidden=mode!=='saved';
+ $('#savedOrder').classList.toggle('hidden',mode!=='saved');
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
  $('#filterDisclosure').classList.toggle('has-filters',activeFilters.length>0);
@@ -2155,6 +2288,7 @@ $$('[data-view]').forEach(b=>b.addEventListener('click',()=>b.dataset.view==='sa
 $$('[data-status-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statusFilter)));
 $$('[data-stat-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statFilter)));
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-rate-id]');if(b)openRating(b.dataset.rateId)});
+$('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
 $('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
 $('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
 $('#ratingDialog').addEventListener('close',()=>{ratingItemId=null});
