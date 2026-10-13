@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.7.4 | アニメ視聴管理</title>
+<title>ANI:LOG v1.8 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -448,6 +448,46 @@
  .rank-meta{font-size:11px}
 }
 
+
+/* v1.7.5: Personal viewing insights. One clear chart at a time, no chart library. */
+.insights-root{margin:31px 0 8px;display:grid;gap:19px}
+.insights-root.hidden{display:none!important}
+.insights-header h3{font-size:19px;margin:0 0 5px;color:#f4f8f4;font-weight:850}
+.insights-header p{color:#bdc9d6;font-size:12.5px;line-height:1.8;margin:0}
+.insights-status{font-size:12px;color:#c6d7ce;line-height:1.7;background:#252e2c;border:1px solid #415348;border-radius:10px;padding:12px 15px}
+.insights-status:empty{display:none}
+.insights-status button{border:1px solid #63715e;background:#354334;color:#e0f4cc;border-radius:7px;margin-left:10px;padding:6px 11px;cursor:pointer;font-size:12px}
+.insights-card{background:var(--surface);border:1px solid #303b48;border-radius:15px;padding:20px 22px;min-width:0}
+.insights-card-head{display:flex;justify-content:space-between;gap:12px;align-items:start;flex-wrap:wrap;margin-bottom:18px}
+.insights-card h4{font-size:16px;font-weight:850;color:#f3f7f9;margin:0 0 5px}
+.insights-card .insights-explain{font-size:11.5px;line-height:1.75;color:#b7c4cf;margin:0}
+.insights-toggle{display:inline-flex;border:1px solid #455343;border-radius:9px;background:#1c2524;padding:3px;gap:3px;flex-wrap:wrap}
+.insights-toggle button{border:0;background:transparent;border-radius:6px;color:#bfcbbf;font-weight:800;font-size:11.5px;min-height:35px;padding:8px 12px;cursor:pointer}
+.insights-toggle button.active{background:#394c33;color:#e2f4c6}
+.insights-category-tabs{margin-bottom:15px}
+.insights-bars{display:grid;gap:13px}
+.insights-bar{border:1px solid transparent;background:transparent;padding:5px 8px 8px;margin:0 -8px;border-radius:9px;color:#edf5f4;text-align:left;width:calc(100% + 16px);cursor:pointer}
+.insights-bar:hover,.insights-bar:focus-visible{background:#272f34;border-color:#526258;outline:none}
+.insights-bar.selected{background:#29382d;border-color:#6d8b64}
+.insights-bar-head{display:flex;gap:10px;align-items:baseline;justify-content:space-between;font-size:13px;font-weight:750;line-height:1.5}
+.insights-bar-head strong{font-size:12px;white-space:nowrap;color:#e6f2d8;font-variant-numeric:tabular-nums}
+.insights-bar-sub{margin:3px 0 7px;color:#b0bdc7;font-size:11.5px;line-height:1.5}
+.insights-track{display:block;background:#323e45;border-radius:10px;height:8px;overflow:hidden}
+.insights-fill{display:block;height:100%;border-radius:10px;background:#a8d875;min-width:0}
+.insights-fill.feature{background:#8ebed7}
+.insights-footnote{margin:15px 0 0;font-size:11.5px;line-height:1.75;color:#b6c4cd}
+.insights-empty{color:#bfccd6;font-size:12.5px;line-height:1.75;border:1px dashed #495660;border-radius:9px;padding:17px}
+.insights-selection{margin-top:17px;padding-top:14px;border-top:1px solid #40504a}
+.insights-selection[hidden]{display:none!important}
+.insights-selection h5{color:#e4f1d5;font-size:13px;margin:0 0 9px}
+.insights-selection ul{padding:0 6px 0 0;margin:0;list-style:none;display:grid;gap:6px;max-height:350px;overflow-y:auto;scrollbar-width:thin}
+.insights-selection li{display:flex;align-items:center;gap:8px;justify-content:space-between;padding:7px 0;border-bottom:1px solid #344047}
+.insights-selection li:last-child{border:0}
+.insights-selection li button{background:none;border:0;color:#edf2f5;text-align:left;cursor:pointer;font-size:12px;line-height:1.5;flex:1;min-width:0}
+.insights-selection li button:hover{text-decoration:underline;color:var(--accent)}
+.insights-selection li span{color:#e5cb83;white-space:nowrap;font-size:11px}
+.insights-selection-close{border:1px solid #485849;background:#2b352d;color:#e2ebdf;padding:6px 10px;border-radius:7px;cursor:pointer;font-size:11px;margin:12px 0 0}
+@media(max-width:740px){.insights-root{margin-top:24px;gap:14px}.insights-card{padding:16px 13px}.insights-card-head{gap:11px}.insights-card h4{font-size:15px}.insights-toggle button{padding:8px 10px;font-size:11px}.insights-header h3{font-size:17px}.insights-bar-head{font-size:12px}.insights-bar-head strong{font-size:11px}}
 </style>
 </head>
 <body>
@@ -476,7 +516,7 @@
     </nav></div>
     <div class="share-card"><strong>🔗 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る ↗</button></div>
     <div class="sidebar-bottom"><div class="tiny-ico">💾</div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す ↓</button><button type="button" class="outline-btn" id="importBtn">読み込む ↑</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.7.4 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.8 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -518,6 +558,22 @@
       </div>
       <div id="rankNotice" class="rank-notice">世間の評価はMyAnimeList由来のデータです。日本国内だけのランキングではありません。</div>
       <div id="rankResults" class="rank-results" aria-live="polite"></div>
+
+      <section id="myInsights" class="insights-root hidden" aria-label="マイランキングの視聴分析">
+        <div class="insights-header"><h3>あなたの視聴分析</h3><p>「見た」作品だけを対象に、制作会社と作品の傾向を分析します。</p></div>
+        <div id="insightsStatus" class="insights-status" role="status" aria-live="polite"></div>
+        <article class="insights-card">
+          <div class="insights-card-head"><div><h4>制作会社ランキング</h4><p class="insights-explain">複数社制作の作品は、それぞれの制作会社に1作品として集計します。</p></div><div class="insights-toggle" role="group" aria-label="制作会社の並び順"><button type="button" data-insight-studio-sort="count" class="active">視聴本数順</button><button type="button" data-insight-studio-sort="average">平均★順</button></div></div>
+          <div id="studioBars" class="insights-bars"></div><p class="insights-footnote" id="studioNote"></p>
+          <div class="insights-selection" id="studioMatches" hidden></div>
+        </article>
+        <article class="insights-card">
+          <div class="insights-card-head"><div><h4>あなたの視聴傾向</h4><p class="insights-explain">ジャンルと作品の特徴は別々に集計します。1作品に複数の分類が付くことがあります。</p></div><div class="insights-toggle" role="group" aria-label="傾向の並び順"><button type="button" data-insight-trait-sort="count" class="active">視聴本数順</button><button type="button" data-insight-trait-sort="average">平均★順</button></div></div>
+          <div class="insights-toggle insights-category-tabs" role="group" aria-label="傾向の種類"><button type="button" data-insight-category="genres" class="active">ジャンル</button><button type="button" data-insight-category="themes">作品の特徴</button></div>
+          <div id="traitBars" class="insights-bars"></div><p class="insights-footnote" id="traitNote"></p>
+          <div class="insights-selection" id="traitMatches" hidden></div>
+        </article>
+      </section>
       <div class="load-wrap"><button type="button" id="rankLoadMore" class="loadmore hidden">さらに作品を読み込む ↓</button></div>
     </section>
     <section id="detailView" class="hidden" aria-label="アニメ作品の詳細">
@@ -679,7 +735,20 @@ function premiereDate(a){
  const y=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
  return y>=1900&&y<=2100&&month>=1&&month<=12&&day>=1&&day<=31?match[0]:'';
 }
-function model(a){const startDate=premiereDate(a);return {startDate,id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null,members:Number.isInteger(a.members)?a.members:null,scoredBy:Number.isInteger(a.scored_by)?a.scored_by:null};}
+// Only verified catalogue taxonomy is counted; an absent label is never guessed.
+function analysisTags(list){if(!Array.isArray(list))return [];
+ const seen=new Set(),out=[];for(const t of list){const name=String(t?.name||'').trim().slice(0,110),id=Number(t?.mal_id);
+  if(!name)continue;const key=Number.isInteger(id)&&id>0?'id:'+id:'name:'+name.toLowerCase();if(seen.has(key))continue;seen.add(key);
+  out.push({id:Number.isInteger(id)&&id>0?id:null,name});if(out.length>=24)break;
+ }return out;
+}
+function extractAnalysisMeta(data){if(!data||!['studios','genres','themes'].every(k=>Array.isArray(data[k])))return null;
+ return {studios:analysisTags(data.studios),genres:analysisTags(data.genres),themes:analysisTags(data.themes),fetchedAt:new Date().toISOString()};
+}
+function cleanAnalysisMeta(input){if(!input||typeof input!=='object'||!['studios','genres','themes'].every(k=>Array.isArray(input[k])))return null;
+ return {studios:analysisTags(input.studios.map(t=>({name:t?.name,mal_id:t?.id}))),genres:analysisTags(input.genres.map(t=>({name:t?.name,mal_id:t?.id}))),themes:analysisTags(input.themes.map(t=>({name:t?.name,mal_id:t?.id}))),fetchedAt:typeof input.fetchedAt==='string'&&Number.isFinite(Date.parse(input.fetchedAt))?input.fetchedAt:''};
+}
+function model(a){const startDate=premiereDate(a),meta=extractAnalysisMeta(a);return {startDate,id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null,members:Number.isInteger(a.members)?a.members:null,scoredBy:Number.isInteger(a.scored_by)?a.scored_by:null,...(meta?{analysisMeta:meta}:{})};}
 // v1.3: multi-query Japanese nickname search, deduplicated by stable MAL ID.
 function publicAnimeAllowed(a){
  const rating=String(a.rating||'').trim().toLowerCase();
@@ -1371,7 +1440,7 @@ let rankDraggedId=null;
 try{const c=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||'{}');if(c&&typeof c==='object'&&!Array.isArray(c))rankingCache=c}catch{}
 for(let y=new Date().getFullYear()+1;y>=1970;y--){const op=document.createElement('option');op.value=String(y);op.textContent=y+'年';$('#rankYear').append(op)}
 $('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-function exitRanking(){if(mode==='ranking'){rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
+function exitRanking(){if(mode==='ranking'){analysisGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
 function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watched'&&readReview(a.review)).sort((a,b)=>{
  const ar=readReview(a.review).overall,br=readReview(b.review).overall;if(ar!==br)return br-ar;
  const an=Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0?a.myRankOrder:999999;
@@ -1389,14 +1458,14 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
 function renderRanking(){if(mode!=='ranking')return;
  $$('#rankingView [data-rank-tab]').forEach(b=>b.classList.toggle('active',b.dataset.rankTab===rankingTab));
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
- const mine=rankingTab==='mine';$('#rankPublicControls').hidden=mine;$('#rankPublicControls').classList.toggle('hidden',mine);$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
+ const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankPublicControls').classList.toggle('hidden',mine);$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
  const names={now:'今期のアニメランキング',period:'年代・シーズン別ランキング',top:'歴代アニメランキング',mine:'マイランキング'};
  $('#rankingTitle').textContent=names[rankingTab];$('#breadcrumb').textContent=names[rankingTab];
  $('#rankingDescription').textContent=mine?'「見た」に登録し、自分で評価した作品を並べます。':'Tenrai API（MyAnimeList由来）の評価・登録者数に基づく作品の並びです。';
  $('#rankNotice').textContent=mine?'★5〜1の順です。同じ星の作品だけドラッグか↑↓で順番を変えられます。順位はブラウザとJSONバックアップに保存されます。':rankingSort==='members'?'人気順は作品をリストに登録した人数による順位です。評価点の高さとは別の指標です。':'スコアは海外ユーザーを含む評価です。新作は評価数が少なく順位が変動しやすいため、人数で絞り込めます。';
  $('#rankLoadMore').classList.toggle('hidden',mine||!rankingHasNext||rankingBusy);
- if(mine){const rows=myRatedItems();if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','☆');return}
+ if(mine){renderInsights();const rows=myRatedItems();if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','☆');return}
   let result='',position=0;for(const stars of [5,4,3,2,1]){const group=rows.filter(a=>readReview(a.review)?.overall===stars);if(!group.length)continue;
    result+=`<div class="rank-group-heading">${'★'.repeat(stars)}${'☆'.repeat(5-stars)}　${group.length}作品</div>`;
    group.forEach((a,i)=>{position++;result+=makeRankRow(a,position,'mine',i,group)})}
@@ -1413,7 +1482,7 @@ function showRanking(tab='now'){
  $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
  $$('[data-view]').forEach(b=>b.classList.remove('active'));$$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
  renderRanking();window.scrollTo({top:0,behavior:'instant'});
- if(tab!=='mine')loadRanking(true);
+ if(tab==='mine')scheduleInsightEnrichment();else loadRanking(true);
 }
 function moveRank(id,direction){const before=myRatedItems(),item=saved[id];if(!item)return;
  const rating=readReview(item.review)?.overall;if(!rating)return;
@@ -1426,6 +1495,91 @@ function moveRank(id,direction){const before=myRatedItems(),item=saved[id];if(!i
  if(!persist()){for(const [key,ord,date] of old){if(ord===undefined)delete saved[key].myRankOrder;else saved[key].myRankOrder=ord;if(date===undefined)delete saved[key].rankUpdatedAt;else saved[key].rankUpdatedAt=date}return}
  renderRanking();
 }
+
+// v1.7.5: Analysis uses completed works only. Public metadata never changes the user's rating.
+const STUDIO_NAMES_JA={'Kyoto Animation':'京都アニメーション','Studio Ghibli':'スタジオジブリ','Wit Studio':'WIT STUDIO','Production I.G':'Production I.G','ufotable':'ufotable','MAPPA':'MAPPA'};
+let studioInsightSort='count',traitInsightSort='count',traitInsightCategory='genres',insightSelection=null;
+let analysisGeneration=0,analysisRunning=false,analysisError='',analysisSkipped=new Set();
+const analysisReady=a=>Boolean(cleanAnalysisMeta(a?.analysisMeta));
+function storeAnalysisMeta(id,data){const entry=saved[id],incoming=extractAnalysisMeta(data);if(!entry||entry.status!=='watched'||!incoming)return false;
+ const old=entry.analysisMeta;if(analysisReady(entry)&&Date.now()-Date.parse(entry.analysisMeta.fetchedAt||'')<120*86400000)return true;
+ entry.analysisMeta=incoming;if(!persist()){if(old)entry.analysisMeta=old;else delete entry.analysisMeta;return false}return true;
+}
+function watchedForAnalysis(){return Object.values(saved).filter(a=>a?.status==='watched')}
+function analysisGroups(category){const groups=new Map();for(const a of watchedForAnalysis()){
+ const tags=cleanAnalysisMeta(a.analysisMeta)?.[category]||[];for(const t of tags){const key=t.id?'id:'+t.id:'name:'+t.name.toLowerCase();
+  if(!groups.has(key))groups.set(key,{key,name:t.name,items:[],totalStars:0,rated:0});
+  const g=groups.get(key);g.items.push(a);const r=readReview(a.review);if(r){g.totalStars+=r.overall;g.rated++}
+ }}return [...groups.values()].map(g=>({...g,count:g.items.length,avg:g.rated?g.totalStars/g.rated:null}));
+}
+function sortedInsightGroups(category,sort){const available=analysisGroups(category);const minRated=sort==='average'&&available.some(g=>g.rated>=2)?2:1;return available.filter(g=>sort!=='average'||g.rated>=minRated).sort((a,b)=>{
+ if(sort==='average'){return b.avg-a.avg||b.rated-a.rated||b.count-a.count||a.name.localeCompare(b.name,'ja')}
+ return b.count-a.count||(b.avg||0)-(a.avg||0)||a.name.localeCompare(b.name,'ja');
+ });}
+function analysisDisplayName(category,name){return category==='studios'?STUDIO_NAMES_JA[name]||name:genreJa(name)}
+function insightBarsMarkup(groups,category,sort){if(!groups.length)return '<div class="insights-empty">まだ集計できるデータがありません。作品情報の取得後に表示されます。</div>';
+ const max=sort==='average'?5:Math.max(...groups.map(g=>g.count),1);
+ return groups.slice(0,10).map((g,i)=>{const selected=insightSelection?.category===category&&insightSelection.key===g.key;
+ const metric=sort==='average'?`★ ${g.avg.toFixed(2)}`:`${g.count}作品`;
+ const sub=sort==='average'?`${g.count}作品中 ${g.rated}作品を評価${g.rated===1?'（1作品のみの参考値）':''}`:`${g.rated?`平均★ ${g.avg.toFixed(2)}（評価${g.rated}作品）`:'★未評価'}`;
+ const width=Math.max(0,Math.min(100,(sort==='average'?g.avg:g.count)/max*100));
+ return `<button type="button" class="insights-bar${selected?' selected':''}" data-insight-group="${safeText(g.key)}" data-insight-kind="${category}" aria-expanded="${selected?'true':'false'}" aria-label="${safeText(analysisDisplayName(category,g.name))} ${metric} の作品一覧を開く"><span class="insights-bar-head"><span>${i+1}. ${safeText(analysisDisplayName(category,g.name))}</span><strong>${safeText(metric)}</strong></span><span class="insights-bar-sub">${safeText(sub)}</span><span class="insights-track"><span class="insights-fill${category==='themes'?' feature':''}" style="width:${width.toFixed(1)}%"></span></span></button>`;
+ }).join('');
+}
+function renderInsightMatches(slot,category){const el=$(slot);if(!insightSelection||insightSelection.category!==category){el.hidden=true;el.innerHTML='';return}
+ const group=analysisGroups(category).find(g=>g.key===insightSelection.key);if(!group){el.hidden=true;insightSelection=null;return}
+ const rows=group.items.slice().sort((a,b)=>(readReview(b.review)?.overall||0)-(readReview(a.review)?.overall||0)||sortByBroadcast(a,b));
+ el.hidden=false;el.innerHTML=`<h5>${safeText(analysisDisplayName(category,group.name))}：該当する${rows.length}作品</h5><ul>${rows.map(a=>`<li><button type="button" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><span>${readReview(a.review)?'★'.repeat(readReview(a.review).overall):'未評価'}</span></li>`).join('')}</ul><button type="button" class="insights-selection-close" data-insight-close>閉じる</button>`;
+}
+function renderInsights(){if(mode!=='ranking'||rankingTab!=='mine')return;
+ const total=watchedForAnalysis().length,ready=watchedForAnalysis().filter(analysisReady).length,pending=watchedForAnalysis().filter(a=>!analysisReady(a)&&/^jikan:\d+$/.test(a.id));
+ const manual=total-watchedForAnalysis().filter(a=>/^jikan:\d+$/.test(a.id)).length;
+ let message=`集計対象：「見た」${total}作品 ／ 作品情報を確認済み ${ready}作品`;
+ if(pending.length){message+=analysisRunning?`。残り${pending.length}作品を順番に取得中…`:`。未取得 ${pending.length}作品`;
+ }if(manual)message+=`。手動登録 ${manual}作品は制作会社・分類を自動判定できません。`;
+ if(analysisError)message+=`。${analysisError}`;
+ $('#insightsStatus').innerHTML=safeText(message)+(pending.length&&!analysisRunning?'<button type="button" id="analysisRetry">取得を再開</button>':'');
+ for(const [category,sort,slot,notes] of [['studios',studioInsightSort,'#studioBars','#studioNote'],[traitInsightCategory,traitInsightSort,'#traitBars','#traitNote']]){
+  const groups=sortedInsightGroups(category,sort);$(slot).innerHTML=insightBarsMarkup(groups,category,sort);
+  const foot=category==='studios'?'制作会社の登録がない作品は集計対象外です。視聴本数と平均★は別の指標です。':category==='themes'?'「異世界」と「転生」は独立したテーマです。「転移」だけを確実に判定できるタグがないため、転移本数は推測表示しません。':'MyAnimeList由来のジャンル分類です。複数ジャンルに該当する作品はそれぞれに計上します。';
+  const ratingRule=sort==='average'?(analysisGroups(category).some(g=>g.rated>=2)?' 平均★順は評価した作品が2本以上の項目に限定します。':' 評価した作品が各項目1本のみのため参考順位です。'):'';
+  $(notes).textContent=foot+ratingRule+(groups.length>10?` 上位10項目を表示（全${groups.length}項目）。`:'');
+ }
+ $$('[data-insight-studio-sort]').forEach(b=>b.classList.toggle('active',b.dataset.insightStudioSort===studioInsightSort));
+ $$('[data-insight-trait-sort]').forEach(b=>b.classList.toggle('active',b.dataset.insightTraitSort===traitInsightSort));
+ $$('[data-insight-category]').forEach(b=>b.classList.toggle('active',b.dataset.insightCategory===traitInsightCategory));
+ renderInsightMatches('#studioMatches','studios');renderInsightMatches('#traitMatches',traitInsightCategory);
+}
+const analysisSleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+function scheduleInsightEnrichment(){const gen=++analysisGeneration;analysisSkipped=new Set();analysisError='';if(analysisRunning)return;
+ Promise.resolve().then(()=>enrichWatchedAnalysis(gen));
+}
+async function enrichWatchedAnalysis(gen){analysisRunning=true;let failures=0;try{
+  while(gen===analysisGeneration&&mode==='ranking'&&rankingTab==='mine'){
+   const next=watchedForAnalysis().find(a=>/^jikan:\d+$/.test(a.id)&&!analysisReady(a)&&!analysisSkipped.has(a.id));
+   if(!next)break;
+   const cached=detailCache.get(next.id)?.full;
+   if(cached&&extractAnalysisMeta(cached)){if(!storeAnalysisMeta(next.id,cached)){analysisSkipped.add(next.id);analysisError='保存領域が不足している可能性があります。';}renderInsights();continue}
+   try{const r=await fetch(`${API}/anime/${next.id.split(':')[1]}/full`,{headers:{Accept:'application/json'}});
+    if(gen!==analysisGeneration)break;
+    if(!r.ok){if(r.status===429){analysisError='APIの利用制限に達しました。少し時間をおいて再試行できます。';break}throw Error('HTTP '+r.status)}
+    const payload=await r.json();if(!extractAnalysisMeta(payload.data))throw Error('分類データがありません');
+    if(!storeAnalysisMeta(next.id,payload.data)){analysisSkipped.add(next.id);analysisError='作品情報の保存に失敗しました。ブラウザの空き容量を確認してください。';break}analysisError='';failures=0;
+   }catch(err){analysisSkipped.add(next.id);failures++;analysisError='作品情報を一部取得できませんでした。時間をおいて再試行できます。';if(failures>=2)break}
+   if(gen!==analysisGeneration)break;renderInsights();await analysisSleep(1050); // About 57 requests/min maximum.
+  }
+ }finally{analysisRunning=false;if(gen!==analysisGeneration&&mode==='ranking'&&rankingTab==='mine')Promise.resolve().then(()=>enrichWatchedAnalysis(analysisGeneration));else if(gen===analysisGeneration)renderInsights()}
+}
+$('#myInsights').addEventListener('click',e=>{
+ const studio=e.target.closest('[data-insight-studio-sort]');if(studio){studioInsightSort=studio.dataset.insightStudioSort;renderInsights();return}
+ const sort=e.target.closest('[data-insight-trait-sort]');if(sort){traitInsightSort=sort.dataset.insightTraitSort;renderInsights();return}
+ const cat=e.target.closest('[data-insight-category]');if(cat){traitInsightCategory=cat.dataset.insightCategory;insightSelection=null;renderInsights();return}
+ const grp=e.target.closest('[data-insight-group]');if(grp){const newSelection={category:grp.dataset.insightKind,key:grp.dataset.insightGroup};insightSelection=insightSelection?.category===newSelection.category&&insightSelection.key===newSelection.key?null:newSelection;renderInsights();return}
+ const closer=e.target.closest('[data-insight-close]');if(closer){insightSelection=null;renderInsights();return}
+ const retry=e.target.closest('#analysisRetry');if(retry){analysisSkipped.clear();analysisError='';scheduleInsightEnrichment();renderInsights();return}
+ const detail=e.target.closest('[data-detail-id]');if(detail){const item=saved[detail.dataset.detailId];if(item)openDetail(item);}
+});
+
 function rankKey(){return [rankingTab,rankingTab==='period'?rankingYear:'',rankingTab==='period'?rankingSeason:'',rankingSort].join('|')}
 function rankEndpoint(page){const query=new URLSearchParams({limit:'24',page:String(page)});
  if(rankingTab==='top'){if(rankingSort==='members')query.set('filter','bypopularity');return '/top/anime?'+query}
@@ -1732,7 +1886,7 @@ let importCandidate=null;
 function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))throw Error('形式が違います');const result=Object.create(null);
  for(const a of data.items){if(!a||typeof a.id!=='string'||typeof a.title!=='string'||!validStatuses.has(a.status)||a.id.length>150||a.title.length>200||['__proto__','constructor','prototype'].includes(a.id))continue;
  const ep=Number(a.watchedEpisodes);
- result[a.id]={id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{})};
+ result[a.id]={id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{})};
  }
  if(!Object.keys(result).length)throw Error('有効な作品がありません');return result;
 }
@@ -1759,6 +1913,9 @@ function mergeEntry(current,backup,preferBackup=false){
   if(winner.reviewDeletedAt)base.reviewDeletedAt=winner.reviewDeletedAt;else delete base.reviewDeletedAt;
  }else if(current.review&&!backup.review)base.review=structuredClone(current.review);
  else if(backup.review&&!current.review)base.review=structuredClone(backup.review);
+ // Public catalogue information is not a user action. Preserve it across old backup merges.
+ const cMeta=cleanAnalysisMeta(current.analysisMeta),bMeta=cleanAnalysisMeta(backup.analysisMeta);
+ if(cMeta||bMeta){const recent=!cMeta?bMeta:!bMeta?cMeta:(Date.parse(bMeta.fetchedAt||'')||0)>(Date.parse(cMeta.fetchedAt||'')||0)?bMeta:cMeta;base.analysisMeta=recent;}
  // Rank order is merged independently from status and review timestamps.
  const cRank=Date.parse(current.rankUpdatedAt||'')||0,bRank=Date.parse(backup.rankUpdatedAt||'')||0;
  const rankOwner=bRank>cRank?backup:cRank>bRank?current:(preferBackup?backup:current);
@@ -2056,6 +2213,7 @@ async function loadDetail(id,token,force=false){
  try{
   const result=await detailFetch(`/anime/${id.split(':')[1]}/full`);
   entry.full=result.data||null;if(!entry.full)throw Error('作品詳細データが空です');
+  if(saved[id]?.status==='watched'&&extractAnalysisMeta(entry.full))storeAnalysisMeta(id,entry.full);
   entry.loading=false;
   if(detailActiveItem?.id===id&&token===detailNonce){
    detailActiveItem={...model(entry.full),...detailActiveItem};
