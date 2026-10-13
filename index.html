@@ -24,6 +24,12 @@
 @media(max-width:740px){.app{display:block}.sidebar{display:none}.main{padding:18px 16px 100px}.topbar{margin-bottom:18px}.hero{padding:22px 21px;min-height:186px;border-radius:17px}.hero-graphic{width:75px;height:75px;border-radius:19px;margin-right:0}.hero-graphic svg{width:43px;height:43px}.hero h1{font-size:27px;margin-top:11px}.hero p{font-size:11px}.stats{gap:8px;margin:13px 0 27px}.stat{padding:13px 9px;border-radius:11px;gap:9px}.stat-icon{width:30px;height:30px;border-radius:8px}.stat-icon svg{width:17px;height:17px}.stat-value{font-size:22px}.stat-label{font-size:9px;margin-top:5px}.section-header h2{font-size:18px}.cards{grid-template-columns:repeat(auto-fill,minmax(156px,1fr));gap:10px}.poster-wrap{height:120px}.card-body{padding:11px}.card-title{font-size:12px}.control-select{flex:1}.searchbox{flex-basis:100%}.result-info{width:100%;margin-left:2px}.mobile-bottom{display:flex;position:fixed;bottom:0;left:0;right:0;background:#151821f5;border-top:1px solid #353946;padding:8px 13px max(8px,env(safe-area-inset-bottom));justify-content:space-around;z-index:50}.mobile-bottom button{border:0;background:transparent;color:#98a0ae;min-width:95px;padding:7px 15px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10px;font-weight:750}.mobile-bottom button.active{color:var(--accent)}.mobile-bottom svg{width:20px;height:20px}.disclaimer{margin-top:25px}.top-right{font-size:10px}}
 @media(max-width:430px){.hero-graphic{display:none}.stats{gap:6px}.stat{gap:6px}.stat-icon{display:none}.stat-value{font-size:24px}.stat{padding:15px 12px}}
 
+/* v1.3.2: Search results sorting, always visible at the results toolbar when searching */
+.search-sort{display:inline-flex;align-items:center;gap:8px;color:#a7b2c0;font-size:11px;font-weight:700;white-space:nowrap}
+.search-sort select{background:#1c202a;border:1px solid #455063;border-radius:9px;color:#eef3f2;height:35px;padding:0 28px 0 12px;cursor:pointer;min-width:110px}
+.search-sort select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:740px){.filter-tabs:has(.search-sort:not(.hidden)) .result-info{width:auto;flex:1;min-width:90px;margin-left:0}.search-sort{margin-left:auto}.search-sort span{font-size:10px}.search-sort select{min-width:104px;padding-left:8px;height:36px}}
+@media(max-width:380px){.search-sort span{display:none}}
 /* v1.2: 省リクエストのスマート検索と年代フィルター */
 .search-guide{font-size:11px;line-height:1.6;color:#8999a9;margin:-7px 0 15px 1px}
 .control-select:disabled{color:#78818d;opacity:.7;cursor:not-allowed}
@@ -250,7 +256,7 @@
     </nav></div>
     <div class="share-card"><strong>🔗 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る ↗</button></div>
     <div class="sidebar-bottom"><div class="tiny-ico">💾</div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す ↓</button><button type="button" class="outline-btn" id="importBtn">読み込む ↑</button></div></div>
-    <div class="side-foot">ANI:LOG v1.3.1 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.3.2 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -275,7 +281,7 @@
           <button type="button" data-explore-status="dropped" aria-pressed="false">■ 視聴中止</button>
         </div>
       </div>
-      <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><span class="result-info" id="resultInfo"></span></div>
+      <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><span class="result-info" id="resultInfo"></span><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
       <div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る ↓</button></div>
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。視聴履歴はこのブラウザに保存され、別端末には自動同期されません。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
@@ -343,6 +349,7 @@
 (() => {
 'use strict';
 const STORAGE_KEY='anilog-v1';
+const SEARCH_SORT_KEY='anilog-search-sort-v1';
 const API='https://api.tenrai.org/v1'; // Jikan公開API終了(2026-10-01)に伴い移行
 const $=sel=>document.querySelector(sel);
 const $$=sel=>[...document.querySelectorAll(sel)];
@@ -352,6 +359,9 @@ const statusLabels={watched:'見た',watching:'見てる',planned:'見たい',pa
 const safeText=s=>String(s ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function safeImage(url){try{const u=new URL(url);return u.protocol==='https:' ? u.href : ''}catch{return ''}}
 function readSaved(){try{const data=JSON.parse(localStorage.getItem(STORAGE_KEY)||'{}');return data&&typeof data==='object'&&!Array.isArray(data)?data:{}}catch{return {}}}
+function getInitialSearchSort(){try{const v=localStorage.getItem(SEARCH_SORT_KEY);return ['new','old','relevance'].includes(v)?v:'new'}catch{return 'new'}}
+let searchSort=getInitialSearchSort();
+$('#searchSort').value=searchSort;
 let saved=readSaved(),items=[],mode='season',typeFilter='all',statusFilter='all',exploreStatusFilter='all',query='',page=1,hasNext=false,loading=false,requestCounter=0,toastTimer;
 const currentDate=new Date();let curYear=currentDate.getFullYear(),curSeason=['winter','spring','summer','fall'][Math.floor(currentDate.getMonth()/3)];
 const years=$('#yearSelect');
@@ -393,7 +403,13 @@ function toast(msg,kind='info'){
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
 }
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));return true}catch{toast('保存に失敗しました。ブラウザの保存領域を確認してください。');return false}}
-function model(a){return {id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null};}
+function premiereDate(a){
+ const raw=String(a.aired?.from||'');const match=raw.match(/^(\d{4})-(\d{2})-(\d{2})/);
+ if(!match)return '';
+ const y=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
+ return y>=1900&&y<=2100&&month>=1&&month<=12&&day>=1&&day<=31?match[0]:'';
+}
+function model(a){const startDate=premiereDate(a);return {startDate,id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null};}
 // v1.3: multi-query Japanese nickname search, deduplicated by stable MAL ID.
 function publicAnimeAllowed(a){
  const rating=String(a.rating||'').trim().toLowerCase();
@@ -511,9 +527,35 @@ function relevanceScore(item,input){
  }
  return best;
 }
+// v1.3.2: The default is premiere recency rather than relevance.
+// Unknown year is always last, even when "oldest" is selected.
+function releaseParts(item){
+ const raw=String(item.startDate||'');
+ const date=/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw:'';
+ const year=Number(item.year)|| (date?Number(date.slice(0,4)):0);
+ const season=seasonRank[item.season]||(date?Math.ceil(Number(date.slice(5,7))/3):0);
+ return {year:Number.isInteger(year)&&year>=1900&&year<=2100?year:0,season,date};
+}
+function premiereCompare(a,b,oldFirst=false){
+ const x=releaseParts(a),y=releaseParts(b);
+ if(!x.year&&y.year)return 1;
+ if(x.year&&!y.year)return -1;
+ const direction=oldFirst?1:-1;
+ if(x.year!==y.year)return direction*(x.year-y.year);
+ if(x.season!==y.season)return direction*(x.season-y.season);
+ // Within a broadcast season, prefer precise start dates if both are known.
+ if(x.date&&y.date&&x.date!==y.date)return direction*x.date.localeCompare(y.date);
+ if(x.date&&!y.date)return -1;
+ if(!x.date&&y.date)return 1;
+ return 0;
+}
 function sortSearchResults(){items.sort((a,b)=>{
- const diff=relevanceScore(b,query)-relevanceScore(a,query);if(diff)return diff;
- return (b.year||0)-(a.year||0)||String(a.title).localeCompare(String(b.title),'ja');
+ if(searchSort==='relevance'){
+  const diff=relevanceScore(b,query)-relevanceScore(a,query);if(diff)return diff;
+ }
+ const premiere=premiereCompare(a,b,searchSort==='old');
+ if(premiere)return premiere;
+ return String(a.title||'').localeCompare(String(b.title||''),'ja')||String(a.id||'').localeCompare(String(b.id||''));
 })}
 // v1.1: reviews remain local unless explicitly included while generating a share URL.
 const REVIEW_ASPECTS={story:'ストーリー',visual:'映像',character:'キャラクター',music:'音楽'};
@@ -628,6 +670,7 @@ function render(){
  years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved);syncPeriodUI();
  $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'作品名・略称を入力すると全年代から検索します。年代・放送年で絞り込むこともできます。';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
+ $('#searchSortWrap').classList.toggle('hidden',isSaved||exploreRegistered||!query);
  $('#searchBtn').textContent=isSaved?'絞り込む':exploreRegistered?'絞り込む':'検索 ↗';
  $('#searchInput').placeholder=isSaved?'マイリストから作品名で絞り込み':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称・一部分で検索（例：レヴュー / まどマギ）';
  let list;
@@ -901,6 +944,12 @@ $('#searchForm').addEventListener('submit',e=>{e.preventDefault();if(mode==='sav
 $('#searchInput').addEventListener('input',()=>{if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
  // First title search should automatically span the whole catalog, unless the user chose a period.
  if($('#searchInput').value.trim()&&!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();$('#searchGuide').textContent='全年代から検索します。特定の年代に絞り込みたい場合は、年代を選んでください。';periodTouched=true}
+});
+$('#searchSort').addEventListener('change',e=>{
+ if(!['new','relevance','old'].includes(e.target.value))return;
+ searchSort=e.target.value;
+ try{localStorage.setItem(SEARCH_SORT_KEY,searchSort)}catch{/* browsing still works without storage */}
+ if(mode==='season'&&query){sortSearchResults();render()}
 });
 $('#loadMore').addEventListener('click',()=>{if(loading)return;if(!query)page++;fetchPage(false)});
 $('#cards').addEventListener('change',e=>{const t=e.target;if(t.matches('[data-status-id]'))setStatus(t.dataset.statusId,t.value)});
