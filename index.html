@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.7 | アニメ視聴管理</title>
+<title>ANI:LOG v1.7.3 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -294,6 +294,19 @@
 .review-list-actions #finishedYearFilter{background:#171e25;border:1px solid #46505f;border-radius:7px;color:#f4f5f5;padding:7px;margin-left:7px;font-size:12px}.review-list-count{display:flex;align-items:center;gap:5px}.review-list-actions{flex-wrap:wrap}
 @media(max-width:740px){.section-header{display:block}.heading-actions{margin-top:12px}.searchbox input{font-size:16px}.card-title{font-size:13px}.card-meta{font-size:11px}.status-control select{font-size:12px}.explore-status-buttons button,.filter-tabs button{font-size:12px}.mobile-bottom button{font-size:11px}.watch-progress-actions button{min-width:42px;min-height:42px;touch-action:manipulation}.watch-progress-entry input{font-size:16px;min-height:42px}.review-quick,.stat,.filter-tabs button,.explore-status-buttons button{min-height:42px;touch-action:manipulation}.toast{bottom:calc(env(safe-area-inset-bottom) + 75px);font-size:11px;max-width:calc(100vw - 18px)}.share-risk{line-height:1.6}.watch-date-row input{width:160px}}
 
+/* v1.7.1: 見終えた時期を年・年月・年月日で保存。入力していない日は補完しない */
+.watch-date{max-width:510px}
+.watch-date-fields{display:grid;grid-template-columns:minmax(95px,1.2fr) minmax(83px,1fr) minmax(83px,1fr);gap:8px;width:100%;margin:4px 0 12px}
+.watch-date .watch-date-field{display:flex;flex-direction:column;gap:5px;min-width:0;margin:0;font-size:11px}
+.watch-date-field span{color:#c8d7d8}
+.watch-date-fields input,.watch-date-fields select{width:100%;min-width:0;min-height:44px;padding:8px 9px;background:#151a22;color:#f2f4f7;border:1px solid #4b5869;border-radius:8px;color-scheme:dark;font-size:14px;margin:0}
+.watch-date-fields select:disabled{opacity:.5;cursor:not-allowed}
+.watch-date .watch-date-help{font-size:11px;line-height:1.7;color:#bed9be;margin:0 0 9px}
+.watch-date .watch-date-hint{font-size:10px;color:#adb7c1;line-height:1.65;margin:9px 0 0}
+.watch-date-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.watch-date .watch-date-actions button{min-height:40px}
+@media(max-width:740px){.watch-date-fields{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.watch-date-fields .watch-date-field:first-child{grid-column:1/-1}.watch-date-fields input,.watch-date-fields select{padding:9px 10px;font-size:16px}}
+
 /* v1.7: public rankings and local, editable personal ranking */
 .rank-sidebar-block .rank-chevron{margin-left:auto;color:#aab0bc;font-size:15px}
 .ranking-subnav{display:grid;gap:4px;margin:0 0 7px 18px;padding-left:12px;border-left:1px solid #485144}
@@ -338,6 +351,103 @@
 @media(max-width:740px){.rank-row{padding:11px 10px;gap:9px}.rank-num{width:26px;flex-basis:26px;font-size:17px}.rank-poster{width:46px;height:65px;flex-basis:46px}.rank-title{font-size:12px}.rank-metric{font-size:11px}.rank-metric strong{font-size:14px}.rank-metric small{font-size:9px}.rank-actions{justify-content:flex-start}.rank-actions button{min-height:39px}.rank-handle{font-size:16px}.rank-controls{gap:9px}.rank-controls label{flex:1;min-width:125px}.rank-controls select{width:100%;min-width:0}.rank-controls .rank-threshold{flex-basis:100%}.rank-view-tabs button{padding:10px 13px}.mobile-bottom button{padding-inline:3px;font-size:9px}}
 @media(max-width:385px){.rank-row{gap:6px}.rank-num{width:22px;flex-basis:22px}.rank-poster{width:42px;height:56px;flex-basis:42px}.rank-metric{min-width:52px}.rank-metric small{display:none}.rank-handle{display:none}}
 
+
+/* v1.7.2 | Readability refinement
+   Respect the restrained dark visual design: increase legibility only on lower-priority
+   supporting copy, controls and metadata. No changes to application behavior. */
+:root{--muted:#b5bfcd;--text-support:#bdc9d6;--text-hint:#aebccc}
+/* Critical: text underneath the page heading and search bar */
+.section-header p{font-size:13px;line-height:1.75;color:#c0cbd8;font-weight:500;margin-top:8px}
+.search-guide{font-size:12.5px;line-height:1.8;color:#b9c7d6;font-weight:500;margin:-4px 0 17px 1px}
+/* Search and browsing controls */
+.searchbox input{font-size:13.5px;color:#f4f7fb}
+.searchbox input::placeholder{color:#aebbc9;opacity:1}
+.searchbox button{font-size:11.5px;color:#e2e7ed}
+.searchbox svg{color:#b4c0cc}
+.control-select{font-size:12.5px;color:#e9eef5;font-weight:600}
+.explore-filter-label{font-size:12px;color:#c5cfdb}
+.explore-status-buttons button,.filter-tabs button{font-size:11.5px;color:#c1cad7}
+.result-info{font-size:12px;color:#b0bdca}
+.search-matched{font-size:12px}
+.search-suggest small,.search-suggest-note{font-size:11px;color:#b8c5d2}
+/* Cards: improve scanability without making every line equally prominent */
+.card-title{font-size:13.5px;line-height:1.52}
+.card-subtitle{font-size:11.5px;line-height:1.6;color:#b4c1d0;margin-top:7px}
+.card-meta{font-size:11.25px;line-height:1.5;color:#b7c4d2;margin-top:12px}
+.status-control select{font-size:12px;color:#e6edf6}
+.type-pill{font-size:10.5px}
+.review-mini-hint{font-size:11px;color:#b1c0cd}
+.complete-date{font-size:11px;color:#c4ddb0}
+/* Main navigation, counts, small labels */
+.crumb{font-size:12.5px;color:#b2bfce}
+.top-right{font-size:11.5px;color:#b7c3cf}
+.stat-label{font-size:11.5px;color:#b7c3d0}
+.side-block-title{font-size:10.5px;color:#a9b6c5;letter-spacing:.14em}
+.nav button{color:#bac6d5}
+.brand-desc{font-size:10.75px;color:#c4d1be;line-height:1.55}
+.sidebar-bottom p,.share-card p{font-size:11.5px;line-height:1.8;color:#b8c8d4}
+.side-foot,.backup-date{font-size:10.5px;color:#a6b5c3}
+.site-slogan{font-size:11px;color:#adbbca}
+.saved-section-head .saved-description,.saved-period-heading span{font-size:11px;color:#b1becd}
+/* Ranking supporting text */
+.rank-eyebrow{font-size:11px}
+.rank-meta{font-size:12px;color:#bac7d5;line-height:1.7}
+.rank-metric small{font-size:11px;color:#b1bdc9}
+.rank-notice{font-size:12.5px;color:#bbc8d6;line-height:1.8}
+.rank-controls label{font-size:12px;color:#c4cfda}
+.rank-view-tabs button{font-size:12.5px;color:#c3cddb}
+.rank-added{font-size:11px}
+.rank-quick-add{font-size:11.5px}
+/* Detail screens and user-authored records */
+.detail-english{font-size:13px;color:#b9c6d3;line-height:1.65}
+.detail-tags span{font-size:11px;color:#c4cfdd}
+.detail-facts span{font-size:11.5px;color:#c9d4e0}
+.detail-source-note,.detail-info-note{font-size:12px;color:#b8c5d2}
+.detail-episode-sub{font-size:11px;color:#acbacb}
+.detail-person small{font-size:11px;color:#b5c1ce}
+.detail-credit{font-size:11px;color:#abb8c7}
+.detail-episode-title{font-size:12.5px}
+.detail-related-name{font-size:12px}
+.detail-related-label{font-size:11px}
+.detail-tab-status{color:#b8c7d6}
+.review-dialog-sub,.review-meta{color:#b7c3d0}
+.shared-info-summary,.share-meta,.share-privacy-note{font-size:11.5px;color:#bdc9d5}
+.watch-date .watch-date-hint,.watch-date p{font-size:11px;color:#bdc9d5}
+.watch-date .watch-date-help{font-size:11.5px}
+.watch-progress-hint{font-size:11px;color:#b5c4d0}
+/* Fine print remains secondary, but should be readable rather than almost invisible. */
+.disclaimer{font-size:11.5px;color:#acbac9;line-height:1.85}
+.disclaimer a{color:#bbc9d8;text-underline-offset:2px}
+.site-slogan>span:first-child{font-size:10.5px;color:#b8da99}
+.site-slogan strong{font-size:11.5px;color:#d2d9e4}
+.state p{font-size:12.5px;color:#b8c5d1}
+/* Typography at phone widths: preserve comfortable taps and prevent sideways overflow. */
+@media(max-width:740px){
+ .section-header p{font-size:12.5px;line-height:1.7}
+ .search-guide{font-size:12px;line-height:1.75;margin:0 0 15px 1px}
+ .searchbox input{font-size:16px}
+ .searchbox input::placeholder{color:#b4c1cf}
+ .card-title{font-size:13.5px}
+ .card-subtitle{font-size:11px}
+ .card-meta{font-size:11px}
+ .stat-label{font-size:11px}
+ .rank-title{font-size:13px}
+ .rank-meta{font-size:11.5px}
+ .rank-metric small{font-size:10px}
+ .rank-notice{font-size:12px}
+ .detail-english{font-size:11.5px}
+ .detail-facts span{font-size:11px}
+ .detail-tags span{font-size:10.5px}
+ .detail-panel{font-size:13px;line-height:1.85}
+ .detail-episode-sub{font-size:11px}
+ .mobile-bottom button{font-size:10.5px}
+ .watch-progress-hint,.anime-card .watch-progress-hint{font-size:10px}
+}
+@media(max-width:380px){
+ .card-subtitle{font-size:10.75px}
+ .rank-meta{font-size:11px}
+}
+
 </style>
 </head>
 <body>
@@ -366,7 +476,7 @@
     </nav></div>
     <div class="share-card"><strong>🔗 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る ↗</button></div>
     <div class="sidebar-bottom"><div class="tiny-ico">💾</div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す ↓</button><button type="button" class="outline-btn" id="importBtn">読み込む ↑</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.7 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.7.3 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -378,7 +488,7 @@
       <button type="button" class="stat" data-stat-filter="dropped" aria-label="視聴中止の作品一覧を開く"><div class="stat-icon slate"><span class="icon-glyph" aria-hidden="true">■</span></div><div><div class="stat-value" id="countDropped">0</div><div class="stat-label">視聴中止</div></div><span class="stat-go" aria-hidden="true">↗</span></button>
     </section>
     <section id="libraryView"><div class="section-header"><div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription">放送年・シーズンから作品一覧を表示。タイトル検索もできます。</p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain">🔗 共有する</button><button type="button" class="add-btn" id="addCustomBtn">＋ 手動で追加</button></div></div>
-      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 ↗</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="winter">冬（1〜3月）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option></select></div>
+      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 ↗</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
       <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
       <div class="explore-status-row" id="exploreStatusTabs" role="group" aria-label="アニメを探す：視聴状況で絞り込み">
         <span class="explore-filter-label">視聴状況 <span class="mobile-swipe-hint">横にスワイプ ↔</span></span>
@@ -402,7 +512,7 @@
       </div>
       <div class="rank-controls" id="rankPublicControls">
         <label id="rankYearField">放送年<select id="rankYear" aria-label="ランキングの年"></select></label>
-        <label id="rankSeasonField">シーズン<select id="rankSeason" aria-label="ランキングのシーズン"><option value="winter">冬</option><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option></select></label>
+        <label id="rankSeasonField">シーズン<select id="rankSeason" aria-label="ランキングのシーズン"><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option><option value="winter">冬</option></select></label>
         <label>並び順<select id="rankSort" aria-label="ランキングの並び順"><option value="score">高評価順</option><option value="members">人気順（登録者数）</option></select></label>
         <label class="rank-threshold"><input type="checkbox" id="rankMinVotes" checked> 評価人数100人以上</label>
       </div>
@@ -813,20 +923,54 @@ function reviewCard(a){if(saved[a.id]?.status!=='watched'||mode==='share')return
  const r=readReview(saved[a.id]?.review);
  return `<div class="card-review"><span>${r?reviewStars(r.overall):'<span class="review-mini-hint">まだ評価していません</span>'}</span><button type="button" class="review-quick" data-rate-id="${safeText(a.id)}">${r?'評価を編集':'☆ 評価する'}</button></div>`;
 }
+// Store only the precision the user remembers: YYYY / YYYY-MM / YYYY-MM-DD.
+// Keep the original field for compatibility with old backups and all existing views.
+function localTodayParts(){const d=new Date();return [d.getFullYear(),d.getMonth()+1,d.getDate()]}
+function validCompletedOn(value){
+ if(typeof value!=='string'||!/^\d{4}(?:-\d{2}(?:-\d{2})?)?$/.test(value))return false;
+ const [ys,ms,ds]=value.split('-'),year=Number(ys),month=ms?Number(ms):0,day=ds?Number(ds):0;
+ if(year<1900||year>2100||ms&&(month<1||month>12)||ds&&(day<1||day>new Date(year,month,0).getDate()))return false;
+ const [cy,cm,cd]=localTodayParts();
+ return year<cy||year===cy&&(!ms||month<cm||month===cm&&(!ds||day<=cd));
+}
+function formatCompletedOn(value){
+ if(!validCompletedOn(value))return '';
+ const [y,m,d]=value.split('-');
+ return y+'年'+(m?Number(m)+'月':'')+(d?Number(d)+'日':'');
+}
+function completionDayOptions(year,month,selected=''){
+ const days=Number.isInteger(year)&&year>=1900&&year<=2100&&Number.isInteger(month)&&month>=1&&month<=12?new Date(year,month,0).getDate():31;
+ return '<option value="">不明</option>'+Array.from({length:days},(_,i)=>{const d=String(i+1).padStart(2,'0');return `<option value="${d}" ${d===selected?'selected':''}>${i+1}日</option>`}).join('');
+}
 function completionDateMarkup(a){
  if(mode==='share'||saved[a.id]?.status!=='watched')return '';
- const date=saved[a.id]?.completedOn||'';
- return `<div class="watch-date"><label for="completionDate">見終わった日（任意）</label><div class="watch-date-row"><input id="completionDate" type="date" max="${new Date().toISOString().slice(0,10)}" value="${safeText(date)}" aria-label="視聴完了日"><button type="button" data-completion-save="${safeText(a.id)}">保存</button>${date?`<button type="button" data-completion-clear="${safeText(a.id)}">日付を消す</button>`:''}</div><p>放送日とは別に、あなたが見終えた日を記録できます。空欄でも構いません。</p></div>`;
+ const savedDate=validCompletedOn(saved[a.id]?.completedOn)?saved[a.id].completedOn:'';
+ const [year='',month='',day='']=savedDate.split('-');
+ const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="completionYear"><span>年</span><input id="completionYear" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：2025" value="${safeText(year)}" aria-label="見終わった年"></label><label class="watch-date-field" for="completionMonth"><span>月（任意）</span><select id="completionMonth" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="completionDay"><span>日（任意）</span><select id="completionDay" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}">保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}">記録を消す</button>`:''}</div><p class="watch-date-hint">例：2025年／2025年8月／2025年8月23日。入力していない月日を自動で補完することはありません。</p></div>`;
+}
+function refreshCompletionDay(){
+ const yearInput=$('#completionYear'),monthInput=$('#completionMonth'),dayInput=$('#completionDay');
+ if(!yearInput||!monthInput||!dayInput)return;
+ const selected=dayInput.value,year=Number(yearInput.value),month=Number(monthInput.value);
+ dayInput.innerHTML=completionDayOptions(year,month,selected);
+ dayInput.disabled=!monthInput.value;
 }
 function saveCompletionDate(id,clear=false){
  const item=saved[id];if(!item||item.status!=='watched'||mode==='share')return;
- const value=clear?'':String($('#completionDate')?.value||'');
- if(value&&(!/^\d{4}-\d{2}-\d{2}$/.test(value)||!Number.isFinite(Date.parse(value))||value>new Date().toISOString().slice(0,10))){toast('正しい日付を入力してください','error');return}
+ let value='';
+ if(!clear){
+  const y=String($('#completionYear')?.value||'').trim(),m=String($('#completionMonth')?.value||''),d=String($('#completionDay')?.value||'');
+  if(!y){toast('見終わった年を入力してください。記録の削除は「記録を消す」を使えます。','error');return}
+  if(!/^\d{4}$/.test(y)){toast('年を4桁で入力してください','error');return}
+  value=y+(m?'-'+m:'')+(m&&d?'-'+d:'');
+  if(!validCompletedOn(value)){toast('未来の日付や存在しない日付は保存できません','error');return}
+ }
  const old=structuredClone(item);
  if(value)item.completedOn=value;else delete item.completedOn;
  item.updatedAt=new Date().toISOString();
  if(!persist()){saved[id]=old;return}
- renderDetailParts(detailNonce);toast(value?'視聴完了日を保存しました':'視聴完了日を削除しました');
+ renderDetailParts(detailNonce);toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
 }
 function reviewDetail(a){if(mode==='share'||saved[a.id]?.status!=='watched')return '';
  const r=readReview(saved[a.id]?.review);
@@ -933,7 +1077,7 @@ function commitProgressInput(input){const id=input.dataset.progressInput,raw=inp
 }
 
 function card(a){const s=saved[a.id]?.status||'';const t=String(a.type||'').toLowerCase();const knownType={tv:'TV',movie:'映画',ova:'OVA',ona:'配信',special:'特番',tv_special:'特番',music:'音楽'}[t]||a.type||'アニメ';const detail=[a.year?a.year+'年':'',a.episodes?a.episodes+'話':''].filter(Boolean).join(' · ');const img=a.image?`<img loading="lazy" referrerpolicy="no-referrer" src="${safeText(safeImage(a.image))}" alt="" onerror="this.remove()">`:'<div class="placeholder">A<span style="color:var(--accent)">:</span>L</div>';
- return `<article class="anime-card"><div class="poster-wrap"><button type="button" class="poster-button detail-trigger" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の作品詳細を開く">${img}</button><span class="type-pill">${safeText(typeJa(knownType))}</span>${s?`<span class="status-pill ${s}">${statusLabels[s]}</span>`:''}</div><div class="card-body"><div class="card-title" title="${safeText(a.title)}"><button type="button" class="title-button detail-trigger" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="card-subtitle" title="${safeText(a.english||'')}">${safeText(a.english||'手動で登録された作品')}</div><div class="card-meta"><span>${safeText(detail||'詳細未登録')}</span>${a.score?`<span class="star">★ ${Number(a.score).toFixed(1)}</span>`:''}</div><div class="status-control"><select aria-label="${safeText(a.title)}の視聴状況" data-status-id="${safeText(a.id)}"><option value="" ${!s?'selected':''}>≡ 未選択</option><option value="watching" ${s==='watching'?'selected':''}>▶ 見てる</option><option value="planned" ${s==='planned'?'selected':''}>☆ 見たい</option><option value="watched" ${s==='watched'?'selected':''}>✓ 見た</option><option value="paused" ${s==='paused'?'selected':''}>Ⅱ 一時中断</option><option value="dropped" ${s==='dropped'?'selected':''}>■ 視聴中止</option></select></div>${s==='watched'&&saved[a.id]?.completedOn?`<div class="complete-date">見終えた日：${safeText(saved[a.id].completedOn.replace(/-/g,'/'))}</div>`:''}${progressMarkup(a)}${reviewCard(a)}</div></article>`;}
+ return `<article class="anime-card"><div class="poster-wrap"><button type="button" class="poster-button detail-trigger" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の作品詳細を開く">${img}</button><span class="type-pill">${safeText(typeJa(knownType))}</span>${s?`<span class="status-pill ${s}">${statusLabels[s]}</span>`:''}</div><div class="card-body"><div class="card-title" title="${safeText(a.title)}"><button type="button" class="title-button detail-trigger" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="card-subtitle" title="${safeText(a.english||'')}">${safeText(a.english||'手動で登録された作品')}</div><div class="card-meta"><span>${safeText(detail||'詳細未登録')}</span>${a.score?`<span class="star">★ ${Number(a.score).toFixed(1)}</span>`:''}</div><div class="status-control"><select aria-label="${safeText(a.title)}の視聴状況" data-status-id="${safeText(a.id)}"><option value="" ${!s?'selected':''}>≡ 未選択</option><option value="watching" ${s==='watching'?'selected':''}>▶ 見てる</option><option value="planned" ${s==='planned'?'selected':''}>☆ 見たい</option><option value="watched" ${s==='watched'?'selected':''}>✓ 見た</option><option value="paused" ${s==='paused'?'selected':''}>Ⅱ 一時中断</option><option value="dropped" ${s==='dropped'?'selected':''}>■ 視聴中止</option></select></div>${s==='watched'&&saved[a.id]?.completedOn?`<div class="complete-date">見終えた時期：${safeText(formatCompletedOn(saved[a.id].completedOn))}</div>`:''}${progressMarkup(a)}${reviewCard(a)}</div></article>`;}
 function emptyCard(title,msg,icon='📺',btn=''){return `<div class="state"><div class="state-icon">${icon}</div><h3>${safeText(title)}</h3><p>${safeText(msg)}</p>${btn?`<button data-state-action="${btn==='再読み込み'?'reload':'season'}">${safeText(btn)}</button>`:''}</div>`}
 const savedStatusOrder=['watching','planned','watched','paused','dropped'];
 const savedStatusIcons={watching:'▶',planned:'☆',paused:'Ⅱ',watched:'✓',dropped:'■'};
@@ -996,17 +1140,17 @@ function render(){
  else list=query ? items.filter(matchingPeriod) : items;
  let filtered=list.filter(a=>(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()));
  if(isSaved&&statusFilter!=='all')filtered=filtered.filter(a=>a.status===statusFilter);
- if(isSaved&&statusFilter==='watched'&&finishedYearFilter!=='all')filtered=filtered.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').startsWith(finishedYearFilter+'-'));
+ if(isSaved&&statusFilter==='watched'&&finishedYearFilter!=='all')filtered=filtered.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);
  if(isSaved&&statusFilter==='watched'&&unratedOnly)filtered=filtered.filter(a=>!readReview(a.review));
  if(isSaved||exploreRegistered){const q=$('#searchInput').value.trim();if(q)filtered=filtered.filter(a=>localTitleMatch(a,q))}
  $('#resultInfo').textContent=isSaved?`${filtered.length}作品`:(exploreRegistered?`登録済み ${filtered.length}作品`:(loading?'取得中…':`${filtered.length}作品を表示`));
  const grid=$('#cards');
  $('#reviewListTools')?.remove();
  if(isSaved&&statusFilter==='watched'){
-  const allWatched=Object.values(saved).filter(a=>a?.status==='watched');const visibleWatched=finishedYearFilter==='all'?allWatched:allWatched.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').startsWith(finishedYearFilter+'-'));const unrated=visibleWatched.filter(a=>!readReview(a.review)).length;
+  const allWatched=Object.values(saved).filter(a=>a?.status==='watched');const visibleWatched=finishedYearFilter==='all'?allWatched:allWatched.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);const unrated=visibleWatched.filter(a=>!readReview(a.review)).length;
   const years=[...new Set(allWatched.map(a=>String(a.completedOn||'').slice(0,4)).filter(x=>/^\d{4}$/.test(x)))].sort((a,b)=>Number(b)-Number(a));
   const tools=document.createElement('div');tools.className='review-list-actions';tools.id='reviewListTools';
-  tools.innerHTML=`<label class="review-list-count" for="finishedYearFilter">見終えた年 <select id="finishedYearFilter" aria-label="見終えた年で絞り込む"><option value="all">すべて</option>${years.map(y=>`<option value="${y}" ${finishedYearFilter===y?'selected':''}>${y}年</option>`).join('')}<option value="unknown" ${finishedYearFilter==='unknown'?'selected':''}>日付未登録</option></select></label><div class="review-list-count"><b>${visibleWatched.length-unrated} / ${visibleWatched.length}作品</b>を評価済み</div><button type="button" id="unratedToggle" aria-pressed="${unratedOnly}">${unratedOnly?'✓ 未評価のみ表示中':'未評価のみ表示（'+unrated+'）'}</button>`;
+  tools.innerHTML=`<label class="review-list-count" for="finishedYearFilter">見終えた年 <select id="finishedYearFilter" aria-label="見終えた年で絞り込む"><option value="all">すべて</option>${years.map(y=>`<option value="${y}" ${finishedYearFilter===y?'selected':''}>${y}年</option>`).join('')}<option value="unknown" ${finishedYearFilter==='unknown'?'selected':''}>時期未登録</option></select></label><div class="review-list-count"><b>${visibleWatched.length-unrated} / ${visibleWatched.length}作品</b>を評価済み</div><button type="button" id="unratedToggle" aria-pressed="${unratedOnly}">${unratedOnly?'✓ 未評価のみ表示中':'未評価のみ表示（'+unrated+'）'}</button>`;
   grid.before(tools);
  }
  if(loading&&!isSaved&&!exploreRegistered&&page===1)grid.innerHTML=emptyCard('作品一覧を取得中…','公開アニメデータベースにアクセスしています。','⏳');
@@ -1477,6 +1621,8 @@ $('#searchInput').addEventListener('keydown',e=>{const options=$$('#searchSugges
 document.addEventListener('click',e=>{if(!e.target.closest('.searchbox-shell'))closeSuggestions()});
 $('#cards').addEventListener('click',e=>{const fold=e.target.closest('[data-fold-status]');if(fold)toggleFold(fold.dataset.foldStatus,fold.dataset.foldPeriod);
  const progress=e.target.closest('[data-progress-id]');if(progress)changeProgress(progress.dataset.progressId,Number(progress.dataset.progressStep));});
+$('#detailView').addEventListener('change',e=>{if(e.target.matches('#completionYear, #completionMonth'))refreshCompletionDay()});
+$('#detailView').addEventListener('input',e=>{if(e.target.matches('#completionYear'))refreshCompletionDay()});
 $('#detailView').addEventListener('click',e=>{const progress=e.target.closest('[data-progress-id]');if(progress)changeProgress(progress.dataset.progressId,Number(progress.dataset.progressStep));const save=e.target.closest('[data-completion-save]');if(save)saveCompletionDate(save.dataset.completionSave);const clear=e.target.closest('[data-completion-clear]');if(clear)saveCompletionDate(clear.dataset.completionClear,true)});
 for(const region of ['#cards','#detailView']){
  $(region).addEventListener('change',e=>{if(e.target.matches('[data-progress-input]'))commitProgressInput(e.target)});
@@ -1507,7 +1653,7 @@ let importCandidate=null;
 function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))throw Error('形式が違います');const result=Object.create(null);
  for(const a of data.items){if(!a||typeof a.id!=='string'||typeof a.title!=='string'||!validStatuses.has(a.status)||a.id.length>150||a.title.length>200||['__proto__','constructor','prototype'].includes(a.id))continue;
  const ep=Number(a.watchedEpisodes);
- result[a.id]={id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(typeof a.completedOn==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(a.completedOn)&&Number.isFinite(Date.parse(a.completedOn))?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{})};
+ result[a.id]={id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{})};
  }
  if(!Object.keys(result).length)throw Error('有効な作品がありません');return result;
 }
