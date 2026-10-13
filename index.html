@@ -559,6 +559,35 @@ svg{stroke-linecap:round;stroke-linejoin:round}
  .anime-card .card-meta{margin-top:9px;margin-bottom:11px}
 }
 
+
+/* Purpose-specific discovery and recording views. */
+.stats{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:22px;padding:0;border:0;background:none}
+.stats .stat{display:flex;align-items:center;justify-content:center;gap:9px;min-height:42px;padding:9px 14px;border:1px solid var(--line,#343b46);border-radius:9px;background:#202630;font-size:13px;flex:0 1 auto}
+.stats .stat:last-child{grid-column:auto}.stats .stat[aria-current="true"]{background:#c7ee90;color:#182414;border-color:#c7ee90}.stat-count{font-size:12px;font-variant-numeric:tabular-nums;opacity:.8}
+.sidebar div:has(> #statusNav){display:none}
+.poster-wrap img,.detail-cover img,.rank-poster img{filter:none;object-fit:contain}
+.discovery-card .poster-wrap{height:auto;aspect-ratio:3/4;background:#12171e}.discovery-card .poster-wrap img{width:100%;height:100%;object-fit:contain;filter:none}
+.poster-fallback{display:grid;place-items:center;width:100%;height:100%;color:#7d8998;font-size:20px}
+.discovery-card .card-title{min-height:0;margin-bottom:10px}.discovery-card .card-body{display:flex;flex-direction:column;flex:1}.discovery-card{display:flex;flex-direction:column}.discovery-actions{margin-top:auto;padding-top:14px;display:grid;gap:8px}.public-score{font-size:11px;color:#9faabb;margin-top:6px}
+.record-primary,.record-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:8px 12px;border-radius:8px;border:1px solid #46505e;font-size:12px;cursor:pointer}.record-primary{background:var(--accent);color:#1c2716;border-color:var(--accent);font-weight:700}.record-secondary{background:#252d38;color:#dce3eb}
+.saved-items.watch-list{display:flex;flex-direction:column;gap:10px}.saved-items.record-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,310px),1fr));gap:14px}
+.record-card{display:grid;grid-template-columns:64px minmax(0,1fr);gap:15px;padding:16px;align-items:start}.record-card.record-row{grid-template-columns:64px minmax(0,1fr) 260px;align-items:center}.record-poster{width:64px;aspect-ratio:2/3;padding:0;border:0;border-radius:7px;background:#111720;overflow:hidden;cursor:pointer}.record-poster img{display:block;width:100%;height:100%;object-fit:contain;filter:none}.record-main{min-width:0}.record-card .card-title{min-height:0;margin:0 0 9px;font-size:16px;line-height:1.55}.record-card .title-button{display:block;-webkit-line-clamp:unset;overflow:visible;white-space:normal;overflow-wrap:anywhere}.record-card .watch-progress{margin:0;padding:12px;background:#161d26;border-radius:10px;border:1px solid #343f4c}.watch-progress-actions button[data-progress-step="1"]{width:auto;min-width:65px;display:inline-flex;gap:3px;align-items:center;justify-content:center}.record-options{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:9px}.record-menu{font-size:11px;color:#aab6c6}.record-menu summary{cursor:pointer;padding:6px 0}.record-menu select{display:block;max-width:100%;background:#171e28;color:#e0e6ee;border:1px solid #536071;border-radius:6px;padding:8px;margin-top:5px}
+.note-preview{display:flex;gap:7px;text-align:left;align-items:flex-start;width:100%;background:none;color:#98a7b9;border:0;padding:7px 0;font:inherit;font-size:12px;cursor:pointer;line-height:1.65}.note-preview .ui-icon{flex-shrink:0;margin-top:2px}.note-preview span{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;overflow-wrap:anywhere}.note-preview.has-note{color:#d0d9e5}.record-date{border:0;background:none;color:#a7b6c7;padding:7px 0;font-size:11px;text-align:left;cursor:pointer}.record-card .card-review{margin:0 0 4px;padding:0;border:0;flex-wrap:wrap;gap:8px}.record-card .card-review>span{display:flex;align-items:center;gap:6px;font-size:12px}
+#noteDialog{width:min(550px,calc(100% - 22px));max-height:90dvh;overflow:auto;padding:0;background:#1d222b;border:1px solid #48505c;border-radius:20px;color:#eff2f8}#noteDialog::backdrop{background:#05070bd9;backdrop-filter:blur(5px)}#noteTitle{font-size:20px;line-height:1.6;margin:8px 0 18px}#noteText{display:block;width:100%;min-height:160px;resize:vertical;background:#141b25;border:1px solid #526074;border-radius:9px;color:#eef4ff;padding:12px;margin-top:9px;font:inherit;font-size:14px;line-height:1.8}#noteText:focus{outline:2px solid var(--accent)}#noteDialog label{font-size:13px}
+[hidden]{display:none!important}
+@media(max-width:900px){.record-card.record-row{grid-template-columns:58px minmax(0,1fr)}.record-row .watch-progress{grid-column:2}.record-poster{width:58px}.record-row .record-poster{grid-row:1/3}}
+@media(max-width:600px){.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin-bottom:16px}.stats .stat{font-size:11px;gap:6px;padding:7px 5px;min-height:38px}.record-card{padding:12px;gap:12px}.record-card .card-title{font-size:15px}.record-card.record-row{grid-template-columns:48px minmax(0,1fr)}.record-poster{width:48px}.record-row .watch-progress{grid-column:2;min-width:0}.record-card .watch-progress-actions{gap:6px}.record-card .watch-progress-entry{min-width:0}.discovery-card .poster-wrap{height:auto}.discovery-card .card-title{font-size:14px}}
+
+.stats .stat{width:auto}
+.record-card .watch-progress-actions{display:grid;grid-template-columns:32px minmax(0,1fr) 65px;gap:7px}
+.record-card .watch-progress-actions button{width:100%;min-height:40px}
+.record-card .watch-progress-entry{display:flex;flex-direction:row;justify-content:center;gap:4px;min-width:0}
+.record-card .watch-progress-entry input{width:48px;max-width:100%;min-width:0}
+.watch-progress-actions button[data-progress-step="1"] span{color:inherit}
+.anime-card:hover img{transform:none}.discovery-card .poster-wrap:after{display:none}
+.detail-related-item img{aspect-ratio:2/3;object-fit:contain}
+.record-card .card-title{display:block;-webkit-line-clamp:unset;overflow:visible}
+@media(max-width:360px){.record-row .watch-progress{grid-column:1/-1}.record-row .record-poster{grid-row:1}}
 </style>
 </head>
 <body>
@@ -592,13 +621,7 @@ svg{stroke-linecap:round;stroke-linejoin:round}
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
-    <section class="stats" aria-label="視聴状況の件数">
-      <button type="button" class="stat" data-stat-filter="watching" aria-label="見てるの作品一覧を開く"><div class="stat-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg></div><div><div class="stat-value" id="countWatching">0</div><div class="stat-label">見てる</div></div><span class="stat-go" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></span></button>
-      <button type="button" class="stat" data-stat-filter="planned" aria-label="見たいの作品一覧を開く"><div class="stat-icon pink"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span></div><div><div class="stat-value" id="countPlanned">0</div><div class="stat-label">見たい</div></div><span class="stat-go" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></span></button>
-      <button type="button" class="stat" data-stat-filter="watched" aria-label="見たの作品一覧を開く"><div class="stat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg></div><div><div class="stat-value" id="countWatched">0</div><div class="stat-label">見た</div></div><span class="stat-go" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></span></button>
-      <button type="button" class="stat" data-stat-filter="paused" aria-label="一時中断の作品一覧を開く"><div class="stat-icon amber"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-pause"/></svg></span></div><div><div class="stat-value" id="countPaused">0</div><div class="stat-label">一時中断</div></div><span class="stat-go" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></span></button>
-      <button type="button" class="stat" data-stat-filter="dropped" aria-label="視聴中止の作品一覧を開く"><div class="stat-icon slate"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg></span></div><div><div class="stat-value" id="countDropped">0</div><div class="stat-label">視聴中止</div></div><span class="stat-go" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></span></button>
-    </section>
+    <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
     <section id="libraryView"><div class="section-header"><div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription">放送年・シーズンから作品一覧を表示。タイトル検索もできます。</p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
       <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
       <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
@@ -632,7 +655,7 @@ svg{stroke-linecap:round;stroke-linejoin:round}
       <div id="rankResults" class="rank-results" aria-live="polite"></div>
 
       <section id="myInsights" class="insights-root hidden" aria-label="マイランキングの視聴分析">
-        <div class="insights-header"><h3>あなたの視聴分析</h3><p>「見た」作品だけを対象に、制作会社と作品の傾向を分析します。</p></div>
+        <div class="insights-header"><h3>あなたの視聴分析</h3><p>「見た」作品を対象に、各シーズンを別作品として集計します。同じシリーズを複数期見ると、その分も加算されます。視聴本数は、好みの広がりと必ずしも一致しません。</p></div>
         <div id="insightsStatus" class="insights-status" role="status" aria-live="polite"></div>
         <article class="insights-card">
           <div class="insights-card-head"><div><h4>制作会社ランキング</h4><p class="insights-explain">複数社制作の作品は、それぞれの制作会社に1作品として集計します。</p></div><div class="insights-toggle" role="group" aria-label="制作会社の並び順"><button type="button" data-insight-studio-sort="count" class="active">視聴本数順</button><button type="button" data-insight-studio-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
@@ -672,16 +695,17 @@ svg{stroke-linecap:round;stroke-linejoin:round}
     <div class="share-required"><span class="mark"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg></span><span>作品名・視聴状況 <small>（必須・常に共有）</small></span></div>
     <label class="share-permission"><input type="checkbox" id="shareOverall" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 総合評価 <small class="share-description"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>1〜5の評価を共有</small></span></label>
     <label class="share-permission"><input type="checkbox" id="shareDetails" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg> 詳細評価 <small class="share-description">ストーリー・映像・キャラクター・音楽を共有</small></span></label>
-    <label class="share-permission"><input type="checkbox" id="shareComment" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> 感想 <small class="share-description">記録した感想文をそのまま共有</small></span></label>
-    <p class="share-privacy-note">※ 評価が登録されている作品だけに反映します。共有リンクを開いた人に感想も読まれます。チェックを外した情報はURLにも含めません。</p>
+    <label class="share-permission"><input type="checkbox" id="shareComment"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> メモ・感想 <small class="share-description">点数のない作品も含め、メモ本文を共有</small></span></label>
+    <p class="share-privacy-note">※ メモは点数のない作品も共有できます。共有リンクを開いた人に感想も読まれます。チェックを外した情報はURLにも含めません。</p>
   </div>
   <div class="share-meta" id="shareCount" aria-live="polite"></div><div id="shareRisk" class="share-risk hidden"></div><menu><button class="primary" type="button" id="generateShare">共有URLを作成</button><button class="secondary" type="button" id="closeShare">閉じる</button></menu>
   <div id="shareOutput" class="hidden"><label for="shareLink" style="margin-top:22px">生成された共有URL</label><input class="share-link" type="text" readonly id="shareLink" aria-label="共有URL"><div class="share-dialog-actions"><button type="button" class="primary" id="copyShare">URLをコピー</button><button type="button" class="secondary" id="previewShare">表示を確認</button></div><p class="share-help" id="shareLocalHelp"></p></div>
   </dialog>
-<dialog id="importModeDialog"><h3>バックアップの読み込み</h3><p id="importPreview">読み込む作品を確認してください。</p><div class="import-detail" id="importDetails"></div><label class="import-conflict-label" for="importTiePreference">同じ更新日時で内容が異なる作品があった場合</label><select class="import-conflict-select" id="importTiePreference"><option value="current">現在の記録を優先（推奨）</option><option value="backup">バックアップを優先</option></select><div class="import-actions"><button type="button" id="importMerge" class="primary">既存と統合（推奨）</button><button type="button" id="importReplace" class="secondary">現在の記録と入れ替え</button><button type="button" id="importCancel" class="secondary">キャンセル</button></div><p class="import-hint">統合：作品ごとの更新日時を比較し、新しい記録を優先します。評価も個別に比較します。入れ替え：現在の記録を消し、ファイル内の作品だけにします。</p></dialog>
+<dialog id="importModeDialog"><h3>バックアップの読み込み</h3><p id="importPreview">読み込む作品を確認してください。</p><div class="import-detail" id="importDetails"></div><label class="import-conflict-label" for="importTiePreference">同じ更新日時で内容が異なる作品があった場合</label><select class="import-conflict-select" id="importTiePreference"><option value="current">現在の記録を優先（推奨）</option><option value="backup">バックアップを優先</option></select><div class="import-actions"><button type="button" id="importMerge" class="primary">既存と統合（推奨）</button><button type="button" id="importReplace" class="secondary">現在の記録と入れ替え</button><button type="button" id="importCancel" class="secondary">キャンセル</button></div><p class="import-hint">統合：作品ごとの更新日時を比較し、新しい記録を優先します。評価とメモも個別に比較します。入れ替え：現在の記録を消し、ファイル内の作品だけにします。</p></dialog>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<dialog id="noteDialog" aria-labelledby="noteTitle"><form id="noteForm" class="review-dialog-inner"><div class="review-dialog-eyebrow">作品メモ · 点数なしで保存</div><h2 id="noteTitle">メモ</h2><label for="noteText">感想・印象に残ったこと</label><textarea id="noteText" maxlength="500" placeholder="3話の演出がよかった、視聴を中止した理由など"></textarea><div class="review-meta"><span>空欄で保存すると削除します。共有は作成時に選べます。</span><span id="noteCount"></span></div><div class="review-dialog-actions"><button type="button" id="noteCancel" class="review-cancel">キャンセル</button><button type="submit" class="review-save">メモを保存</button></div></form></dialog>
 <dialog id="ratingDialog" aria-labelledby="ratingTitle">
   <form id="ratingForm" class="review-dialog-inner">
     <div class="review-dialog-eyebrow">MY REVIEW · ブラウザに保存</div>
@@ -1209,10 +1233,32 @@ function readReview(value){
  const aspects={};for(const key of Object.keys(REVIEW_ASPECTS)){const n=value.aspects?.[key];if(Number.isInteger(n)&&n>=1&&n<=4)aspects[key]=n}
  return {overall:value.overall,aspects,comment:typeof value.comment==='string'?value.comment.slice(0,500):'',updatedAt:typeof value.updatedAt==='string'?value.updatedAt:''};
 }
-function reviewStars(n){return `<span class="review-stars-mini" aria-label="あなたの評価：5点中${n}点">${ratingIcons(n)}</span>`}
+
+function readNote(a){
+ if(a?.noteDeletedAt&&(!a.note||Date.parse(a.noteDeletedAt)>=Date.parse(a.note.updatedAt||'')))return null;
+ if(a?.note&&typeof a.note.text==='string')return {text:a.note.text.slice(0,500),updatedAt:a.note.updatedAt||''};
+ return a?.review?.comment?{text:String(a.review.comment).slice(0,500),updatedAt:a.review.updatedAt||a.updatedAt||''}:null;
+}
+function carryLegacyNote(a){if(!a.note&&!a.noteDeletedAt){const n=readNote(a);if(n)a.note=n}}
+function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]);return `<button type="button" class="note-preview ${n?.text?'has-note':''}" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${n?.text?'編集':'追加'}">${uiIcon('edit')}<span>${n?.text?safeText(n.text):'メモを残す'}</span></button>`}
+let noteItemId=null,noteOriginal=null;
+function openNote(id){if(!saved[id]||mode==='share')return;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();$('#noteText').focus()}
+async function saveNoteImpl(){const id=noteItemId,item=saved[id];if(!item)return;
+ if(!sameRecordValue(readNote(item),noteOriginal)){toast('別のタブでメモが変更されました。入力内容を控えて、最新のメモを確認してください。','error');return}
+ const before=structuredClone(item),text=$('#noteText').value.trim().slice(0,500),now=new Date().toISOString();
+ if(text){item.note={text,updatedAt:now};delete item.noteDeletedAt}else{delete item.note;item.noteDeletedAt=now}
+ if(!await persist()){saved[id]=before;return}
+ $('#noteDialog').close();render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce);toast(text?'メモを保存しました':'メモを削除しました');
+}
+document.addEventListener('click',e=>{const n=e.target.closest('[data-note-id]');if(n)openNote(n.dataset.noteId);const q=e.target.closest('[data-quick-status]');if(q)setStatus(q.dataset.recordId,q.dataset.quickStatus)});
+$('#noteForm').addEventListener('submit',e=>{e.preventDefault();queueRecordWrite(saveNoteImpl)});
+$('#noteCancel').addEventListener('click',()=>$('#noteDialog').close());
+$('#noteText').addEventListener('input',()=>$('#noteCount').textContent=$('#noteText').value.length+' / 500文字');
+
+function reviewStars(n,owner="自分"){return `<span class="review-stars-mini" aria-label="${owner}の評価：5点中${n}点">${ratingIcons(n)}</span>`}
 function reviewCard(a){if(saved[a.id]?.status!=='watched'||mode==='share')return '';
  const r=readReview(saved[a.id]?.review);
- return `<div class="card-review"><span>${r?reviewStars(r.overall):'<span class="review-mini-hint">未評価</span>'}</span><button type="button" class="review-quick" data-rate-id="${safeText(a.id)}">${r?'評価を編集':uiIcon('star')+' 評価する'}</button></div>`;
+ return `<div class="card-review"><span>${r?'自分 '+reviewStars(r.overall)+' '+r.overall+' / 5':'<span class="review-mini-hint">未評価</span>'}</span><button type="button" class="review-quick" data-rate-id="${safeText(a.id)}">${r?'評価を編集':uiIcon('star')+' 評価する'}</button></div>`;
 }
 // Store only the precision the user remembers: YYYY / YYYY-MM / YYYY-MM-DD.
 // Keep the original field for compatibility with old backups and all existing views.
@@ -1279,23 +1325,24 @@ function publicReviewMarkup(a,compact=false){
  const comment=typeof r.comment==='string'?r.comment.slice(0,500):'';
  if(!overall&&!keys.length&&!comment)return '';
  const gradeList=keys.length?`<div class="shared-review-aspects">${keys.map(k=>`<span>${safeText(REVIEW_ASPECTS[k])}：${safeText(REVIEW_GRADES[aspects[k]-1])}</span>`).join('')}</div>`:'';
- const stars=overall?`<div class="shared-review-stars">${reviewStars(overall)}<span>${safeText(REVIEW_LABELS[overall])}</span></div>`:'';
- return `<section class="shared-review" aria-label="共有された作品評価"><div class="shared-review-label">共有された評価</div>${stars}${gradeList}${comment?`<p class="shared-review-comment">${safeText(comment)}</p>`:''}</section>`;
+ const stars=overall?`<div class="shared-review-stars">共有者 ${reviewStars(overall,"共有者")} ${overall} / 5<span>${safeText(REVIEW_LABELS[overall])}</span></div>`:'';
+ return `<section class="shared-review" aria-label="共有された作品評価"><div class="shared-review-label">共有された評価・メモ</div>${stars}${gradeList}${comment?`<p class="shared-review-comment">${safeText(comment)}</p>`:''}</section>`;
 }
 function updateRatingUI(){
  $$('#ratingDialog [data-rating-star]').forEach(b=>{const selected=Number(b.dataset.ratingStar)<=ratingDraft.overall;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected))});
  $('#ratingOverallWord').textContent=REVIEW_LABELS[ratingDraft.overall]||'未評価';
  $('#ratingSave').disabled=!ratingDraft.overall;
  $$('#ratingAspects [data-rating-aspect]').forEach(b=>b.setAttribute('aria-pressed',String(ratingDraft.aspects[b.dataset.ratingAspect]===Number(b.dataset.ratingGrade))));
- $('#ratingCommentCount').textContent=String($('#ratingComment').value.length)+' / 500文字';
+
 }
-function ratingAspectHTML(){return Object.entries(REVIEW_ASPECTS).map(([key,label])=>`<div class="review-aspect"><span class="review-aspect-name">${label}</span><div class="review-aspect-options" role="group" aria-label="${label}">${REVIEW_GRADES.map((grade,i)=>`<button type="button" data-rating-aspect="${key}" data-rating-grade="${i+1}" aria-pressed="false">${grade}</button>`).join('')}</div></div>`).join('')+`<label class="review-comment-label" for="ratingComment">ひとこと感想（任意）</label><textarea id="ratingComment" maxlength="500" placeholder="よかったところ、印象に残ったシーンなど"></textarea><div class="review-meta"><span>公開範囲は共有URLの作成時に選べます</span><span id="ratingCommentCount">0 / 500文字</span></div>`}
+function ratingAspectHTML(){return Object.entries(REVIEW_ASPECTS).map(([key,label])=>`<div class="review-aspect"><span class="review-aspect-name">${label}</span><div class="review-aspect-options" role="group" aria-label="${label}">${REVIEW_GRADES.map((grade,i)=>`<button type="button" data-rating-aspect="${key}" data-rating-grade="${i+1}" aria-pressed="false">${grade}</button>`).join('')}</div></div>`).join('')}
+
 function openRating(id){
  const item=saved[id];if(!item||item.status!=='watched'||mode==='share')return;
  ratingItemId=id;ratingOriginalReview=structuredClone(item.review??null);const previous=readReview(item.review);
  ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})},comment:previous?.comment||''};
  $('#ratingTitle').textContent=item.title;
- $('#ratingAspects').innerHTML=ratingAspectHTML();$('#ratingComment').value=ratingDraft.comment;
+ $('#ratingAspects').innerHTML=ratingAspectHTML();
  $('#ratingOptional').open=false; // The quick rating path stays compact, even when editing a detailed review.
  $('#ratingClear').hidden=!previous;
  updateRatingUI();$('#ratingDialog').showModal();
@@ -1307,16 +1354,16 @@ function saveRating(...args){return queueRecordWrite(()=>saveRatingImpl(...args)
 async function saveRatingImpl(){
  if(!ratingItemId||!saved[ratingItemId]||saved[ratingItemId].status!=='watched'||ratingDraft.overall<1)return;
  const current=saved[ratingItemId];
- if(!sameRecordValue(current.review??null,ratingOriginalReview)){toast('別のタブで評価が変更されました。入力中の感想はこの画面に残しています。閉じて最新の評価を確認してください。','error');return}
- const old=current.review,oldDeletion=current.reviewDeletedAt;delete current.reviewDeletedAt;current.review={overall:ratingDraft.overall,aspects:{...ratingDraft.aspects},comment:$('#ratingComment').value.slice(0,500).trim(),updatedAt:new Date().toISOString()};
- if(!await persist()){current.review=old;if(oldDeletion)current.reviewDeletedAt=oldDeletion;return}
+ if(!sameRecordValue(current.review??null,ratingOriginalReview)){toast('別のタブで評価が変更されました。入力中の評価はこの画面に残しています。閉じて最新の評価を確認してください。','error');return}
+ const before=structuredClone(current);carryLegacyNote(current);delete current.reviewDeletedAt;current.review={overall:ratingDraft.overall,aspects:{...ratingDraft.aspects},updatedAt:new Date().toISOString()};
+ if(!await persist()){saved[current.id]=before;return}
  closeRating();render();if(detailActiveItem?.id===current.id)renderDetailParts(detailNonce);toast('評価を保存しました');
 }
 function clearRating(...args){return queueRecordWrite(()=>clearRatingImpl(...args))}
-async function clearRatingImpl(){if(!ratingItemId||!saved[ratingItemId])return;const item=saved[ratingItemId];if(!sameRecordValue(item.review??null,ratingOriginalReview)){toast('別のタブで評価が変更されました。閉じて最新の評価を確認してください。','error');return}const old=item.review,oldDeletion=item.reviewDeletedAt;delete item.review;item.reviewDeletedAt=new Date().toISOString();
- if(!await persist()){item.review=old;if(oldDeletion)item.reviewDeletedAt=oldDeletion;else delete item.reviewDeletedAt;return}closeRating();render();if(detailActiveItem?.id===item.id)renderDetailParts(detailNonce);toast('評価を削除しました');
+async function clearRatingImpl(){if(!ratingItemId||!saved[ratingItemId])return;const item=saved[ratingItemId];if(!sameRecordValue(item.review??null,ratingOriginalReview)){toast('別のタブで評価が変更されました。閉じて最新の評価を確認してください。','error');return}const before=structuredClone(item);carryLegacyNote(item);delete item.review;item.reviewDeletedAt=new Date().toISOString();
+ if(!await persist()){saved[item.id]=before;return}closeRating();render();if(detailActiveItem?.id===item.id)renderDetailParts(detailNonce);toast('評価を削除しました');
 }
-function updateCounts(){let counts={watched:0,watching:0,planned:0,paused:0,dropped:0};Object.values(saved).forEach(v=>{if(v&&validStatuses.has(v.status))counts[v.status]++});$('#countWatched').textContent=counts.watched;$('#countWatching').textContent=counts.watching;$('#countPlanned').textContent=counts.planned;$('#countPaused').textContent=counts.paused;$('#countDropped').textContent=counts.dropped;$('#savedBadge').textContent=Object.values(counts).reduce((a,b)=>a+b,0)}
+function updateCounts(){let counts={watched:0,watching:0,planned:0,paused:0,dropped:0};Object.values(saved).forEach(v=>{if(v&&validStatuses.has(v.status))counts[v.status]++});$('#countWatched').textContent=counts.watched;$('#countWatching').textContent=counts.watching;$('#countPlanned').textContent=counts.planned;$('#countPaused').textContent=counts.paused;$('#countDropped').textContent=counts.dropped;$('#savedBadge').textContent=Object.values(counts).reduce((a,b)=>a+b,0);$('#countAll').textContent=$('#savedBadge').textContent}
 function setStatus(...args){return queueRecordWrite(()=>setStatusImpl(...args))}
 async function setStatusImpl(id,status){const all=[...items,...rankingData,...Object.values(saved),...(detailActiveItem?[detailActiveItem]:[])];const candidate=all.find(a=>a.id===id);if(!candidate)return;
  const before=saved[id]?structuredClone(saved[id]):null;
@@ -1346,7 +1393,7 @@ function progressMarkup(a,extra=null,inDetail=false){const s=saved[a.id]?.status
  if(!['watching','paused'].includes(s)||mode==='share')return '';
  const current=watchedCount(a),total=totalEpisodes(a,extra),usable=total!==null&&current<=total;
  const value=usable?Math.min(100,current/total*100):0;const hint=progressHint(current,total,inDetail);
- return `<div class="watch-progress${inDetail?' detail-progress':''}" data-progress-for="${safeText(a.id)}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" aria-label="視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" aria-label="視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}</button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div></div>`;
+ return `<div class="watch-progress${inDetail?' detail-progress':''}" data-progress-for="${safeText(a.id)}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" aria-label="視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" aria-label="視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div></div>`;
 }
 function setWatchedProgress(...args){return queueRecordWrite(()=>setWatchedProgressImpl(...args))}
 async function setWatchedProgressImpl(id,requested){const item=saved[id];
@@ -1382,8 +1429,14 @@ async function commitProgressInput(input){const id=input.dataset.progressInput,r
  if(!await setWatchedProgress(id,value))input.value=String(watchedCount(saved[id]));
 }
 
-function card(a){const s=saved[a.id]?.status||'';const t=String(a.type||'').toLowerCase();const knownType={tv:'TV',movie:'映画',ova:'OVA',ona:'配信',special:'特番',tv_special:'特番',music:'音楽'}[t]||a.type||'アニメ';const hasProgress=['watching','paused'].includes(s);const detail=[a.year?a.year+'年':'',!hasProgress&&a.episodes?a.episodes+'話':''].filter(Boolean).join(' · ');const img=a.image?`<img loading="lazy" referrerpolicy="no-referrer" src="${safeText(safeImage(a.image))}" alt="" onerror="this.remove()">`:'<div class="placeholder">A<span style="color:var(--accent)">:</span>L</div>';
- return `<article class="anime-card"><div class="poster-wrap"><button type="button" class="poster-button detail-trigger" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の作品詳細を開く">${img}</button><span class="type-pill">${safeText(typeJa(knownType))}</span>${s?`<span class="status-pill ${s}">${statusLabels[s]}</span>`:''}</div><div class="card-body"><div class="card-title" title="${safeText(a.title)}"><button type="button" class="title-button detail-trigger" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div>${detail||a.score?`<div class="card-meta">${detail?`<span>${safeText(detail)}</span>`:''}${a.score?`<span class="star">${uiIcon('star')} ${Number(a.score).toFixed(1)}</span>`:''}</div>`:''}<div class="status-control"><select aria-label="${safeText(a.title)}の視聴状況" data-status-id="${safeText(a.id)}"><option value="" ${!s?'selected':''}>未選択</option><option value="watching" ${s==='watching'?'selected':''}>見てる</option><option value="planned" ${s==='planned'?'selected':''}>見たい</option><option value="watched" ${s==='watched'?'selected':''}>見た</option><option value="paused" ${s==='paused'?'selected':''}>一時中断</option><option value="dropped" ${s==='dropped'?'selected':''}>視聴中止</option></select></div>${s==='watched'&&saved[a.id]?.completedOn?`<div class="complete-date">見終えた時期：${safeText(formatCompletedOn(saved[a.id].completedOn))}</div>`:''}${progressMarkup(a)}${reviewCard(a)}</div></article>`;}
+
+function posterMarkup(a){return a.image?`<img loading="lazy" referrerpolicy="no-referrer" src="${safeText(safeImage(a.image))}" alt="" onerror="this.remove()">`:'<span class="poster-fallback">A:L</span>'}
+function recordTitle(a){return `<h3 class="card-title"><button type="button" class="title-button" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></h3>`}
+function stateMenu(a){const status=saved[a.id]?.status||'';return `<details class="record-menu"><summary>${status?'状態を変更':'別の状態で登録'}</summary><select data-status-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴状況"><option value="">${status?'リストから削除':'未登録'}</option>${Object.entries(statusLabels).filter(([s])=>validStatuses.has(s)).map(([s,l])=>`<option value="${s}" ${s===status?'selected':''}>${l}</option>`).join('')}</select></details>`}
+function quickStatus(a,status,label){return `<button type="button" class="record-primary" data-record-id="${safeText(a.id)}" data-quick-status="${status}">${uiIcon(status==='planned'?'plus':'play')}${label}</button>`}
+function card(a){return mode==='saved'?recordCard(a):discoveryCard(a)}
+function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${!status?stateMenu(a):''}</div></div></article>`}
+function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status);return `<article class="anime-card record-card ${watch?'record-row':''}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${status==='watched'?reviewCard(a)+`<button class="record-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${noteMarkup(a)}<div class="record-options">${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${stateMenu(a)}</div></div>${watch?progressMarkup(a):''}</article>`}
 function emptyCard(title,msg,icon='grid',btn=''){return `<div class="state"><div class="state-icon">${uiIcon(icon)}</div><h3>${safeText(title)}</h3><p>${safeText(msg)}</p>${btn?`<button data-state-action="${btn==='再読み込み'?'reload':'season'}">${safeText(btn)}</button>`:''}</div>`}
 const savedStatusOrder=['watching','planned','watched','paused','dropped'];
 const savedStatusIcons={watching:uiIcon('play'),planned:uiIcon('star'),paused:uiIcon('pause'),watched:uiIcon('check'),dropped:uiIcon('stop')};
@@ -1416,8 +1469,8 @@ function savedGroups(list){
   if(!matches.length)continue;
   const periods=new Map();
   for(const item of matches){const name=broadcastPeriod(item);if(!periods.has(name))periods.set(name,[]);periods.get(name).push(item)}
-  let html=`<section class="saved-section" aria-label="${statusLabels[status]}"><header class="saved-section-head"><span class="saved-heading-icon" aria-hidden="true">${savedStatusIcons[status]}</span><h3>${statusLabels[status]}</h3><span class="saved-count">${matches.length}作品</span><span class="saved-description">${savedStatusDescriptions[status]}</span></header>`;
-  for(const [name,group] of periods){const folded=collapsedPeriods.has(foldKey(status,name));html+=`<div class="saved-period"><button type="button" class="saved-period-heading" aria-expanded="${!folded}" data-fold-status="${safeText(status)}" data-fold-period="${safeText(name)}"><span class="fold-symbol" aria-hidden="true">${uiIcon(folded?'chevron-right':'chevron-down')}</span>${safeText(name)} <span>${group.length}作品</span><span class="period-divider"></span></button><div class="saved-items" ${folded?'hidden':''}>${group.map(card).join('')}</div></div>`}
+  let html=`<section class="saved-section" aria-label="${statusLabels[status]}"><header class="saved-section-head" ${statusFilter!=='all'?'hidden':''}><span class="saved-heading-icon" aria-hidden="true">${savedStatusIcons[status]}</span><h3>${statusLabels[status]}</h3><span class="saved-count">${matches.length}作品</span><span class="saved-description">${savedStatusDescriptions[status]}</span></header>`;
+  for(const [name,group] of periods){const folded=collapsedPeriods.has(foldKey(status,name));html+=`<div class="saved-period"><button type="button" class="saved-period-heading" aria-expanded="${!folded}" data-fold-status="${safeText(status)}" data-fold-period="${safeText(name)}"><span class="fold-symbol" aria-hidden="true">${uiIcon(folded?'chevron-right':'chevron-down')}</span>${safeText(name)} <span>${group.length}作品</span><span class="period-divider"></span></button><div class="saved-items ${['watching','paused'].includes(status)?'watch-list':'record-grid'}" ${folded?'hidden':''}>${group.map(card).join('')}</div></div>`}
   fragments.push(html+'</section>');
  }
  return fragments.join('');
@@ -1429,11 +1482,12 @@ function setNav(){
  $$('[data-explore-status]').forEach(b=>{const active=mode==='season'&&b.dataset.exploreStatus===exploreStatusFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
 }
 function render(){
+ $('.stats').classList.toggle('hidden',mode!=='saved');
  updateCounts();setNav();if(mode==='share')return;if(mode==='ranking'){renderRanking();return;}
  const isSaved=mode==='saved', exploreRegistered=!isSaved&&exploreStatusFilter!=='all';
  $('#breadcrumb').textContent=isSaved?'マイリスト':'アニメを探す';
  $('#sectionTitle').textContent=isSaved?(statusFilter==='all'?'マイリスト':`マイリスト · ${statusLabels[statusFilter]}`):(query?`「${query}」の検索結果 · ${periodLabel()}`:currentScope()==='all'?'全年代のアニメ':currentScope().startsWith('decade:')?`${periodLabel()}のアニメ`:`${periodLabel()} ${$('#seasonSelect').value==='all'?'通年':seasonLabels[$('#seasonSelect').value]}アニメ`);
- $('#sectionDescription').textContent=isSaved?'視聴状況ごとに整理し、各カテゴリ内は放送年・シーズンの新しい順に表示します。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${periodLabel()}）。`:'放送時期や年代を選んで作品を探せます。';
+ $('#sectionDescription').textContent=isSaved?'あなたの視聴記録。放送時期の新しい順に表示。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${periodLabel()}）。`:'放送時期や年代を選んで作品を探せます。';
  years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved);syncPeriodUI();
  $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'作品名・略称を入力すると全年代から検索します。年代・放送年で絞り込むこともできます。';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
@@ -1610,7 +1664,7 @@ function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watch
 })}
 function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';const review=own?readReview(a.review):null;
  const score=Number(a.score),votes=Number(a.scoredBy);
- const scoreText=own?`<strong>${ratingIcons(review.overall)}</strong><small>${review.overall} / 5 · あなたの評価</small>`:rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · ★ ${score>0?score.toFixed(2):'未評価'}</small>`:`<strong>${uiIcon('star')} ${score>0?score.toFixed(2):'--'}</strong><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
+ const scoreText=own?`<strong>${ratingIcons(review.overall)}</strong><small>${review.overall} / 5 · あなたの評価</small>`:rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
  const addedStatus=saved[a.id]?.status;const addControl=!own?(addedStatus?`<span class="rank-added">${safeText(statusLabels[addedStatus]||'登録済み')} ${uiIcon('check')}</span>`:`<button type="button" class="rank-quick-add" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')} 見たいに登録</button>`):'';
  const same=own?group.length>1:false;
@@ -1683,8 +1737,8 @@ function analysisDisplayName(category,name){return category==='studios'?STUDIO_N
 function insightBarsMarkup(groups,category,sort){if(!groups.length)return '<div class="insights-empty">まだ集計できるデータがありません。作品情報の取得後に表示されます。</div>';
  const max=sort==='average'?5:Math.max(...groups.map(g=>g.count),1);
  return groups.slice(0,10).map((g,i)=>{const selected=insightSelection?.category===category&&insightSelection.key===g.key;
- const metric=sort==='average'?`★ ${g.avg.toFixed(2)}`:`${g.count}作品`;
- const sub=sort==='average'?`${g.count}作品中 ${g.rated}作品を評価${g.rated===1?'（1作品のみの参考値）':''}`:`${g.rated?`平均★ ${g.avg.toFixed(2)}（評価${g.rated}作品）`:'★未評価'}`;
+ const metric=sort==='average'?`自分 ${g.avg.toFixed(2)} / 5`:`${g.count}作品`;
+ const sub=sort==='average'?`${g.count}作品中 ${g.rated}作品を評価${g.rated===1?'（1作品のみの参考値）':''}`:`${g.rated?`自分の平均 ${g.avg.toFixed(2)} / 5（評価${g.rated}作品）`:'★未評価'}`;
  const width=Math.max(0,Math.min(100,(sort==='average'?g.avg:g.count)/max*100));
  return `<button type="button" class="insights-bar${selected?' selected':''}" data-insight-group="${safeText(g.key)}" data-insight-kind="${category}" aria-expanded="${selected?'true':'false'}" aria-label="${safeText(analysisDisplayName(category,g.name))} ${metric} の作品一覧を開く"><span class="insights-bar-head"><span>${i+1}. ${safeText(analysisDisplayName(category,g.name))}</span><strong>${safeText(metric)}</strong></span><span class="insights-bar-sub">${safeText(sub)}</span><span class="insights-track"><span class="insights-fill${category==='themes'?' feature':''}" style="width:${width.toFixed(1)}%"></span></span></button>`;
  }).join('');
@@ -1825,12 +1879,12 @@ async function unpackShare(mode,bytes){
  while(true){const {value,done}=await reader.read();if(done)break;length+=value.byteLength;if(length>90000){await reader.cancel();throw Error('共有データが大きすぎます')}parts.push(value)}
  const all=new Uint8Array(length);let off=0;for(const part of parts){all.set(part,off);off+=part.length}return new TextDecoder('utf-8',{fatal:true}).decode(all);
 }
-function reviewForShare(raw,options){
- const r=readReview(raw);if(!r)return null;
- const overall=options.overall?r.overall:null;
- const grades=options.details?Object.keys(REVIEW_ASPECTS).map(k=>r.aspects[k]||0):null;
+function reviewForShare(raw,options,noteText=''){
+ const r=readReview(raw);
+ const overall=options.overall&&r?r.overall:null;
+ const grades=options.details&&r?Object.keys(REVIEW_ASPECTS).map(k=>r.aspects[k]||0):null;
  const aspectData=grades?.some(Boolean)?grades:null;
- const comment=options.comment&&r.comment?r.comment:null;
+ const comment=options.comment&&noteText?noteText:null;
  return overall||aspectData||comment?[overall,aspectData,comment]:null;
 }
 function validateSnapshot(payload){
@@ -1899,9 +1953,9 @@ function showShareDialog(){
 function updateShareDialog(){
  clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value,list=selectedForShare(scope),count=list.length;
  const rated=list.filter(a=>readReview(a.review)).length;
- const withNotes=list.filter(a=>readReview(a.review)?.comment).length;
+ const withNotes=list.filter(a=>readNote(a)?.text).length;
  $('#shareCount').textContent=(scope==='season'?`${curYear}年 ${seasonLabels[curSeason]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（感想登録 ${withNotes}作品）`:''}`;
- const chars=list.reduce((n,a)=>n+(($('#shareComment').checked?readReview(a.review)?.comment:'')||'').length,0);
+ const chars=list.reduce((n,a)=>n+(($('#shareComment').checked?readNote(a)?.text:'')||'').length,0);
  const risk=$('#shareRisk');const risky=count>60||chars>1800;
  risk.classList.toggle('hidden',!risky);
  risk.textContent=risky?'作品数や感想が多いため共有URLが長くなる可能性があります。生成できない場合はシーズンを絞るか、感想の共有を外してください。':'';
@@ -1915,7 +1969,7 @@ async function generateShare(){
   const options={overall:$('#shareOverall').checked,details:$('#shareDetails').checked,comment:$('#shareComment').checked};
   const data={v:SHARE_VERSION,scope,created:Date.now(),year:curYear,season:curSeason,options,items:list.map(a=>{
    const row=[a.id,a.title,a.status,a.year||null,a.season||null,a.type||null,compactImg(a.image)];
-   const review=reviewForShare(a.review,options);if(review)row.push(review);
+   const review=reviewForShare(a.review,options,readNote(a)?.text);if(review)row.push(review);
    return row;
   })};
   const encoded=await compressShare(utf8Bytes(JSON.stringify(data)));
@@ -2053,14 +2107,15 @@ $('#addForm').addEventListener('submit',e=>{
  }).finally(()=>{addingCustom=false;button.disabled=false});
 });
 function download(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
-function exportData(){const dump={app:'ANI:LOG',version:2,exportedAt:new Date().toISOString(),items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
+function exportData(){const dump={app:'ANI:LOG',version:3,exportedAt:new Date().toISOString(),items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
 $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEventListener('click',()=>$('#backupDialog').showModal());$('#mobileDownloadBtn').addEventListener('click',()=>{exportData();$('#backupDialog').close()});$('#mobileImportBtn').addEventListener('click',()=>{$('#backupDialog').close();$('#importFile').click()});$('#mobileCloseBackup').addEventListener('click',()=>$('#backupDialog').close());
 $('#importBtn').addEventListener('click',()=>$('#importFile').click());
 let importCandidate=null;
 function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))throw Error('形式が違います');const result=Object.create(null);
  for(const a of data.items){if(!a||typeof a.id!=='string'||typeof a.title!=='string'||!validStatuses.has(a.status)||a.id.length>150||a.title.length>200||['__proto__','constructor','prototype'].includes(a.id))continue;
  const ep=Number(a.watchedEpisodes);
- result[a.id]={id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{})};
+ const note=readNote(a);
+ result[a.id]={...(note?{note}:{}),...(typeof a.noteDeletedAt==='string'&&Number.isFinite(Date.parse(a.noteDeletedAt))?{noteDeletedAt:a.noteDeletedAt}:{}),id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{})};
  }
  if(!Object.keys(result).length)throw Error('有効な作品がありません');return result;
 }
@@ -2087,6 +2142,11 @@ function mergeEntry(current,backup,preferBackup=false){
   if(winner.reviewDeletedAt)base.reviewDeletedAt=winner.reviewDeletedAt;else delete base.reviewDeletedAt;
  }else if(current.review&&!backup.review)base.review=structuredClone(current.review);
  else if(backup.review&&!current.review)base.review=structuredClone(backup.review);
+ const cn=readNote(current),bn=readNote(backup);
+ const ct=Math.max(Date.parse(cn?.updatedAt||'')||0,Date.parse(current.noteDeletedAt||'')||0),bt=Math.max(Date.parse(bn?.updatedAt||'')||0,Date.parse(backup.noteDeletedAt||'')||0);
+ const noteOwner=bt>ct?backup:ct>bt?current:(preferBackup?backup:current),note=readNote(noteOwner);
+ delete base.note;delete base.noteDeletedAt;
+ if(note)base.note=structuredClone(note);else if(noteOwner.noteDeletedAt)base.noteDeletedAt=noteOwner.noteDeletedAt;
  // Public catalogue information is not a user action. Preserve it across old backup merges.
  const cMeta=cleanAnalysisMeta(current.analysisMeta),bMeta=cleanAnalysisMeta(backup.analysisMeta);
  if(cMeta||bMeta){const recent=!cMeta?bMeta:!bMeta?cMeta:(Date.parse(bMeta.fetchedAt||'')||0)>(Date.parse(cMeta.fetchedAt||'')||0)?bMeta:cMeta;base.analysisMeta=recent;}
@@ -2105,7 +2165,7 @@ function mergePreview(candidate){let additions=0,updates=0,keeps=0,ties=0;
   const a=whenChanged(current),b=whenChanged(entry);
   if(b>a)updates++;else if(a>b)keeps++;else if(JSON.stringify(current)!==JSON.stringify(entry))ties++;else keeps++;
  }
- return `新規追加：${additions}件 ／ バックアップの方が新しい：${updates}件 ／ 現在の記録を保持：${keeps}件 ／ 同日時の競合：${ties}件。評価は評価日時を別に比較します。`;}
+ return `新規追加：${additions}件 ／ バックアップの方が新しい：${updates}件 ／ 現在の記録を保持：${keeps}件 ／ 同日時の競合：${ties}件。評価とメモは、それぞれの更新日時を別に比較します。`;}
 function commitImport(...args){return queueRecordWrite(()=>commitImportImpl(...args))}
 async function commitImportImpl(replace){if(!importCandidate)return;
  if(replace&&!confirm('現在の視聴履歴と評価をすべて入れ替えます。バックアップの書き出しは済んでいますか？'))return;
@@ -2177,10 +2237,10 @@ function genreJa(value){const original=String(value??'').trim();return JAPANESE_
 function typeJa(value){const original=String(value??'').trim();return JAPANESE_TYPES[original]||original}
 function detailHeader(a,full=null){const d=full||{};const year=d.year||a.year||d.aired?.prop?.from?.year;const season=d.season||a.season;const status=saved[a.id]?.status||'';const image=safeImage(d.images?.jpg?.large_image_url||d.images?.jpg?.image_url||a.image);const title=d.title_japanese||a.title;const alt=(d.title&&d.title!==title?d.title:a.english&&a.english!==title?a.english:'');
  const badges=[typeJa(d.type||a.type||'アニメ'),year&&seasonLabels[season]?`${year}年${seasonLabels[season]}` : year?`${year}年`:null].filter(Boolean);
- const facts=[(d.episodes||a.episodes)?`${d.episodes||a.episodes}話`:null, d.duration||null,({ 'Currently Airing':'放送中','Finished Airing':'放送終了','Not yet aired':'放送前'}[d.status]||d.status)||null,Number.isFinite(d.score)&&d.score>0?`★ ${d.score.toFixed(2)}`:null,d.broadcast?.string||null].filter(Boolean);
+ const facts=[(d.episodes||a.episodes)?`${d.episodes||a.episodes}話`:null, d.duration||null,({ 'Currently Airing':'放送中','Finished Airing':'放送終了','Not yet aired':'放送前'}[d.status]||d.status)||null,Number.isFinite(d.score)&&d.score>0?`MAL ${d.score.toFixed(2)} / 10`:null,d.broadcast?.string||null].filter(Boolean);
  const tags=[...(Array.isArray(d.genres)?d.genres:[]),...(Array.isArray(d.themes)?d.themes:[])].map(x=>genreJa(x?.name)).filter(Boolean);
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
- return `<div class="detail-head"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:''}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:''}<div class="detail-status-area"><label for="detailStatus">視聴状況</label>${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${mode==='share'?publicReviewMarkup(a):reviewDetail(a)}${completionDateMarkup(a)}${progressMarkup(a,d.episodes||a.episodes,true)}</div></div>`}
+ return `<div class="detail-head"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:''}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:''}<div class="detail-status-area"><label for="detailStatus">視聴状況</label>${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${mode==='share'?publicReviewMarkup(a):reviewDetail(a)}${noteMarkup(a)}${completionDateMarkup(a)}${progressMarkup(a,d.episodes||a.episodes,true)}</div></div>`}
 function detailGeneral(d){const facts=[];
  const groups=[['制作会社',d.studios],['原作',d.source],['放送期間',d.aired?.string],['海外年齢区分',d.rating]];
  for(const [label,value] of groups){let txt=Array.isArray(value)?value.map(x=>x?.name).filter(Boolean).join(' / '):value;if(label==='原作')txt=({'Manga':'漫画','Original':'オリジナル','Light novel':'ライトノベル','Game':'ゲーム','Novel':'小説','Web manga':'Web漫画','Visual novel':'ビジュアルノベル'}[txt]||txt);if(present(txt))facts.push(`<span><b>${safeText(label)}：</b>${safeText(txt)}</span>`)}
