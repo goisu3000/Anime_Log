@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.2 | アニメ視聴管理</title>
+<title>ANI:LOG v1.3.1 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -250,7 +250,7 @@
     </nav></div>
     <div class="share-card"><strong>🔗 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る ↗</button></div>
     <div class="sidebar-bottom"><div class="tiny-ico">💾</div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す ↓</button><button type="button" class="outline-btn" id="importBtn">読み込む ↑</button></div></div>
-    <div class="side-foot">ANI:LOG v1.2 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.3.1 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -262,7 +262,7 @@
       <button type="button" class="stat" data-stat-filter="dropped" aria-label="視聴中止の作品一覧を開く"><div class="stat-icon slate"><span class="icon-glyph" aria-hidden="true">■</span></div><div><div class="stat-value" id="countDropped">0</div><div class="stat-label">視聴中止</div></div><span class="stat-go" aria-hidden="true">↗</span></button>
     </section>
     <section id="libraryView"><div class="section-header"><div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription">放送年・シーズンから作品一覧を表示。タイトル検索もできます。</p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain">🔗 共有する</button><button type="button" class="add-btn" id="addCustomBtn">＋ 手動で追加</button></div></div>
-      <div class="controls"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" placeholder="作品名・略称で検索（例：リゼロ / rezero）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 ↗</button></form><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="winter">冬（1〜3月）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option></select></div>
+      <div class="controls"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" placeholder="作品名・略称・一部分で検索（例：レヴュー / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 ↗</button></form><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="winter">冬（1〜3月）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option></select></div>
       <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。</p>
       <div class="explore-status-row" id="exploreStatusTabs" role="group" aria-label="アニメを探す：視聴状況で絞り込み">
         <span class="explore-filter-label">視聴状況 <span class="mobile-swipe-hint">横にスワイプ ↔</span></span>
@@ -393,16 +393,25 @@ function toast(msg,kind='info'){
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
 }
 function persist(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(saved));return true}catch{toast('保存に失敗しました。ブラウザの保存領域を確認してください。');return false}}
-function model(a){return {id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:Array.isArray(a.title_synonyms)?a.title_synonyms.filter(s=>typeof s==='string').slice(0,12):[],image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null};}
-// v1.2: lightweight client-side normalization and carefully scoped anime nicknames.
-// Tenrai supports fuzzy official titles, but it does not promise community nicknames.
+function model(a){return {id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null};}
+// v1.3: multi-query Japanese nickname search, deduplicated by stable MAL ID.
+function publicAnimeAllowed(a){
+ const rating=String(a.rating||'').trim().toLowerCase();
+ if(/^rx(?:\b|\s*[-:])/.test(rating)||rating.includes('hentai'))return false;
+ const tags=[...(Array.isArray(a.genres)?a.genres:[]),...(Array.isArray(a.explicit_genres)?a.explicit_genres:[])];
+ return !tags.some(g=>[12,49].includes(Number(g.mal_id))||/^(hentai|erotica)$/i.test(String(g.name||'')));
+}
+// Nicknames are a small local supplement, NOT a complete encyclopedia.
 function normalizeSearch(v){return String(v||'').normalize('NFKC').toLowerCase()
  .replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60))
- .replace(/[\s\u3000:：!！?？・._\-ー–—'’「」『』()（）\[\]【】]/g,'')}
+ .replace(/[\s\u3000:：!！?？・._\-ー–—'’「」『』()（）\[\]【】★☆]/g,'')}
 const aliasGroups=[
  {term:'Gundam',names:['ガンダム','機動戦士ガンダム','gundam','mobile suit gundam']},
- {term:'re zero', names:['リゼロ','りぜろ','rezero','re zero','re:zero','reゼロ','Re:ゼロから始める異世界生活']},
- {term:'Shingeki no Kyojin', names:['進撃','進撃の巨人','attack on titan','aot']},
+ {term:'re zero',names:['リゼロ','りぜろ','rezero','re zero','re:zero','reゼロ','Re:ゼロから始める異世界生活']},
+ {term:'Madoka Magica',queries:['Madoka Magica','Mahou Shoujo Madoka Magica'],names:['まどマギ','まどまぎ','まどかマギカ','魔法少女まどか☆マギカ','魔法少女まどかマギカ','puella magi madoka magica','madomagi']},
+ {term:'Cyberpunk',queries:['Cyberpunk','Cyberpunk: Edgerunners'],names:['サイバーパンク','サイバーパンクエッジランナーズ','サイバーパンク エッジランナーズ','エッジランナーズ','cyberpunk','edgerunners','cyberpunk edgerunners']},
+ {term:'Shoujo Kageki Revue Starlight',queries:['Shoujo Kageki Revue Starlight','Revue Starlight'],names:['少女☆歌劇 レヴュースタァライト','少女 歌劇 レヴュースタァライト','レヴュースタァライト','スタァライト','少女歌劇','shoujo kageki revue starlight','revue starlight']},
+ {term:'Shingeki no Kyojin',names:['進撃','進撃の巨人','attack on titan','aot']},
  {term:'Kimetsu no Yaiba',names:['鬼滅','鬼滅の刃','demonslayer']},
  {term:'Jujutsu Kaisen',names:['呪術','呪術廻戦','jujutsukaisen']},
  {term:'Bocchi the Rock!',names:['ぼざろ','ぼっちざろっく','ぼっちざろっく！']},
@@ -412,14 +421,100 @@ const aliasGroups=[
  {term:'Sword Art Online',names:['sao','ソードアートオンライン']},
  {term:'Dungeon ni Deai wo Motomeru no wa Machigatteiru Darou ka',names:['ダンまち','ダンジョンに出会いを求めるのは間違っているだろうか']},
  {term:'Yahari Ore no Seishun Love Comedy wa Machigatteiru.',names:['俺ガイル','やはり俺の青春ラブコメはまちがっている']},
- {term:'Seishun Buta Yarou',names:['青ブタ','青春ブタ野郎']}
+ {term:'Seishun Buta Yarou',names:['青ブタ','青春ブタ野郎']},
+ {term:'Hagane no Renkinjutsushi',names:['ハガレン','鋼の錬金術師']},
+ {term:'Yakusoku no Neverland',names:['約ネバ','約束のネバーランド']},
+ {term:'Kaguya-sama wa Kokurasetai',names:['かぐや様','かぐや様は告らせたい']},
+ {term:'Oshi no Ko',names:['推しの子','おしのこ']},
+ {term:'Shokugeki no Souma',names:['食戟のソーマ','食戟','しょくげき']},
+ {term:'Hibike! Euphonium',names:['ユーフォ','響けユーフォニアム','響け！ユーフォニアム']},
+ {term:'Kobayashi-san Chi no Maid Dragon',names:['メイドラ','小林さんちのメイドラゴン']},
+ {term:'Gotoubun no Hanayome',names:['五等分','五等分の花嫁']},
+ {term:'Kanojo, Okarishimasu',names:['かのかり','彼女お借りします']},
+ {term:'Yuru Camp',names:['ゆるキャン','ゆるキャン△']},
+ {term:'JoJo no Kimyou na Bouken',names:['ジョジョ','ジョジョの奇妙な冒険','jojo']},
+ {term:'Full Metal Panic!',names:['フルメタ','フルメタルパニック']},
+ {term:'Toaru Majutsu no Index',names:['とある魔術','禁書目録','とある魔術の禁書目録']},
+ {term:'Toaru Kagaku no Railgun',names:['超電磁砲','レールガン','とある科学の超電磁砲']},
+ {term:'Code Geass',names:['ギアス','コードギアス']},
+ {term:'Kusuriya no Hitorigoto',names:['薬屋','薬屋のひとりごと']},
+ {term:'Sousou no Frieren',names:['フリーレン','葬送のフリーレン']},
+ {term:'SPY x FAMILY',names:['スパイファミリー','スパファミ','spyfamily']},
+ {term:'One Punch Man',names:['ワンパンマン','ワンパン']},
+ {term:'Mob Psycho 100',names:['モブサイコ','モブサイコ100']},
+ {term:'Bungou Stray Dogs',names:['文スト','文豪ストレイドッグス']},
+ {term:'Kuroko no Basket',names:['黒バス','黒子のバスケ']},
+ {term:'Shin Seiki Evangelion',names:['エヴァ','エヴァンゲリオン','新世紀エヴァンゲリオン']},
+ {term:'Boku dake ga Inai Machi',names:['僕街','僕だけがいない街']},
+ {term:'Mushoku Tensei',names:['無職転生']},
 ];
-const aliasIndex=new Map();for(const g of aliasGroups){for(const n of [...g.names,g.term])aliasIndex.set(normalizeSearch(n),g.term)}
-function apiSearchTerm(input){const original=String(input||'').trim();return aliasIndex.get(normalizeSearch(original))||original.normalize('NFKC')}
-function localTitleMatch(item,input){const n=normalizeSearch(input);if(!n)return true;
- if([item.title,item.english,...(Array.isArray(item.synonyms)?item.synonyms:[])].some(t=>normalizeSearch(t).includes(n)))return true;
- const expanded=aliasIndex.get(n);return Boolean(expanded&&[item.title,item.english].some(t=>normalizeSearch(t).includes(normalizeSearch(expanded))))
+const aliasIndex=new Map();
+for(const group of aliasGroups){for(const name of [...group.names,group.term,...(group.queries||[])]){
+ const key=normalizeSearch(name);if(key)aliasIndex.set(key,group);
+}}
+// For uncommon fragments, expand *distinctive* parts of already known titles.
+// This is a lightweight supplement, not an index of every anime ever released.
+function matchedAliasGroups(input){
+ const needle=normalizeSearch(input);if(!needle)return [];
+ const exact=aliasIndex.get(needle);if(exact)return [exact];
+ // 3+ Japanese characters or 5+ Latin characters, to avoid expanding overly vague queries.
+ const hasJapanese=/[\u3040-\u30ff\u3400-\u9fff]/.test(needle);
+ if(needle.length<(hasJapanese?3:5))return [];
+ const groups=aliasGroups.filter(group=>[...group.names,group.term,...(group.queries||[])].some(name=>normalizeSearch(name).includes(needle)));
+ // Ambiguous fragments should remain normal queries, not force one unrelated show.
+ return groups.length===1?groups:[];
 }
+function apiSearchTerm(input){const group=matchedAliasGroups(input)[0];return group?.term||String(input||'').trim().normalize('NFKC')}
+function searchVariants(input){
+ const original=String(input||'').trim().normalize('NFKC');if(!original)return [];
+ const group=matchedAliasGroups(original)[0];
+ // Try canonical titles first, then the user's original Japanese fragment.
+ const candidates=group?[...(group.queries||[group.term]),original]:[original];
+ return [...new Map(candidates.map(t=>[normalizeSearch(t),t])).values()].slice(0,3);
+}
+function titleFields(item){return [item.title,item.english,...(Array.isArray(item.synonyms)?item.synonyms:[])].filter(Boolean).map(normalizeSearch)}
+function localTitleMatch(item,input){const needle=normalizeSearch(input);if(!needle)return true;
+ const fields=titleFields(item);
+ if(fields.some(t=>t.includes(needle)))return true;
+ const group=matchedAliasGroups(input)[0];
+ return Boolean(group&&[group.term,...(group.queries||[])].some(term=>fields.some(t=>t.includes(normalizeSearch(term)))));
+}
+// Already downloaded works remain searchable by any portion of their title
+// without more API calls. This is session-only to avoid large persistent storage.
+const searchMemory=new Map(),SEARCH_MEMORY_LIMIT=700;
+function rememberAnime(a){
+ if(searchMemory.has(a.id))searchMemory.delete(a.id);
+ searchMemory.set(a.id,a);
+ while(searchMemory.size>SEARCH_MEMORY_LIMIT)searchMemory.delete(searchMemory.keys().next().value);
+}
+function rememberedMatches(input){
+ if(!input)return [];
+ const result=new Map();
+ for(const a of [...searchMemory.values(),...Object.values(saved)]){
+  if(a&&a.id&&localTitleMatch(a,input))result.set(a.id,a);
+ }
+ return [...result.values()];
+}
+function relevanceScore(item,input){
+ const needle=normalizeSearch(input),variants=searchVariants(input).map(normalizeSearch);
+ const fields=[item.title,item.english,...(item.synonyms||[])].filter(Boolean).map(normalizeSearch);
+ let best=0;
+ for(const field of fields){
+  if(field===needle)best=Math.max(best,1100);
+  if(needle&&field.startsWith(needle))best=Math.max(best,640-Math.min(250,field.length-needle.length));
+  else if(needle&&field.includes(needle))best=Math.max(best,500);
+  for(const v of variants){if(!v)continue;
+   if(field===v)best=Math.max(best,1000);
+   else if(field.startsWith(v))best=Math.max(best,600-Math.min(250,field.length-v.length));
+   else if(field.includes(v))best=Math.max(best,300);
+  }
+ }
+ return best;
+}
+function sortSearchResults(){items.sort((a,b)=>{
+ const diff=relevanceScore(b,query)-relevanceScore(a,query);if(diff)return diff;
+ return (b.year||0)-(a.year||0)||String(a.title).localeCompare(String(b.title),'ja');
+})}
 // v1.1: reviews remain local unless explicitly included while generating a share URL.
 const REVIEW_ASPECTS={story:'ストーリー',visual:'映像',character:'キャラクター',music:'音楽'};
 const REVIEW_GRADES=['良くない','普通','良い','とても良い'];
@@ -529,12 +624,12 @@ function render(){
  const isSaved=mode==='saved', exploreRegistered=!isSaved&&exploreStatusFilter!=='all';
  $('#breadcrumb').textContent=isSaved?'マイリスト':'アニメを探す';
  $('#sectionTitle').textContent=isSaved?(statusFilter==='all'?'マイリスト':`マイリスト · ${statusLabels[statusFilter]}`):(query?`「${query}」の検索結果 · ${periodLabel()}`:currentScope()==='all'?'全年代のアニメ':currentScope().startsWith('decade:')?`${periodLabel()}のアニメ`:`${periodLabel()} ${$('#seasonSelect').value==='all'?'通年':seasonLabels[$('#seasonSelect').value]}アニメ`);
- $('#sectionDescription').textContent=isSaved?'視聴状況ごとに整理し、各カテゴリ内は放送年・シーズンの新しい順に表示します。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称から検索しています（対象：${periodLabel()}）。`:'放送時期や年代を選んで作品を探せます。';
+ $('#sectionDescription').textContent=isSaved?'視聴状況ごとに整理し、各カテゴリ内は放送年・シーズンの新しい順に表示します。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${periodLabel()}）。`:'放送時期や年代を選んで作品を探せます。';
  years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved);syncPeriodUI();
  $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'作品名・略称を入力すると全年代から検索します。年代・放送年で絞り込むこともできます。';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
  $('#searchBtn').textContent=isSaved?'絞り込む':exploreRegistered?'絞り込む':'検索 ↗';
- $('#searchInput').placeholder=isSaved?'マイリストから作品名で絞り込み':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称で検索（例：リゼロ / rezero）';
+ $('#searchInput').placeholder=isSaved?'マイリストから作品名で絞り込み':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称・一部分で検索（例：レヴュー / まどマギ）';
  let list;
  if(isSaved)list=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
  else if(exploreRegistered){list=Object.values(saved).filter(a=>a&&a.status===exploreStatusFilter&&matchingPeriod(a))}
@@ -560,55 +655,88 @@ function render(){
  }else grid.innerHTML=isSaved?savedGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
-let lastRequestAt=0, activeController=null;
+let lastRequestAt=0, activeController=null, searchProgress=[];
 function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
-async function fetchPage(reset=true){if(loading&&!reset)return;if(reset){activeController?.abort();page=1;items=[];hasNext=false}loading=true;requestCounter++;const thisRequest=requestCounter;const controller=new AbortController();activeController=controller;render();
- const scope=currentScope(), exact=/^\d{4}$/.test(scope), season=$('#seasonSelect').value;
- const seasonal=!query&&exact&&season!=='all';
- const params=new URLSearchParams({sfw:'true',limit:query?'50':'24',page:String(page)});
- if(query){
-  // Dates sent to Tenrai describe separate start/end constraints. In particular,
-  // end_date filters by when the show FINISHED, not the upper bound of its premiere.
-  // Search by title, then compare premiere year/season locally to avoid dropping
-  // still-airing or long-running anime. Newer titles first reduces pagination.
-  params.set('q',apiSearchTerm(query));params.set('order_by','start_date');params.set('sort','desc');
- }else if(!seasonal){
-  params.set('order_by','start_date');params.set('sort','desc');
-  const dates=dateBounds();if(dates){params.set('start_date',dates[0]);params.set('end_date',dates[1])}
+async function fetchPage(reset=true){
+ if(loading&&!reset)return;
+ if(reset){activeController?.abort();page=1;items=query?rememberedMatches(query):[];hasNext=false;
+  searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
  }
- const makeUrl=()=>seasonal?`${API}/seasons/${scope}/${season}?${params}`:`${API}/anime?${params}`;
- let url=makeUrl();
+ loading=true;requestCounter++;const thisRequest=requestCounter;
+ const controller=new AbortController();activeController=controller;render();
+ const scope=currentScope(),exact=/^\d{4}$/.test(scope),season=$('#seasonSelect').value;
+ const seasonal=!query&&exact&&season!=='all';
+ const baseParams=new URLSearchParams({limit:query?'50':'24'});
+ // SFW=true excludes R+ titles such as Cyberpunk: Edgerunners (2022).
+ // Filter Rx/Hentai/Erotica without excluding mainstream R+ titles.
+ if(query||!seasonal)baseParams.set('genres_exclude','12,49');
+ if(!query){
+  baseParams.set('order_by','start_date');baseParams.set('sort','desc');
+  if(!seasonal){const dates=dateBounds();if(dates){baseParams.set('start_date',dates[0]);baseParams.set('end_date',dates[1])}}
+ }
+ let lastUrl='',successful=0;
+ const getData=async(url)=>{
+  const wait=Math.max(0,420-(Date.now()-lastRequestAt));if(wait)await delay(wait);
+  if(thisRequest!==requestCounter)return null;
+  lastRequestAt=Date.now();lastUrl=url;
+  const resp=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+  if(!resp.ok)throw new Error(resp.status===429?'アクセスが集中しています（429）。時間をあけて再読み込みしてください。':resp.status===403?'APIからアクセスが制限されています（403）。時間をあけて試してください。':`API応答エラー（${resp.status}）`);
+  const payload=await resp.json();
+  if(!Array.isArray(payload.data))throw new Error('作品情報の形式が変更された可能性があります。');
+  if(thisRequest!==requestCounter)return null;
+  successful++;
+  const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)&&publicAnimeAllowed(a)).map(a=>{
+   const m=model(a);if(seasonal){if(!m.year)m.year=Number(scope);if(!m.season)m.season=season}return m;
+  });
+  for(const a of incoming)rememberAnime(a);
+  items=[...new Map([...items,...incoming].map(a=>[a.id,a])).values()];
+  return payload;
+ };
  try{
-  // No relevant match on page one? Search up to 3 pages automatically rather
-  // than incorrectly reporting zero results. Extra pages are fetched only when needed.
-  const maxScan=query&&scope!=='all'?3:1;
-  for(let scan=0;scan<maxScan;scan++){
-   params.set('page',String(page));url=makeUrl();
-   const wait=Math.max(0,420-(Date.now()-lastRequestAt));if(wait)await delay(wait);
-   if(thisRequest!==requestCounter)return;
-   lastRequestAt=Date.now();
-   const resp=await fetch(url,{signal:controller.signal,headers:{'Accept':'application/json'}});
-   if(!resp.ok)throw new Error(resp.status===429?'アクセスが集中しています（429）。時間をあけて再読み込みしてください。':resp.status===403?'APIからアクセスが制限されています（403）。時間をあけて試してください。':`API応答エラー（${resp.status}）`);
-   const payload=await resp.json();
-   if(!Array.isArray(payload.data))throw new Error('作品情報の形式が変更された可能性があります。');
-   if(thisRequest!==requestCounter)return;
-   const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)).map(a=>{
-    const m=model(a);if(seasonal){if(!m.year)m.year=Number(scope);if(!m.season)m.season=season}return m
-   });
-   items=[...new Map([...items,...incoming].map(a=>[a.id,a])).values()];
+  if(query){
+   // Query every known title variant separately, then merge by MAL ID.
+   // For example: Cyberpunk + Cyberpunk: Edgerunners; Madoka Magica + Mahou Shoujo Madoka Magica.
+   // For a selected year/decade, scan a few more pages *only* if no result yet fits.
+   for(const cursor of searchProgress){
+    if(thisRequest!==requestCounter)return;
+    if(!cursor.hasNext)continue;
+    const maxScan=reset&&scope!=='all'?3:1;
+    for(let attempt=0;attempt<maxScan&&cursor.hasNext;attempt++){
+     const params=new URLSearchParams(baseParams);params.set('q',cursor.term);params.set('page',String(cursor.page));
+     // Do not use end_date: it limits the end of airing, not the premiere date.
+     // Local premiere-year filtering is reliable even for currently airing series.
+     try{
+      const payload=await getData(`${API}/anime?${params}`);
+      if(!payload)return;
+      cursor.hasNext=Boolean(payload.pagination?.has_next_page);cursor.page++;
+     }catch(err){
+      if(err.name==='AbortError'||thisRequest!==requestCounter)return;
+      // Another spelling may still work. Treat a failed variant as exhausted.
+      cursor.hasNext=false;
+      if(successful===0&&searchProgress.every(v=>!v.hasNext))throw err;
+      break;
+     }
+     if(scope==='all'||items.some(matchingPeriod))break;
+    }
+   }
+   sortSearchResults();hasNext=searchProgress.some(c=>c.hasNext);
+  }else{
+   const params=new URLSearchParams(baseParams);params.set('page',String(page));
+   const url=seasonal?`${API}/seasons/${scope}/${season}?${params}`:`${API}/anime?${params}`;
+   const payload=await getData(url);if(!payload)return;
    hasNext=Boolean(payload.pagination?.has_next_page);
-   if(!query||scope==='all'||items.some(matchingPeriod)||!hasNext)break;
-   page++;
   }
-  loading=false;render();
-
- }catch(err){if(thisRequest!==requestCounter)return;loading=false;hasNext=false;
- const blocked=err instanceof TypeError || /Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
- const reason=blocked?'外部のアニメデータAPIに接続できませんでした。通信・ブラウザの制限・API側の障害などが考えられます。':(err?.message||'通信環境やAPIの稼働状況を確認してください。');
- const diagnostic=url;
- const fileNotice=location.protocol==='file:'?'<p>HTMLファイルを直接開いている場合、ブラウザの通信制限の影響を受けることがあります。公開サイト（https://）からの動作もお試しください。</p>':'';
- $('#cards').innerHTML=`<div class="state error"><div class="state-icon">📡</div><h3>作品情報を取得できませんでした</h3><p>${safeText(reason)}</p>${fileNotice}<p><a href="${diagnostic}" target="_blank" rel="noopener noreferrer">APIへの接続をブラウザで確認 ↗</a></p><button data-state-action="reload">再読み込み</button></div>`;
- $('#loadMore').classList.add('hidden');$('#resultInfo').textContent='通信エラー';}}
+  if(thisRequest!==requestCounter)return;loading=false;render();
+ }catch(err){
+  if(thisRequest!==requestCounter||err.name==='AbortError')return;
+  loading=false;hasNext=false;
+  const blocked=err instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
+  const reason=blocked?'外部のアニメデータAPIに接続できませんでした。通信・ブラウザの制限・API側の障害などが考えられます。':(err?.message||'通信環境やAPIの稼働状況を確認してください。');
+  const fileNotice=location.protocol==='file:'?'<p>HTMLファイルを直接開いている場合、ブラウザの通信制限の影響を受けることがあります。公開サイト（https://）からの動作もお試しください。</p>':'';
+  $('#cards').innerHTML=`<div class="state error"><div class="state-icon">📡</div><h3>作品情報を取得できませんでした</h3><p>${safeText(reason)}</p>${fileNotice}<p><a href="${safeText(lastUrl)}" target="_blank" rel="noopener noreferrer">APIへの接続をブラウザで確認 ↗</a></p><button data-state-action="reload">再読み込み</button></div>`;
+  $('#loadMore').classList.add('hidden');$('#resultInfo').textContent='通信エラー';
+ }
+}
 function showSaved(filter='all'){closeDetail(false);exitSharedView();mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();window.scrollTo({top:0,behavior:'smooth'});}
 function showSeason(){closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';render();fetchPage(true);window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
@@ -774,7 +902,7 @@ $('#searchInput').addEventListener('input',()=>{if(mode==='saved'||(mode==='seas
  // First title search should automatically span the whole catalog, unless the user chose a period.
  if($('#searchInput').value.trim()&&!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();$('#searchGuide').textContent='全年代から検索します。特定の年代に絞り込みたい場合は、年代を選んでください。';periodTouched=true}
 });
-$('#loadMore').addEventListener('click',()=>{if(loading)return;page++;fetchPage(false)});
+$('#loadMore').addEventListener('click',()=>{if(loading)return;if(!query)page++;fetchPage(false)});
 $('#cards').addEventListener('change',e=>{const t=e.target;if(t.matches('[data-status-id]'))setStatus(t.dataset.statusId,t.value)});
 $('#cards').addEventListener('click',e=>{const t=e.target.closest('[data-state-action]');if(t){t.dataset.stateAction==='reload'?fetchPage(true):showSeason()}});
 $('#addCustomBtn').addEventListener('click',()=>{$('#customTitle').value='';$('#customStatus').value='watched';$('#addDialog').showModal()});
