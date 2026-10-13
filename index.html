@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.4 | アニメ視聴管理</title>
+<title>ANI:LOG v1.4.1 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -285,7 +285,7 @@
     </nav></div>
     <div class="share-card"><strong>🔗 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る ↗</button></div>
     <div class="sidebar-bottom"><div class="tiny-ico">💾</div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す ↓</button><button type="button" class="outline-btn" id="importBtn">読み込む ↑</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.4 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.4.1 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -759,7 +759,7 @@ function render(){
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
  $('#searchSortWrap').classList.toggle('hidden',isSaved||exploreRegistered||!query);
  $('#searchBtn').textContent=isSaved?'絞り込む':exploreRegistered?'絞り込む':'検索 ↗';
- $('#searchInput').placeholder=isSaved?'マイリストから作品名で絞り込み':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称・一部分で検索（例：レヴュー / まどマギ）';
+ $('#searchInput').placeholder=isSaved?'マイリストから作品名で絞り込み':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称・一部分で検索（例：ガンダム / まどマギ）';
  let list;
  if(isSaved)list=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
  else if(exploreRegistered){list=Object.values(saved).filter(a=>a&&a.status===exploreStatusFilter&&matchingPeriod(a))}
