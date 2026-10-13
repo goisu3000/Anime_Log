@@ -655,6 +655,66 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 .sidebar-bottom .outline-btn .ui-icon{width:13px;height:13px}
 .sidebar-bottom .backup-date{font-size:10px;line-height:1.4;margin:8px 0 0;color:#9baaaa;overflow-wrap:anywhere}
 @media(max-width:740px){.note-preview{min-height:40px;font-size:12px}}
+
+/* ANI:LOG v1.9 | Pattern A my-list refinement. No change to discovery, detail or persisted records. */
+.saved-mode #cards.saved-grid{display:block}
+.saved-mode #cards .pattern-a-year{margin:0 0 23px}
+.saved-mode #cards .pattern-a-year .saved-period-heading{margin:0 0 10px;padding:8px 1px;color:#e6ecea;font-size:14px;font-weight:750}
+.saved-mode #cards .pattern-a-year .saved-period-heading>span:not(.fold-symbol):not(.period-divider){color:#aebbc1;font-size:11px;font-weight:500}
+.saved-mode #cards .pattern-a-year .period-divider{background:#343d42}
+.saved-mode #cards .pattern-a-list{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;min-width:0}
+.saved-mode #cards .pattern-a-list[hidden]{display:none!important}
+.saved-mode #cards .pattern-a-card{display:grid;grid-template-columns:112px minmax(180px,1fr) minmax(174px,215px) minmax(178px,218px);align-items:center;gap:18px;min-height:155px;padding:12px 17px;background:#1a2025;border:1px solid #313a40;border-radius:12px;color:#eaf0ed;transition:background .15s,border-color .15s;min-width:0}
+.saved-mode #cards .pattern-a-card:hover{background:#1f272b;border-color:#536257;transform:none}
+.saved-mode #cards .pattern-a-card .record-poster{display:block;grid-row:1;align-self:center;width:112px;height:128px;aspect-ratio:auto;background:#131a20;border-radius:7px;overflow:hidden}
+.saved-mode #cards .pattern-a-card .record-poster img{width:100%;height:100%;object-fit:contain;object-position:center}
+.saved-mode #cards .pattern-a-card .record-main{align-self:center;min-width:0}
+.saved-mode #cards .pattern-a-card .card-title{font-size:16px;font-weight:750;line-height:1.5;letter-spacing:.005em;margin:0 0 7px;min-height:0}
+.saved-mode #cards .pattern-a-card .title-button{font-weight:750;line-height:1.5}
+.pattern-a-meta{display:flex;align-items:center;flex-wrap:wrap;gap:5px;color:#b4c1c7;font-size:11px;line-height:1.5}
+.pattern-a-meta .pattern-a-separator{color:#6d8189}
+.pattern-a-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:9px}
+.pattern-a-tags span{border:1px solid #405047;background:#253029;color:#c6d8c7;border-radius:5px;padding:3px 7px;font-size:10px}
+.saved-mode #cards .pattern-a-date{display:inline-flex;align-items:center;gap:7px;margin-top:10px;padding:4px 0;color:#aebfc9;font-size:11px;line-height:1.6}
+.pattern-a-date .ui-icon{width:13px;height:13px;flex:0 0 13px}
+.saved-mode #cards .pattern-a-watch-column{display:flex;flex-direction:column;align-self:stretch;justify-content:center;align-items:flex-start;min-width:0;gap:9px;padding:6px 15px 6px 17px;border-left:1px solid #303a41}
+.saved-mode #cards .pattern-a-personal-column{display:flex;flex-direction:column;align-self:stretch;justify-content:center;gap:9px;min-width:0;padding:6px 0 6px 16px;border-left:1px solid #303a41}
+.pattern-a-field-name{font-size:10px;color:#a4b4bc;font-weight:500;line-height:1.5}
+.pattern-a-rating{display:flex;flex-direction:column;gap:5px;min-width:0}
+.pattern-a-rating-line{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
+.pattern-a-rating-line .review-stars-mini{font-size:16px;white-space:nowrap;letter-spacing:1px}
+.pattern-a-rating-score{font-size:11px;color:#d2dadf;white-space:nowrap}
+.pattern-a-rating-empty{font-size:12px;color:#c3cdd3}
+.pattern-a-rate-edit{background:none;border:0;padding:3px 0;margin:0;color:#cce3bd;text-decoration:underline;text-underline-offset:3px;font-size:11px;cursor:pointer}
+.pattern-a-rate-edit:hover{color:var(--accent)}
+.pattern-a-rating-unavailable{font-size:11px;line-height:1.7;color:#9facb3}
+.saved-mode #cards .pattern-a-personal-column .note-preview{display:flex;align-items:center;justify-content:center;width:100%;min-height:37px;padding:8px 9px;border:1px solid #54616b;border-radius:7px;background:#222c34;color:#ecf0ef;font-size:12px;line-height:1.4;font-weight:600}
+.saved-mode #cards .pattern-a-personal-column .note-preview:hover{border-color:#92b287;background:#2a3637}
+.saved-mode #cards .pattern-a-personal-column .note-preview .note-preview-excerpt{font-size:10px;color:#bdd1d7;text-align:left;max-height:32px;overflow:hidden}
+.saved-mode #cards .pattern-a-card .pattern-a-status-menu{width:100%;max-width:180px;position:relative;margin:0;min-width:0}
+.saved-mode #cards .pattern-a-card .pattern-a-status-menu>summary{display:flex;align-items:center;gap:8px;min-height:37px;padding:7px 10px;border:1px solid #50606d;border-radius:7px;background:#202a31;list-style:none;cursor:pointer;font-size:12px;color:#e6eceb;font-weight:700;line-height:1.4}
+.saved-mode #cards .pattern-a-status-menu>summary::-webkit-details-marker{display:none}
+.saved-mode #cards .pattern-a-status-menu>summary .ui-icon{width:15px;height:15px;color:#bdda9b;flex:0 0 15px}
+.saved-mode #cards .pattern-a-status-menu>summary .ui-icon:last-child{margin-left:auto;color:#acbdc4;width:13px;height:13px}
+.saved-mode #cards .pattern-a-status-menu select{width:100%;min-height:39px;margin:5px 0 0;padding:7px 4px;background:#172128;border:1px solid #65737b;color:#eff1ef;font-size:12px}
+.saved-mode #cards .pattern-a-status-menu[open]{z-index:2}
+.saved-mode #cards .pattern-a-card .record-primary{min-height:31px;font-size:11px;padding:6px 10px;background:#263329;color:#d2e9b8;border:1px solid #4c654c}
+.saved-mode #cards .pattern-a-card .pattern-a-progress{width:100%;padding:0;margin:0;min-width:0;background:none;border:0}
+.saved-mode #cards .pattern-a-progress .watch-progress-top{display:flex;justify-content:space-between;gap:4px;margin:0 0 6px;font-size:10px;flex-wrap:wrap}
+.saved-mode #cards .pattern-a-progress .watch-progress-top strong{color:#dbe4e6;font-size:11px;font-weight:650;line-height:1.4}
+.saved-mode #cards .pattern-a-progress .watch-progress-track{height:5px;margin:4px 0 8px;background:#364349;border-radius:4px}
+.saved-mode #cards .pattern-a-progress .watch-progress-fill{background:#b8dd87}
+.saved-mode #cards .pattern-a-progress .watch-progress-actions{display:flex;align-items:center;justify-content:flex-start;gap:5px}
+.saved-mode #cards .pattern-a-progress .watch-progress-actions button{display:inline-flex;align-items:center;justify-content:center;gap:3px;height:28px;min-height:28px;width:29px;min-width:29px;padding:2px;border:1px solid #465763;background:#253137;color:#e4e9e7;border-radius:5px;font-size:11px}
+.saved-mode #cards .pattern-a-progress .watch-progress-actions button[data-progress-step="1"]{width:54px;min-width:54px}
+.saved-mode #cards .pattern-a-progress .watch-progress-entry{display:flex;align-items:center;gap:3px;font-size:10px}
+.saved-mode #cards .pattern-a-progress .watch-progress-entry input{height:28px;min-height:28px;width:39px;max-width:39px;padding:1px;background:#131b20;border:1px solid #43545e;border-radius:5px;font-size:12px;color:#ebf2eb;text-align:center}
+.saved-mode #cards .pattern-a-progress .watch-progress-entry span{font-size:10px;white-space:nowrap}
+.saved-mode #cards .pattern-a-progress .watch-progress-hint{font-size:9px;line-height:1.5}
+@media(max-width:1180px){.saved-mode #cards .pattern-a-card{grid-template-columns:90px minmax(145px,1fr) minmax(155px,190px) minmax(150px,190px);gap:12px;padding:12px}.saved-mode #cards .pattern-a-card .record-poster{width:90px;height:125px}.saved-mode #cards .pattern-a-watch-column{padding:5px 10px 5px 12px}.saved-mode #cards .pattern-a-personal-column{padding-left:12px}}
+@media(max-width:1000px){.saved-mode #cards .pattern-a-card{grid-template-columns:86px minmax(170px,1fr) minmax(170px,205px);grid-template-rows:auto auto;gap:8px 15px;align-items:center}.saved-mode #cards .pattern-a-card .record-poster{grid-row:1/3;width:86px;height:126px}.saved-mode #cards .pattern-a-card .record-main{grid-column:2;grid-row:1/3}.saved-mode #cards .pattern-a-watch-column{grid-column:3;grid-row:1;border-left:1px solid #303a41;padding:0 0 0 13px}.saved-mode #cards .pattern-a-personal-column{grid-column:3;grid-row:2;border-left:1px solid #303a41;padding:5px 0 0 13px}}
+@media(max-width:740px){.saved-mode #cards .pattern-a-card{grid-template-columns:76px minmax(0,1fr);grid-template-rows:auto auto;gap:9px 12px;min-height:0;padding:12px;border-radius:10px}.saved-mode #cards .pattern-a-card .record-poster{width:76px;height:110px;grid-row:1;grid-column:1;align-self:start}.saved-mode #cards .pattern-a-card .record-main{grid-row:1;grid-column:2;align-self:center}.saved-mode #cards .pattern-a-card .card-title{font-size:14px;line-height:1.5;margin-bottom:6px}.saved-mode #cards .pattern-a-card .title-button{font-size:14px}.saved-mode #cards .pattern-a-card .pattern-a-meta{font-size:10px}.saved-mode #cards .pattern-a-card .pattern-a-date{font-size:10px}.saved-mode #cards .pattern-a-card .pattern-a-tags{margin-top:6px}.saved-mode #cards .pattern-a-watch-column{grid-column:1/3;grid-row:2;border-left:0;border-top:1px solid #313c41;display:flex;align-items:center;flex-direction:row;flex-wrap:wrap;gap:10px;padding:10px 0 0;min-width:0}.saved-mode #cards .pattern-a-card .pattern-a-status-menu{max-width:155px;flex:0 1 145px}.saved-mode #cards .pattern-a-progress{flex:1 1 155px}.saved-mode #cards .pattern-a-personal-column{grid-column:1/3;grid-row:3;border-left:0;border-top:1px solid #313c41;padding:9px 0 0;display:flex;flex-direction:row;align-items:center;gap:10px;justify-content:space-between}.saved-mode #cards .pattern-a-rating{flex:1;min-width:0}.saved-mode #cards .pattern-a-rating-line .review-stars-mini{font-size:14px}.saved-mode #cards .pattern-a-personal-column .note-preview{flex:0 1 150px;min-width:120px;max-width:55%;margin:0}.saved-mode #cards .pattern-a-personal-column .note-preview .note-preview-excerpt{display:none}.saved-mode #cards .pattern-a-progress .watch-progress-actions button{min-width:35px;min-height:35px}.saved-mode #cards .pattern-a-progress .watch-progress-entry input{min-height:35px;height:35px}.saved-mode #cards .pattern-a-list{gap:9px}.saved-mode #cards .pattern-a-year .saved-period-heading{font-size:13px}}
+@media(max-width:360px){.saved-mode #cards .pattern-a-card{grid-template-columns:68px minmax(0,1fr);gap:8px 10px;padding:10px}.saved-mode #cards .pattern-a-card .record-poster{width:68px;height:100px}.saved-mode #cards .pattern-a-personal-column{flex-wrap:wrap}.saved-mode #cards .pattern-a-personal-column .note-preview{max-width:100%;flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -684,7 +744,7 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
     </nav></div>
     <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.8.1 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.9 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1504,7 +1564,25 @@ function stateMenu(a){const status=saved[a.id]?.status||'';return `<details clas
 function quickStatus(a,status,label){return `<button type="button" class="record-primary" data-record-id="${safeText(a.id)}" data-quick-status="${status}">${uiIcon(status==='planned'?'plus':'play')}${label}</button>`}
 function card(a){return mode==='saved'?recordCard(a):discoveryCard(a)}
 function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${!status?stateMenu(a):''}</div></div></article>`}
-function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status);return `<article class="anime-card record-card ${watch?'record-row':''}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${status==='watched'?reviewCard(a)+`<button class="record-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${noteMarkup(a)}<div class="record-options">${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${stateMenu(a)}</div></div>${watch?progressMarkup(a):''}</article>`}
+// Pattern A: one consistent, information-first record card for all five statuses.
+function patternAStatusMenu(a){const status=a.status||'watched',id=safeText(a.id),label=safeText(statusLabels[status]||'未登録');
+ return `<details class="record-menu pattern-a-status-menu"><summary aria-label="${safeText(a.title)}の視聴状態：${label}。変更する">${savedStatusIcons[status]||uiIcon('check')}<span>${label}</span>${uiIcon('chevron-down')}</summary><select data-status-id="${id}" aria-label="${safeText(a.title)}の視聴状況"><option value="">リストから削除</option>${Object.entries(statusLabels).filter(([v])=>validStatuses.has(v)).map(([v,l])=>`<option value="${v}" ${v===status?'selected':''}>${safeText(l)}</option>`).join('')}</select></details>`;
+}
+function patternAReview(a){const r=readReview(saved[a.id]?.review);if(a.status!=='watched')return `<div class="pattern-a-rating-unavailable">評価は視聴後に記録できます</div>`;
+ return `<div class="pattern-a-rating"><span class="pattern-a-field-name">自分の評価</span><div class="pattern-a-rating-line">${r?reviewStars(r.overall):'<span class="pattern-a-rating-empty">未評価</span>'}${r?`<span class="pattern-a-rating-score">${r.overall} / 5</span>`:''}<button type="button" class="pattern-a-rate-edit" data-rate-id="${safeText(a.id)}">${r?'評価を編集':'評価する'}</button></div></div>`;
+}
+function patternAProgress(a){if(!['watching','paused'].includes(a.status))return '';
+ const total=totalEpisodes(a),current=watchedCount(a),usable=total!==null&&current<=total,hint=progressHint(current,total);
+ return `<div class="watch-progress pattern-a-progress" data-progress-for="${safeText(a.id)}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${usable?'':'hidden'}><div class="watch-progress-fill" data-progress-bar style="width:${usable?Math.min(100,100*current/total):0}%"></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div></div>`;
+}
+function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}年`:'放送年未登録',a.type?typeJa(a.type):'',Number.isInteger(a.episodes)&&a.episodes>0?`全${a.episodes}話`:''].filter(Boolean);
+ const tags=cleanAnalysisMeta(a.analysisMeta)?.genres?.slice(0,3)||[];
+ return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:''}`;
+}
+function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
+ const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?patternAProgress(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}</div></article>`;
+}
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
 function emptyCard(title,msg,icon='grid',btn=''){return `<div class="state"><div class="state-icon">${uiIcon(icon)}</div><h3>${safeText(title)}</h3><p>${safeText(msg)}</p>${btn?`<button data-state-action="${btn==='再読み込み'?'reload':'season'}">${safeText(btn)}</button>`:''}</div>`}
@@ -1532,18 +1610,13 @@ function toggleFold(status,period){const key=foldKey(status,period);
  const button=$$('[data-fold-status]').find(el=>el.dataset.foldStatus===status&&el.dataset.foldPeriod===period);
  if(button){const folded=collapsedPeriods.has(key);button.setAttribute('aria-expanded',String(!folded));button.querySelector('.fold-symbol').innerHTML=uiIcon(folded?'chevron-right':'chevron-down');const grid=button.nextElementSibling;if(grid)grid.hidden=folded}
 }
+// Pattern A: group by broadcast year first; status is shown inside each card.
 function savedGroups(list){
- const fragments=[];
- for(const status of savedStatusOrder){
-  const matches=list.filter(a=>a.status===status).sort(sortByBroadcast);
-  if(!matches.length)continue;
-  const periods=new Map();
-  for(const item of matches){const name=broadcastPeriod(item);if(!periods.has(name))periods.set(name,[]);periods.get(name).push(item)}
-  let html=`<section class="saved-section" aria-label="${statusLabels[status]}"><header class="saved-section-head" ${statusFilter!=='all'?'hidden':''}><span class="saved-heading-icon" aria-hidden="true">${savedStatusIcons[status]}</span><h3>${statusLabels[status]}</h3><span class="saved-count">${matches.length}作品</span><span class="saved-description">${savedStatusDescriptions[status]}</span></header>`;
-  for(const [name,group] of periods){const folded=collapsedPeriods.has(foldKey(status,name));html+=`<div class="saved-period"><button type="button" class="saved-period-heading" aria-expanded="${!folded}" data-fold-status="${safeText(status)}" data-fold-period="${safeText(name)}"><span class="fold-symbol" aria-hidden="true">${uiIcon(folded?'chevron-right':'chevron-down')}</span>${safeText(name)} <span>${group.length}作品</span><span class="period-divider"></span></button><div class="saved-items ${['watching','paused'].includes(status)?'watch-list':'record-grid'}" ${folded?'hidden':''}>${group.map(card).join('')}</div></div>`}
-  fragments.push(html+'</section>');
- }
- return fragments.join('');
+ const sorted=[...list].sort((a,b)=>sortByBroadcast(a,b)||savedStatusOrder.indexOf(a.status)-savedStatusOrder.indexOf(b.status));
+ const periods=new Map();
+ for(const a of sorted){const period=broadcastPeriod(a);if(!periods.has(period))periods.set(period,[]);periods.get(period).push(a)}
+ const foldStatus=statusFilter==='all'?'all':statusFilter;
+ return [...periods].map(([period,entries])=>{const folded=collapsedPeriods.has(foldKey(foldStatus,period));return `<section class="saved-period pattern-a-year"><button type="button" class="saved-period-heading" aria-expanded="${!folded}" data-fold-status="${safeText(foldStatus)}" data-fold-period="${safeText(period)}"><span class="fold-symbol" aria-hidden="true">${uiIcon(folded?'chevron-right':'chevron-down')}</span>${safeText(period)} <span>${entries.length}作品</span><span class="period-divider"></span></button><div class="saved-items pattern-a-list" ${folded?'hidden':''}>${entries.map(recordCard).join('')}</div></section>`}).join('');
 }
 function setNav(){
  $$('[data-stat-filter]').forEach(b=>b.setAttribute('aria-current',String(mode==='saved'&&statusFilter===b.dataset.statFilter)));
