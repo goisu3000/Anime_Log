@@ -400,6 +400,7 @@ function normalizeSearch(v){return String(v||'').normalize('NFKC').toLowerCase()
  .replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60))
  .replace(/[\s\u3000:：!！?？・._\-ー–—'’「」『』()（）\[\]【】]/g,'')}
 const aliasGroups=[
+ {term:'Gundam',names:['ガンダム','機動戦士ガンダム','gundam','mobile suit gundam']},
  {term:'re zero', names:['リゼロ','りぜろ','rezero','re zero','re:zero','reゼロ','Re:ゼロから始める異世界生活']},
  {term:'Shingeki no Kyojin', names:['進撃','進撃の巨人','attack on titan','aot']},
  {term:'Kimetsu no Yaiba',names:['鬼滅','鬼滅の刃','demonslayer']},
@@ -530,14 +531,14 @@ function render(){
  $('#sectionTitle').textContent=isSaved?(statusFilter==='all'?'マイリスト':`マイリスト · ${statusLabels[statusFilter]}`):(query?`「${query}」の検索結果 · ${periodLabel()}`:currentScope()==='all'?'全年代のアニメ':currentScope().startsWith('decade:')?`${periodLabel()}のアニメ`:`${periodLabel()} ${$('#seasonSelect').value==='all'?'通年':seasonLabels[$('#seasonSelect').value]}アニメ`);
  $('#sectionDescription').textContent=isSaved?'視聴状況ごとに整理し、各カテゴリ内は放送年・シーズンの新しい順に表示します。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称から検索しています（対象：${periodLabel()}）。`:'放送時期や年代を選んで作品を探せます。';
  years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved);syncPeriodUI();
- $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`検索対象：${periodLabel()}。別の年代を選ぶと自動的に絞り込みます。`:'作品名・略称を入力すると全年代から検索します。年代・放送年で絞り込むこともできます。';
+ $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'作品名・略称を入力すると全年代から検索します。年代・放送年で絞り込むこともできます。';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
  $('#searchBtn').textContent=isSaved?'絞り込む':exploreRegistered?'絞り込む':'検索 ↗';
  $('#searchInput').placeholder=isSaved?'マイリストから作品名で絞り込み':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称で検索（例：リゼロ / rezero）';
  let list;
  if(isSaved)list=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
  else if(exploreRegistered){list=Object.values(saved).filter(a=>a&&a.status===exploreStatusFilter&&matchingPeriod(a))}
- else list=items;
+ else list=query ? items.filter(matchingPeriod) : items;
  let filtered=list.filter(a=>(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()));
  if(isSaved&&statusFilter!=='all')filtered=filtered.filter(a=>a.status===statusFilter);
  if(isSaved&&statusFilter==='watched'&&unratedOnly)filtered=filtered.filter(a=>!readReview(a.review));
@@ -555,7 +556,7 @@ function render(){
  else if(!filtered.length){
   grid.innerHTML=isSaved?emptyCard('該当する作品がありません','視聴状況や検索条件を変更するか、アニメを探して作品を登録してください。','📓','アニメを探す'):
    exploreRegistered?emptyCard('この条件で登録した作品はありません','放送年・季節を変えるか、上の「すべて」で作品を探して登録してください。','🔎'):
-   emptyCard('作品が見つかりません','検索条件を変更するか、タイトルを手動で追加してください。','🔎');
+   emptyCard('作品が見つかりません',query&&hasNext?'指定された年代の作品はまだ見つかっていません。下の「さらに読み込む」で続きを検索できます。':'検索条件を変更するか、タイトルを手動で追加してください。','🔎');
  }else grid.innerHTML=isSaved?savedGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
@@ -564,12 +565,43 @@ function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 async function fetchPage(reset=true){if(loading&&!reset)return;if(reset){activeController?.abort();page=1;items=[];hasNext=false}loading=true;requestCounter++;const thisRequest=requestCounter;const controller=new AbortController();activeController=controller;render();
  const scope=currentScope(), exact=/^\d{4}$/.test(scope), season=$('#seasonSelect').value;
  const seasonal=!query&&exact&&season!=='all';
- const params=new URLSearchParams({sfw:'true',limit:'24',page:String(page)});
- if(!seasonal){if(query)params.set('q',apiSearchTerm(query));else{params.set('order_by','start_date');params.set('sort','desc')}
-  const dates=dateBounds();if(dates){params.set('start_date',dates[0]);params.set('end_date',dates[1])}}
- const url=seasonal?`${API}/seasons/${scope}/${season}?${params}`:`${API}/anime?${params}`;
- try{let wait=Math.max(0,420-(Date.now()-lastRequestAt));if(wait)await delay(wait);lastRequestAt=Date.now();const resp=await fetch(url,{signal:controller.signal,headers:{'Accept':'application/json'}});if(!resp.ok){throw new Error(resp.status===429?'アクセスが集中しています（429）。時間をあけて再読み込みしてください。':resp.status===403?'APIからアクセスが制限されています（403）。時間をあけて試してください。':`API応答エラー（${resp.status}）`)}const payload=await resp.json();if(!Array.isArray(payload.data))throw new Error('作品情報の形式が変更された可能性があります。');if(thisRequest!==requestCounter)return;
- const incoming=(payload.data||[]).filter(a=>a&&Number.isInteger(a.mal_id)).map(a=>{const m=model(a);if(seasonal){if(!m.year)m.year=Number(scope);if(!m.season)m.season=season}return m});const uniq=new Map([...items,...incoming].map(a=>[a.id,a]));items=[...uniq.values()];hasNext=Boolean(payload.pagination?.has_next_page);loading=false;render();
+ const params=new URLSearchParams({sfw:'true',limit:query?'50':'24',page:String(page)});
+ if(query){
+  // Dates sent to Tenrai describe separate start/end constraints. In particular,
+  // end_date filters by when the show FINISHED, not the upper bound of its premiere.
+  // Search by title, then compare premiere year/season locally to avoid dropping
+  // still-airing or long-running anime. Newer titles first reduces pagination.
+  params.set('q',apiSearchTerm(query));params.set('order_by','start_date');params.set('sort','desc');
+ }else if(!seasonal){
+  params.set('order_by','start_date');params.set('sort','desc');
+  const dates=dateBounds();if(dates){params.set('start_date',dates[0]);params.set('end_date',dates[1])}
+ }
+ const makeUrl=()=>seasonal?`${API}/seasons/${scope}/${season}?${params}`:`${API}/anime?${params}`;
+ let url=makeUrl();
+ try{
+  // No relevant match on page one? Search up to 3 pages automatically rather
+  // than incorrectly reporting zero results. Extra pages are fetched only when needed.
+  const maxScan=query&&scope!=='all'?3:1;
+  for(let scan=0;scan<maxScan;scan++){
+   params.set('page',String(page));url=makeUrl();
+   const wait=Math.max(0,420-(Date.now()-lastRequestAt));if(wait)await delay(wait);
+   if(thisRequest!==requestCounter)return;
+   lastRequestAt=Date.now();
+   const resp=await fetch(url,{signal:controller.signal,headers:{'Accept':'application/json'}});
+   if(!resp.ok)throw new Error(resp.status===429?'アクセスが集中しています（429）。時間をあけて再読み込みしてください。':resp.status===403?'APIからアクセスが制限されています（403）。時間をあけて試してください。':`API応答エラー（${resp.status}）`);
+   const payload=await resp.json();
+   if(!Array.isArray(payload.data))throw new Error('作品情報の形式が変更された可能性があります。');
+   if(thisRequest!==requestCounter)return;
+   const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)).map(a=>{
+    const m=model(a);if(seasonal){if(!m.year)m.year=Number(scope);if(!m.season)m.season=season}return m
+   });
+   items=[...new Map([...items,...incoming].map(a=>[a.id,a])).values()];
+   hasNext=Boolean(payload.pagination?.has_next_page);
+   if(!query||scope==='all'||items.some(matchingPeriod)||!hasNext)break;
+   page++;
+  }
+  loading=false;render();
+
  }catch(err){if(thisRequest!==requestCounter)return;loading=false;hasNext=false;
  const blocked=err instanceof TypeError || /Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
  const reason=blocked?'外部のアニメデータAPIに接続できませんでした。通信・ブラウザの制限・API側の障害などが考えられます。':(err?.message||'通信環境やAPIの稼働状況を確認してください。');
