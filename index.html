@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.7.3 | アニメ視聴管理</title>
+<title>ANI:LOG v1.7.4 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -476,7 +476,7 @@
     </nav></div>
     <div class="share-card"><strong>🔗 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る ↗</button></div>
     <div class="sidebar-bottom"><div class="tiny-ico">💾</div><strong>あなたの記録は、この端末に。</strong><p>アカウント不要。チェック履歴はブラウザ内に保存されます。データ消去に備えてバックアップがおすすめです。</p><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す ↓</button><button type="button" class="outline-btn" id="importBtn">読み込む ↑</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.7.3 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.7.4 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -690,7 +690,7 @@ function publicAnimeAllowed(a){
 // Nicknames are a small local supplement, NOT a complete encyclopedia.
 function normalizeSearch(v){return String(v||'').normalize('NFKC').toLowerCase()
  .replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60))
- .replace(/[\s\u3000:：!！?？・._\-ー–—'’「」『』()（）\[\]【】★☆]/g,'')}
+ .replace(/[\s\u3000:：!！?？・._\-ー–—'’「」『』()（）\[\]【】★☆;；]/g,'')}
 const aliasGroups=[
  {term:'Gundam',names:['ガンダム','機動戦士ガンダム','gundam','mobile suit gundam']},
  {term:'re zero',names:['リゼロ','りぜろ','rezero','re zero','re:zero','reゼロ','Re:ゼロから始める異世界生活']},
@@ -753,7 +753,7 @@ function matchedAliasGroups(input){
 // v1.6: Search Japanese Wikipedia only when a full Tenrai search finds too few matching titles.
 // This supplements hand-maintained nicknames and cached titles without requiring a login or paid API.
 // Never call this on keystrokes. Cache positive lookups for 30 days, misses for 3 days.
-const AUTO_ALIAS_LIMIT=75;
+const AUTO_ALIAS_LIMIT=110;
 const autoAliasCache=new Map();
 try{
  const rows=JSON.parse(localStorage.getItem(WIKI_ALIAS_KEY)||'[]');
@@ -773,12 +773,12 @@ async function wikiQuery(extra, parentSignal){
  parentSignal?.addEventListener('abort',stop,{once:true});
  const timer=setTimeout(()=>local.abort(),2600);
  try{
-  const r=await fetch('https://ja.wikipedia.org/w/api.php?'+params,{signal:local.signal,headers:{Accept:'application/json'}});
+  const r=await fetch('https://ja.wikipedia.org/w/api.php?'+params,{signal:local.signal,headers:WIKI_AGENT});
   if(!r.ok)throw Error('Wikipedia '+r.status);
   return await r.json();
  }finally{clearTimeout(timer);parentSignal?.removeEventListener('abort',stop)}
 }
-async function wikipediaVariants(term,signal){
+async function wikipediaVariantsLegacy(term,signal){
  const key=normalizeSearch(term);
  // Avoid sending broad, single-character, or code-like queries to Wikipedia.
  if(key.length<2||key.length>65||!/[\u30a0-\u30ff\u3400-\u9fff]/.test(key))return [];
@@ -808,6 +808,82 @@ async function wikipediaVariants(term,signal){
   return result;
  }catch(err){if(signal?.aborted)throw err;return []} // Network/CORS errors must not break Tenrai results.
 }
+// v1.7.4: Automatic Japanese title lookup when the ordinary search has too few results.
+// Never runs while typing. Names are checked before being used to search Tenrai.
+const WIKI_AGENT={'Accept':'application/json','Api-User-Agent':'ANI-LOG/1.7.4 (https://github.com/goisu3000/Anime_Log)'};
+async function wikiFetchJSON(url,signal){
+ const ctrl=new AbortController(),stop=()=>ctrl.abort();
+ if(signal?.aborted)throw new DOMException('Aborted','AbortError');
+ signal?.addEventListener('abort',stop,{once:true});const timer=setTimeout(()=>ctrl.abort(),3500);
+ try{const r=await fetch(url,{signal:ctrl.signal,headers:WIKI_AGENT});if(!r.ok)throw Error('Wikimedia '+r.status);return await r.json()}
+ finally{clearTimeout(timer);signal?.removeEventListener('abort',stop)}
+}
+async function wikidataVariants(term,signal){
+ const key=normalizeSearch(term);
+ const p=new URLSearchParams({action:'wbsearchentities',format:'json',origin:'*',language:'ja',uselang:'ja',search:term,limit:'6'});
+ const data=await wikiFetchJSON('https://www.wikidata.org/w/api.php?'+p,signal);
+ const hits=(data.search||[]).filter(h=>{
+  const m=normalizeSearch(h.match?.text||h.label);
+  return /^Q\d+$/.test(h.id||'')&&(m===key||(key.length>=5&&m.includes(key)));
+ }).slice(0,2);
+ if(!hits.length)return [];
+ const names=hits.map(h=>h.label).filter(Boolean);
+ const ids=hits.map(h=>h.id).join('|');
+ try{
+  const details=new URLSearchParams({action:'wbgetentities',format:'json',origin:'*',ids,props:'labels|sitelinks',languages:'ja|en',sitefilter:'enwiki|jawiki'});
+  const result=await wikiFetchJSON('https://www.wikidata.org/w/api.php?'+details,signal);
+  for(const h of hits){const e=result.entities?.[h.id];if(e)names.push(e.labels?.en?.value,e.sitelinks?.enwiki?.title)}
+ }catch(e){if(signal?.aborted)throw e}
+ return names.filter(Boolean);
+}
+async function wikipediaTextVariants(term,signal){
+ const key=normalizeSearch(term);
+ const data=await wikiQuery({list:'search',srwhat:'text',srlimit:'6',srprop:'snippet|redirecttitle',srsearch:term},signal);
+ const titles=[];
+ for(const hit of data.query?.search||[]){
+  const title=String(hit.title||''),alias=String(hit.redirecttitle||'');
+  const text=String(hit.snippet||'').replace(/<[^>]+>/g,'');
+  if(/^(一覧|年表|登場人物一覧|List of|\d{4}年)/i.test(title))continue;
+  if(![title,alias,text].some(s=>normalizeSearch(s).includes(key)))continue;
+  titles.push(title);if(titles.length===2)break;
+ }
+ if(!titles.length)return [];
+ try{
+  const links=await wikiQuery({redirects:'1',prop:'langlinks',lllang:'en',lllimit:'1',titles:titles.join('|')},signal);
+  for(const page of links.query?.pages||[])if(!page.missing&&page.langlinks?.[0]?.title)titles.push(page.langlinks[0].title);
+ }catch(e){if(signal?.aborted)throw e}
+ return titles;
+}
+const WIKI_ADVANCED_KEY='anilog-wikimedia-advanced-v174';
+const advancedAliasCache=new Map();
+try{for(const row of JSON.parse(localStorage.getItem(WIKI_ADVANCED_KEY)||'[]')){
+ if(row&&typeof row.key==='string'&&Number.isFinite(row.at)&&Array.isArray(row.terms))advancedAliasCache.set(row.key,row);
+}}catch{}
+function storeAdvancedAlias(key,terms){
+ advancedAliasCache.delete(key);advancedAliasCache.set(key,{key,at:Date.now(),terms:terms.slice(0,4)});
+ while(advancedAliasCache.size>70)advancedAliasCache.delete(advancedAliasCache.keys().next().value);
+ try{localStorage.setItem(WIKI_ADVANCED_KEY,JSON.stringify([...advancedAliasCache.values()]))}catch{}
+}
+async function wikipediaVariants(term,signal){
+ const key=normalizeSearch(term);
+ if(key.length<3||key.length>65||!/[\u30a0-\u30ff\u3400-\u9fff]/.test(key))return [];
+ const cache=autoAliasCache.get(key);
+ if(cache&&cache.terms.length&&Date.now()-cache.at<30*86400000)return cache.terms;
+ const advanced=advancedAliasCache.get(key);
+ if(advanced&&Date.now()-advanced.at<(advanced.terms.length?30:1)*86400000)return advanced.terms;
+ // Legacy exact redirect/title matching remains useful and inexpensive.
+ let candidates=await wikipediaVariantsLegacy(term,signal);
+ if(candidates.length)return candidates;
+ let completedLookup=false;
+ try{candidates=await wikidataVariants(term,signal);completedLookup=true}catch(e){if(signal?.aborted)throw e}
+ if(!candidates.length)try{candidates=await wikipediaTextVariants(term,signal);completedLookup=true}catch(e){if(signal?.aborted)throw e}
+ const out=[...new Map(candidates.filter(s=>typeof s==='string'&&s.length<=140&&normalizeSearch(s)!==key).map(s=>[normalizeSearch(s),s])).values()].slice(0,4);
+ if(out.length)saveAutoAlias(key,out);
+ // Never cache a temporary, all-source network failure as a confirmed "no match".
+ if(out.length||completedLookup)storeAdvancedAlias(key,out);
+ return out;
+}
+
 function apiSearchTerm(input){const group=matchedAliasGroups(input)[0];return group?.term||String(input||'').trim().normalize('NFKC')}
 function searchVariants(input){
  const original=String(input||'').trim().normalize('NFKC');if(!original)return [];
@@ -1230,7 +1306,10 @@ async function fetchPage(reset=true){
    // Previously retrieved items remain visible if Wikipedia is unavailable.
    const relevant=items.filter(a=>matchingPeriod(a)&&(localTitleMatch(a,query)||relevanceScore(a,query)>0));
    const isExact=relevant.some(a=>titleFields(a).some(t=>t===normalizeSearch(query)));
-   if(reset && (relevant.length===0||(relevant.length===1&&!isExact))){
+   // A local alias resolving to an actual matching title needs no external encyclopedia lookup.
+   // This avoids a redundant Wikipedia/Wikidata roundtrip for familiar nicknames.
+   const knownAliasResolved=Boolean(matchedAliasGroups(query).length && relevant.length);
+   if(reset && !knownAliasResolved && (relevant.length===0||(relevant.length===1&&!isExact))){
     const candidates=await wikipediaVariants(query,controller.signal);
     if(thisRequest!==requestCounter)return;
     const existing=new Set(searchProgress.map(c=>normalizeSearch(c.term)));
