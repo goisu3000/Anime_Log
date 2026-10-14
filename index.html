@@ -680,11 +680,13 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 .saved-mode #cards .pattern-a-watch-column{display:flex;flex-direction:column;align-self:stretch;justify-content:center;align-items:flex-start;min-width:0;gap:9px;padding:6px 15px 6px 17px;border-left:1px solid #303a41}
 .saved-mode #cards .pattern-a-personal-column{display:flex;flex-direction:column;align-self:stretch;justify-content:center;gap:9px;min-width:0;padding:6px 0 6px 16px;border-left:1px solid #303a41}
 .pattern-a-field-name{font-size:10px;color:#a4b4bc;font-weight:500;line-height:1.5}
-.pattern-a-rating{display:flex;flex-direction:column;gap:5px;min-width:0}
-.pattern-a-rating-line{display:flex;gap:6px;align-items:center;flex-wrap:wrap;min-width:0}
-.pattern-a-rating-line .review-stars-mini{font-size:16px;white-space:nowrap;letter-spacing:1px}
-.pattern-a-rating-score{font-size:11px;color:#d2dadf;white-space:nowrap}
-.pattern-a-rating-empty{font-size:12px;color:#c3cdd3}
+.pattern-a-rating{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pattern-a-rating-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
+.pattern-a-rating-label{display:inline-flex;align-items:center;line-height:1;font-size:10px;color:#a4b4bc;font-weight:500;white-space:nowrap}
+.pattern-a-rating-line .review-stars-mini{display:inline-flex;align-items:center;gap:2px;font-size:16px;white-space:nowrap;letter-spacing:0;line-height:1}
+.pattern-a-rating-line .review-stars-mini .ui-icon{width:15px;height:15px}
+.pattern-a-rating-score{font-size:11px;color:#d2dadf;white-space:nowrap;line-height:1}
+.pattern-a-rating-empty{font-size:12px;color:#c3cdd3;line-height:1}
 .pattern-a-rate-edit{background:none;border:0;padding:3px 0;margin:0;color:#cce3bd;text-decoration:underline;text-underline-offset:3px;font-size:11px;cursor:pointer}
 .pattern-a-rate-edit:hover{color:var(--accent)}
 .pattern-a-rating-unavailable{font-size:11px;line-height:1.7;color:#9facb3}
@@ -1890,7 +1892,7 @@ function patternAStatusMenu(a){const status=a.status||'watched',id=safeText(a.id
  return `<details class="record-menu pattern-a-status-menu"><summary aria-label="${safeText(a.title)}の視聴状態：${label}。変更する">${savedStatusIcons[status]||uiIcon('check')}<span>${label}</span>${uiIcon('chevron-down')}</summary><select data-status-id="${id}" aria-label="${safeText(a.title)}の視聴状況"><option value="">リストから削除</option>${Object.entries(statusLabels).filter(([v])=>validStatuses.has(v)).map(([v,l])=>`<option value="${v}" ${v===status?'selected':''}>${safeText(l)}</option>`).join('')}</select></details>`;
 }
 function patternAReview(a){const r=readReview(saved[a.id]?.review);if(a.status!=='watched')return `<div class="pattern-a-rating-unavailable">評価は視聴後に記録できます</div>`;
- return `<div class="pattern-a-rating"><span class="pattern-a-field-name">自分の評価</span><div class="pattern-a-rating-line">${r?reviewStars(r.overall):'<span class="pattern-a-rating-empty">未評価</span>'}${r?`<span class="pattern-a-rating-score">${r.overall} / 5</span>`:''}<button type="button" class="pattern-a-rate-edit" data-rate-id="${safeText(a.id)}">${r?'評価を編集':'評価する'}</button></div></div>`;
+ return `<div class="pattern-a-rating"><div class="pattern-a-rating-line"><span class="pattern-a-field-name pattern-a-rating-label">自分の評価</span>${r?reviewStars(r.overall):'<span class="pattern-a-rating-empty">未評価</span>'}${r?`<span class="pattern-a-rating-score">${r.overall} / 5</span>`:''}<button type="button" class="pattern-a-rate-edit" data-rate-id="${safeText(a.id)}">${r?'評価を編集':'評価する'}</button></div></div>`;
 }
 function patternAProgress(a){if(!['watching','paused'].includes(a.status))return '';
  const total=totalEpisodes(a),current=watchedCount(a),usable=total!==null&&current<=total,hint=progressHint(current,total);
