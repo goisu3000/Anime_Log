@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.9.4 | アニメ視聴管理</title>
+<title>ANI:LOG v1.9.5 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -991,6 +991,43 @@ body.view-detail .detail-aspect-unrated{font-size:11px;color:#96aaa9}
  body.view-detail .detail-rating-aspects{padding:12px 0 0;border-left:0;border-top:1px solid #43544f}
  body.view-detail .detail-rating-subheading span{display:inline}
 }
+
+/* v1.9.5: Memo content is editorial text, not a large button.
+   Keep the outer journal card, and move the actual edit action to its heading. */
+body.view-detail .detail-journal-memo .detail-note-heading{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;
+  gap:9px 12px;min-width:0;margin-bottom:17px
+}
+body.view-detail .detail-journal-memo .detail-note-heading .detail-journal-cell-heading{
+  margin:0
+}
+body.view-detail .detail-journal-memo .detail-note-edit{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid #60727b;border-radius:8px;background:#26343c;
+  color:#e8f0ec;min-height:35px;padding:6px 10px;
+  font-size:11px;font-weight:700;line-height:1.4;cursor:pointer;white-space:nowrap
+}
+body.view-detail .detail-journal-memo .detail-note-edit:hover{
+  border-color:#b7d89f;background:#34453d
+}
+body.view-detail .detail-journal-memo .detail-note-edit .ui-icon{
+  width:14px;height:14px;flex:0 0 14px
+}
+body.view-detail .detail-journal-memo .detail-note-text{
+  padding:0;margin:0;background:none;border:0;box-shadow:none;
+  color:#d1dee4;font-size:12px;line-height:1.9;font-weight:400;
+  overflow-wrap:anywhere;white-space:pre-line;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:5;
+  overflow:hidden
+}
+body.view-detail .detail-journal-memo .detail-note-empty{
+  color:#a5b5c2;font-size:12px;line-height:1.75;margin:0
+}
+@media(max-width:740px){
+  body.view-detail .detail-journal-memo .detail-note-heading{margin-bottom:12px}
+  body.view-detail .detail-journal-memo .detail-note-text{font-size:12px;line-height:1.8}
+}
+
 </style>
 </head>
 <body>
@@ -1020,7 +1057,7 @@ body.view-detail .detail-aspect-unrated{font-size:11px;color:#96aaa9}
     </nav></div>
     <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.9.4 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.9.5 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2696,7 +2733,12 @@ function detailHeader(a,full=null){
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'} ${uiIcon('down')}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}</div>`;
  const reviewPanel=`<div class="detail-journal-cell detail-journal-review">${mode==='share'?(publicReviewMarkup(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">共有されている評価はありません</p>'):(reviewDetail(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">視聴済みにすると★評価を記録できます</p>')}</div>`;
- const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-journal-cell-heading">作品メモ</div>${noteMarkup(a)||'<p class="detail-journal-empty">作品を登録するとメモを残せます</p>'}</div>`;
+ const detailNote=saved[a.id]?readNote(saved[a.id]):null;
+ // Detail page: put the editing action in the heading and show saved text directly
+ // on the card surface. Do not reuse the bordered list-card note-preview button.
+ const noteAction=saved[a.id]?`<button type="button" class="detail-note-edit" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${detailNote?.text?'編集':'追加'}">${uiIcon('edit')} ${detailNote?.text?'メモを編集する':'メモを書く'}</button>`:'';
+ const noteContent=saved[a.id]?(detailNote?.text?`<p class="detail-note-text">${safeText(detailNote.text)}</p>`:'<p class="detail-note-empty">まだメモはありません</p>'):'<p class="detail-note-empty">作品を登録するとメモを残せます</p>';
+ const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-note-heading"><div class="detail-journal-cell-heading">作品メモ</div>${noteAction}</div>${noteContent}</div>`;
  const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2><span>${mode==='share'?'共有された情報を表示しています':'このブラウザに保存'}</span></div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}</div></section>`;
  return header+journal;
 }
