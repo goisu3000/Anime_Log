@@ -1100,7 +1100,7 @@ body.view-detail .detail-journal-memo .detail-note-empty{
  .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .ui-icon{width:16px;height:16px;}
 }
 
-/* UI Polish: Unify My List toolbar with Discover toolbar, inline count + sort, and compact filter panel */
+/* UI Polish: Unify My List toolbar, tactile Search button, and highlighted Share actions */
 body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{
   align-items:center;gap:10px;margin-bottom:18px;
 }
@@ -1108,7 +1108,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls{
   display:flex;align-items:center;gap:10px;flex:1;min-width:0;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox{
-  background:#1c2125;border:1px solid transparent;border-radius:8px;padding:0 12px;
+  background:#1c2125;border:1px solid transparent;border-radius:8px;padding:0 7px 0 12px;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox:focus-within{
   border-color:#839d68;
@@ -1143,6 +1143,70 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
 body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel .review-list-actions{
   margin:10px 0 0;padding:10px 12px;
 }
+
+/* Search button: clean text pill inside the search bar */
+.searchbox{
+  padding:0 7px 0 12px;
+}
+.searchbox #searchBtn{
+  background:#262e34;border:1px solid #3c4750;color:#dce5ea;
+  border-radius:6px;padding:6px 13px;height:30px;
+  display:inline-flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:600;letter-spacing:.02em;
+  transition:background .16s,border-color .16s,color .16s;
+}
+.searchbox #searchBtn:hover{
+  background:#2f3a41;border-color:#839d68;color:var(--accent);
+}
+.searchbox #searchBtn:active{
+  transform:translateY(1px);
+}
+
+/* Sidebar Share: unified nav item structure + subtle accent highlight */
+.sidebar .share-card{
+  padding:0;margin:0;border:0;background:none;
+}
+.sidebar .share-card .share-action{
+  width:100%;display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:8px;
+  background:rgba(196,233,149,.07);border:1px solid rgba(196,233,149,.32);
+  color:#d9f1b4;font-size:13px;font-weight:600;text-align:left;
+  transition:background .18s,border-color .18s,color .18s,box-shadow .18s;
+}
+.sidebar .share-card .share-action .icon-glyph{
+  display:inline-grid;place-items:center;flex:0 0 18px;width:18px;height:18px;color:var(--accent);
+}
+.sidebar .share-card .share-action .ui-icon{
+  width:18px;height:18px;margin:0;color:currentColor;
+}
+.sidebar .share-card .share-action:hover{
+  background:rgba(196,233,149,.15);border-color:var(--accent);color:#f3fde4;
+  box-shadow:0 6px 18px rgba(196,233,149,.08);
+}
+
+/* Top header Share & Add buttons: highlight Share while keeping editorial harmony */
+.heading-actions .share-action{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:1px solid rgba(196,233,149,.38);background:rgba(196,233,149,.09);
+  color:#daf2b6;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:600;
+  transition:background .18s,border-color .18s,color .18s,box-shadow .18s;
+}
+.heading-actions .share-action .ui-icon{
+  width:15px;height:15px;color:var(--accent);
+}
+.heading-actions .share-action:hover{
+  background:rgba(196,233,149,.17);border-color:var(--accent);color:#f4fde6;
+  box-shadow:0 4px 14px rgba(196,233,149,.08);
+}
+.heading-actions .add-btn{
+  border:1px solid #3c464d;background:#1b2126;color:#cbd5dc;
+  border-radius:8px;padding:10px 13px;font-size:12px;font-weight:500;
+  transition:background .18s,border-color .18s,color .18s;
+}
+.heading-actions .add-btn:hover{
+  background:#232b31;border-color:#697a86;color:#f0f4f7;filter:none;
+}
+
 @media(max-width:740px){
   body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{
     align-items:flex-start;margin-bottom:14px;
@@ -1152,6 +1216,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
   }
   body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox input{
     height:42px;font-size:16px;
+  }
+  .searchbox #searchBtn{
+    padding:5px 11px;height:28px;font-size:11px;
   }
   body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls .result-info{
     height:38px;font-size:11px;padding:0 2px;
@@ -1190,7 +1257,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
       </div>
       <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
     </nav></div>
-    <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
+    <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
     <div class="side-foot">ANI:LOG v1.9.5 · 記録はブラウザ内に保存</div>
   </aside>
@@ -1199,7 +1266,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
 
     <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
-<div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
+<div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
 <details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
       <div class="explore-status-row" id="exploreStatusTabs" role="group" aria-label="アニメを探す：視聴状況で絞り込み">
         <span class="explore-filter-label">視聴状況 <span class="mobile-swipe-hint">横にスワイプ ↔</span></span>
@@ -2109,7 +2176,7 @@ function render(){
  $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
  $('#searchSortWrap').classList.toggle('hidden',isSaved||exploreRegistered||!query);
- $('#searchBtn').innerHTML=isSaved||exploreRegistered?'検索':'検索 '+uiIcon('search');
+ $('#searchBtn').textContent='検索';
  $('#searchInput').placeholder=isSaved?'リスト内を検索':exploreRegistered?'登録済みの作品を絞り込み':'作品名・略称・一部分で検索（例：ガンダム / まどマギ）';
  let list;
  if(isSaved)list=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
