@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.9.3 | アニメ視聴管理</title>
+<title>ANI:LOG v1.9.4 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -928,6 +928,69 @@ body.view-detail .detail-tab{font-size:13px;font-weight:700}
 @media(min-width:741px) and (max-width:1330px){body.view-detail .detail-status-completion{grid-template-columns:1fr}body.view-detail .detail-date-disclosure>summary{width:max-content;max-width:100%}}
 @media(max-width:390px){body.view-detail .detail-status-completion{grid-template-columns:1fr}body.view-detail .detail-date-disclosure>summary{width:max-content;max-width:100%}}
 
+
+/* v1.9.4 — Pattern A detail: the selected side-by-side overall / four-aspect rating composition. */
+@media(min-width:1251px){
+ body.view-detail .detail-journal-grid:not(.detail-journal-shared){grid-template-columns:minmax(0,1fr) minmax(0,1.46fr) minmax(0,1fr)}
+}
+body.view-detail .detail-journal-review:has(.detail-rating-layout){background:linear-gradient(138deg,#21312e 0%,#202c30 48%,#202a32 100%);border-color:#425a4c;padding:17px 19px}
+body.view-detail .detail-rating-layout{min-width:0}
+body.view-detail .detail-rating-header{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:19px}
+body.view-detail .detail-rating-header .detail-journal-cell-heading{margin:0;color:#d5f0c2;font-weight:800;font-size:13px}
+body.view-detail .detail-rating-edit{border:1px solid #60727b;border-radius:8px;background:#26343c;color:#e8f0ec;min-height:35px;padding:6px 10px;display:inline-flex;align-items:center;justify-content:center;gap:7px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap}
+body.view-detail .detail-rating-edit:hover{border-color:#b7d89f;background:#34453d}
+body.view-detail .detail-rating-edit .ui-icon{width:14px;height:14px}
+body.view-detail .detail-rating-body{display:grid;grid-template-columns:minmax(0,1.06fr) minmax(0,1fr);gap:18px;align-items:center;min-width:0}
+body.view-detail .detail-rating-primary{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+body.view-detail .detail-rating-caption{color:#b6c7c7;font-size:11px;line-height:1.45;font-weight:650}
+body.view-detail .detail-rating-total{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+body.view-detail .detail-rating-bigstars .review-stars-mini{font-size:24px;letter-spacing:1px;color:#f3cb71;white-space:nowrap}
+body.view-detail .detail-rating-bigstars .review-stars-mini .ui-icon{width:24px;height:24px;stroke-width:1.35}
+body.view-detail .detail-rating-bigstars .review-stars-mini .rated-icon .ui-icon{fill:currentColor;fill-opacity:.90}
+body.view-detail .detail-rating-bigstars .review-stars-mini .empty .ui-icon{color:#71848b}
+body.view-detail .detail-rating-number{font-weight:800;font-size:28px;line-height:1;color:#f5f7f2;letter-spacing:-.05em;white-space:nowrap;font-variant-numeric:tabular-nums}
+body.view-detail .detail-rating-number small{font-size:13px;font-weight:550;color:#aebec1;letter-spacing:normal}
+body.view-detail .detail-rating-word{font-size:11px;color:#d6eaba;padding:6px 15px;border-radius:999px;background:#263c30;border:1px solid #3c6046;font-weight:750}
+body.view-detail .detail-rating-no-stars{font-size:23px;letter-spacing:1px;color:#75868e}
+body.view-detail .detail-rating-no-score{font-size:12px;font-weight:700;color:#d4dfdc}
+body.view-detail .detail-rating-helper{font-size:11px;color:#b3c4bf;line-height:1.6}
+body.view-detail .detail-rating-aspects{border-left:1px solid #43544f;padding-left:18px;display:grid;gap:9px;min-width:0}
+body.view-detail .detail-rating-subheading{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:2px}
+body.view-detail .detail-rating-subheading span{color:#95b1a7;font-size:10px;font-weight:500;white-space:nowrap}
+body.view-detail .detail-aspect-row{display:flex;justify-content:space-between;align-items:center;gap:9px;min-width:0;font-size:12px}
+body.view-detail .detail-aspect-label{color:#d8e3e4;font-size:11px;font-weight:650;white-space:nowrap}
+body.view-detail .detail-aspect-measure{display:flex;align-items:center;justify-content:flex-end;gap:7px;white-space:nowrap;min-width:0}
+body.view-detail .detail-aspect-stars{font-size:15px;letter-spacing:.015em;line-height:1;color:#f3ca6f}
+body.view-detail .detail-aspect-empty{color:#798a8e}
+body.view-detail .detail-aspect-value{font-size:12px;font-weight:750;color:#eaf0eb;min-width:32px;text-align:right;font-variant-numeric:tabular-nums}
+body.view-detail .detail-aspect-value small{font-weight:500;font-size:10px;color:#a1b5b6}
+body.view-detail .detail-aspect-unrated{font-size:11px;color:#96aaa9}
+@media(min-width:741px) and (max-width:1250px){
+ body.view-detail .detail-journal-grid:not(.detail-journal-shared){grid-template-columns:repeat(2,minmax(0,1fr))}
+ body.view-detail .detail-journal-review:has(.detail-rating-layout){grid-column:1/-1;grid-row:2}
+ body.view-detail .detail-journal-memo{grid-column:2;grid-row:1}
+ body.view-detail .detail-rating-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+}
+@media(max-width:740px){
+ body.view-detail .detail-journal-review:has(.detail-rating-layout){padding:14px}
+ body.view-detail .detail-rating-header{margin-bottom:15px}
+ body.view-detail .detail-rating-body{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:11px}
+ body.view-detail .detail-rating-aspects{padding-left:12px;gap:8px}
+ body.view-detail .detail-rating-total{gap:4px 8px}
+ body.view-detail .detail-rating-bigstars .review-stars-mini{font-size:21px;letter-spacing:0}
+ body.view-detail .detail-rating-bigstars .review-stars-mini .ui-icon{width:20px;height:20px}
+ body.view-detail .detail-rating-number{font-size:23px}
+ body.view-detail .detail-aspect-label{font-size:10px}
+ body.view-detail .detail-aspect-stars{font-size:13px}
+ body.view-detail .detail-aspect-measure{gap:4px}
+ body.view-detail .detail-rating-subheading span{display:none}
+}
+@media(max-width:390px){
+ body.view-detail .detail-rating-body{grid-template-columns:minmax(0,1fr);gap:15px}
+ body.view-detail .detail-rating-primary{gap:8px}
+ body.view-detail .detail-rating-aspects{padding:12px 0 0;border-left:0;border-top:1px solid #43544f}
+ body.view-detail .detail-rating-subheading span{display:inline}
+}
 </style>
 </head>
 <body>
@@ -957,7 +1020,7 @@ body.view-detail .detail-tab{font-size:13px;font-weight:700}
     </nav></div>
     <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.9.3 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.9.4 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1651,10 +1714,18 @@ async function saveCompletionDateImpl(id,clear=false){
  if(!await persist()){saved[id]=old;return}
  renderDetailParts(detailNonce);toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
 }
-function reviewDetail(a){if(mode==='share'||saved[a.id]?.status!=='watched')return '';
+// v1.9.4: Overall rating uses five stars; the four optional aspects use the existing FOUR-grade scale.
+// Do not synthesize scores for fields the user has never rated.
+function reviewAspectStarMarkup(value){
+ if(!Number.isInteger(value)||value<1||value>4)return '<span class="detail-aspect-unrated">未評価</span>';
+ return `<span class="detail-aspect-stars" role="img" aria-label="4段階中${value}：${safeText(REVIEW_GRADES[value-1])}"><span class="detail-aspect-filled" aria-hidden="true">${'★'.repeat(value)}</span><span class="detail-aspect-empty" aria-hidden="true">${'☆'.repeat(4-value)}</span></span><span class="detail-aspect-value">${value}<small> / 4</small></span>`;
+}
+function reviewDetail(a){
+ if(mode==='share'||saved[a.id]?.status!=='watched')return '';
  const r=readReview(saved[a.id]?.review);
- const preview=r?(reviewStars(r.overall)+` <span>${safeText(REVIEW_LABELS[r.overall])}</span>`):'<span>★1〜5でかんたんに記録できます</span>';
- return `<div class="detail-private-review"><div><strong>自分の評価</strong><p>${preview} · ブラウザに保存</p></div><button type="button" class="review-quick" data-rate-id="${safeText(a.id)}">${r?'評価を編集する':uiIcon('star')+' 評価する'}</button></div>`;
+ const aspects=Object.entries(REVIEW_ASPECTS).map(([key,label])=>`<div class="detail-aspect-row"><span class="detail-aspect-label">${safeText(label)}</span><div class="detail-aspect-measure">${reviewAspectStarMarkup(r?.aspects[key])}</div></div>`).join('');
+ const score=r?`<div class="detail-rating-total"><span class="detail-rating-bigstars">${reviewStars(r.overall)}</span><span class="detail-rating-number">${r.overall}<small> / 5</small></span></div><span class="detail-rating-word">${safeText(REVIEW_LABELS[r.overall])}</span>`:`<div class="detail-rating-total"><span class="detail-rating-no-stars" aria-label="総合評価は未入力">☆☆☆☆☆</span><span class="detail-rating-no-score">未評価</span></div><span class="detail-rating-helper">まずは総合評価から記録できます</span>`;
+ return `<div class="detail-rating-layout"><div class="detail-rating-header"><h3 class="detail-journal-cell-heading">自分の評価</h3><button type="button" class="detail-rating-edit" data-rate-id="${safeText(a.id)}">${uiIcon('edit')} ${r?'評価を編集する':'評価する'}</button></div><div class="detail-rating-body"><div class="detail-rating-primary"><div class="detail-rating-caption">総合評価</div>${score}</div><div class="detail-rating-aspects"><div class="detail-rating-caption detail-rating-subheading">詳細評価 <span>4段階・任意</span></div>${aspects}</div></div></div>`;
 }
 // Only values decoded from a shared snapshot are displayed in read-only mode.
 function publicReviewMarkup(a,compact=false){
