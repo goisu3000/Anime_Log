@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v1.8.1 | アニメ視聴管理</title>
+<title>ANI:LOG v1.9.2 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -840,6 +840,85 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
   .saved-mode #cards .record-main>.pattern-a-date{display:inline-flex}
 }
 
+
+/* v1.9.2: Pattern A detail page. All recording controls use the existing handlers. */
+body.view-detail .main{max-width:1700px;padding-top:24px}
+body.view-detail .detail-navigation{margin:0 0 19px}
+body.view-detail .detail-back{background:#222a32;border:1px solid #43505a;border-radius:9px;display:inline-flex;align-items:center;gap:7px;min-height:43px;font-weight:650;color:#e4eaec}
+body.view-detail .detail-back:hover{border-color:#9ab58b;color:#e4f6ce}
+body.view-detail #detailBreadcrumb{color:#9baab4;font-size:12px}
+body.view-detail .detail-profile{grid-template-columns:minmax(230px,290px) minmax(0,1fr);gap:37px;align-items:start;padding:28px;background:linear-gradient(118deg,#222b33 0%,#1c242c 58%,#1b2229 100%);border:1px solid #35414a;border-radius:17px;min-height:0}
+body.view-detail .detail-profile .detail-cover{width:100%;aspect-ratio:2/3;max-width:290px;border-radius:11px;box-shadow:0 16px 30px #0004;background:#111922;overflow:hidden;align-self:start}
+body.view-detail .detail-profile .detail-cover img{width:100%;height:100%;object-fit:contain;display:block}
+body.view-detail .detail-head-info{padding:5px 0;min-width:0;max-width:940px}
+body.view-detail .detail-eyebrow{color:#a5b8b0;font-size:11px;letter-spacing:.11em;font-weight:700;margin:0 0 19px}
+body.view-detail .detail-profile .detail-heading-badges{gap:8px}
+body.view-detail .detail-profile .detail-chip{font-size:11px;background:#27343c;border:1px solid #41535b;color:#d4e0e5;border-radius:6px;padding:6px 10px;font-weight:700}
+body.view-detail .detail-profile h1{font-size:clamp(25px,2.55vw,38px);font-weight:750;line-height:1.48;letter-spacing:-.035em;margin:18px 0 9px;color:#f3f5f6}
+body.view-detail .detail-profile .detail-english{color:#b2beca;font-size:13px;line-height:1.6;margin:0 0 25px}
+body.view-detail .detail-profile .detail-facts{gap:8px;margin:19px 0 21px}
+body.view-detail .detail-profile .detail-facts span{background:#161e25;border:1px solid #36434c;border-radius:7px;color:#d0dbe3;font-size:12px;padding:9px 12px}
+body.view-detail .detail-profile .detail-tags{margin:0 0 24px;gap:8px}
+body.view-detail .detail-profile .detail-tags span{font-size:11px;border:1px solid #47535d;color:#c0ccd5;border-radius:15px;padding:5px 11px}
+body.view-detail .detail-studio{border-top:1px solid #3a4650;padding-top:18px;margin-top:6px;display:grid;gap:7px;line-height:1.6}
+body.view-detail .detail-studio>span{color:#9fadba;font-size:11px;font-weight:600}
+body.view-detail .detail-studio>strong{font-size:13px;font-weight:600;color:#e4e9ef}
+body.view-detail .detail-journal{margin-top:22px;background:linear-gradient(100deg,#1a232a,#1a2229);border:1px solid #343f48;border-radius:16px;padding:22px 24px 23px}
+body.view-detail .detail-journal-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:19px}
+body.view-detail .detail-journal-heading h2{font-size:19px;letter-spacing:-.03em;font-weight:750;margin:0;color:#f2f5f5}
+body.view-detail .detail-journal-heading>span{font-size:11px;color:#97abb4}
+body.view-detail .detail-journal-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(0,1fr);gap:15px}
+body.view-detail .detail-journal-grid.detail-journal-shared{grid-template-columns:repeat(2,minmax(0,1fr))}
+body.view-detail .detail-journal-cell{background:#202a32;border:1px solid #34424c;border-radius:11px;padding:17px;min-width:0;min-height:122px}
+body.view-detail .detail-journal-cell-heading{color:#b6c6d1;font-size:12px;font-weight:750;margin:0 0 13px}
+body.view-detail .detail-journal-empty{color:#a5b5c2;font-size:12px;line-height:1.75;margin:10px 0}
+body.view-detail .detail-journal-cell .detail-status-area{padding:0;margin:0;border:0;display:block}
+body.view-detail .detail-journal-cell .detail-status-area select{display:block;width:100%;min-width:0;min-height:42px;background:#151e25;border:1px solid #52616c;border-radius:8px;color:#eef2f3;font-size:13px;font-weight:650;cursor:pointer}
+body.view-detail .detail-journal-cell .detail-readonly{display:block;margin:10px 0;font-size:13px}
+body.view-detail .detail-journal-cell .detail-progress{width:100%;max-width:none;margin:18px 0 0;padding:0;border:0;background:transparent}
+body.view-detail .detail-journal-cell .watch-progress-top{margin:0 0 10px}
+body.view-detail .detail-journal-cell .watch-progress-top>span{font-size:12px;color:#b9c9d2}
+body.view-detail .detail-journal-cell .watch-progress-top strong{font-size:16px;color:#e9f0e9}
+body.view-detail .detail-journal-cell .watch-progress-track{height:6px;margin:0 0 13px;border-radius:6px}
+body.view-detail .detail-journal-cell .watch-progress-fill{background:#b1d681}
+body.view-detail .detail-journal-cell .watch-progress-actions{display:flex;gap:9px;align-items:center;justify-content:flex-start;flex-wrap:wrap}
+body.view-detail .detail-journal-cell .watch-progress-actions button{min-height:36px;height:36px;min-width:36px;width:auto;padding:5px 11px;border-radius:7px}
+body.view-detail .detail-journal-cell .watch-progress-entry input{height:37px;min-height:37px;font-size:15px}
+body.view-detail .detail-journal-cell .watch-progress-hint{font-size:11px;line-height:1.55;text-align:left}
+body.view-detail .detail-journal-cell .detail-private-review{margin:0;padding:0;border:0;background:none;display:grid;align-items:start;gap:13px}
+body.view-detail .detail-journal-cell .detail-private-review strong{font-size:12px;font-weight:750;color:#b6c6d1}
+body.view-detail .detail-journal-cell .detail-private-review p{font-size:13px;margin:11px 0 0;color:#e2eae8;line-height:1.65}
+body.view-detail .detail-journal-cell .detail-private-review .review-stars-mini{font-size:19px;margin-right:3px}
+body.view-detail .detail-journal-cell .review-quick{width:100%;padding:11px;border-radius:8px;min-height:40px;background:#29343b;border:1px solid #53636e;color:#eef3ed;font-size:12px;font-weight:700}
+body.view-detail .detail-journal-cell .review-quick:hover{background:#34414b;border-color:#93ac9e}
+body.view-detail .detail-journal-memo .note-preview{display:flex;min-height:43px;width:100%;max-width:none;background:#29343b;border:1px solid #53636e;padding:11px 13px;color:#eff4f1;border-radius:8px;font-size:12px;font-weight:700}
+body.view-detail .detail-journal-memo .note-preview:hover{background:#34414b;border-color:#93ac9e}
+body.view-detail .detail-journal-memo .note-preview.has-note{align-items:flex-start}
+body.view-detail .detail-journal-memo .note-preview .note-preview-excerpt{font-weight:400;font-size:11px;line-height:1.75;color:#bdd0d6}
+body.view-detail .detail-journal-date{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;background:#202a32;border:1px solid #34424c;border-radius:10px;padding:12px 17px}
+body.view-detail .detail-date-current{display:flex;align-items:center;gap:16px;flex-wrap:wrap;min-width:0}
+body.view-detail .detail-date-current span{display:flex;align-items:center;gap:7px;font-size:12px;color:#aebfcb}
+body.view-detail .detail-date-current strong{font-size:13px;font-weight:750;color:#e8f0e9}
+body.view-detail .detail-date-disclosure{min-width:0}
+body.view-detail .detail-date-disclosure>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;border:1px solid #52616e;border-radius:7px;background:#28343d;color:#e2e9ed;padding:9px 12px;min-height:37px;font-size:12px;font-weight:650}
+body.view-detail .detail-date-disclosure>summary::-webkit-details-marker{display:none}
+body.view-detail .detail-date-disclosure>summary .ui-icon{width:14px;height:14px;transition:transform .15s}
+body.view-detail .detail-date-disclosure[open]>summary .ui-icon{transform:rotate(180deg)}
+body.view-detail .detail-date-disclosure[open]{flex:1 1 100%;display:grid;justify-items:start}
+body.view-detail .detail-date-disclosure[open]>summary{margin-left:auto}
+body.view-detail .detail-date-disclosure .watch-date{background:transparent;border:0;padding:18px 0 0;margin:0;max-width:570px;width:100%}
+body.view-detail .detail-date-disclosure .watch-date-title{display:none}
+body.view-detail .detail-date-disclosure .watch-date-help{font-size:12px;margin:0 0 12px;color:#bacdb8}
+body.view-detail .detail-date-disclosure .watch-date-hint{font-size:11px;line-height:1.65}
+body.view-detail .detail-date-disclosure .watch-date-fields{gap:10px}
+body.view-detail .detail-date-disclosure .watch-date-actions button{min-height:40px}
+body.view-detail .sr-only{position:absolute!important;clip:rect(0,0,0,0)!important;clip-path:inset(50%)!important;width:1px!important;height:1px!important;overflow:hidden!important;white-space:nowrap!important}
+body.view-detail .detail-tabs{margin:28px 0 0}
+body.view-detail .detail-tab{font-size:13px;font-weight:700}
+@media(max-width:1120px){body.view-detail .detail-profile{grid-template-columns:240px minmax(0,1fr);gap:25px;padding:21px}body.view-detail .detail-profile .detail-cover{max-width:240px}body.view-detail .detail-journal-grid{grid-template-columns:repeat(2,minmax(0,1fr))}body.view-detail .detail-journal-memo{grid-column:1/-1}}
+@media(max-width:740px){body.view-detail .main{padding-top:18px}body.view-detail .detail-navigation{margin-bottom:16px}body.view-detail .detail-profile{grid-template-columns:minmax(100px,37%) minmax(0,1fr);gap:15px;padding:14px;border-radius:13px}body.view-detail .detail-profile .detail-cover{width:100%;max-width:none;aspect-ratio:2/3;border-radius:8px}body.view-detail .detail-head-info{padding:0}body.view-detail .detail-eyebrow{font-size:9px;margin-bottom:10px}body.view-detail .detail-profile .detail-heading-badges{gap:5px}body.view-detail .detail-profile .detail-chip{font-size:9px;padding:4px 6px}body.view-detail .detail-profile h1{font-size:clamp(17px,4.3vw,25px);line-height:1.45;margin:11px 0 5px}body.view-detail .detail-profile .detail-english{font-size:10px;margin:0 0 11px}body.view-detail .detail-profile .detail-facts{margin:9px 0 9px;gap:5px}body.view-detail .detail-profile .detail-facts span{font-size:10px;padding:5px 6px}body.view-detail .detail-profile .detail-tags{gap:5px;margin-bottom:8px}body.view-detail .detail-profile .detail-tags span{font-size:10px;padding:4px 7px}body.view-detail .detail-studio{padding-top:10px;margin-top:9px;gap:3px}body.view-detail .detail-studio>span{font-size:10px}body.view-detail .detail-studio>strong{font-size:11px}body.view-detail .detail-journal{padding:16px 13px;margin-top:14px;border-radius:12px}body.view-detail .detail-journal-heading{margin-bottom:13px}body.view-detail .detail-journal-heading h2{font-size:17px}body.view-detail .detail-journal-heading>span{font-size:10px}body.view-detail .detail-journal-grid,body.view-detail .detail-journal-grid.detail-journal-shared{grid-template-columns:minmax(0,1fr);gap:10px}body.view-detail .detail-journal-memo{grid-column:auto}body.view-detail .detail-journal-cell{padding:13px;min-height:0}body.view-detail .detail-journal-date{padding:11px 13px;gap:10px}body.view-detail .detail-date-current{gap:9px}body.view-detail .detail-date-current span,body.view-detail .detail-date-current strong{font-size:12px}body.view-detail .detail-date-disclosure{width:100%}body.view-detail .detail-date-disclosure>summary{justify-content:center;width:100%}body.view-detail .detail-date-disclosure[open]>summary{margin-left:0}body.view-detail .detail-date-disclosure .watch-date{max-width:none}body.view-detail .detail-tab{padding:13px 14px}}
+@media(max-width:360px){body.view-detail .detail-profile{grid-template-columns:94px minmax(0,1fr);gap:10px;padding:11px}body.view-detail .detail-profile h1{font-size:16px}body.view-detail .detail-profile .detail-facts span{font-size:9px}}
+
 </style>
 </head>
 <body>
@@ -869,7 +948,7 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
     </nav></div>
     <div class="share-card"><strong><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</strong><p>選んだ作品をURLにまとめて友達へ。ログイン不要で閲覧できます。</p><button type="button" class="share-action" id="shareBtnSidebar">共有URLを作る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v1.9.1 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v1.9.2 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2520,14 +2599,28 @@ const STAFF_ROLES_JA={
 function roleJa(text){return STAFF_ROLES_JA[text]||text}
 function genreJa(value){const original=String(value??'').trim();return JAPANESE_GENRES[original]||original}
 function typeJa(value){const original=String(value??'').trim();return JAPANESE_TYPES[original]||original}
-function detailHeader(a,full=null){const d=full||{};const year=d.year||a.year||d.aired?.prop?.from?.year;const season=d.season||a.season;const status=saved[a.id]?.status||'';const image=safeImage(d.images?.jpg?.large_image_url||d.images?.jpg?.image_url||a.image);const title=d.title_japanese||a.title;const alt=(d.title&&d.title!==title?d.title:a.english&&a.english!==title?a.english:'');
- const badges=[typeJa(d.type||a.type||'アニメ'),year&&seasonLabels[season]?`${year}年${seasonLabels[season]}` : year?`${year}年`:null].filter(Boolean);
- const facts=[(d.episodes||a.episodes)?`${d.episodes||a.episodes}話`:null, d.duration||null,({ 'Currently Airing':'放送中','Finished Airing':'放送終了','Not yet aired':'放送前'}[d.status]||d.status)||null,Number.isFinite(d.score)&&d.score>0?`MAL ${d.score.toFixed(2)} / 10`:null,d.broadcast?.string||null].filter(Boolean);
+function detailHeader(a,full=null){
+ const d=full||{},record=saved[a.id]||null;
+ const year=d.year||a.year||d.aired?.prop?.from?.year,season=d.season||a.season;
+ const status=record?.status||'',image=safeImage(d.images?.jpg?.large_image_url||d.images?.jpg?.image_url||a.image);
+ const title=d.title_japanese||a.title,alt=(d.title&&d.title!==title?d.title:a.english&&a.english!==title?a.english:'');
+ const badges=[typeJa(d.type||a.type||'アニメ'),year&&seasonLabels[season]?`${year}年 ${seasonLabels[season]}`:year?`${year}年`:null].filter(Boolean);
+ const facts=[(d.episodes||a.episodes)?`${d.episodes||a.episodes}話`:null,d.duration||null,({'Currently Airing':'放送中','Finished Airing':'放送終了','Not yet aired':'放送前'}[d.status]||d.status)||null,Number.isFinite(d.score)&&d.score>0?`MAL ${d.score.toFixed(2)} / 10`:null,d.broadcast?.string||null].filter(Boolean);
  const tags=[...(Array.isArray(d.genres)?d.genres:[]),...(Array.isArray(d.themes)?d.themes:[])].map(x=>genreJa(x?.name)).filter(Boolean);
+ const studios=Array.isArray(d.studios)?d.studios.map(x=>x?.name).filter(Boolean):[];
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
- return `<div class="detail-head"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:''}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:''}<div class="detail-status-area"><label for="detailStatus">視聴状況</label>${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${mode==='share'?publicReviewMarkup(a):reviewDetail(a)}${noteMarkup(a)}${completionDateMarkup(a)}${progressMarkup(a,d.episodes||a.episodes,true)}</div></div>`}
+ const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
+ const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
+ const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:''}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:''}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:''}</div></section>`;
+ const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}</div>`;
+ const reviewPanel=`<div class="detail-journal-cell detail-journal-review">${mode==='share'?(publicReviewMarkup(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">共有されている評価はありません</p>'):(reviewDetail(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">視聴済みにすると★評価を記録できます</p>')}</div>`;
+ const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-journal-cell-heading">作品メモ</div>${noteMarkup(a)||'<p class="detail-journal-empty">作品を登録するとメモを残せます</p>'}</div>`;
+ const datePanel=date?`<div class="detail-journal-date"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${record?.completedOn?'時期を編集する':'時期を記録する'} ${uiIcon('down')}</summary>${date}</details></div>`:'';
+ const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2><span>${mode==='share'?'共有された情報を表示しています':'このブラウザに保存'}</span></div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}${datePanel}</div></section>`;
+ return header+journal;
+}
 function detailGeneral(d){const facts=[];
- const groups=[['制作会社',d.studios],['原作',d.source],['放送期間',d.aired?.string],['海外年齢区分',d.rating]];
+ const groups=[['原作',d.source],['放送期間',d.aired?.string],['海外年齢区分',d.rating]];
  for(const [label,value] of groups){let txt=Array.isArray(value)?value.map(x=>x?.name).filter(Boolean).join(' / '):value;if(label==='原作')txt=({'Manga':'漫画','Original':'オリジナル','Light novel':'ライトノベル','Game':'ゲーム','Novel':'小説','Web manga':'Web漫画','Visual novel':'ビジュアルノベル'}[txt]||txt);if(present(txt))facts.push(`<span><b>${safeText(label)}：</b>${safeText(txt)}</span>`)}
  return facts.length?detailHeading('制作・放送情報',`<div class="detail-panel">${facts.join('<div style="height:6px"></div>')}</div>`):''}
 // Only the currently opened title is checked; no catalogue-wide collection.
