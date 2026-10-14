@@ -684,7 +684,9 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 .pattern-a-rating-line{display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:0}
 .pattern-a-rating-label{display:inline-flex;align-items:center;line-height:1;font-size:10px;color:#a4b4bc;font-weight:500;white-space:nowrap}
 .pattern-a-rating-line .review-stars-mini{display:inline-flex;align-items:center;gap:2px;font-size:16px;white-space:nowrap;letter-spacing:0;line-height:1}
-.pattern-a-rating-line .review-stars-mini .ui-icon{width:15px;height:15px}
+/* Optical alignment: the star SVG's painted shape sits lower than text in the same flex row. */
+.pattern-a-rating-line .review-stars-mini .ui-icon{width:15px;height:15px;transform:translateY(-1px)}
+.pattern-a-rating-line .pattern-a-rate-edit{position:relative;top:-1px}
 .pattern-a-rating-score{font-size:11px;color:#d2dadf;white-space:nowrap;line-height:1}
 .pattern-a-rating-empty{font-size:12px;color:#c3cdd3;line-height:1}
 .pattern-a-rate-edit{background:none;border:0;padding:3px 0;margin:0;color:#cce3bd;text-decoration:underline;text-underline-offset:3px;font-size:11px;cursor:pointer}
