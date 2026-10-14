@@ -1099,6 +1099,70 @@ body.view-detail .detail-journal-memo .detail-note-empty{
  .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini>span{width:16px;height:16px;}
  .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .ui-icon{width:16px;height:16px;}
 }
+
+/* UI Polish: Unify My List toolbar with Discover toolbar, inline count + sort, and compact filter panel */
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{
+  align-items:center;gap:10px;margin-bottom:18px;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls{
+  display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox{
+  background:#1c2125;border:1px solid transparent;border-radius:8px;padding:0 12px;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox:focus-within{
+  border-color:#839d68;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox input{
+  height:44px;font-size:13px;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls .result-info{
+  margin:0;width:auto;flex:0 0 auto;display:inline-flex;align-items:center;
+  height:44px;padding:0 4px;font-size:12px;color:#b8c3c9;white-space:nowrap;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .saved-order-select{
+  height:44px;max-width:none;width:auto;flex:0 0 auto;
+  padding:0 13px;background:#1c2125;border:1px solid transparent;
+  border-radius:8px;color:#e9eef5;font-size:12.5px;font-weight:600;cursor:pointer;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .saved-order-select:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
+  display:none!important;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #cards{
+  margin-top:0!important;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel{
+  width:max-content;max-width:min(560px,calc(100vw - 32px));padding:10px 12px;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel .filter-tabs{
+  margin:0;gap:4px;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel .review-list-actions{
+  margin:10px 0 0;padding:10px 12px;
+}
+@media(max-width:740px){
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{
+    align-items:flex-start;margin-bottom:14px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls{
+    flex-wrap:wrap;gap:7px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox input{
+    height:42px;font-size:16px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls .result-info{
+    height:38px;font-size:11px;padding:0 2px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .saved-order-select{
+    height:38px;font-size:11px;padding:0 9px;flex:1;min-width:130px;
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel{
+    width:100%;max-width:100%;padding:12px;
+  }
+}
 </style>
 </head>
 <body>
@@ -2029,6 +2093,8 @@ function render(){
  $('#collectionEyebrow').textContent=mode==='saved'?'YOUR ANIME JOURNAL':'DISCOVER ANIME';
  $('#listOrderHint').hidden=mode!=='saved';
  $('#savedOrder').classList.toggle('hidden',mode!=='saved');
+ const ctrlRow=$('#libraryView .controls'),capRow=$('#libraryView .list-caption');
+ if(mode==='saved'){if($('#resultInfo').parentElement!==ctrlRow)ctrlRow.append($('#resultInfo'),$('#savedOrder'))}else{if($('#resultInfo').parentElement!==capRow)capRow.prepend($('#resultInfo'))}
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
  $('#filterDisclosure').classList.toggle('has-filters',activeFilters.length>0);
