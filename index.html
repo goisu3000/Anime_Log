@@ -1032,6 +1032,73 @@ body.view-detail .detail-journal-memo .detail-note-empty{
   body.view-detail .detail-journal-memo .detail-note-text{font-size:12px;line-height:1.8}
 }
 
+
+/* v1.9.8 | Optical alignment re-design based on Pattern A reference. */
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating{min-width:0;}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line{
+  appearance:none;display:inline-flex;align-items:center;justify-content:flex-start;
+  gap:9px;min-width:0;min-height:28px;width:max-content;max-width:100%;
+  flex-wrap:nowrap;margin:0;padding:0;border:0;border-radius:3px;
+  background:transparent;text-align:left;color:inherit;cursor:pointer;
+  line-height:1;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line:focus-visible{
+  outline:2px solid var(--accent);outline-offset:4px;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-label{
+  display:inline-flex;align-items:center;flex:0 0 auto;
+  font-size:12px;font-weight:550;line-height:1.2;color:#aebfc5;white-space:nowrap;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini{
+  display:inline-flex;align-items:center;flex:0 0 auto;
+  gap:5px;margin:0;padding:0;letter-spacing:0;line-height:1;font-size:0;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini>span{
+  display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .ui-icon{
+  display:block;position:static;transform:none;width:19px;height:19px;
+  stroke-width:1.85;fill:none;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .rated-icon{
+  color:#f2c86c;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .rated-icon .ui-icon{
+  fill:currentColor;fill-opacity:1;stroke:currentColor;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .empty{
+  color:#899aa8;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .empty .ui-icon{
+  fill:none;stroke:currentColor;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-score{
+  display:inline-flex;align-items:center;flex:0 0 auto;
+  font-size:12px;font-weight:650;line-height:1.2;color:#d8e2e8;white-space:nowrap;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .pattern-a-rate-edit{
+  display:none;position:static;top:auto;margin:0;padding:0;border:0;
+}
+.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line:hover .pattern-a-rating-score{
+  color:#f2d294;
+}
+/* Compact phones retain a visible edit hint and wrap gracefully without horizontal scroll. */
+@media(max-width:740px){
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line{gap:6px;min-height:35px;flex-wrap:wrap;width:100%;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-label{font-size:11px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini{gap:2px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini>span{width:15px;height:15px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .ui-icon{width:15px;height:15px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .rated-icon .ui-icon{fill-opacity:.13;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .pattern-a-rate-edit{display:inline-flex;align-items:center;line-height:1.35;font-size:11px;text-decoration:underline;text-underline-offset:3px;color:#cee1be;}
+}
+@media (min-width:741px) and (max-width:1280px){
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line{gap:6px;flex-wrap:wrap;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-label{font-size:11px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini{gap:2px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini>span{width:16px;height:16px;}
+ .saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating-line .review-stars-mini .ui-icon{width:16px;height:16px;}
+}
 </style>
 </head>
 <body>
@@ -1894,8 +1961,8 @@ function patternAStatusMenu(a){const status=a.status||'watched',id=safeText(a.id
  return `<details class="record-menu pattern-a-status-menu"><summary aria-label="${safeText(a.title)}の視聴状態：${label}。変更する">${savedStatusIcons[status]||uiIcon('check')}<span>${label}</span>${uiIcon('chevron-down')}</summary><select data-status-id="${id}" aria-label="${safeText(a.title)}の視聴状況"><option value="">リストから削除</option>${Object.entries(statusLabels).filter(([v])=>validStatuses.has(v)).map(([v,l])=>`<option value="${v}" ${v===status?'selected':''}>${safeText(l)}</option>`).join('')}</select></details>`;
 }
 function patternAReview(a){const r=readReview(saved[a.id]?.review);if(a.status!=='watched')return `<div class="pattern-a-rating-unavailable">評価は視聴後に記録できます</div>`;
- return `<div class="pattern-a-rating"><div class="pattern-a-rating-line"><span class="pattern-a-field-name pattern-a-rating-label">自分の評価</span>${r?reviewStars(r.overall):'<span class="pattern-a-rating-empty">未評価</span>'}${r?`<span class="pattern-a-rating-score">${r.overall} / 5</span>`:''}<button type="button" class="pattern-a-rate-edit" data-rate-id="${safeText(a.id)}">${r?'評価を編集':'評価する'}</button></div></div>`;
-}
+ const score=r?`${r.overall} / 5`:'未評価';
+ return `<div class="pattern-a-rating"><button type="button" class="pattern-a-rating-line" data-rate-id="${safeText(a.id)}" title="${r?'評価を編集する':'作品を評価する'}" aria-label="${safeText(a.title)}：自分の評価 ${score}。${r?'評価を編集':'評価する'}"><span class="pattern-a-field-name pattern-a-rating-label">自分の評価</span>${r?reviewStars(r.overall):'<span class="pattern-a-rating-empty">未評価</span>'}${r?`<span class="pattern-a-rating-score">${r.overall} / 5</span>`:''}<span class="pattern-a-rate-edit">${r?'評価を編集':'評価する'}</span></button></div>`;}
 function patternAProgress(a){if(!['watching','paused'].includes(a.status))return '';
  const total=totalEpisodes(a),current=watchedCount(a),usable=total!==null&&current<=total,hint=progressHint(current,total);
  return `<div class="watch-progress pattern-a-progress" data-progress-for="${safeText(a.id)}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${usable?'':'hidden'}><div class="watch-progress-fill" data-progress-bar style="width:${usable?Math.min(100,100*current/total):0}%"></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div></div>`;
