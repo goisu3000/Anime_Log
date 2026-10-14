@@ -1231,7 +1231,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
   }
 }
 
-/* v2.0.0: Direct 1-click status select, Pattern A unrated CTA button, and compact 170px memo button */
+/* v2.0.0: Direct 1-click status select, Pattern A unrated CTA button, and 170x38px fixed inline memo */
 .record-select-Direct{
   position:relative;display:inline-flex;align-items:center;width:fit-content;
 }
@@ -1250,12 +1250,12 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
 }
 
 .saved-mode #cards .pattern-a-card .pattern-a-status-menu{
-  width:100%;max-width:170px;position:relative;margin:0;min-width:0;
+  width:170px;max-width:170px;position:relative;margin:0;min-width:0;
 }
 .saved-mode #cards .pattern-a-card .pattern-a-status-summary{
-  display:flex;align-items:center;gap:8px;min-height:38px;padding:7px 11px;
+  display:flex;align-items:center;gap:8px;height:38px;min-height:38px;padding:0 11px;
   border:1px solid #485864;border-radius:7px;background:#1a252b;
-  font-size:12px;color:#e6eceb;font-weight:700;line-height:1.4;
+  font-size:12px;color:#e6eceb;font-weight:700;line-height:1;
   pointer-events:none;transition:border-color .15s,background .15s;
 }
 .saved-mode #cards .pattern-a-card .pattern-a-status-summary .ui-icon{
@@ -1275,17 +1275,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
   cursor:pointer;margin:0;padding:0;border:0;font-size:13px;
 }
 
-/* 評価ボタン(未評価時)とメモボタンを左隣の「見た(170px×38px)」と完全に同じサイズに統一 */
+/* 評価ボタン(未評価時)とメモ枠を「横170px × 縦38px」で完全固定 */
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating{
   width:100%;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta,
 .saved-mode #cards .pattern-a-rate-cta{
   display:flex;align-items:center;justify-content:flex-start;gap:8px;
-  width:100%;max-width:170px;min-height:38px;padding:7px 11px;
+  width:170px;max-width:170px;height:38px;min-height:38px;max-height:38px;padding:0 11px;
   border:1px solid rgba(196,233,149,.38);border-radius:7px;
   background:rgba(196,233,149,.08);color:#dfefb9;
-  font-size:12px;font-weight:700;line-height:1.4;cursor:pointer;
+  font-size:12px;font-weight:700;line-height:1;cursor:pointer;
   transition:background .16s,border-color .16s,color .16s;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta .ui-icon,
@@ -1299,14 +1299,26 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta:
 
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview,
 .saved-mode #cards .pattern-a-personal-column .note-preview{
-  display:flex;align-items:center;justify-content:flex-start;gap:8px;
-  width:100%;max-width:170px;min-height:38px;padding:7px 11px;
+  display:flex;align-items:center;justify-content:flex-start;flex-wrap:nowrap;gap:8px;
+  width:170px;max-width:170px;height:38px;min-height:38px;max-height:38px;padding:0 11px;
   border:1px solid #3f4d56;border-radius:7px;background:#1a252b;
-  color:#cfd9de;font-size:12px;font-weight:700;line-height:1.4;
+  color:#cfd9de;font-size:12px;font-weight:700;line-height:1;overflow:hidden;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .note-preview:not(.has-note) .note-preview-label,
+.saved-mode #cards .note-preview .note-preview-label{
+  font-size:12px;display:block;flex:1 1 auto;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;line-height:1.3;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .note-preview:not(.has-note) .note-preview-label::after{
+  content:none;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview.has-note,
 .saved-mode #cards .pattern-a-personal-column .note-preview.has-note{
-  border-color:#4b5d56;background:#1e2928;color:#dce8dc;
+  border-color:#4b5d56;background:#1e2928;color:#e2eee2;font-weight:500;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview.has-note .ui-icon,
+.saved-mode #cards .pattern-a-personal-column .note-preview.has-note .ui-icon{
+  color:#a8c69f;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview:hover,
 .saved-mode #cards .pattern-a-personal-column .note-preview:hover{
@@ -1314,11 +1326,14 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-
 }
 
 @media(max-width:740px){
-  .saved-mode #cards .pattern-a-card .pattern-a-status-menu{max-width:155px;flex:0 1 145px}
+  .saved-mode #cards .pattern-a-card .pattern-a-status-menu{width:155px;max-width:155px;flex:0 1 155px}
+  .saved-mode #cards .pattern-a-card .pattern-a-status-summary{height:36px;min-height:36px;padding:0 10px}
   body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta,
-  .saved-mode #cards .pattern-a-rate-cta{max-width:155px;min-height:36px;padding:6px 10px;font-size:11.5px}
+  .saved-mode #cards .pattern-a-rate-cta{width:155px;max-width:155px;height:36px;min-height:36px;max-height:36px;padding:0 10px;font-size:11.5px}
   body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview,
-  .saved-mode #cards .pattern-a-personal-column .note-preview{max-width:155px;min-height:36px;padding:6px 10px;font-size:11.5px}
+  .saved-mode #cards .pattern-a-personal-column .note-preview{width:155px;max-width:155px;height:36px;min-height:36px;max-height:36px;padding:0 10px;font-size:11.5px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .note-preview:not(.has-note) .note-preview-label,
+  .saved-mode #cards .note-preview .note-preview-label{font-size:11.5px}
 }
 </style>
 </head>
@@ -1973,7 +1988,7 @@ function readNote(a){
  return a?.review?.comment?{text:String(a.review.comment).slice(0,500),updatedAt:a.review.updatedAt||a.updatedAt||''}:null;
 }
 function carryLegacyNote(a){if(!a.note&&!a.noteDeletedAt){const n=readNote(a);if(n)a.note=n}}
-function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]);return `<button type="button" class="note-preview ${n?.text?'has-note':''}" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${n?.text?'編集':'追加'}">${uiIcon('edit')}<span class="note-preview-label">${n?.text?'メモを編集':'メモを書く'}</span>${n?.text?`<span class="note-preview-excerpt">${safeText(n.text)}</span>`:''}</button>`}
+function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]),txt=n?.text?n.text.replace(/\s+/g,' ').trim():'';return `<button type="button" class="note-preview ${txt?'has-note':''}" data-note-id="${safeText(a.id)}" ${txt?`title="${safeText(n.text)}"`:'title="メモを残す"'} aria-label="${safeText(a.title)}のメモを${txt?'編集：'+safeText(txt):'追加'}">${uiIcon('edit')}<span class="note-preview-label">${txt?safeText(txt):'メモを残す'}</span></button>`}
 let noteItemId=null,noteOriginal=null;
 function openNote(id){if(!saved[id]||mode==='share')return;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();$('#noteText').focus()}
 async function saveNoteImpl(){const id=noteItemId,item=saved[id];if(!item)return;
