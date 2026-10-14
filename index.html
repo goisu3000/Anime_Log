@@ -1280,7 +1280,7 @@ let periodTouched=false;
 const seasonOrder=['winter','spring','summer','fall'];
 function currentScope(){return years.value}
 function periodLabel(){const v=currentScope();return v==='all'?'全年代':v.startsWith('decade:')?`${v.slice(7)}年代`:`${v}年`}
-function matchingPeriod(a){const year=Number(a?.year);if(!Number.isInteger(year))return currentScope()==='all';const val=currentScope();if(val==='all')return true;if(val.startsWith('decade:'))return year>=Number(val.slice(7))&&year<Number(val.slice(7))+10;return year===Number(val)&&($('#seasonSelect').value==='all'||a.season===$('#seasonSelect').value)}
+function matchingPeriod(a){const val=currentScope(),selSeason=$('#seasonSelect').value;if(val==='all')return true;if(a?.seasonalKey&&(selSeason==='all'?a.seasonalKey.startsWith(val+':'):a.seasonalKey===`${val}:${selSeason}`))return true;const year=Number(a?.year);if(!Number.isInteger(year))return false;if(val.startsWith('decade:'))return year>=Number(val.slice(7))&&year<Number(val.slice(7))+10;const itemSeason=typeof a?.season==='string'?a.season.trim().toLowerCase():'';return year===Number(val)&&(selSeason==='all'||itemSeason===selSeason)}
 function dateBounds(){const v=currentScope();if(v==='all')return null;
  const y=v.startsWith('decade:')?Number(v.slice(7)):Number(v), end=v.startsWith('decade:')?y+9:y;
  if(!Number.isInteger(y)||y<1900)return null;
@@ -1429,7 +1429,7 @@ function extractAnalysisMeta(data){if(!data||!['studios','genres','themes'].ever
 function cleanAnalysisMeta(input){if(!input||typeof input!=='object'||!['studios','genres','themes'].every(k=>Array.isArray(input[k])))return null;
  return {studios:analysisTags(input.studios.map(t=>({name:t?.name,mal_id:t?.id}))),genres:analysisTags(input.genres.map(t=>({name:t?.name,mal_id:t?.id}))),themes:analysisTags(input.themes.map(t=>({name:t?.name,mal_id:t?.id}))),fetchedAt:typeof input.fetchedAt==='string'&&Number.isFinite(Date.parse(input.fetchedAt))?input.fetchedAt:''};
 }
-function model(a){const startDate=premiereDate(a),meta=extractAnalysisMeta(a);return {startDate,id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||null,season:a.season||null,type:a.type||null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null,members:Number.isInteger(a.members)?a.members:null,scoredBy:Number.isInteger(a.scored_by)?a.scored_by:null,...(meta?{analysisMeta:meta}:{})};}
+function model(a){const startDate=premiereDate(a),meta=extractAnalysisMeta(a);return {startDate,id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||(startDate?Number(startDate.slice(0,4)):null),season:(typeof a.season==='string'&&a.season.trim()?a.season.trim().toLowerCase():null)||(startDate?seasonOrder[Math.floor((Number(startDate.slice(5,7))-1)/3)]:null),type:typeof a.type==='string'&&a.type.trim()?a.type.trim():null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null,members:Number.isInteger(a.members)?a.members:null,scoredBy:Number.isInteger(a.scored_by)?a.scored_by:null,...(meta?{analysisMeta:meta}:{})};}
 // v1.3: multi-query Japanese nickname search, deduplicated by stable MAL ID.
 function publicAnimeAllowed(a){
  const rating=String(a.rating||'').trim().toLowerCase();
@@ -2048,7 +2048,7 @@ function render(){
  let list;
  if(isSaved)list=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
  else if(exploreRegistered){list=Object.values(saved).filter(a=>a&&a.status===exploreStatusFilter&&matchingPeriod(a))}
- else list=query ? items.filter(matchingPeriod) : items;
+ else list=items.filter(matchingPeriod);
  let filtered=list.filter(a=>(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()));
  if(isSaved&&statusFilter!=='all')filtered=filtered.filter(a=>a.status===statusFilter);
  if(isSaved&&statusFilter==='watched'&&finishedYearFilter!=='all')filtered=filtered.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);
@@ -2068,7 +2068,7 @@ function render(){
  else if(!filtered.length){
   grid.innerHTML=isSaved?emptyCard('該当する作品がありません','視聴状況や検索条件を変更するか、アニメを探して作品を登録してください。','book','アニメを探す'):
    exploreRegistered?emptyCard('この条件で登録した作品はありません','放送年・季節を変えるか、上の「すべて」で作品を探して登録してください。','search'):
-   emptyCard('作品が見つかりません',query&&hasNext?'指定された年代の作品はまだ見つかっていません。下の「さらに読み込む」で続きを検索できます。':'検索条件を変更するか、タイトルを手動で追加してください。','search');
+   emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
  }else grid.innerHTML=isSaved?savedGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
@@ -2076,6 +2076,7 @@ let lastRequestAt=0, activeController=null, searchProgress=[];
 function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 async function fetchPage(reset=true){
  if(loading&&!reset)return;
+ if(mode==='season'&&exploreStatusFilter==='all'&&!$('#searchInput').value.trim()&&query)query='';
  if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;
   searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
  }
@@ -2084,12 +2085,25 @@ async function fetchPage(reset=true){
  const scope=currentScope(),exact=/^\d{4}$/.test(scope),season=$('#seasonSelect').value;
  const seasonal=!query&&exact&&season!=='all';
  const baseParams=new URLSearchParams({limit:query?'50':'24'});
- // SFW=true excludes R+ titles such as Cyberpunk: Edgerunners (2022).
- // Filter Rx/Hentai/Erotica without excluding mainstream R+ titles.
+ // Send the media type to the API. A TV tab must not depend on the media mix
+ // in the first unfiltered season page.
+ const apiType=({TV:'tv',Movie:'movie',OVA:'ova',ONA:'ona'})[typeFilter];
+ if(apiType)baseParams.set(seasonal?'filter':'type',apiType);
+ // Keep R+ mainstream titles. Tenrai's SFW flag excludes those as well.
  if(query||!seasonal)baseParams.set('genres_exclude','12,49');
  if(!query){
-  baseParams.set('order_by','start_date');baseParams.set('sort','desc');
-  if(!seasonal){const dates=dateBounds();if(dates){baseParams.set('start_date',dates[0]);baseParams.set('end_date',dates[1])}}
+  if(seasonal){
+   // Season endpoints support members and start_date ordering. Popular works
+   // should be discoverable without paging past numerous obscure shorts.
+   baseParams.set('order_by','members');baseParams.set('sort','desc');
+  }else{
+   baseParams.set('order_by','start_date');
+   // A bounded scope requires a START-date bound, NOT end_date (which filters
+   // the ending of the entire broadcast and wrongly drops ongoing TV series).
+   const dates=dateBounds();
+   if(dates){baseParams.set('start_date',dates[0]);baseParams.set('sort','asc')}
+   else baseParams.set('sort','desc');
+  }
  }
  let lastUrl='',successful=0;
  const getData=async(url)=>{
@@ -2103,7 +2117,7 @@ async function fetchPage(reset=true){
   if(thisRequest!==requestCounter)return null;
   successful++;
   const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)&&publicAnimeAllowed(a)).map(a=>{
-   const m=model(a);if(seasonal){if(!m.year)m.year=Number(scope);if(!m.season)m.season=season}return m;
+   const m=model(a);if(seasonal){m.seasonalKey=`${scope}:${season}`;m.year=Number(scope);m.season=season;if(!m.type&&apiType)m.type=typeFilter}return m;
   });
   for(const a of incoming)rememberAnime(a);
   items=[...new Map([...items,...incoming].map(a=>[a.id,a])).values()];
@@ -2170,6 +2184,14 @@ async function fetchPage(reset=true){
    const url=seasonal?`${API}/seasons/${scope}/${season}?${params}`:`${API}/anime?${params}`;
    const payload=await getData(url);if(!payload)return;
    hasNext=Boolean(payload.pagination?.has_next_page);
+   if(seasonal&&page===1&&typeFilter==='all'&&!items.some(a=>matchingPeriod(a)&&String(a.type||'').toLowerCase()==='tv')){const tvParams=new URLSearchParams(params);tvParams.set('filter','tv');try{const tvPayload=await getData(`${API}/seasons/${scope}/${season}?${tvParams}`);if(tvPayload)hasNext=hasNext||Boolean(tvPayload.pagination?.has_next_page)}catch(err){if(err.name==='AbortError'||thisRequest!==requestCounter)return}}
+   if(seasonal&&page===1&&!items.some(a=>matchingPeriod(a)&&(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()))){const plainParams=new URLSearchParams({limit:'24',page:'1'});if(apiType)plainParams.set('filter',apiType);try{const fb=await getData(`${API}/seasons/${scope}/${season}?${plainParams}`);if(fb)hasNext=Boolean(fb.pagination?.has_next_page)}catch(err){if(err.name==='AbortError'||thisRequest!==requestCounter)return}}
+   // General /anime results are sorted by premiere date ascending for bounded
+   // scopes. Stop offering pages once we have crossed the requested range.
+   if(!seasonal&&scope!=='all'&&hasNext){
+    const end=dateBounds()?.[1];
+    if(end&&payload.data.some(a=>{const d=premiereDate(a);return d&&d>end}))hasNext=false;
+   }
   }
   if(thisRequest!==requestCounter)return;loading=false;$('#offlineNotice').classList.add('hidden');render();
  }catch(err){
@@ -2182,8 +2204,8 @@ async function fetchPage(reset=true){
   let offlineList=[];
   try{
    const titles=[...suggestionCache.values()].filter(a=>a&&a.id&&a.title);
-   offlineList=[...new Map([...Object.values(saved),...titles,...items].filter(a=>a&&a.id&&(!query||localTitleMatch(a,query))).map(a=>[a.id,a])).values()].filter(matchingPeriod);
-  }catch{offlineList=items.filter(matchingPeriod)}
+   offlineList=[...new Map([...Object.values(saved),...titles,...items].filter(a=>a&&a.id&&(!query||localTitleMatch(a,query))).map(a=>[a.id,a])).values()].filter(a=>matchingPeriod(a)&&(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()));
+  }catch{offlineList=items.filter(a=>matchingPeriod(a)&&(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()))}
   if(offlineList.length){items=offlineList;sortSearchResults();render();
    const note=$('#offlineNotice');note.classList.remove('hidden');note.innerHTML='<strong>現在オフライン表示中</strong>：APIに接続できないため、過去に取得した作品と保存済み作品だけを表示しています。全作品の検索結果ではありません。通信が戻ったら検索を再実行してください。';
    $('#resultInfo').textContent='保存済み '+offlineList.length+'作品';
@@ -2564,7 +2586,7 @@ $('#ratingDialog').addEventListener('input',e=>{if(e.target.id==='ratingComment'
 $('#ratingForm').addEventListener('submit',e=>{e.preventDefault();saveRating()});
 $('#ratingCancel').addEventListener('click',closeRating);
 $('#ratingClear').addEventListener('click',clearRating);
-$$('[data-type]').forEach(b=>b.addEventListener('click',()=>{typeFilter=b.dataset.type;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));render()}));
+$$('[data-type]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.type;if(next===typeFilter)return;typeFilter=next;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='season'&&exploreStatusFilter==='all')fetchPage(true);else render()}));
 $$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;exploreStatusFilter=next;if(next==='all'){fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}));
 years.addEventListener('change',()=>{periodTouched=true;if(/^\d{4}$/.test(years.value))curYear=Number(years.value);syncPeriodUI();if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render()});
 $('#seasonSelect').addEventListener('change',()=>{periodTouched=true;if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render()});
@@ -2632,8 +2654,9 @@ for(const region of ['#cards','#detailView']){
 }
 
 $('#searchInput').addEventListener('input',()=>{refreshSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
+ const val=$('#searchInput').value.trim();if(!val&&query){query='';fetchPage(true);return}
  // First title search should automatically span the whole catalog, unless the user chose a period.
- if($('#searchInput').value.trim()&&!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();$('#searchGuide').textContent='全年代から検索します。特定の年代に絞り込みたい場合は、年代を選んでください。';periodTouched=true}
+ if(val&&!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();$('#searchGuide').textContent='全年代から検索します。特定の年代に絞り込みたい場合は、年代を選んでください。';periodTouched=true}
 });
 $('#searchSort').addEventListener('change',e=>{
  if(!['new','relevance','old'].includes(e.target.value))return;
