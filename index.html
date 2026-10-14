@@ -1231,7 +1231,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
   }
 }
 
-/* v2.0.0: Direct 1-click status select, Pattern A unrated CTA button, and compact memo button */
+/* v2.0.0: Direct 1-click status select, Pattern A unrated CTA button, and compact 170px memo button */
 .record-select-Direct{
   position:relative;display:inline-flex;align-items:center;width:fit-content;
 }
@@ -1275,37 +1275,50 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .filter-panel 
   cursor:pointer;margin:0;padding:0;border:0;font-size:13px;
 }
 
-/* Pattern A: Unrated CTA button (Option A) and slimmed Memo button */
+/* 評価ボタン(未評価時)とメモボタンを左隣の「見た(170px×38px)」と完全に同じサイズに統一 */
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rating{
+  width:100%;
+}
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta,
 .saved-mode #cards .pattern-a-rate-cta{
-  display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
-  width:100%;max-width:184px;min-height:36px;padding:7px 12px;
+  display:flex;align-items:center;justify-content:flex-start;gap:8px;
+  width:100%;max-width:170px;min-height:38px;padding:7px 11px;
   border:1px solid rgba(196,233,149,.38);border-radius:7px;
   background:rgba(196,233,149,.08);color:#dfefb9;
   font-size:12px;font-weight:700;line-height:1.4;cursor:pointer;
   transition:background .16s,border-color .16s,color .16s;
 }
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta .ui-icon,
 .saved-mode #cards .pattern-a-rate-cta .ui-icon{
   width:15px;height:15px;color:#f2c86c;flex:0 0 15px;
 }
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta:hover,
 .saved-mode #cards .pattern-a-rate-cta:hover{
   background:rgba(196,233,149,.16);border-color:var(--accent);color:#f4fde6;
 }
+
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview,
 .saved-mode #cards .pattern-a-personal-column .note-preview{
-  display:inline-flex;align-items:center;justify-content:flex-start;gap:8px;
-  width:100%;max-width:184px;min-height:36px;padding:7px 12px;
-  border:1px solid #3f4d56;border-radius:7px;background:#1b242a;
-  color:#cfd9de;font-size:12px;font-weight:600;line-height:1.4;
+  display:flex;align-items:center;justify-content:flex-start;gap:8px;
+  width:100%;max-width:170px;min-height:38px;padding:7px 11px;
+  border:1px solid #3f4d56;border-radius:7px;background:#1a252b;
+  color:#cfd9de;font-size:12px;font-weight:700;line-height:1.4;
 }
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview.has-note,
 .saved-mode #cards .pattern-a-personal-column .note-preview.has-note{
   border-color:#4b5d56;background:#1e2928;color:#dce8dc;
 }
+body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview:hover,
 .saved-mode #cards .pattern-a-personal-column .note-preview:hover{
-  border-color:#7d958c;background:#243136;color:#f0f5f4;
+  border-color:#7d958c;background:#212e36;color:#f0f5f4;
 }
+
 @media(max-width:740px){
   .saved-mode #cards .pattern-a-card .pattern-a-status-menu{max-width:155px;flex:0 1 145px}
-  .saved-mode #cards .pattern-a-rate-cta{max-width:165px;min-height:36px;padding:6px 10px;font-size:11.5px}
-  .saved-mode #cards .pattern-a-personal-column .note-preview{max-width:165px;min-height:36px;padding:6px 10px;font-size:11.5px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta,
+  .saved-mode #cards .pattern-a-rate-cta{max-width:155px;min-height:36px;padding:6px 10px;font-size:11.5px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-personal-column .note-preview,
+  .saved-mode #cards .pattern-a-personal-column .note-preview{max-width:155px;min-height:36px;padding:6px 10px;font-size:11.5px}
 }
 </style>
 </head>
