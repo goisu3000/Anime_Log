@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.9 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.11 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -118,7 +118,8 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .filter-disclosure[open]>summary,.filter-disclosure.has-filters>summary{color:var(--accent)}
 .filter-panel{position:absolute;right:0;top:calc(100% + 7px);width:min(620px,100%);padding:20px;background:var(--surface2);border:1px solid var(--border-ctrl);border-radius:var(--radius);box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .search-guide{font-size:var(--fs-sm);line-height:1.7;color:var(--muted);margin:0 0 16px}
-.explore-status-row{display:flex;align-items:center;gap:12px;margin:0 0 16px}
+.explore-status-row,.explore-type-row{display:grid;gap:var(--sp-2)}
+.explore-status-row{margin:0 0 var(--sp-3)}
 .explore-filter-label{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--muted);white-space:nowrap}
 .mobile-swipe-hint{display:none}
 .explore-status-buttons,.filter-tabs{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
@@ -160,7 +161,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .record-select-Direct .record-select-label{display:inline-flex;align-items:center;gap:4px;padding:0 2px;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1;pointer-events:none}
 .record-select-Direct .record-select-label .ui-icon{width:13px;height:13px;color:var(--subtle)}
 .record-select-Direct:hover .record-select-label,.record-select-Direct:hover .record-select-label .ui-icon{color:var(--accent)}
-.record-select-Direct select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.record-select-Direct select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;background:var(--surface);color:var(--ink);color-scheme:dark}
+.record-select-Direct select option{background:var(--surface);color:var(--ink)}
 
 /* My List (Pattern A) & Next Watch */
 .cards.saved-grid{display:block}
@@ -682,7 +684,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.1.9 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.1.11 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -703,7 +705,10 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
           <button type="button" data-explore-status="dropped" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg> 視聴中止</button>
         </div>
       </div>
-      <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
+      <div class="explore-type-row" role="group" aria-labelledby="exploreTypeLabel">
+        <span class="explore-filter-label" id="exploreTypeLabel">作品形式</span>
+        <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
+      </div>
 </div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span><select id="savedOrder" class="saved-order-select hidden" aria-label="マイリストの年内の並び順"><option value="broadcast">放送時期が新しい順</option><option value="updated">更新が新しい順</option><option value="title">作品名順</option></select></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はこのブラウザに保存され、別端末には自動同期されません。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
