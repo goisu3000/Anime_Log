@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.11 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.12 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -200,7 +200,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .pattern-a-status-summary .ui-icon{width:15px;height:15px;color:var(--accent);flex:0 0 15px}
 .pattern-a-status-summary .ui-icon:last-child{margin-left:auto;color:var(--muted);width:13px;height:13px}
 .pattern-a-status-menu:hover .pattern-a-status-summary{background:var(--surface-hover);border-color:var(--muted)}
-.pattern-a-status-menu select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0}
+.pattern-a-status-menu select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;background:var(--surface);color:var(--ink);color-scheme:dark}
+.pattern-a-status-menu select option{background:var(--surface);color:var(--ink)}
 .pattern-a-card .record-primary{width:170px;height:36px;min-height:36px;font-size:var(--fs-sm)}
 .pattern-a-date-watch,.pattern-a-date{font-size:var(--fs-xs);color:var(--muted);display:inline-flex;gap:6px;align-items:center;border:0;background:transparent;padding:2px 0;text-align:left}
 .pattern-a-date-watch:hover{color:var(--accent);text-decoration:underline}
@@ -684,7 +685,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.1.11 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.1.12 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
