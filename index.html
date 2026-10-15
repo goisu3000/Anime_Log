@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.1 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.2 | アニメ視聴管理</title>
 <style>
-/* ANI:LOG v2.1.1 | Unified Design System & Refactored Stylesheet
+/* ANI:LOG v2.1.2 | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
    Weights: 400 (normal), 600 (semi-bold), 700 (bold)
    Sizes: 11px, 12px, 13px, 15px, 18px, 22px, 30px */
@@ -245,7 +245,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .annual-entry>span .ui-icon{width:18px;height:18px;color:var(--accent)}
 .annual-entry button{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--accent-border);color:var(--accent);background:var(--accent-soft);padding:8px 13px;border-radius:var(--radius-sm);font-size:var(--fs-sm);font-weight:var(--fw-bold)}
 .view-annual #libraryView,.view-annual #rankingView,.view-annual #shareView,.view-annual .site-slogan,.view-detail #annualView{display:none!important}
-.view-annual #annualView{display:block!important}
+.view-annual:not(.view-detail) #annualView{display:block!important}
 .annual-back-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 18px}
 .annual-back-row>span{color:var(--subtle);font-weight:var(--fw-bold);font-size:var(--fs-xs);letter-spacing:.14em}
 .annual-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:30px;min-height:190px}
@@ -290,7 +290,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 
 /* Rankings & Insights */
 .view-ranking .stats,.view-ranking #libraryView,.view-ranking #shareView,.view-detail #rankingView{display:none!important}
-.view-ranking #rankingView{display:block!important}
+.view-ranking:not(.view-detail) #rankingView{display:block!important}
 .rank-view-tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;margin:0 0 18px;border-bottom:1px solid var(--border)}
 .rank-view-tabs button{border:1px solid var(--border);background:var(--surface);color:var(--muted);white-space:nowrap;padding:10px 16px;border-radius:var(--radius-sm);font-size:var(--fs-sm);font-weight:var(--fw-semi)}
 .rank-view-tabs button.active{color:var(--accent);background:var(--accent-soft);border-color:var(--accent-border)}
@@ -476,7 +476,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 
 /* Share Snapshot View */
 .view-sharing .stats,.view-sharing #libraryView,.view-sharing .sidebar-bottom,.view-sharing .side-foot{display:none!important}
-.view-sharing #shareView{display:block!important}
+.view-sharing:not(.view-detail) #shareView{display:block!important}
 .share-lead{border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);padding:28px;margin:0 0 24px}
 .share-lead h1{font-size:clamp(22px,2.7vw,30px);line-height:1.4;margin:0 0 10px}
 .share-lead p{font-size:var(--fs-sm);line-height:1.8;color:var(--muted);margin:0 0 14px}
@@ -644,7 +644,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.1.1 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.1.2 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1871,8 +1871,11 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
 
  const addedStatus=saved[a.id]?.status;
- const statusText=addedStatus?'見たいに登録済み':'見たいに登録';
- const addControl=own?'':`<button type="button" class="rank-register-control${addedStatus?' is-registered':''}" ${addedStatus?'disabled aria-disabled="true"':`data-rank-add="${safeText(a.id)}"`} aria-label="${safeText(statusText)}">${uiIcon(addedStatus?'check':'star')}<span>${safeText(statusText)}</span></button>`;
+ const addControl=own?'':!addedStatus
+  ?`<button type="button" class="rank-register-control" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')}<span>見たいに登録</span></button>`
+  :addedStatus==='planned'
+   ?`<button type="button" class="rank-register-control is-registered" data-rank-add="${safeText(a.id)}" title="クリックで登録を解除">${uiIcon('check')}<span>見たいに登録済み</span></button>`
+   :`<button type="button" class="rank-register-control is-registered" data-detail-id="${safeText(a.id)}" title="作品詳細・記録を開く">${savedStatusIcons[addedStatus]||uiIcon('check')}<span>${safeText(statusLabels[addedStatus])}・登録済み</span></button>`;
  const same=own?group.length>1:false;
  const controls=own?`<div class="rank-actions"><button type="button" data-rate-id="${safeText(a.id)}">評価編集</button><button type="button" data-rank-move="up" data-rank-id="${safeText(a.id)}" ${i===0?'disabled':''} aria-label="${safeText(a.title)}の順位を上げる">${uiIcon('up')}</button><button type="button" data-rank-move="down" data-rank-id="${safeText(a.id)}" ${i>=group.length-1?'disabled':''} aria-label="${safeText(a.title)}の順位を下げる">${uiIcon('down')}</button></div>`:'';
  const medalClass=pos===1?' rank-medal-1':pos===2?' rank-medal-2':pos===3?' rank-medal-3':'';
@@ -2054,7 +2057,7 @@ $('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);
 $('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;loadRanking(true)});
 $('#rankMinVotes').addEventListener('change',renderRanking);
 $('#rankLoadMore').addEventListener('click',()=>loadRanking(false));
-$('#rankResults').addEventListener('click',e=>{const add=e.target.closest('[data-rank-add]');if(add){setStatus(add.dataset.rankAdd,'planned');return}const move=e.target.closest('[data-rank-move]');if(move){moveRank(move.dataset.rankId,move.dataset.rankMove==='up'?-1:1);return}
+$('#rankResults').addEventListener('click',e=>{const add=e.target.closest('[data-rank-add]');if(add){const id=add.dataset.rankAdd;setStatus(id,saved[id]?.status==='planned'?'':'planned');return}const move=e.target.closest('[data-rank-move]');if(move){moveRank(move.dataset.rankId,move.dataset.rankMove==='up'?-1:1);return}
  const rate=e.target.closest('[data-rate-id]');if(rate){openRating(rate.dataset.rateId);return}
  const detail=e.target.closest('[data-detail-id]');if(detail)openDetail(detailSource(detail.dataset.detailId));
 });
