@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.0.1 | アニメ視聴管理</title>
+<title>ANI:LOG v2.0.2 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -1458,10 +1458,37 @@ body.view-detail .detail-journal-memo .detail-note-edit{flex-shrink:0}
 
 /* v2.0.1: compact bottom-nav label on very narrow phones */
 @media(max-width:360px){.mobile-bottom button[data-view="season"]{font-size:0}.mobile-bottom button[data-view="season"]::after{content:"探す";font-size:11px;line-height:1.2}}
+/* v2.0.2: compact Next Watch pinning, without altering the existing card layout. */
+.saved-mode #cards .next-watch-section{margin:0 0 27px;min-width:0}
+.saved-mode #cards .next-watch-head{display:flex;align-items:center;gap:9px;padding:2px 1px 12px;border-bottom:1px solid #465643;margin-bottom:11px}
+.saved-mode #cards .next-watch-head .ui-icon{width:18px;height:18px;color:#c4e995}
+.saved-mode #cards .next-watch-head h3{font-size:17px;font-weight:760;color:#e7f4d6;margin:0;letter-spacing:.01em}
+.saved-mode #cards .next-watch-head .next-watch-count{font-size:11px;font-weight:650;color:#adbf9f;background:#263129;border-radius:6px;padding:4px 8px}
+.saved-mode #cards .next-watch-head .next-watch-desc{margin-left:auto;font-size:11px;color:#9bada6}
+.saved-mode #cards .next-watch-section .pattern-a-card{border-color:#3a513d;background:linear-gradient(108deg,#1c2a29 0%,#1b2828 55%,#1b252b 100%)}
+.saved-mode #cards .next-watch-section .pattern-a-card:hover{border-color:#769263}
+.saved-mode #cards .next-watch-other{display:flex;align-items:center;gap:10px;color:#aab7bc;font-size:12px;font-weight:650;margin:8px 0 14px}
+.saved-mode #cards .next-watch-other::after{content:"";height:1px;background:#303b3d;flex:1}
+/* The action lives under the title's metadata, not over the poster or other controls. */
+.next-watch-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;max-width:100%;border:1px solid #455748;background:transparent;color:#aec2ad;border-radius:7px;font-family:inherit;font-size:11px;font-weight:650;line-height:1.4;padding:6px 10px;min-height:32px;cursor:pointer;transition:background .15s,border-color .15s}
+.next-watch-toggle .ui-icon{width:14px;height:14px;flex-shrink:0}
+.next-watch-toggle:hover{border-color:#b7dc91;background:#a8d77a12;color:#e0f3c9}
+.next-watch-toggle.is-active{background:#c4e99516;color:#d5f2ac;border-color:#829e61}
+.next-watch-toggle.is-active .ui-icon{fill:#b1da8055}
+.saved-mode #cards .record-main>.next-watch-toggle{margin-top:12px}
+body.view-detail .detail-journal-watch>.next-watch-toggle{margin-top:12px}
+@media(max-width:740px){
+ .saved-mode #cards .next-watch-section{margin-bottom:25px}
+ .saved-mode #cards .next-watch-head{flex-wrap:wrap;gap:7px}
+ .saved-mode #cards .next-watch-head h3{font-size:16px}
+ .saved-mode #cards .next-watch-head .next-watch-desc{width:100%;margin-left:26px;font-size:11px}
+ .next-watch-toggle{min-height:44px;font-size:12px;padding:10px 12px}
+ .saved-mode #cards .record-main>.next-watch-toggle{margin-top:10px}
+}
 </style>
 </head>
 <body>
-<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14m0-9H4v15h15v-6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8m4 0h4v4"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14m0-9H4v15h15v-6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8m4 0h4v4"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
 <div class="app">
   <aside class="sidebar" aria-label="サイドメニュー">
     <button type="button" class="brand" id="homeBrand" aria-label="ANI:LOG トップページへ戻る" title="トップページへ戻る"><span class="brand-mark">A</span><span class="brand-text"><span class="brand-name">ANI<span>:</span>LOG</span><span class="brand-desc">観たアニメ、忘れずに残そう。</span></span></button>
@@ -2244,10 +2271,35 @@ async function clearRatingImpl(){if(!ratingItemId||!saved[ratingItemId])return;c
 }
 function updateCounts(){let counts={watched:0,watching:0,planned:0,paused:0,dropped:0};Object.values(saved).forEach(v=>{if(v&&validStatuses.has(v.status))counts[v.status]++});$('#countWatched').textContent=counts.watched;$('#countWatching').textContent=counts.watching;$('#countPlanned').textContent=counts.planned;$('#countPaused').textContent=counts.paused;$('#countDropped').textContent=counts.dropped;$('#savedBadge').textContent=Object.values(counts).reduce((a,b)=>a+b,0);$('#countAll').textContent=$('#savedBadge').textContent}
 function setStatus(...args){return queueRecordWrite(()=>setStatusImpl(...args))}
+function pinnedNextWatch(a){return a?.status==='planned'&&typeof a.nextWatchPinnedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchPinnedAt))}
+function nextWatchToggleMarkup(a){
+ if(mode==='share'||saved[a.id]?.status!=='planned')return '';
+ const selected=pinnedNextWatch(saved[a.id]);
+ return `<button type="button" class="next-watch-toggle${selected?' is-active':''}" data-next-watch-id="${safeText(a.id)}" aria-pressed="${selected}" aria-label="${safeText(a.title)}を${selected?'次に観るから解除':'次に観るに固定'}">${uiIcon('pin')}<span>${selected?'次に観るに固定中 · 解除':'次に観るに固定'}</span></button>`;
+}
+function toggleNextWatch(id){return queueRecordWrite(()=>toggleNextWatchImpl(id))}
+async function toggleNextWatchImpl(id){
+ const a=saved[id];if(!a||a.status!=='planned'||mode==='share')return false;
+ const before=structuredClone(a),wasPinned=pinnedNextWatch(a),now=new Date().toISOString();
+ if(wasPinned)delete a.nextWatchPinnedAt;else a.nextWatchPinnedAt=now;
+ a.nextWatchUpdatedAt=now;
+ if(!await persist()){saved[id]=before;return false}
+ render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce);
+ toast(wasPinned?'「次に観る」の固定を解除しました':'「次に観る」の先頭に固定しました');
+ return true;
+}
+document.addEventListener('click',e=>{const pin=e.target.closest('[data-next-watch-id]');if(pin)toggleNextWatch(pin.dataset.nextWatchId)});
 async function setStatusImpl(id,status){const all=[...items,...rankingData,...Object.values(saved),...(detailActiveItem?[detailActiveItem]:[])];const candidate=all.find(a=>a.id===id);if(!candidate)return;
  const before=saved[id]?structuredClone(saved[id]):null;
  if(!validStatuses.has(status))delete saved[id];
- else saved[id]={...candidate,...(saved[id]||{}),status,updatedAt:new Date().toISOString()};
+ else {
+  saved[id]={...candidate,...(saved[id]||{}),status,updatedAt:new Date().toISOString()};
+  // A work leaves Next Watch as soon as it is no longer in the Want to Watch list.
+  if(status!=='planned'&&saved[id].nextWatchPinnedAt){
+   delete saved[id].nextWatchPinnedAt;
+   saved[id].nextWatchUpdatedAt=saved[id].updatedAt;
+  }
+ }
  const intended=saved[id]?structuredClone(saved[id]):null;
  if(!await persist()){if(before)saved[id]=before;else delete saved[id];render();return}
  let undoBefore=before;
@@ -2350,7 +2402,7 @@ function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}
 }
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?patternAProgress(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?patternAProgress(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -2378,6 +2430,15 @@ function toggleFold(status,period){const key=foldKey(status,period);
  try{localStorage.setItem(COLLAPSED_KEY,JSON.stringify([...collapsedPeriods]))}catch{}
  const button=$$('[data-fold-status]').find(el=>el.dataset.foldStatus===status&&el.dataset.foldPeriod===period);
  if(button){const folded=collapsedPeriods.has(key);button.setAttribute('aria-expanded',String(!folded));button.querySelector('.fold-symbol').innerHTML=uiIcon(folded?'chevron-right':'chevron-down');const grid=button.nextElementSibling;if(grid)grid.hidden=folded}
+}
+// Pinning is only a private local preference. Search and type filters are respected.
+function nextWatchGroups(list){
+ if(statusFilter!=='all'&&statusFilter!=='planned')return savedGroups(list);
+ const pinned=list.filter(pinnedNextWatch).sort((a,b)=>(Date.parse(b.nextWatchPinnedAt)||0)-(Date.parse(a.nextWatchPinnedAt)||0)||sortByBroadcast(a,b));
+ if(!pinned.length)return savedGroups(list);
+ const ordinary=list.filter(a=>!pinnedNextWatch(a));
+ const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head">${uiIcon('pin')}<h3>次に観る</h3><span class="next-watch-count">${pinned.length}作品</span><span class="next-watch-desc">気になる作品を優先して表示</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
+ return heading+(ordinary.length?'<div class="next-watch-other">その他の作品</div>'+savedGroups(ordinary):'');
 }
 // Pattern A: group by broadcast year first; status is shown inside each card.
 function savedGroups(list){
@@ -2448,7 +2509,7 @@ function render(){
   grid.innerHTML=isSaved?emptyCard('該当する作品がありません','視聴状況や検索条件を変更するか、アニメを探して作品を登録してください。','book','アニメを探す'):
    exploreRegistered?emptyCard('この条件で登録した作品はありません','放送年・季節を変えるか、上の「すべて」で作品を探して登録してください。','search'):
    emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
- }else grid.innerHTML=isSaved?savedGroups(filtered):filtered.map(card).join('');
+ }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
 let lastRequestAt=0, activeController=null, searchProgress=[];
@@ -3069,7 +3130,9 @@ function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))
  for(const a of data.items){if(!a||typeof a.id!=='string'||typeof a.title!=='string'||!validStatuses.has(a.status)||a.id.length>150||a.title.length>200||['__proto__','constructor','prototype'].includes(a.id))continue;
  const ep=Number(a.watchedEpisodes);
  const note=readNote(a);
- result[a.id]={...(note?{note}:{}),...(typeof a.noteDeletedAt==='string'&&Number.isFinite(Date.parse(a.noteDeletedAt))?{noteDeletedAt:a.noteDeletedAt}:{}),id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{})};
+ result[a.id]={...(note?{note}:{}),...(typeof a.noteDeletedAt==='string'&&Number.isFinite(Date.parse(a.noteDeletedAt))?{noteDeletedAt:a.noteDeletedAt}:{}),id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{}),
+  ...(a.status==='planned'&&typeof a.nextWatchPinnedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchPinnedAt))?{nextWatchPinnedAt:a.nextWatchPinnedAt}:{}),
+  ...(typeof a.nextWatchUpdatedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchUpdatedAt))?{nextWatchUpdatedAt:a.nextWatchUpdatedAt}:{})};
  }
  if(!Object.keys(result).length)throw Error('有効な作品がありません');return result;
 }
@@ -3111,6 +3174,15 @@ function mergeEntry(current,backup,preferBackup=false){
  else delete base.myRankOrder;
  if(rankOwner.rankUpdatedAt)base.rankUpdatedAt=rankOwner.rankUpdatedAt;
  else delete base.rankUpdatedAt;
+ // Merge pin changes independently, so an old backup cannot revive an unpinned work.
+ const cPin=Date.parse(current.nextWatchUpdatedAt||current.nextWatchPinnedAt||'')||0;
+ const bPin=Date.parse(backup.nextWatchUpdatedAt||backup.nextWatchPinnedAt||'')||0;
+ const pinOwner=bPin>cPin?backup:cPin>bPin?current:(preferBackup?backup:current);
+ if(base.status==='planned'&&pinnedNextWatch(pinOwner))base.nextWatchPinnedAt=pinOwner.nextWatchPinnedAt;
+ else delete base.nextWatchPinnedAt;
+ if(pinOwner.nextWatchUpdatedAt)base.nextWatchUpdatedAt=pinOwner.nextWatchUpdatedAt;
+ else if(pinOwner.nextWatchPinnedAt)base.nextWatchUpdatedAt=pinOwner.nextWatchPinnedAt;
+ else delete base.nextWatchUpdatedAt;
  return base;
 }
 function mergePreview(candidate){let additions=0,updates=0,keeps=0,ties=0;
@@ -3126,6 +3198,7 @@ async function commitImportImpl(replace){if(!importCandidate)return;
  const before=saved,count=Object.keys(importCandidate).length;
  const merged=replace?{...importCandidate}:{...saved};
  if(!replace)for(const [id,entry] of Object.entries(importCandidate))merged[id]=mergeEntry(saved[id],entry,$('#importTiePreference').value==='backup');
+ for(const entry of Object.values(merged))if(entry?.status!=='planned'&&entry?.nextWatchPinnedAt)delete entry.nextWatchPinnedAt;
  saved=merged;if(!await persist(replace)){saved=before;return}
  importCandidate=null;$('#importModeDialog').close();updateCounts();toast(`${count}作品を${replace?'入れ替え':'安全に統合'}しました`);showSaved();
 }
@@ -3204,7 +3277,7 @@ function detailHeader(a,full=null){
  const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:''}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:''}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:''}</div></section>`;
  // Completion date belongs to viewing status. Keep the editor collapsed until requested.
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'} ${uiIcon('down')}</summary>${date}</details></div>`:'';
- const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}</div>`;
+ const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
  const reviewPanel=`<div class="detail-journal-cell detail-journal-review">${mode==='share'?(publicReviewMarkup(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">共有されている評価はありません</p>'):(reviewDetail(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">視聴済みにすると★評価を記録できます</p>')}</div>`;
  const detailNote=saved[a.id]?readNote(saved[a.id]):null;
  // Detail page: put the editing action in the heading and show saved text directly
