@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.0.7 | アニメ視聴管理</title>
+<title>ANI:LOG v2.0.8 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -1562,12 +1562,11 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 @media(max-width:740px){.annual-entry{padding:10px 12px;margin-bottom:14px}.annual-entry>span{font-size:11px;gap:6px}.annual-entry button{font-size:11px;padding:8px 9px;min-height:44px}.annual-back-row{margin-bottom:15px}.annual-hero{padding:24px 20px;min-height:0;gap:20px}.annual-hero h1{font-size:44px}.annual-heading-unit{font-size:20px}.annual-hero-copy>p{font-size:12px}.annual-year-control{flex-direction:row;align-items:center;justify-content:space-between;width:100%}.annual-year-control select{height:44px;min-width:130px}.annual-rule{font-size:11px}.annual-stats{gap:8px}.annual-stat{padding:15px 11px}.annual-stat-label{font-size:11px}.annual-stat-value{font-size:29px}.annual-stat-note{font-size:10px}.annual-panel,.annual-coverage{padding:17px 14px}.annual-panel h2,.annual-coverage h2{font-size:17px}.annual-coverage-grid{grid-template-columns:1fr}.annual-favorite{min-height:72px}.annual-coverage-item button{min-height:44px}}
 @media(max-width:365px){.annual-entry>span>span{display:none}.annual-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-stat:last-child{grid-column:1/-1}.annual-stat-value{font-size:32px}.annual-stat-value small{font-size:12px}.annual-panel-note{font-size:10px}}
 
-/* v2.0.5 | Rank registration badges: equal footprint before / after saving.
-   The planned state uses a subdued lime border, inspired by the saved-list buttons.
-   Do not alter ranking numbers, insights, or record storage. */
-#rankingView .rank-quick-add,
-#rankingView .rank-added.rank-registered{
+/* v2.0.8: The same rank-registration button element is used in every public tab.
+   State changes never alter its outer dimensions. */
+#rankingView .rank-register-control{
   box-sizing:border-box;
+  appearance:none;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -1581,6 +1580,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
   border-radius:8px;
   background:#29323e;
   color:#d7e1ee;
+  font-family:inherit;
   font-size:11.5px;
   font-weight:750;
   line-height:1;
@@ -1588,26 +1588,26 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
   white-space:nowrap;
   text-decoration:none;
 }
-#rankingView .rank-quick-add .ui-icon,
-#rankingView .rank-added.rank-registered .ui-icon{
+#rankingView .rank-register-control .ui-icon{
   width:15px;
   height:15px;
   flex:0 0 15px;
   vertical-align:middle;
 }
-#rankingView .rank-added.rank-registered{
+#rankingView .rank-register-control.is-registered{
   border-color:#526e47;
   background:#273628;
   color:#d5efb8;
   cursor:default;
+  opacity:1;
 }
-#rankingView .rank-quick-add:hover{
+#rankingView .rank-register-control.is-registered:disabled{opacity:1}
+#rankingView .rank-register-control:not(:disabled):hover{
   border-color:var(--accent);
   color:var(--accent);
 }
 @media(max-width:740px){
-  #rankingView .rank-quick-add,
-  #rankingView .rank-added.rank-registered{
+  #rankingView .rank-register-control{
     height:44px;
     min-height:44px;
     font-size:12px;
@@ -2902,12 +2902,10 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const score=Number(a.score),votes=Number(a.scoredBy);
  const scoreText=own?`<strong>${ratingIcons(review.overall)}</strong><small>${review.overall} / 5 · あなたの評価</small>`:rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
+ // All three public tabs now use an identical button element and sizing rules.
  const addedStatus=saved[a.id]?.status;
- // All public ranking tabs share the same button-sized presentation.
- // Distinguish a saved Want-to-Watch title from titles already in other lists.
- const addControl=own?'':addedStatus
-  ?`<span class="rank-added rank-registered${addedStatus==='planned'?' rank-planned':''}" aria-label="${addedStatus==='planned'?'見たいに登録済み':'「'+safeText(statusLabels[addedStatus]||'登録済み')+'」に登録済み'}">${uiIcon('check')}<span>${addedStatus==='planned'?'見たいに登録済み':'「'+safeText(statusLabels[addedStatus]||'登録済み')+'」に登録済み'}</span></span>`
-  :`<button type="button" class="rank-quick-add" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')}<span>見たいに登録</span></button>`;
+ const statusText=addedStatus?(addedStatus==='planned'?'見たいに登録済み':`「${statusLabels[addedStatus]||'登録済み'}」に登録済み`):'見たいに登録';
+ const addControl=own?'':`<button type="button" class="rank-register-control${addedStatus?' is-registered':''}" ${addedStatus?'disabled aria-disabled="true"':`data-rank-add="${safeText(a.id)}"`} aria-label="${safeText(statusText)}">${uiIcon(addedStatus?'check':'star')}<span>${safeText(statusText)}</span></button>`;
  const same=own?group.length>1:false;
  const controls=own?`<div class="rank-actions"><button type="button" data-rate-id="${safeText(a.id)}">評価編集</button><button type="button" data-rank-move="up" data-rank-id="${safeText(a.id)}" ${i===0?'disabled':''} aria-label="${safeText(a.title)}の順位を上げる">${uiIcon('up')}</button><button type="button" data-rank-move="down" data-rank-id="${safeText(a.id)}" ${i>=group.length-1?'disabled':''} aria-label="${safeText(a.title)}の順位を下げる">${uiIcon('down')}</button></div>`:'';
  const medalClass=pos===1?' rank-medal-1':pos===2?' rank-medal-2':pos===3?' rank-medal-3':'';
@@ -3039,6 +3037,19 @@ $('#myInsights').addEventListener('click',e=>{
  const detail=e.target.closest('[data-detail-id]');if(detail){const item=saved[detail.dataset.detailId];if(item)openDetail(item);}
 });
 
+// Keep previously cached Top/Season ranking entries aligned with the stable MAL IDs
+// used throughout My List. Ignore cache rows without a reliable ID, never title-match.
+function normalizeRankingRow(raw){
+ if(!raw||typeof raw!=='object')return null;
+ const entry=raw.anime&&typeof raw.anime==='object'?raw.anime:raw;
+ const mal=Number(entry.mal_id);
+ if(Number.isSafeInteger(mal)&&mal>0)return model(entry);
+ const match=String(entry.id??'').match(/^(?:jikan:)?([1-9]\d*)$/);
+ return match?{...entry,id:'jikan:'+match[1]}:null;
+}
+function normalizeRankingRows(records){
+ return Array.isArray(records)?[...new Map(records.map(normalizeRankingRow).filter(Boolean).map(a=>[a.id,a])).values()]:[];
+}
 function rankKey(){return [rankingTab,rankingTab==='period'?rankingYear:'',rankingTab==='period'?rankingSeason:'',rankingSort].join('|')}
 function rankEndpoint(page){const query=new URLSearchParams({limit:'24',page:String(page)});
  if(rankingTab==='top'){if(rankingSort==='members')query.set('filter','bypopularity');return '/top/anime?'+query}
@@ -3049,7 +3060,8 @@ function rankEndpoint(page){const query=new URLSearchParams({limit:'24',page:Str
 async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')return;
  const key=rankKey();if(reset){rankingRequestId++;rankingData=[];rankingPage=1;rankingHasNext=false;
   const cached=rankingCache[key];if(cached&&Date.now()-cached.time<3*3600000&&Array.isArray(cached.rows)){
-   rankingData=cached.rows;rankingPage=cached.next||1;rankingHasNext=Boolean(cached.hasNext);rankingBusy=false;renderRanking();return;
+   const restored=normalizeRankingRows(cached.rows);
+   if(restored.length){rankingData=restored;rankingPage=cached.next||1;rankingHasNext=Boolean(cached.hasNext);rankingBusy=false;renderRanking();return;}
   }
  }else if(rankingBusy||!rankingHasNext)return;
  const requestId=rankingRequestId,activeTab=rankingTab,activeKey=key,currentPage=rankingPage;
@@ -3058,7 +3070,8 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
   const res=await fetch(API+rankEndpoint(currentPage),{headers:{Accept:'application/json'}});
   if(!res.ok)throw Error(res.status===429?'アクセスが集中しています（429）。少し時間をおいてください。':`API応答エラー（${res.status}）`);
   const payload=await res.json();if(requestId!==rankingRequestId||mode!=='ranking'||rankingTab!==activeTab||rankKey()!==activeKey)return;
-  const entries=Array.isArray(payload.data)?payload.data.filter(publicAnimeAllowed).map(model):[];
+  const rawRows=Array.isArray(payload.data)?payload.data.map(v=>v?.anime&&typeof v.anime==='object'?v.anime:v):[];
+  const entries=normalizeRankingRows(rawRows.filter(v=>v&&publicAnimeAllowed(v)));
   rankingData=[...new Map([...rankingData,...entries].map(a=>[a.id,a])).values()];rankingHasNext=Boolean(payload.pagination?.has_next_page);rankingPage++;
   // Most useful for quick return visits. Cache only a bounded number of entries.
   rankingCache[key]={time:Date.now(),rows:rankingData.slice(0,96),next:rankingPage,hasNext:rankingHasNext};
