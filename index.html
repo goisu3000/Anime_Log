@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.3 | アニメ視聴管理</title>
+<title>ANI:LOG v2.2.4 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -789,6 +789,17 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .back-to-top{right:16px;bottom:calc(env(safe-area-inset-bottom) + 76px);width:40px;height:40px}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* v2.2.4 | 10-item ranking block headings & center column divider */
+.rank-chunk-block{margin:0 0 28px}
+.rank-chunk-block:last-child{margin-bottom:0}
+.rank-chunk-head{display:flex;align-items:center;gap:12px;margin:0 0 8px;color:var(--accent);font-size:var(--fs-xs);font-weight:var(--fw-bold);letter-spacing:.08em}
+.rank-chunk-head span{background:var(--surface2);border:1px solid var(--accent-border);padding:4px 10px;border-radius:6px;white-space:nowrap}
+.rank-chunk-head::after{content:"";height:1px;flex:1;background:var(--border)}
+@media(min-width:1051px){
+  .rank-two-col{position:relative;column-gap:40px}
+  .rank-two-col.has-right-col::before{content:"";position:absolute;top:8px;bottom:8px;left:50%;width:1px;background:var(--border);pointer-events:none}
+}
 </style>
 </head>
 <body>
@@ -819,7 +830,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.3 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.2.4 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2173,12 +2184,13 @@ function renderRanking(){if(mode!=='ranking')return;
   let result='',position=0;for(const stars of [5,4,3,2,1]){const group=rows.filter(a=>readReview(a.review)?.overall===stars);if(!group.length)continue;
    if(myRatingFilter&&stars!==myRatingFilter)continue;
    result+=`<div class="rank-group-heading" aria-label="評価${stars}点：${group.length}作品"><span class="review-stars-mini rank-group-stars" aria-hidden="true">${ratingIcons(stars)}</span>　${group.length}作品</div>`;
-   for(let c=0;c<group.length;c+=10){const chunk=group.slice(c,c+10),rowsCount=Math.ceil(chunk.length/2);result+=`<div class="rank-two-col" style="--rank-rows:${rowsCount}">`;chunk.forEach((a,j)=>{result+=makeRankRow(a,c+j+1,'mine',c+j,group)});result+='</div>'}}
+   for(let c=0;c<group.length;c+=10){const chunk=group.slice(c,c+10),rowsCount=Math.ceil(chunk.length/2),head=group.length>10?`<div class="rank-chunk-head"><span>${c+1}〜${c+chunk.length}位</span></div>`:'';result+=`<div class="rank-chunk-block">${head}<div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${rowsCount}">`;chunk.forEach((a,j)=>{result+=makeRankRow(a,c+j+1,'mine',c+j,group)});result+='</div></div>'}}
   $('#rankResults').innerHTML=result||emptyCard('該当する評価の作品がありません','別の★評価を選ぶか「すべて」に戻してください。','star');return;
  }
  const min=$('#rankMinVotes').checked;
- const filtered=rankingData.filter(a=>!min||rankingSort==='members'||Number(a.scoredBy||0)>=100);
- $('#rankResults').innerHTML=rankingBusy&&!rankingData.length?emptyCard('ランキングを取得中…','公開アニメデータベースから読み込んでいます。','loading'):filtered.length?Array.from({length:Math.ceil(filtered.length/10)},(_,b)=>{const chunk=filtered.slice(b*10,b*10+10);return `<div class="rank-two-col" style="--rank-rows:${Math.ceil(chunk.length/2)}">${chunk.map((a,j)=>makeRankRow(a,b*10+j+1)).join('')}</div>`}).join(''):emptyCard('条件に合う作品がありません',rankingData.length?'評価人数の条件を外すと表示できる場合があります。':'ランキングを取得できませんでした。','search');
+ const [nowY,nowS]=rankNowParts();
+ const filtered=rankingData.filter(a=>(rankingTab!=='now'||(a.year===nowY&&a.season===nowS))&&(!min||rankingSort==='members'||Number(a.scoredBy||0)>=100));
+ $('#rankResults').innerHTML=rankingBusy&&!rankingData.length?emptyCard('ランキングを取得中…','公開アニメデータベースから読み込んでいます。','loading'):filtered.length?Array.from({length:Math.ceil(filtered.length/10)},(_,b)=>{const chunk=filtered.slice(b*10,b*10+10),start=b*10+1,end=b*10+chunk.length;return `<div class="rank-chunk-block"><div class="rank-chunk-head"><span>${start}〜${end}位</span></div><div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${Math.ceil(chunk.length/2)}">${chunk.map((a,j)=>makeRankRow(a,start+j)).join('')}</div></div>`}).join(''):emptyCard('条件に合う作品がありません',rankingData.length?'評価人数の条件を外すと表示できる場合があります。':'ランキングを取得できませんでした。','search');
 }
 function showRanking(tab='now'){
  if(!['now','period','top','mine'].includes(tab))tab='now';
@@ -2298,11 +2310,12 @@ function normalizeRankingRow(raw){
 function normalizeRankingRows(records){
  return Array.isArray(records)?[...new Map(records.map(normalizeRankingRow).filter(Boolean).map(a=>[a.id,a])).values()]:[];
 }
-function rankKey(){return [rankingTab,rankingTab==='period'?rankingYear:'',rankingTab==='period'?rankingSeason:'',rankingSort].join('|')}
+function rankNowParts(){const d=new Date();return [d.getFullYear(),['winter','spring','summer','fall'][Math.floor(d.getMonth()/3)]]}
+function rankKey(){const [ny,ns]=rankNowParts();return [rankingTab==='now'?`now:${ny}:${ns}`:rankingTab,rankingTab==='period'?rankingYear:'',rankingTab==='period'?rankingSeason:'',rankingSort].join('|')}
 function rankEndpoint(page){const query=new URLSearchParams({limit:'24',page:String(page)});
  if(rankingTab==='top'){if(rankingSort==='members')query.set('filter','bypopularity');return '/top/anime?'+query}
  query.set('order_by',rankingSort==='members'?'members':'score');query.set('sort','desc');
- if(rankingTab==='now'){query.set('continuing','');return '/seasons/now?'+query}
+ if(rankingTab==='now'){const [ny,ns]=rankNowParts();return `/seasons/${ny}/${ns}?`+query}
  return `/seasons/${rankingYear}/${rankingSeason}?${query}`;
 }
 async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')return;
