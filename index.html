@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.0.6 | アニメ視聴管理</title>
+<title>ANI:LOG v2.0.7 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -327,9 +327,11 @@
 .rank-row{display:flex;gap:16px;align-items:center;background:var(--surface);border:1px solid #303b48;border-radius:15px;padding:13px 17px;min-width:0;transition:border-color .15s,background .15s}
 .rank-row:hover{border-color:#546d5a}.rank-row.dragging{opacity:.45}.rank-row.drag-over{border-color:var(--accent);background:#2a3428}
 .rank-num{font-weight:900;font-size:23px;color:#d6e0ec;font-variant-numeric:tabular-nums;text-align:center;width:42px;flex:0 0 42px}
-.rank-row.rank-medal-1 .rank-num,.rank-row:nth-child(1) .rank-num{color:#f6d56b;text-shadow:0 0 14px rgba(246,213,107,.16)}
-.rank-row.rank-medal-2 .rank-num,.rank-row:nth-child(2) .rank-num{color:#d4dde7;text-shadow:0 0 12px rgba(212,221,231,.12)}
-.rank-row.rank-medal-3 .rank-num,.rank-row:nth-child(3) .rank-num{color:#cd8c5e;text-shadow:0 0 10px rgba(205,140,94,.10)}
+/* Positional medals are attached to the actual ranking position, not DOM child index.
+   Personal rankings insert star-group headings between rows. */
+#rankingView .rank-row.rank-medal-1 .rank-num{color:#f6d56b;text-shadow:0 0 14px rgba(246,213,107,.16)}
+#rankingView .rank-row.rank-medal-2 .rank-num{color:#d4dde7;text-shadow:0 0 12px rgba(212,221,231,.12)}
+#rankingView .rank-row.rank-medal-3 .rank-num{color:#cd8c5e;text-shadow:0 0 10px rgba(205,140,94,.10)}
 .rank-poster{width:61px;height:82px;flex:0 0 61px;border-radius:7px;overflow:hidden;background:#29303a;display:grid;place-items:center;color:#8192a1;font-size:16px}
 .rank-poster img{width:100%;height:100%;object-fit:cover}
 .rank-item-main{min-width:0;flex:1;display:grid;gap:6px}
@@ -1293,7 +1295,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta,
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta .ui-icon,
 .saved-mode #cards .pattern-a-rate-cta .ui-icon{
-  width:15px;height:15px;color:#f2c86c;flex:0 0 15px;
+  width:15px;height:15px;color:#bdda9b;flex:0 0 15px;
 }
 body.saved-mode:not(.view-detail):not(.view-ranking) #cards .pattern-a-rate-cta:hover,
 .saved-mode #cards .pattern-a-rate-cta:hover{
@@ -1564,7 +1566,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
    The planned state uses a subdued lime border, inspired by the saved-list buttons.
    Do not alter ranking numbers, insights, or record storage. */
 #rankingView .rank-quick-add,
-#rankingView .rank-added.rank-planned{
+#rankingView .rank-added.rank-registered{
   box-sizing:border-box;
   display:inline-flex;
   align-items:center;
@@ -1587,13 +1589,13 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
   text-decoration:none;
 }
 #rankingView .rank-quick-add .ui-icon,
-#rankingView .rank-added.rank-planned .ui-icon{
+#rankingView .rank-added.rank-registered .ui-icon{
   width:15px;
   height:15px;
   flex:0 0 15px;
   vertical-align:middle;
 }
-#rankingView .rank-added.rank-planned{
+#rankingView .rank-added.rank-registered{
   border-color:#526e47;
   background:#273628;
   color:#d5efb8;
@@ -1605,21 +1607,12 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 }
 @media(max-width:740px){
   #rankingView .rank-quick-add,
-  #rankingView .rank-added.rank-planned{
+  #rankingView .rank-added.rank-registered{
     height:44px;
     min-height:44px;
     font-size:12px;
   }
 }
-
-/* v2.0.6 | Discovery card action height alignment & status menu legibility */
-.discovery-actions{padding-top:13px;gap:6px}
-.discovery-actions>.record-primary,.discovery-actions>.record-secondary{box-sizing:border-box;width:100%;height:38px;min-height:38px;max-height:38px;padding:0 12px;border-radius:7px;font-size:12px;line-height:1}
-.discovery-actions .record-select-Direct{height:28px;min-height:28px;display:inline-flex;align-items:center}
-.discovery-actions .record-select-Direct .record-select-label{padding:0 2px;color:#b8c7d0;font-size:11.5px;font-weight:600;line-height:1}
-.discovery-actions .record-select-Direct .record-select-label .ui-icon{width:13px;height:13px;color:#9eb0bc;transition:color .15s}
-.discovery-actions .record-select-Direct:hover .record-select-label,.discovery-actions .record-select-Direct:hover .record-select-label .ui-icon{color:var(--accent)}
-@media(max-width:740px){.discovery-actions>.record-primary,.discovery-actions>.record-secondary{height:44px;min-height:44px;max-height:44px}.discovery-actions .record-select-Direct{height:34px;min-height:34px}.discovery-actions .record-select-Direct .record-select-label{font-size:12px}}
 </style>
 </head>
 <body>
@@ -1650,7 +1643,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.0.6 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.0.5 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2536,7 +2529,7 @@ function recordTitle(a){return `<h3 class="card-title"><button type="button" cla
 function stateMenu(a){const status=saved[a.id]?.status||'';return `<div class="record-menu record-select-Direct"><span class="record-select-label">${status?'状態を変更':'別の状態で登録'}${uiIcon('chevron-down')}</span><select data-status-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴状況"><option value="">${status?'リストから削除':'未登録'}</option>${Object.entries(statusLabels).filter(([s])=>validStatuses.has(s)).map(([s,l])=>`<option value="${s}" ${s===status?'selected':''}>${l}</option>`).join('')}</select></div>`}
 function quickStatus(a,status,label){return `<button type="button" class="record-primary" data-record-id="${safeText(a.id)}" data-quick-status="${status}">${uiIcon(status==='planned'?'plus':'play')}${label}</button>`}
 function card(a){return mode==='saved'?recordCard(a):discoveryCard(a)}
-function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button type="button" class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${stateMenu(a)}</div></div></article>`}
+function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${!status?stateMenu(a):''}</div></div></article>`}
 // Pattern A: one consistent, information-first record card for all five statuses.
 function patternAStatusMenu(a){const status=a.status||'watched',id=safeText(a.id),label=safeText(statusLabels[status]||'未登録');
  return `<div class="record-menu pattern-a-status-menu"><div class="pattern-a-status-summary" aria-hidden="true">${savedStatusIcons[status]||uiIcon('check')}<span>${label}</span>${uiIcon('chevron-down')}</div><select data-status-id="${id}" aria-label="${safeText(a.title)}の視聴状況（現在：${label}）"><option value="">リストから削除</option>${Object.entries(statusLabels).filter(([v])=>validStatuses.has(v)).map(([v,l])=>`<option value="${v}" ${v===status?'selected':''}>${safeText(l)}</option>`).join('')}</select></div>`;
@@ -2910,11 +2903,11 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const scoreText=own?`<strong>${ratingIcons(review.overall)}</strong><small>${review.overall} / 5 · あなたの評価</small>`:rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
  const addedStatus=saved[a.id]?.status;
- const addControl=own?'':addedStatus==='planned'
-  ?`<span class="rank-added rank-planned" aria-label="見たいに登録済み">${uiIcon('check')}<span>見たいに登録済み</span></span>`
-  :addedStatus
-   ?`<span class="rank-added">${safeText(statusLabels[addedStatus]||'登録済み')} ${uiIcon('check')}</span>`
-   :`<button type="button" class="rank-quick-add" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')}<span>見たいに登録</span></button>`;
+ // All public ranking tabs share the same button-sized presentation.
+ // Distinguish a saved Want-to-Watch title from titles already in other lists.
+ const addControl=own?'':addedStatus
+  ?`<span class="rank-added rank-registered${addedStatus==='planned'?' rank-planned':''}" aria-label="${addedStatus==='planned'?'見たいに登録済み':'「'+safeText(statusLabels[addedStatus]||'登録済み')+'」に登録済み'}">${uiIcon('check')}<span>${addedStatus==='planned'?'見たいに登録済み':'「'+safeText(statusLabels[addedStatus]||'登録済み')+'」に登録済み'}</span></span>`
+  :`<button type="button" class="rank-quick-add" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')}<span>見たいに登録</span></button>`;
  const same=own?group.length>1:false;
  const controls=own?`<div class="rank-actions"><button type="button" data-rate-id="${safeText(a.id)}">評価編集</button><button type="button" data-rank-move="up" data-rank-id="${safeText(a.id)}" ${i===0?'disabled':''} aria-label="${safeText(a.title)}の順位を上げる">${uiIcon('up')}</button><button type="button" data-rank-move="down" data-rank-id="${safeText(a.id)}" ${i>=group.length-1?'disabled':''} aria-label="${safeText(a.title)}の順位を下げる">${uiIcon('down')}</button></div>`:'';
  const medalClass=pos===1?' rank-medal-1':pos===2?' rank-medal-2':pos===3?' rank-medal-3':'';
