@@ -1623,6 +1623,15 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
     font-size:12px;
   }
 }
+
+/* v2.0.6 | Discovery card action height alignment & status menu legibility */
+.discovery-actions{padding-top:13px;gap:6px}
+.discovery-actions>.record-primary,.discovery-actions>.record-secondary{box-sizing:border-box;width:100%;height:38px;min-height:38px;max-height:38px;padding:0 12px;border-radius:7px;font-size:12px;line-height:1}
+.discovery-actions .record-select-Direct{height:28px;min-height:28px;display:inline-flex;align-items:center}
+.discovery-actions .record-select-Direct .record-select-label{padding:0 2px;color:#b8c7d0;font-size:11.5px;font-weight:600;line-height:1}
+.discovery-actions .record-select-Direct .record-select-label .ui-icon{width:13px;height:13px;color:#9eb0bc;transition:color .15s}
+.discovery-actions .record-select-Direct:hover .record-select-label,.discovery-actions .record-select-Direct:hover .record-select-label .ui-icon{color:var(--accent)}
+@media(max-width:740px){.discovery-actions>.record-primary,.discovery-actions>.record-secondary{height:44px;min-height:44px;max-height:44px}.discovery-actions .record-select-Direct{height:34px;min-height:34px}.discovery-actions .record-select-Direct .record-select-label{font-size:12px}}
 </style>
 </head>
 <body>
@@ -2539,7 +2548,7 @@ function recordTitle(a){return `<h3 class="card-title"><button type="button" cla
 function stateMenu(a){const status=saved[a.id]?.status||'';return `<div class="record-menu record-select-Direct"><span class="record-select-label">${status?'状態を変更':'別の状態で登録'}${uiIcon('chevron-down')}</span><select data-status-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴状況"><option value="">${status?'リストから削除':'未登録'}</option>${Object.entries(statusLabels).filter(([s])=>validStatuses.has(s)).map(([s,l])=>`<option value="${s}" ${s===status?'selected':''}>${l}</option>`).join('')}</select></div>`}
 function quickStatus(a,status,label){return `<button type="button" class="record-primary" data-record-id="${safeText(a.id)}" data-quick-status="${status}">${uiIcon(status==='planned'?'plus':'play')}${label}</button>`}
 function card(a){return mode==='saved'?recordCard(a):discoveryCard(a)}
-function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${!status?stateMenu(a):''}</div></div></article>`}
+function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button type="button" class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${stateMenu(a)}</div></div></article>`}
 // Pattern A: one consistent, information-first record card for all five statuses.
 function patternAStatusMenu(a){const status=a.status||'watched',id=safeText(a.id),label=safeText(statusLabels[status]||'未登録');
  return `<div class="record-menu pattern-a-status-menu"><div class="pattern-a-status-summary" aria-hidden="true">${savedStatusIcons[status]||uiIcon('check')}<span>${label}</span>${uiIcon('chevron-down')}</div><select data-status-id="${id}" aria-label="${safeText(a.title)}の視聴状況（現在：${label}）"><option value="">リストから削除</option>${Object.entries(statusLabels).filter(([v])=>validStatuses.has(v)).map(([v,l])=>`<option value="${v}" ${v===status?'selected':''}>${safeText(l)}</option>`).join('')}</select></div>`;
