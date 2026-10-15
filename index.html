@@ -266,12 +266,6 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .note-preview-quote{flex:1;min-width:0;font-size:var(--fs-sm);line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .note-preview-edit-ico{flex:0 0 14px;color:var(--muted)}
 .pattern-a-update{font-size:var(--fs-xs);color:var(--muted);font-weight:var(--fw-semi)}
-/* Paused cards: reuse the free space beside the metadata for the existing resume action. */
-.pattern-a-paused .record-main{display:flex;flex-wrap:wrap;align-items:center;align-content:center;column-gap:8px}
-.pattern-a-paused .record-main>.card-title,.pattern-a-paused .record-main>.pattern-a-meta{flex:0 0 100%}
-.pattern-a-paused .record-main>.pattern-a-tags{flex:1 1 110px;min-width:0;margin-top:8px}
-.pattern-a-paused .record-main>.pattern-a-resume-desktop{flex:0 0 170px;margin-top:8px}
-.pattern-a-resume-mobile{display:none}
 
 /* Annual Summary */
 .annual-entry{display:none;align-items:center;justify-content:space-between;gap:12px;padding:11px 16px;margin:0 0 16px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}
@@ -758,10 +752,6 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .detail-journal-grid:not(.detail-journal-shared){grid-template-columns:repeat(2,minmax(0,1fr))}
   .detail-journal-review:has(.detail-rating-layout){grid-column:1/-1;grid-row:2}
 }
-/* Keep all four columns aligned while reserving space for titles and resume controls. */
-@media(min-width:1251px) and (max-width:1400px){
-  .pattern-a-card{grid-template-columns:112px minmax(180px,1fr) 215px 255px}
-}
 @media(max-width:1050px){.annual-panels{grid-template-columns:1fr}}
 @media(max-width:740px){
   .app{display:block}.sidebar,.top-right,.section-header p,.heading-actions .share-action{display:none}
@@ -788,12 +778,6 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .pattern-a-status-menu,.pattern-a-rate-cta,.note-preview:not(.has-note){width:155px;max-width:155px;height:42px}
   .pattern-a-status-summary{height:42px}
   .note-preview.has-note{flex:1 1 160px;max-width:60%;height:42px}
-  .pattern-a-paused .record-main{display:block}
-  .pattern-a-resume-desktop{display:none}
-  .pattern-a-paused .pattern-a-watch-column{column-gap:0;row-gap:8px}
-  .pattern-a-paused .pattern-a-watch-column>.pattern-a-status-menu{order:0}
-  .pattern-a-paused .pattern-a-watch-column>.pattern-a-resume-mobile{display:block;order:1}
-  .pattern-a-paused .pattern-a-watch-column>.pattern-a-progress{order:2;flex:0 0 100%}
   .pattern-a-rate-edit{display:inline-flex}
   .detail-profile{grid-template-columns:108px minmax(0,1fr);gap:16px;padding:16px}
   .detail-journal-grid,.detail-journal-grid.detail-journal-shared,.annual-coverage-grid,.annual-stats{grid-template-columns:1fr}
@@ -1750,7 +1734,7 @@ function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}
 }
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}${status==='paused'?`<div class="pattern-a-resume-desktop">${quickStatus(a,'watching','視聴を再開')}</div>`:''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?`<div class="pattern-a-resume-mobile">${quickStatus(a,'watching','視聴を再開')}</div>`:''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
