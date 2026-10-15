@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.2 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.3 | アニメ視聴管理</title>
 <style>
-/* ANI:LOG v2.1.2 | Unified Design System & Refactored Stylesheet
+/* ANI:LOG v2.1.3 | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
    Weights: 400 (normal), 600 (semi-bold), 700 (bold)
    Sizes: 11px, 12px, 13px, 15px, 18px, 22px, 30px */
@@ -300,6 +300,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .rank-controls .rank-threshold{flex-direction:row;align-items:center;gap:8px;min-height:42px}
 .rank-threshold input{accent-color:var(--accent);width:17px;height:17px}
 .rank-notice{color:var(--muted);font-size:var(--fs-sm);line-height:1.7;margin:0 0 16px}
+/* My ranking: star-rating filter (presentation only, no saved-data changes) */
+.rank-rating-filter{margin:0 0 18px}
+.rank-rating-filter-label{display:block;margin:0 0 8px;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-semi)}
+.rank-rating-filter-options{display:flex;gap:8px;max-width:100%;overflow-x:auto;padding:0 0 4px;scrollbar-width:thin;scrollbar-color:var(--border-ctrl) transparent}
+.rank-rating-filter-options button{display:flex;flex:0 0 96px;flex-direction:column;align-items:center;justify-content:center;gap:5px;min-height:62px;padding:8px 10px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-semi);white-space:nowrap}
+.rank-rating-filter-options button:not(:disabled):hover{border-color:var(--accent);color:var(--accent)}
+.rank-rating-filter-options button[aria-pressed="true"]{border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
+.rank-rating-filter-options button:disabled{opacity:.45}
+.rank-rating-filter-count{font-size:var(--fs-xs);font-weight:var(--fw-normal);color:var(--muted)}
+.rank-rating-filter-options button[aria-pressed="true"] .rank-rating-filter-count{color:var(--accent)}
+.rank-rating-filter-feedback{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px;margin:12px 0 0;color:var(--muted);font-size:var(--fs-xs);line-height:1.5}
 .rank-results{display:grid}
 .rank-group-heading{color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-bold);margin:18px 0 6px;display:flex;align-items:center;gap:10px}
 .rank-group-heading::after{content:"";height:1px;flex:1;background:var(--border)}
@@ -697,6 +708,11 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
         <label class="rank-threshold"><input type="checkbox" id="rankMinVotes" checked> 評価人数100人以上</label>
       </div>
       <div id="rankNotice" class="rank-notice">世間の評価はMyAnimeList由来のデータです。日本国内だけのランキングではありません。</div>
+      <div id="rankRatingFilter" class="rank-rating-filter" role="group" aria-label="マイランキングを星評価で絞り込む" hidden>
+        <span class="rank-rating-filter-label">評価で絞り込む</span>
+        <div id="rankRatingFilterOptions" class="rank-rating-filter-options"></div>
+        <div id="rankRatingFilterFeedback" class="rank-rating-filter-feedback" role="status" aria-live="polite" hidden></div>
+      </div>
       <div id="rankResults" class="rank-results" aria-live="polite"></div>
 
       <section id="myInsights" class="insights-root hidden" aria-label="マイランキングの視聴分析">
@@ -1853,7 +1869,7 @@ $('#annualView').addEventListener('click',e=>{
 
 let rankingTab='now', rankingSort='score', rankingYear=new Date().getFullYear(),rankingSeason=['winter','spring','summer','fall'][Math.floor(new Date().getMonth()/3)];
 let rankingData=[],rankingPage=1,rankingHasNext=false,rankingBusy=false,rankingRequestId=0,rankingCache={};
-let rankDraggedId=null;
+let rankDraggedId=null, myRatingFilter=0; // 0 = all, 1..5 = selected rating (view only)
 try{const c=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||'{}');if(c&&typeof c==='object'&&!Array.isArray(c))rankingCache=c}catch{}
 for(let y=new Date().getFullYear()+1;y>=1970;y--){const op=document.createElement('option');op.value=String(y);op.textContent=y+'年';$('#rankYear').append(op)}
 $('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
@@ -1883,18 +1899,27 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
 function renderRanking(){if(mode!=='ranking')return;
  $$('#rankingView [data-rank-tab]').forEach(b=>b.classList.toggle('active',b.dataset.rankTab===rankingTab));
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
- const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
+ const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankRatingFilter').hidden=!mine;$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
  const names={now:'今期のアニメランキング',period:'年代・シーズン別ランキング',top:'歴代アニメランキング',mine:'マイランキング'};
  $('#rankingTitle').textContent=names[rankingTab];$('#breadcrumb').textContent=names[rankingTab];
  $('#rankingDescription').textContent=mine?'「見た」に登録し、自分で評価した作品を並べます。':'Tenrai API（MyAnimeList由来）の評価・登録者数に基づく作品の並びです。';
  $('#rankNotice').textContent=mine?'★5〜1の順です。同じ星の作品だけドラッグか↑↓で順番を変えられます。順位はブラウザとJSONバックアップに保存されます。':rankingSort==='members'?'人気順は作品をリストに登録した人数による順位です。評価点の高さとは別の指標です。':'スコアは海外ユーザーを含む評価です。新作は評価数が少なく順位が変動しやすいため、人数で絞り込めます。';
  $('#rankLoadMore').classList.toggle('hidden',mine||!rankingHasNext||rankingBusy);
- if(mine){renderInsights();const rows=myRatedItems();if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','star');return}
+ if(mine){renderInsights();const rows=myRatedItems();
+  const ratingCounts=[0,0,0,0,0,0];rows.forEach(a=>ratingCounts[readReview(a.review).overall]++);
+  $('#rankRatingFilterOptions').innerHTML=[0,5,4,3,2,1].map(stars=>{
+   const count=stars?ratingCounts[stars]:rows.length;
+   return `<button type="button" data-rank-rating="${stars}" aria-pressed="${myRatingFilter===stars}" ${count===0&&myRatingFilter!==stars?'disabled':''}><span>${stars?'★'+stars:'すべて'}</span><span class="rank-rating-filter-count">${count}作品</span></button>`;
+  }).join('');
+  const feedback=$('#rankRatingFilterFeedback');feedback.hidden=myRatingFilter===0;
+  if(myRatingFilter){feedback.innerHTML=`<span>★${myRatingFilter}の作品だけを表示しています（${ratingCounts[myRatingFilter]}作品）</span><span>解除するには「すべて」を選択</span>`}
+  if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','star');return}
   let result='',position=0;for(const stars of [5,4,3,2,1]){const group=rows.filter(a=>readReview(a.review)?.overall===stars);if(!group.length)continue;
+   if(myRatingFilter&&stars!==myRatingFilter){position+=group.length;continue}
    result+=`<div class="rank-group-heading" aria-label="評価${stars}点：${group.length}作品"><span class="review-stars-mini rank-group-stars" aria-hidden="true">${ratingIcons(stars)}</span>　${group.length}作品</div>`;
    group.forEach((a,i)=>{position++;result+=makeRankRow(a,position,'mine',i,group)})}
-  $('#rankResults').innerHTML=result;return;
+  $('#rankResults').innerHTML=result||emptyCard('該当する評価の作品がありません','別の★評価を選ぶか「すべて」に戻してください。','star');return;
  }
  const min=$('#rankMinVotes').checked;
  const filtered=rankingData.filter(a=>!min||rankingSort==='members'||Number(a.scoredBy||0)>=100);
@@ -1903,6 +1928,7 @@ function renderRanking(){if(mode!=='ranking')return;
 function showRanking(tab='now'){
  if(!['now','period','top','mine'].includes(tab))tab='now';
  exitAnnual();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;
+ if(tab==='mine'&&rankingTab!=='mine')myRatingFilter=0;
  mode='ranking';rankingTab=tab;document.body.classList.add('view-ranking');$('#rankingView').classList.remove('hidden');
  $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
  $$('[data-view]').forEach(b=>b.classList.remove('active'));$$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
@@ -2052,6 +2078,7 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
 $('#rankingDisclosure').addEventListener('click',()=>{const expanded=$('#rankingDisclosure').getAttribute('aria-expanded')==='true';$('#rankingDisclosure').setAttribute('aria-expanded',String(!expanded));$('#rankingSubnav').hidden=expanded});
 $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankOpen)));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
+$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking()});
 $('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;loadRanking(true)});
 $('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);loadRanking(true)});
 $('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;loadRanking(true)});
