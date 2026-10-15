@@ -5,24 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.5 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.6 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
-   Weights: 400 (normal), 600 (semi-bold), 700 (bold)
-   Sizes: 11px, 12px, 13px, 15px, 18px, 22px, 30px
+   Weights: 500 (min/normal), 600 (semi-bold), 700 (bold)
+   Sizes: 12px (min), 13px, 15px, 18px, 22px, 30px
    Spacing: 4px, 8px, 12px, 16px, 20px, 24px, 32px (4px grid) */
 :root{
   color-scheme:dark;
   --bg:#111417;--bg-side:#15191c;
   --surface:#1a2228;--surface2:#202a32;--surface-hover:#26333d;--surface-input:#141b20;
   --border:#303b43;--border-ctrl:#485864;
-  --ink:#f0f4f2;--muted:#b5c4ce;--subtle:#8c9da8;
+  --ink:#f0f4f2;--muted:#c2d0da;--subtle:#a8b8c4;
   --accent:#c4e995;--accent-soft:rgba(196,233,149,.10);--accent-border:rgba(196,233,149,.40);--accent-ink:#182414;
   --gold:#f2c86c;--danger:#e6a5a5;--cyan:#88dcee;--pink:#edb6dc;
   --radius:12px;--radius-sm:8px;
-  --fs-xs:11px;--fs-sm:12px;--fs-md:13px;--fs-lg:15px;--fs-xl:18px;--fs-2xl:22px;--fs-3xl:30px;
-  --fw-normal:400;--fw-semi:600;--fw-bold:700;
+  --fs-xs:12px;--fs-sm:12px;--fs-md:13px;--fs-lg:15px;--fs-xl:18px;--fs-2xl:22px;--fs-3xl:30px;
+  --fw-normal:500;--fw-semi:600;--fw-bold:700;
   --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;
 }
 *{box-sizing:border-box}html{scroll-behavior:smooth}
@@ -627,6 +627,12 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .toast{bottom:calc(env(safe-area-inset-bottom) + 74px)}
 }
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{transition:none!important;animation:none!important}}
+
+/* v2.1.6 | Strict Minimum Readability & 2-Line Discovery Title Rule */
+.discovery-card .card-title{line-height:1.5;min-height:3em;max-height:3em;margin:0 0 8px}
+.discovery-card .title-button{-webkit-line-clamp:2;line-height:1.5;min-height:3em;max-height:3em}
+.pattern-a-rating-unavailable,.watch-progress-top>span,.watch-progress-entry,.pattern-a-update,.pattern-a-date-watch,.pattern-a-date{color:var(--muted);font-weight:var(--fw-semi)}
+.disclaimer,.detail-credit{color:var(--muted);font-weight:var(--fw-normal)}
 </style>
 </head>
 <body>
@@ -657,7 +663,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.1.5 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.1.6 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
