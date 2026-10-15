@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.0.3 | アニメ視聴管理</title>
+<title>ANI:LOG v2.0.5 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -327,7 +327,9 @@
 .rank-row{display:flex;gap:16px;align-items:center;background:var(--surface);border:1px solid #303b48;border-radius:15px;padding:13px 17px;min-width:0;transition:border-color .15s,background .15s}
 .rank-row:hover{border-color:#546d5a}.rank-row.dragging{opacity:.45}.rank-row.drag-over{border-color:var(--accent);background:#2a3428}
 .rank-num{font-weight:900;font-size:23px;color:#d6e0ec;font-variant-numeric:tabular-nums;text-align:center;width:42px;flex:0 0 42px}
-.rank-row:nth-child(1) .rank-num{color:#f0cb79}.rank-row:nth-child(2) .rank-num{color:#c7d4ea}.rank-row:nth-child(3) .rank-num{color:#d6ac8a}
+.rank-row.rank-medal-1 .rank-num,.rank-row:nth-child(1) .rank-num{color:#f6d56b;text-shadow:0 0 14px rgba(246,213,107,.16)}
+.rank-row.rank-medal-2 .rank-num,.rank-row:nth-child(2) .rank-num{color:#d4dde7;text-shadow:0 0 12px rgba(212,221,231,.12)}
+.rank-row.rank-medal-3 .rank-num,.rank-row:nth-child(3) .rank-num{color:#cd8c5e;text-shadow:0 0 10px rgba(205,140,94,.10)}
 .rank-poster{width:61px;height:82px;flex:0 0 61px;border-radius:7px;overflow:hidden;background:#29303a;display:grid;place-items:center;color:#8192a1;font-size:16px}
 .rank-poster img{width:100%;height:100%;object-fit:cover}
 .rank-item-main{min-width:0;flex:1;display:grid;gap:6px}
@@ -694,6 +696,7 @@ body{letter-spacing:.01em;-webkit-font-smoothing:antialiased;background:var(--bg
 .pattern-a-rating-unavailable{font-size:11px;line-height:1.7;color:#9facb3}
 .saved-mode #cards .pattern-a-personal-column .note-preview{display:flex;align-items:center;justify-content:center;width:100%;min-height:37px;padding:8px 9px;border:1px solid #54616b;border-radius:7px;background:#222c34;color:#ecf0ef;font-size:12px;line-height:1.4;font-weight:600}
 .saved-mode #cards .pattern-a-personal-column .note-preview:hover{border-color:#92b287;background:#2a3637}
+.saved-mode #cards .pattern-a-personal-column .note-preview .ui-icon{color:#bdda9b}
 .saved-mode #cards .pattern-a-personal-column .note-preview .note-preview-excerpt{font-size:10px;color:#bdd1d7;text-align:left;max-height:32px;overflow:hidden}
 .saved-mode #cards .pattern-a-card .pattern-a-status-menu{width:100%;max-width:180px;position:relative;margin:0;min-width:0}
 .saved-mode #cards .pattern-a-card .pattern-a-status-menu>summary{display:flex;align-items:center;gap:8px;min-height:37px;padding:7px 10px;border:1px solid #50606d;border-radius:7px;background:#202a31;list-style:none;cursor:pointer;font-size:12px;color:#e6eceb;font-weight:700;line-height:1.4}
@@ -1556,6 +1559,58 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 @media(max-width:1050px){.annual-panels{grid-template-columns:minmax(0,1fr)}.annual-hero{min-height:180px}}
 @media(max-width:740px){.annual-entry{padding:10px 12px;margin-bottom:14px}.annual-entry>span{font-size:11px;gap:6px}.annual-entry button{font-size:11px;padding:8px 9px;min-height:44px}.annual-back-row{margin-bottom:15px}.annual-hero{padding:24px 20px;min-height:0;gap:20px}.annual-hero h1{font-size:44px}.annual-heading-unit{font-size:20px}.annual-hero-copy>p{font-size:12px}.annual-year-control{flex-direction:row;align-items:center;justify-content:space-between;width:100%}.annual-year-control select{height:44px;min-width:130px}.annual-rule{font-size:11px}.annual-stats{gap:8px}.annual-stat{padding:15px 11px}.annual-stat-label{font-size:11px}.annual-stat-value{font-size:29px}.annual-stat-note{font-size:10px}.annual-panel,.annual-coverage{padding:17px 14px}.annual-panel h2,.annual-coverage h2{font-size:17px}.annual-coverage-grid{grid-template-columns:1fr}.annual-favorite{min-height:72px}.annual-coverage-item button{min-height:44px}}
 @media(max-width:365px){.annual-entry>span>span{display:none}.annual-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-stat:last-child{grid-column:1/-1}.annual-stat-value{font-size:32px}.annual-stat-value small{font-size:12px}.annual-panel-note{font-size:10px}}
+
+/* v2.0.5 | Rank registration badges: equal footprint before / after saving.
+   The planned state uses a subdued lime border, inspired by the saved-list buttons.
+   Do not alter ranking numbers, insights, or record storage. */
+#rankingView .rank-quick-add,
+#rankingView .rank-added.rank-planned{
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  justify-self:start;
+  flex:0 0 auto;
+  gap:6px;
+  height:36px;
+  min-height:36px;
+  padding:0 12px;
+  border:1px solid #526074;
+  border-radius:8px;
+  background:#29323e;
+  color:#d7e1ee;
+  font-size:11.5px;
+  font-weight:750;
+  line-height:1;
+  letter-spacing:0;
+  white-space:nowrap;
+  text-decoration:none;
+}
+#rankingView .rank-quick-add .ui-icon,
+#rankingView .rank-added.rank-planned .ui-icon{
+  width:15px;
+  height:15px;
+  flex:0 0 15px;
+  vertical-align:middle;
+}
+#rankingView .rank-added.rank-planned{
+  border-color:#526e47;
+  background:#273628;
+  color:#d5efb8;
+  cursor:default;
+}
+#rankingView .rank-quick-add:hover{
+  border-color:var(--accent);
+  color:var(--accent);
+}
+@media(max-width:740px){
+  #rankingView .rank-quick-add,
+  #rankingView .rank-added.rank-planned{
+    height:44px;
+    min-height:44px;
+    font-size:12px;
+  }
+}
 </style>
 </head>
 <body>
@@ -1586,7 +1641,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.0.3 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.0.5 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2845,10 +2900,16 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const score=Number(a.score),votes=Number(a.scoredBy);
  const scoreText=own?`<strong>${ratingIcons(review.overall)}</strong><small>${review.overall} / 5 · あなたの評価</small>`:rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
- const addedStatus=saved[a.id]?.status;const addControl=!own?(addedStatus?`<span class="rank-added">${safeText(statusLabels[addedStatus]||'登録済み')} ${uiIcon('check')}</span>`:`<button type="button" class="rank-quick-add" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')} 見たいに登録</button>`):'';
+ const addedStatus=saved[a.id]?.status;
+ const addControl=own?'':addedStatus==='planned'
+  ?`<span class="rank-added rank-planned" aria-label="見たいに登録済み">${uiIcon('check')}<span>見たいに登録済み</span></span>`
+  :addedStatus
+   ?`<span class="rank-added">${safeText(statusLabels[addedStatus]||'登録済み')} ${uiIcon('check')}</span>`
+   :`<button type="button" class="rank-quick-add" data-rank-add="${safeText(a.id)}" title="見たいに登録する">${uiIcon('star')}<span>見たいに登録</span></button>`;
  const same=own?group.length>1:false;
  const controls=own?`<div class="rank-actions"><button type="button" data-rate-id="${safeText(a.id)}">評価編集</button><button type="button" data-rank-move="up" data-rank-id="${safeText(a.id)}" ${i===0?'disabled':''} aria-label="${safeText(a.title)}の順位を上げる">${uiIcon('up')}</button><button type="button" data-rank-move="down" data-rank-id="${safeText(a.id)}" ${i>=group.length-1?'disabled':''} aria-label="${safeText(a.title)}の順位を下げる">${uiIcon('down')}</button></div>`:'';
- return `<article class="rank-row" data-ranked-id="${safeText(a.id)}" ${own&&same?'draggable="true"':''}><div class="rank-num">${pos}</div><div class="rank-poster">${img}</div><div class="rank-item-main"><button type="button" class="rank-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="rank-meta">${a.year?a.year+'年':'放送年未登録'} ${seasonLabels[a.season]||''} ${a.type?' · '+safeText(typeJa(a.type)):''}</div>${controls}${addControl}</div><div class="rank-metric">${scoreText}</div>${own&&same?'<span class="rank-handle" title="同じ評価の作品内でドラッグして並び替え">'+uiIcon('grip')+'</span>':''}</article>`}
+ const medalClass=pos===1?' rank-medal-1':pos===2?' rank-medal-2':pos===3?' rank-medal-3':'';
+ return `<article class="rank-row${medalClass}" data-ranked-id="${safeText(a.id)}" ${own&&same?'draggable="true"':''}><div class="rank-num">${pos}</div><div class="rank-poster">${img}</div><div class="rank-item-main"><button type="button" class="rank-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="rank-meta">${a.year?a.year+'年':'放送年未登録'} ${seasonLabels[a.season]||''} ${a.type?' · '+safeText(typeJa(a.type)):''}</div>${controls}${addControl}</div><div class="rank-metric">${scoreText}</div>${own&&same?'<span class="rank-handle" title="同じ評価の作品内でドラッグして並び替え">'+uiIcon('grip')+'</span>':''}</article>`}
 function renderRanking(){if(mode!=='ranking')return;
  $$('#rankingView [data-rank-tab]').forEach(b=>b.classList.toggle('active',b.dataset.rankTab===rankingTab));
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
