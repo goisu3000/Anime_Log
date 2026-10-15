@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.3 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.4 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG v2.1.3 | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -802,7 +802,7 @@ const SEARCH_SORT_KEY='anilog-search-sort-v1';
 const BACKUP_AT_KEY='anilog-last-backup-v1',BACKUP_TOAST_KEY='anilog-backup-notified-v1';
 const COLLAPSED_KEY='anilog-collapsed-periods-v1', TITLE_CACHE_KEY='anilog-titles-cache-v1';
 const WIKI_ALIAS_KEY='anilog-wikipedia-alias-v1';
-const RANK_CACHE_KEY='anilog-ranking-cache-v1';
+const RANK_CACHE_KEY='anilog-ranking-cache-v1',MAL_METRIC_CACHE_KEY='anilog-mal-metrics-v1';
 const API='https://api.tenrai.org/v1'; // Jikan公開API終了(2026-10-01)に伴い移行
 function uiIcon(name){return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-'+name+'"/></svg>'}
 function ratingIcons(n){return Array.from({length:5},(_,i)=>'<span class="'+(i<n?'rated-icon':'empty')+'">'+uiIcon('star')+'</span>').join('')}
@@ -1873,17 +1873,95 @@ let rankDraggedId=null, myRatingFilter=0; // 0 = all, 1..5 = selected rating (vi
 try{const c=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||'{}');if(c&&typeof c==='object'&&!Array.isArray(c))rankingCache=c}catch{}
 for(let y=new Date().getFullYear()+1;y>=1970;y--){const op=document.createElement('option');op.value=String(y);op.textContent=y+'年';$('#rankYear').append(op)}
 $('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-function exitRanking(){if(mode==='ranking'){analysisGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
+function exitRanking(){if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
 function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watched'&&readReview(a.review)).sort((a,b)=>{
  const ar=readReview(a.review).overall,br=readReview(b.review).overall;if(ar!==br)return br-ar;
  const an=Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0?a.myRankOrder:999999;
  const bn=Number.isInteger(b.myRankOrder)&&b.myRankOrder>=0?b.myRankOrder:999999;
  return an-bn||sortByBroadcast(a,b);
 })}
+// MAL's public rating is separate from personal stars and record backups.
+// Keep the public ranking's .rank-metric markup and CSS unchanged.
+const MAL_METRIC_TTL=7*86400000,MAL_METRIC_RETRY_TTL=6*3600000;
+const malMetricCache=(()=>{try{const data=JSON.parse(localStorage.getItem(MAL_METRIC_CACHE_KEY)||'{}');return data&&typeof data==='object'&&!Array.isArray(data)?data:{}}catch{return {}}})();
+let malMetricGeneration=0,malMetricRunning=false,malMetricCooldownUntil=0,malMetricFailedIds=new Set();
+const validMalScore=n=>typeof n==='number'&&Number.isFinite(n)&&n>0&&n<=10?n:null;
+const validMalVotes=n=>Number.isSafeInteger(n)&&n>=0?n:null;
+function malMetricData(a){
+ const cached=malMetricCache[a.id],publicRow=rankingData.find(b=>b.id===a.id);
+ return {
+  score:validMalScore(cached?.score)??validMalScore(publicRow?.score)??validMalScore(a.score),
+  scoredBy:validMalVotes(cached?.scoredBy)??validMalVotes(publicRow?.scoredBy)??validMalVotes(a.scoredBy)
+ };
+}
+function malScoreMarkup(score,votes){return `<strong>MAL ${score!==null?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes!==null&&votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`}
+function updateVisibleMalMetric(id){
+ if(mode!=='ranking'||rankingTab!=='mine')return;
+ const item=saved[id];if(!item)return;
+ const row=$$('#rankResults .rank-row').find(node=>node.dataset.rankedId===id);
+ const metric=row?.querySelector('.rank-metric');if(!metric)return;
+ const m=malMetricData(item);metric.innerHTML=malScoreMarkup(m.score,m.scoredBy);
+}
+function cacheMalMetric(id,raw){
+ if(!/^jikan:[1-9]\d*$/.test(id)||!raw||typeof raw!=='object')return;
+ const score=validMalScore(raw.score),scoredBy=validMalVotes(raw.scoredBy??raw.scored_by);
+ // Do not overwrite a previously useful result with an empty/partial response.
+ const previous=malMetricCache[id];
+ malMetricCache[id]={score:score??validMalScore(previous?.score),scoredBy:scoredBy??validMalVotes(previous?.scoredBy),at:Date.now()};
+ try{
+  const top=Object.entries(malMetricCache).filter(([,v])=>v&&Number.isFinite(v.at)).sort((a,b)=>b[1].at-a[1].at).slice(0,350);
+  localStorage.setItem(MAL_METRIC_CACHE_KEY,JSON.stringify(Object.fromEntries(top)));
+ }catch{/* MAL metrics are optional; storage issues must not affect viewing records. */}
+ updateVisibleMalMetric(id);
+}
+function malMetricNeedsFetch(item){
+ if(!/^jikan:[1-9]\d*$/.test(item.id)||malMetricFailedIds.has(item.id))return false;
+ const cached=malMetricCache[item.id];
+ if(cached&&Date.now()-cached.at<(validMalScore(cached.score)!==null&&validMalVotes(cached.scoredBy)!==null?MAL_METRIC_TTL:MAL_METRIC_RETRY_TTL))return false;
+ // Even complete old records are refreshed after a week, but their existing values
+ // remain visible while the background request runs. No record is mutated.
+ return true;
+}
+function scheduleMalMetricEnrichment(){
+ const gen=++malMetricGeneration;
+ if(malMetricRunning||Date.now()<malMetricCooldownUntil)return;
+ Promise.resolve().then(()=>enrichMalMetrics(gen));
+}
+async function enrichMalMetrics(gen){
+ if(malMetricRunning)return;
+ malMetricRunning=true;
+ try{
+  while(gen===malMetricGeneration&&mode==='ranking'&&rankingTab==='mine'){
+   const all=myRatedItems();
+   // Fetch the selected rating group first, without changing total ranking order.
+   const prioritized=myRatingFilter?[...all.filter(a=>readReview(a.review)?.overall===myRatingFilter),...all.filter(a=>readReview(a.review)?.overall!==myRatingFilter)]:all;
+   const next=prioritized.find(malMetricNeedsFetch);
+   if(!next||Date.now()<malMetricCooldownUntil)break;
+   const full=detailCache.get(next.id)?.full;
+   if(full){cacheMalMetric(next.id,full);continue}
+   // The existing viewing-insights task already fetches /full. Wait and reuse its response.
+   if(analysisRunning){await analysisSleep(1200);continue}
+   try{
+    const response=await fetch(`${API}/anime/${next.id.split(':')[1]}/full`,{headers:{Accept:'application/json'}});
+    if(gen!==malMetricGeneration)break;
+    if(!response.ok){if(response.status===429){malMetricCooldownUntil=Date.now()+30*60000;break}throw Error('HTTP '+response.status)}
+    const data=(await response.json())?.data;
+    if(gen!==malMetricGeneration)break;
+    if(!data||typeof data!=='object')throw Error('MAL data missing');
+    cacheMalMetric(next.id,data);
+   }catch{malMetricFailedIds.add(next.id)}
+   await analysisSleep(1400); // Below ~43 requests/minute, excluding existing analysis requests.
+  }
+ }finally{
+  malMetricRunning=false;
+  if(gen!==malMetricGeneration&&mode==='ranking'&&rankingTab==='mine'&&Date.now()>=malMetricCooldownUntil)scheduleMalMetricEnrichment();
+ }
+}
 function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';const review=own?readReview(a.review):null;
- const score=Number(a.score),votes=Number(a.scoredBy);
- const scoreText=rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
- const metricMarkup=own?'':`<div class="rank-metric">${scoreText}</div>`;
+ const score=Number(a.score);
+ const ownMal=own?malMetricData(a):null;
+ const scoreText=!own&&rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:malScoreMarkup(own?ownMal.score:validMalScore(a.score),own?ownMal.scoredBy:validMalVotes(a.scoredBy));
+ const metricMarkup=own&&!/^jikan:[1-9]\d*$/.test(a.id)?'':`<div class="rank-metric">${scoreText}</div>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
 
  const addedStatus=saved[a.id]?.status;
@@ -1933,7 +2011,7 @@ function showRanking(tab='now'){
  $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
  $$('[data-view]').forEach(b=>b.classList.remove('active'));$$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
  renderRanking();window.scrollTo({top:0,behavior:'instant'});
- if(tab==='mine')scheduleInsightEnrichment();else loadRanking(true);
+ if(tab==='mine'){malMetricFailedIds.clear();scheduleInsightEnrichment();scheduleMalMetricEnrichment()}else{malMetricGeneration++;loadRanking(true)}
 }
 function moveRank(...args){return queueRecordWrite(()=>moveRankImpl(...args))}
 async function moveRankImpl(id,direction){const before=myRatedItems(),item=saved[id];if(!item)return;
@@ -2015,7 +2093,7 @@ async function enrichWatchedAnalysis(gen){analysisRunning=true;let failures=0;tr
    try{const r=await fetch(`${API}/anime/${next.id.split(':')[1]}/full`,{headers:{Accept:'application/json'}});
     if(gen!==analysisGeneration)break;
     if(!r.ok){if(r.status===429){analysisError='APIの利用制限に達しました。少し時間をおいて再試行できます。';break}throw Error('HTTP '+r.status)}
-    const payload=await r.json();if(!extractAnalysisMeta(payload.data))throw Error('分類データがありません');
+    const payload=await r.json();cacheMalMetric(next.id,payload.data);if(!extractAnalysisMeta(payload.data))throw Error('分類データがありません');
     if(!await storeAnalysisMeta(next.id,payload.data)){analysisSkipped.add(next.id);analysisError='作品情報の保存に失敗しました。ブラウザの空き容量を確認してください。';break}analysisError='';failures=0;
    }catch(err){analysisSkipped.add(next.id);failures++;analysisError='作品情報を一部取得できませんでした。時間をおいて再試行できます。';if(failures>=2)break}
    if(gen!==analysisGeneration)break;renderInsights();await analysisSleep(1050); // About 57 requests/min maximum.
@@ -2078,7 +2156,7 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
 $('#rankingDisclosure').addEventListener('click',()=>{const expanded=$('#rankingDisclosure').getAttribute('aria-expanded')==='true';$('#rankingDisclosure').setAttribute('aria-expanded',String(!expanded));$('#rankingSubnav').hidden=expanded});
 $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankOpen)));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
-$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking()});
+$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();scheduleMalMetricEnrichment()});
 $('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;loadRanking(true)});
 $('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);loadRanking(true)});
 $('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;loadRanking(true)});
@@ -2722,7 +2800,7 @@ async function loadDetail(id,token,force=false){
  renderDetailParts(token);
  try{
   const result=await detailFetch(`/anime/${id.split(':')[1]}/full`);
-  entry.full=result.data||null;if(!entry.full)throw Error('作品詳細データが空です');
+  entry.full=result.data||null;if(!entry.full)throw Error('作品詳細データが空です');cacheMalMetric(id,entry.full);
   if(saved[id]?.status==='watched'&&extractAnalysisMeta(entry.full))storeAnalysisMeta(id,entry.full);
   entry.loading=false;
   if(detailActiveItem?.id===id&&token===detailNonce){
