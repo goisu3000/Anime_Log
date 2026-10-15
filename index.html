@@ -352,7 +352,7 @@
 .view-ranking #rankingView{display:block!important}
 .view-detail #rankingView{display:none!important}
 .mobile-ranking-icon{font-size:20px;line-height:20px}
-@media(max-width:740px){.rank-row{padding:11px 10px;gap:9px}.rank-num{width:26px;flex-basis:26px;font-size:17px}.rank-poster{width:46px;height:65px;flex-basis:46px}.rank-title{font-size:12px}.rank-metric{font-size:11px}.rank-metric strong{font-size:14px}.rank-metric small{font-size:9px}.rank-actions{justify-content:flex-start}.rank-actions button{min-height:39px}.rank-handle{font-size:16px}.rank-controls{gap:9px}.rank-controls label{flex:1;min-width:125px}.rank-controls select{width:100%;min-width:0}.rank-controls .rank-threshold{flex-basis:100%}.rank-view-tabs button{padding:10px 13px}.mobile-bottom button{padding-inline:3px;font-size:9px}}
+@media(max-width:740px){.rank-row{padding:11px 10px;gap:9px}.rank-num{width:26px;flex-basis:26px;font-size:17px}.rank-poster{width:46px;height:65px;flex-basis:46px}.rank-title{font-size:12px}.rank-metric{font-size:11px}.rank-metric strong{font-size:14px}.rank-metric small{font-size:9px}.rank-actions{justify-content:flex-start}.rank-actions button{min-height:39px}.rank-handle{font-size:16px}.rank-controls{gap:9px}.rank-controls label{flex:1;min-width:125px}.rank-controls select{width:100%;min-width:0}.rank-controls .rank-threshold{flex-basis:100%}.rank-view-tabs button{padding:10px 13px}.mobile-bottom button{padding-inline:3px;font-size:9px}.rank-group-stars{gap:4px}.rank-group-stars>span{width:16px;height:16px}.rank-group-stars .ui-icon{width:16px;height:16px}}
 @media(max-width:385px){.rank-row{gap:6px}.rank-num{width:22px;flex-basis:22px}.rank-poster{width:42px;height:56px;flex-basis:42px}.rank-metric{min-width:52px}.rank-metric small{display:none}.rank-handle{display:none}}
 
 
@@ -505,6 +505,13 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .review-star .ui-icon{width:32px;height:32px;vertical-align:middle}.review-star.selected .ui-icon,.rated-icon .ui-icon{fill:currentColor;fill-opacity:.13}
 .review-stars-mini{display:inline-flex;gap:2px;letter-spacing:0}.review-stars-mini .ui-icon,.rank-metric .ui-icon,.rank-group-heading .ui-icon{width:14px;height:14px}
 .rank-group-heading .empty,.rank-metric .empty{color:#65717f}
+.rank-group-stars{display:inline-flex;align-items:center;flex:0 0 auto;gap:5px;margin:0;padding:0;letter-spacing:0;line-height:1;font-size:0}
+.rank-group-stars>span{display:inline-flex;align-items:center;justify-content:center;width:19px;height:19px}
+.rank-group-stars .ui-icon{display:block;position:static;transform:none;width:19px;height:19px;stroke-width:1.85;fill:none}
+.rank-group-stars .rated-icon{color:#f2c86c}
+.rank-group-stars .rated-icon .ui-icon{fill:currentColor;fill-opacity:1;stroke:currentColor}
+.rank-group-stars .empty{color:#899aa8}
+.rank-group-stars .empty .ui-icon{fill:none;stroke:currentColor}
 .share-action{background:#242a35;color:#d5deea;border:1px solid #495363}
 .share-action:hover{background:#2c3441;border-color:#76869a;filter:none}
 .share-card{background:var(--surface);border-color:#363e4b}.share-card p{color:var(--muted)}
@@ -2900,7 +2907,8 @@ function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watch
 })}
 function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';const review=own?readReview(a.review):null;
  const score=Number(a.score),votes=Number(a.scoredBy);
- const scoreText=own?`<strong>${ratingIcons(review.overall)}</strong><small>${review.overall} / 5 · あなたの評価</small>`:rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
+ const scoreText=rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
+ const metricMarkup=own?'':`<div class="rank-metric">${scoreText}</div>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
  // All three public tabs now use an identical button element and sizing rules.
  const addedStatus=saved[a.id]?.status;
@@ -2909,7 +2917,7 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const same=own?group.length>1:false;
  const controls=own?`<div class="rank-actions"><button type="button" data-rate-id="${safeText(a.id)}">評価編集</button><button type="button" data-rank-move="up" data-rank-id="${safeText(a.id)}" ${i===0?'disabled':''} aria-label="${safeText(a.title)}の順位を上げる">${uiIcon('up')}</button><button type="button" data-rank-move="down" data-rank-id="${safeText(a.id)}" ${i>=group.length-1?'disabled':''} aria-label="${safeText(a.title)}の順位を下げる">${uiIcon('down')}</button></div>`:'';
  const medalClass=pos===1?' rank-medal-1':pos===2?' rank-medal-2':pos===3?' rank-medal-3':'';
- return `<article class="rank-row${medalClass}" data-ranked-id="${safeText(a.id)}" ${own&&same?'draggable="true"':''}><div class="rank-num">${pos}</div><div class="rank-poster">${img}</div><div class="rank-item-main"><button type="button" class="rank-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="rank-meta">${a.year?a.year+'年':'放送年未登録'} ${seasonLabels[a.season]||''} ${a.type?' · '+safeText(typeJa(a.type)):''}</div>${controls}${addControl}</div><div class="rank-metric">${scoreText}</div>${own&&same?'<span class="rank-handle" title="同じ評価の作品内でドラッグして並び替え">'+uiIcon('grip')+'</span>':''}</article>`}
+ return `<article class="rank-row${medalClass}" data-ranked-id="${safeText(a.id)}" ${own&&same?'draggable="true"':''}><div class="rank-num">${pos}</div><div class="rank-poster">${img}</div><div class="rank-item-main"><button type="button" class="rank-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="rank-meta">${a.year?a.year+'年':'放送年未登録'} ${seasonLabels[a.season]||''} ${a.type?' · '+safeText(typeJa(a.type)):''}</div>${controls}${addControl}</div>${metricMarkup}${own&&same?'<span class="rank-handle" title="同じ評価の作品内でドラッグして並び替え">'+uiIcon('grip')+'</span>':''}</article>`}
 function renderRanking(){if(mode!=='ranking')return;
  $$('#rankingView [data-rank-tab]').forEach(b=>b.classList.toggle('active',b.dataset.rankTab===rankingTab));
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
@@ -2922,7 +2930,7 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#rankLoadMore').classList.toggle('hidden',mine||!rankingHasNext||rankingBusy);
  if(mine){renderInsights();const rows=myRatedItems();if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','star');return}
   let result='',position=0;for(const stars of [5,4,3,2,1]){const group=rows.filter(a=>readReview(a.review)?.overall===stars);if(!group.length)continue;
-   result+=`<div class="rank-group-heading" aria-label="評価${stars}点：${group.length}作品">${ratingIcons(stars)}　${group.length}作品</div>`;
+   result+=`<div class="rank-group-heading" aria-label="評価${stars}点：${group.length}作品"><span class="review-stars-mini rank-group-stars" aria-hidden="true">${ratingIcons(stars)}</span>　${group.length}作品</div>`;
    group.forEach((a,i)=>{position++;result+=makeRankRow(a,position,'mine',i,group)})}
   $('#rankResults').innerHTML=result;return;
  }
