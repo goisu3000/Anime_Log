@@ -252,7 +252,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .annual-hero h1{font-size:clamp(32px,4.5vw,56px);letter-spacing:-.05em;margin:8px 0;line-height:1.15;font-weight:var(--fw-bold);font-variant-numeric:tabular-nums}
 .annual-heading-unit{font-size:var(--fs-2xl);margin-left:8px}
 .annual-hero-copy>p{color:var(--muted);margin:6px 0 0;font-size:var(--fs-md)}
-.annual-hero-outline{position:absolute;right:12%;bottom:-90px;color:rgba(196,233,149,.04);font-size:320px;pointer-events:none;line-height:1}
+.annual-hero-outline{position:absolute;right:8%;bottom:-54px;width:min(360px,28vw);min-width:220px;aspect-ratio:1/1;color:rgba(196,233,149,.055);pointer-events:none;z-index:0}
+.annual-hero-outline svg{display:block;width:100%;height:100%}
+.annual-hero-outline .mascot-line{fill:none;stroke:currentColor;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
 .annual-year-control{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi);z-index:1}
 .annual-year-control select{background:var(--surface2);border:1px solid var(--border-ctrl);color:var(--ink);border-radius:var(--radius-sm);height:44px;min-width:140px;padding:0 12px;font-weight:var(--fw-bold);font-size:var(--fs-md)}
 .annual-rule{margin:14px 0 20px;color:var(--muted);font-size:var(--fs-sm)}
@@ -672,7 +674,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
       <header class="annual-hero">
         <div class="annual-hero-copy"><span class="annual-kicker">MY ANIME YEAR</span><h1><span id="annualHeadingYear">2026</span><span class="annual-heading-unit">年の視聴記録</span></h1><p>見終わった作品と思い出を、一年ごとに。</p></div>
         <label class="annual-year-control" for="annualYear">集計する年<select id="annualYear" aria-label="年間まとめの対象年"></select></label>
-        <div class="annual-hero-outline" aria-hidden="true">✳</div>
+        <div class="annual-hero-outline" aria-hidden="true"><svg viewBox="0 0 320 320" role="presentation" focusable="false"><circle class="mascot-line" cx="124" cy="75" r="20"/><circle class="mascot-line" cx="240" cy="75" r="20"/><path class="mascot-line" d="M96 92c18-18 42-28 86-28 43 0 68 10 86 28 20 20 31 49 31 83v54c0 24-9 42-26 54-16 12-39 18-63 18H154c-24 0-47-6-63-18-17-12-26-30-26-54v-54c0-34 11-63 31-83Z"/><path class="mascot-line" d="M100 143l10 10"/><path class="mascot-line" d="M262 143l-10 10"/><path class="mascot-line" d="M120 189c8-6 19-9 29-9 14 0 24 5 30 15"/><path class="mascot-line" d="M242 189c-8-6-19-9-29-9-14 0-24 5-30 15"/><circle class="mascot-line" cx="154" cy="195" r="7"/><circle class="mascot-line" cx="210" cy="195" r="7"/><path class="mascot-line" d="M174 221c5-4 10-6 16-6 6 0 12 2 17 6"/><path class="mascot-line" d="M176 232c5 4 10 6 16 6 6 0 12-2 17-6"/><path class="mascot-line" d="M134 223l-8 16"/><path class="mascot-line" d="M146 221l-7 16"/><path class="mascot-line" d="M222 223l8 16"/><path class="mascot-line" d="M234 221l7 16"/><path class="mascot-line" d="M106 247c-23 0-41 18-41 41v12"/><path class="mascot-line" d="M258 247c23 0 41 18 41 41v12"/><path class="mascot-line" d="M66 294v12"/><path class="mascot-line" d="M299 294v12"/></svg></div>
       </header>
       <p class="annual-rule">集計は「見た」作品に入力された<strong>見終わった年</strong>を基準にしています。放送年ではありません。</p>
       <div class="annual-stats" id="annualStats" aria-live="polite"></div>
