@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.0 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.1 | アニメ視聴管理</title>
 <style>
-/* ANI:LOG v2.1.0 | Unified Design System & Refactored Stylesheet
+/* ANI:LOG v2.1.1 | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
    Weights: 400 (normal), 600 (semi-bold), 700 (bold)
    Sizes: 11px, 12px, 13px, 15px, 18px, 22px, 30px */
@@ -620,51 +620,51 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   <aside class="sidebar" aria-label="サイドメニュー">
     <button type="button" class="brand" id="homeBrand" aria-label="ANI:LOG トップページへ戻る" title="トップページへ戻る"><span class="brand-mark">A</span><span class="brand-text"><span class="brand-name">ANI<span>:</span>LOG</span><span class="brand-desc">観たアニメ、忘れずに残そう。</span></span></button>
     <div><div class="side-block-title">ライブラリ</div><nav class="nav" id="desktopNav">
-      <button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>アニメを探す</button>
+      <button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg>アニメを探す</button>
       <button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト <span class="count" id="savedBadge">0</span></button>
       <button type="button" data-annual-open class="annual-side-link"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg>年間まとめ</button>
     </nav></div>
     <div><div class="side-block-title">視聴状況で絞り込み</div><nav class="nav" id="statusNav">
       <button data-status-filter="watching"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>見てる</button>
-      <button data-status-filter="planned"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>見たい</button>
+      <button data-status-filter="planned"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>見たい</button>
       <button data-status-filter="watched"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>見た</button>
-      <button data-status-filter="paused"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-pause"/></svg></span>一時中断</button>
-      <button data-status-filter="dropped"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg></span>視聴中止</button>
+      <button data-status-filter="paused"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-pause"/></svg></span>一時中断</button>
+      <button data-status-filter="dropped"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg></span>視聴中止</button>
     </nav></div>
     <div class="rank-sidebar-block"><div class="side-block-title">ランキング</div><nav class="nav" aria-label="人気作ランキング">
-      <button type="button" id="rankingDisclosure" aria-expanded="false" aria-controls="rankingSubnav"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>人気作<span class="rank-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></span></button>
+      <button type="button" id="rankingDisclosure" aria-expanded="false" aria-controls="rankingSubnav"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>人気作<span class="rank-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></span></button>
       <div id="rankingSubnav" class="ranking-subnav" hidden>
         <button type="button" data-rank-open="now">今期ランキング</button>
         <button type="button" data-rank-open="period">年代・シーズン別</button>
         <button type="button" data-rank-open="top">歴代ランキング</button>
       </div>
-      <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
+      <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
     </nav></div>
-    <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
-    <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.1.0 · 記録はブラウザ内に保存</div>
+    <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
+    <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
+    <div class="side-foot">ANI:LOG v2.1.1 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
 
-    <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
+    <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
     <div class="annual-entry" id="annualEntry"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg><span>一年の視聴記録を振り返る</span></span><button type="button" data-annual-open>年間まとめを見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-chevron-right"/></svg></button></div>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
-<div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
+<div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-search"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
 <details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
       <div class="explore-status-row" id="exploreStatusTabs" role="group" aria-label="アニメを探す：視聴状況で絞り込み">
         <span class="explore-filter-label">視聴状況 <span class="mobile-swipe-hint">横にスワイプ ↔</span></span>
         <div class="explore-status-buttons">
           <button type="button" class="active" data-explore-status="all" aria-pressed="true">すべて</button>
-          <button type="button" data-explore-status="watching" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-play"/></svg> 見てる</button>
-          <button type="button" data-explore-status="planned" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 見たい</button>
-          <button type="button" data-explore-status="watched" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg> 見た</button>
-          <button type="button" data-explore-status="paused" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-pause"/></svg> 一時中断</button>
-          <button type="button" data-explore-status="dropped" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg> 視聴中止</button>
+          <button type="button" data-explore-status="watching" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-play"/></svg> 見てる</button>
+          <button type="button" data-explore-status="planned" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 見たい</button>
+          <button type="button" data-explore-status="watched" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg> 見た</button>
+          <button type="button" data-explore-status="paused" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-pause"/></svg> 一時中断</button>
+          <button type="button" data-explore-status="dropped" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg> 視聴中止</button>
         </div>
       </div>
       <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
-</div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span><select id="savedOrder" class="saved-order-select hidden" aria-label="マイリストの年内の並び順"><option value="broadcast">放送時期が新しい順</option><option value="updated">更新が新しい順</option><option value="title">作品名順</option></select></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
+</div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span><select id="savedOrder" class="saved-order-select hidden" aria-label="マイリストの年内の並び順"><option value="broadcast">放送時期が新しい順</option><option value="updated">更新が新しい順</option><option value="title">作品名順</option></select></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はこのブラウザに保存され、別端末には自動同期されません。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
     <section id="annualView" class="hidden" aria-label="年間アニメまとめ">
@@ -701,44 +701,44 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
         <div class="insights-header"><h3>あなたの視聴分析</h3><p>「見た」作品を対象に、各シーズンを別作品として集計します。同じシリーズを複数期見ると、その分も加算されます。視聴本数は、好みの広がりと必ずしも一致しません。</p></div>
         <div id="insightsStatus" class="insights-status" role="status" aria-live="polite"></div>
         <article class="insights-card">
-          <div class="insights-card-head"><div><h4>制作会社ランキング</h4><p class="insights-explain">複数社制作の作品は、それぞれの制作会社に1作品として集計します。</p></div><div class="insights-toggle" role="group" aria-label="制作会社の並び順"><button type="button" data-insight-studio-sort="count" class="active">視聴本数順</button><button type="button" data-insight-studio-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
+          <div class="insights-card-head"><div><h4>制作会社ランキング</h4><p class="insights-explain">複数社制作の作品は、それぞれの制作会社に1作品として集計します。</p></div><div class="insights-toggle" role="group" aria-label="制作会社の並び順"><button type="button" data-insight-studio-sort="count" class="active">視聴本数順</button><button type="button" data-insight-studio-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
           <div id="studioBars" class="insights-bars"></div><p class="insights-footnote" id="studioNote"></p>
           <div class="insights-selection" id="studioMatches" hidden></div>
         </article>
         <article class="insights-card">
-          <div class="insights-card-head"><div><h4>あなたの視聴傾向</h4><p class="insights-explain">ジャンルと作品の特徴は別々に集計します。1作品に複数の分類が付くことがあります。</p></div><div class="insights-toggle" role="group" aria-label="傾向の並び順"><button type="button" data-insight-trait-sort="count" class="active">視聴本数順</button><button type="button" data-insight-trait-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
+          <div class="insights-card-head"><div><h4>あなたの視聴傾向</h4><p class="insights-explain">ジャンルと作品の特徴は別々に集計します。1作品に複数の分類が付くことがあります。</p></div><div class="insights-toggle" role="group" aria-label="傾向の並び順"><button type="button" data-insight-trait-sort="count" class="active">視聴本数順</button><button type="button" data-insight-trait-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
           <div class="insights-toggle insights-category-tabs" role="group" aria-label="傾向の種類"><button type="button" data-insight-category="genres" class="active">ジャンル</button><button type="button" data-insight-category="themes">作品の特徴</button></div>
           <div id="traitBars" class="insights-bars"></div><p class="insights-footnote" id="traitNote"></p>
           <div class="insights-selection" id="traitMatches" hidden></div>
         </article>
       </section>
-      <div class="load-wrap"><button type="button" id="rankLoadMore" class="loadmore hidden">さらに作品を読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
+      <div class="load-wrap"><button type="button" id="rankLoadMore" class="loadmore hidden">さらに作品を読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
     </section>
     <section id="detailView" class="hidden" aria-label="アニメ作品の詳細">
-      <div class="detail-navigation"><button type="button" class="detail-back" id="detailBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-back"/></svg> 作品一覧に戻る</button><span id="detailBreadcrumb">作品詳細</span></div>
+      <div class="detail-navigation"><button type="button" class="detail-back" id="detailBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-back"/></svg> 作品一覧に戻る</button><span id="detailBreadcrumb">作品詳細</span></div>
       <div id="detailContent" aria-live="polite"></div>
       <p class="detail-credit">作品情報は <a href="https://tenrai.org/" target="_blank" rel="noopener noreferrer">Tenrai API</a> から取得しています。未登録の項目は表示しません。作品概要は日本語版Wikipediaの公開情報を補完に利用することがあります。PVの公開状況や日本国内の配信状況は保証されません。</p>
     </section>
     <section id="shareView" class="hidden" aria-label="共有された視聴リスト">
       <div class="share-lead"><div class="eyebrow">SHARED ANIME LIST</div><h1 id="sharedTitle">視聴リスト</h1><p>このリストは共有時点のスナップショットです。閲覧しても、あなた自身の視聴記録は変更されません。</p><span class="share-tag" id="sharedTag">閲覧専用</span></div>
-      <div class="shared-info"><div><h2>共有された作品</h2><div class="muted" id="sharedCreated"></div><p class="shared-info-summary" id="sharedInfoSummary"></p></div><button type="button" class="outline-btn" id="backFromShare">自分のリストへ <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
+      <div class="shared-info"><div><h2>共有された作品</h2><div class="muted" id="sharedCreated"></div><p class="shared-info-summary" id="sharedInfoSummary"></p></div><button type="button" class="outline-btn" id="backFromShare">自分のリストへ <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-external"/></svg></button></div>
       <div class="shared-entries" id="sharedItems" aria-live="polite"></div>
       <p class="disclaimer">これは作成時点の記録です。最新のリストは、共有した人から新しいURLを受け取ってください。</p>
     </section>
     <footer class="site-slogan"><span>KEEP YOUR ANIME MEMORIES</span><span>あの作品、観たっけ？ をなくすための、あなた専用アニメ視聴ログ。</span></footer>
   </main>
 </div>
-<nav class="mobile-bottom" aria-label="モバイルメニュー"><button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>アニメを探す</button><button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト</button><button type="button" id="mobileRanking" data-rank-open="now"><span class="mobile-ranking-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>ランキング</button><button id="mobileShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"/></svg>共有する</button><button id="mobileExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>バックアップ</button></nav>
+<nav class="mobile-bottom" aria-label="モバイルメニュー"><button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg>アニメを探す</button><button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト</button><button type="button" id="mobileRanking" data-rank-open="now"><span class="mobile-ranking-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>ランキング</button><button id="mobileShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"/></svg>共有する</button><button id="mobileExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>バックアップ</button></nav>
 <dialog id="addDialog"><form method="dialog" id="addForm"><h3>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
-<dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu><button type="button" class="secondary" id="mobileImportBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button><button type="button" class="primary" id="mobileDownloadBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></menu><menu><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
-<dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有URLに含めます。リンクを知っている人は誰でも閲覧できます。</p>
+<dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu><button type="button" class="secondary" id="mobileImportBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button><button type="button" class="primary" id="mobileDownloadBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></menu><menu><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
+<dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有URLに含めます。リンクを知っている人は誰でも閲覧できます。</p>
   <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">選択中のシーズンで見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
   <div class="share-permissions" role="group" aria-labelledby="sharePermissionsTitle">
     <h4 id="sharePermissionsTitle">共有する情報を選択</h4>
-    <div class="share-required"><span class="mark"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg></span><span>作品名・視聴状況 <small>（必須・常に共有）</small></span></div>
-    <label class="share-permission"><input type="checkbox" id="shareOverall" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 総合評価 <small class="share-description"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>1〜5の評価を共有</small></span></label>
-    <label class="share-permission"><input type="checkbox" id="shareDetails" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg> 詳細評価 <small class="share-description">ストーリー・映像・キャラクター・音楽を共有</small></span></label>
-    <label class="share-permission"><input type="checkbox" id="shareComment"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> メモ・感想 <small class="share-description">点数のない作品も含め、メモ本文を共有</small></span></label>
+    <div class="share-required"><span class="mark"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg></span><span>作品名・視聴状況 <small>（必須・常に共有）</small></span></div>
+    <label class="share-permission"><input type="checkbox" id="shareOverall" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 総合評価 <small class="share-description"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>1〜5の評価を共有</small></span></label>
+    <label class="share-permission"><input type="checkbox" id="shareDetails" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg> 詳細評価 <small class="share-description">ストーリー・映像・キャラクター・音楽を共有</small></span></label>
+    <label class="share-permission"><input type="checkbox" id="shareComment"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> メモ・感想 <small class="share-description">点数のない作品も含め、メモ本文を共有</small></span></label>
     <p class="share-privacy-note">※ メモは点数のない作品も共有できます。共有リンクを開いた人に感想も読まれます。チェックを外した情報はURLにも含めません。</p>
   </div>
   <div class="share-meta" id="shareCount" aria-live="polite"></div><div id="shareRisk" class="share-risk hidden"></div><menu><button class="primary" type="button" id="generateShare">共有URLを作成</button><button class="secondary" type="button" id="closeShare">閉じる</button></menu>
@@ -757,11 +757,11 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     <div class="review-overall">
       <span class="review-section-label" id="ratingOverallLabel">総合評価 <span aria-hidden="true">*</span></span>
       <div class="review-overall-stars" role="group" aria-labelledby="ratingOverallLabel">
-        <button type="button" class="review-star" data-rating-star="1" aria-label="星1つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
-        <button type="button" class="review-star" data-rating-star="2" aria-label="星2つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
-        <button type="button" class="review-star" data-rating-star="3" aria-label="星3つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
-        <button type="button" class="review-star" data-rating-star="4" aria-label="星4つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
-        <button type="button" class="review-star" data-rating-star="5" aria-label="星5つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
+        <button type="button" class="review-star" data-rating-star="1" aria-label="星1つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
+        <button type="button" class="review-star" data-rating-star="2" aria-label="星2つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
+        <button type="button" class="review-star" data-rating-star="3" aria-label="星3つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
+        <button type="button" class="review-star" data-rating-star="4" aria-label="星4つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
+        <button type="button" class="review-star" data-rating-star="5" aria-label="星5つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
       </div>
       <div id="ratingOverallWord" class="review-overall-word" aria-live="polite">未評価</div>
     </div>
@@ -786,7 +786,7 @@ const COLLAPSED_KEY='anilog-collapsed-periods-v1', TITLE_CACHE_KEY='anilog-title
 const WIKI_ALIAS_KEY='anilog-wikipedia-alias-v1';
 const RANK_CACHE_KEY='anilog-ranking-cache-v1';
 const API='https://api.tenrai.org/v1'; // Jikan公開API終了(2026-10-01)に伴い移行
-function uiIcon(name){return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-'+name+'"/></svg>'}
+function uiIcon(name){return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-'+name+'"/></svg>'}
 function ratingIcons(n){return Array.from({length:5},(_,i)=>'<span class="'+(i<n?'rated-icon':'empty')+'">'+uiIcon('star')+'</span>').join('')}
 const $=sel=>document.querySelector(sel);
 const $$=sel=>[...document.querySelectorAll(sel)];
@@ -857,8 +857,7 @@ function offerUndo(id,oldItem,afterItem,label){
  node.append(btn);node.classList.add('show');clearTimeout(toastTimer);
  undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},9500);
 }
-// Serialize writes across tabs and merge only fields changed by this tab.
-// Never treat a failed read as an empty database during a write.
+
 let savedBaseline=structuredClone(saved),recordWriteQueue=Promise.resolve(),recordWrites=0;
 let pendingStorageRefresh=false;
 const sameRecordValue=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
@@ -891,7 +890,7 @@ function mergeRecordChanges(base,draft,latest,replace=false){
 async function persist(replace=false){
  const base=structuredClone(savedBaseline),draft=structuredClone(saved);
  try{
-  // A non-atomic read/modify/write fallback would silently reintroduce lost updates.
+
   if(!navigator.locks?.request){toast('この環境では安全な保存を利用できません。最新版のChrome・Edge・Firefox・SafariでHTTPSのページを開いてください。','error');return false}
   return await navigator.locks.request(STORAGE_KEY+'-write',async()=>{
    const merged=mergeRecordChanges(base,draft,readRecordsStrict(),replace);
@@ -906,7 +905,7 @@ async function persist(replace=false){
 }
 function refreshStoredRecords(){
  if(recordWrites){pendingStorageRefresh=true;return}
- // Preserve a number/date currently being typed. The subsequent save detects conflicts.
+
  if(document.activeElement?.matches('#detailContent input, #detailContent select, [data-progress-input]')){pendingStorageRefresh=true;return}
  try{
   const latest=readRecordsStrict();pendingStorageRefresh=false;
@@ -929,7 +928,6 @@ window.addEventListener('focus',refreshStoredRecords);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshStoredRecords()});
 document.addEventListener('focusout',()=>{if(pendingStorageRefresh)setTimeout(refreshStoredRecords,0)});
 
-// Backup reminders only show occasionally and never interrupt normal work.
 function updateBackupDate(){const el=$('#backupDate');if(!el)return;
  try{const last=Number(localStorage.getItem(BACKUP_AT_KEY)||0);el.textContent=last?'最終バックアップ：'+new Date(last).toLocaleDateString('ja-JP'):'バックアップ：まだ作成していません';}catch{el.textContent='バックアップ：保存状態を確認できません';}}
 function remindBackup(){try{
@@ -947,7 +945,7 @@ function premiereDate(a){
  const y=Number(match[1]),month=Number(match[2]),day=Number(match[3]);
  return y>=1900&&y<=2100&&month>=1&&month<=12&&day>=1&&day<=31?match[0]:'';
 }
-// Only verified catalogue taxonomy is counted; an absent label is never guessed.
+
 function analysisTags(list){if(!Array.isArray(list))return [];
  const seen=new Set(),out=[];for(const t of list){const name=String(t?.name||'').trim().slice(0,110),id=Number(t?.mal_id);
   if(!name)continue;const key=Number.isInteger(id)&&id>0?'id:'+id:'name:'+name.toLowerCase();if(seen.has(key))continue;seen.add(key);
@@ -961,14 +959,14 @@ function cleanAnalysisMeta(input){if(!input||typeof input!=='object'||!['studios
  return {studios:analysisTags(input.studios.map(t=>({name:t?.name,mal_id:t?.id}))),genres:analysisTags(input.genres.map(t=>({name:t?.name,mal_id:t?.id}))),themes:analysisTags(input.themes.map(t=>({name:t?.name,mal_id:t?.id}))),fetchedAt:typeof input.fetchedAt==='string'&&Number.isFinite(Date.parse(input.fetchedAt))?input.fetchedAt:''};
 }
 function model(a){const startDate=premiereDate(a),meta=extractAnalysisMeta(a);return {startDate,id:'jikan:'+a.mal_id,title:a.title_japanese||a.title||'タイトル不明',english:a.title||'',synonyms:[...(Array.isArray(a.title_synonyms)?a.title_synonyms:[]),...(Array.isArray(a.titles)?a.titles.map(t=>t?.title):[]),a.title_english].filter(s=>typeof s==='string'&&s.trim()).slice(0,18),image:safeImage(a.images?.jpg?.large_image_url||a.images?.jpg?.image_url||''),year:a.year||a.aired?.prop?.from?.year||(startDate?Number(startDate.slice(0,4)):null),season:(typeof a.season==='string'&&a.season.trim()?a.season.trim().toLowerCase():null)||(startDate?seasonOrder[Math.floor((Number(startDate.slice(5,7))-1)/3)]:null),type:typeof a.type==='string'&&a.type.trim()?a.type.trim():null,episodes:a.episodes||null,score:Number.isFinite(a.score)?a.score:null,members:Number.isInteger(a.members)?a.members:null,scoredBy:Number.isInteger(a.scored_by)?a.scored_by:null,...(meta?{analysisMeta:meta}:{})};}
-// v1.3: multi-query Japanese nickname search, deduplicated by stable MAL ID.
+
 function publicAnimeAllowed(a){
  const rating=String(a.rating||'').trim().toLowerCase();
  if(/^rx(?:\b|\s*[-:])/.test(rating)||rating.includes('hentai'))return false;
  const tags=[...(Array.isArray(a.genres)?a.genres:[]),...(Array.isArray(a.explicit_genres)?a.explicit_genres:[])];
  return !tags.some(g=>[12,49].includes(Number(g.mal_id))||/^(hentai|erotica)$/i.test(String(g.name||'')));
 }
-// Nicknames are a small local supplement, NOT a complete encyclopedia.
+
 function normalizeSearch(v){return String(v||'').normalize('NFKC').toLowerCase()
  .replace(/[ぁ-ゖ]/g,c=>String.fromCharCode(c.charCodeAt(0)+0x60))
  .replace(/[\s\u3000:：!！?？・._\-ー–—'’「」『』()（）\[\]【】★☆;；]/g,'')}
@@ -1019,21 +1017,18 @@ const aliasIndex=new Map();
 for(const group of aliasGroups){for(const name of [...group.names,group.term,...(group.queries||[])]){
  const key=normalizeSearch(name);if(key)aliasIndex.set(key,group);
 }}
-// For uncommon fragments, expand *distinctive* parts of already known titles.
-// This is a lightweight supplement, not an index of every anime ever released.
+
 function matchedAliasGroups(input){
  const needle=normalizeSearch(input);if(!needle)return [];
  const exact=aliasIndex.get(needle);if(exact)return [exact];
- // 3+ Japanese characters or 5+ Latin characters, to avoid expanding overly vague queries.
+
  const hasJapanese=/[\u3040-\u30ff\u3400-\u9fff]/.test(needle);
  if(needle.length<(hasJapanese?3:5))return [];
  const groups=aliasGroups.filter(group=>[...group.names,group.term,...(group.queries||[])].some(name=>normalizeSearch(name).includes(needle)));
- // Ambiguous fragments should remain normal queries, not force one unrelated show.
+
  return groups.length===1?groups:[];
 }
-// v1.6: Search Japanese Wikipedia only when a full Tenrai search finds too few matching titles.
-// This supplements hand-maintained nicknames and cached titles without requiring a login or paid API.
-// Never call this on keystrokes. Cache positive lookups for 30 days, misses for 3 days.
+
 const AUTO_ALIAS_LIMIT=110;
 const autoAliasCache=new Map();
 try{
@@ -1061,13 +1056,13 @@ async function wikiQuery(extra, parentSignal){
 }
 async function wikipediaVariantsLegacy(term,signal){
  const key=normalizeSearch(term);
- // Avoid sending broad, single-character, or code-like queries to Wikipedia.
+
  if(key.length<2||key.length>65||!/[\u30a0-\u30ff\u3400-\u9fff]/.test(key))return [];
  const cached=autoAliasCache.get(key);
  if(cached && Date.now()-cached.at<(cached.terms.length?30:3)*86400000)return cached.terms;
  const names=[];
  try{
-  // Exact Japanese page names often redirect from colloquial abbreviations.
+
   const direct=await wikiQuery({redirects:'1',prop:'langlinks',lllang:'en',lllimit:'1',titles:term},signal);
   const found=(direct.query?.pages||[]).filter(p=>p&&!p.missing);
   const redirected=Array.isArray(direct.query?.redirects)&&direct.query.redirects.length>0;
@@ -1075,7 +1070,7 @@ async function wikipediaVariantsLegacy(term,signal){
    if(redirected||normalizeSearch(p.title)===key){names.push(p.title);if(p.langlinks?.[0]?.title)names.push(p.langlinks[0].title)}
   }
   if(!names.length){
-   // Search titles, not all article text, so unrelated article mentions do not become suggestions.
+
    const res=await wikiQuery({list:'search',srwhat:'title',srlimit:'5',srsearch:term},signal);
    const titles=(res.query?.search||[]).map(p=>p?.title).filter(t=>typeof t==='string'&&normalizeSearch(t).includes(key)).slice(0,2);
    if(titles.length){
@@ -1089,8 +1084,7 @@ async function wikipediaVariantsLegacy(term,signal){
   return result;
  }catch(err){if(signal?.aborted)throw err;return []} // Network/CORS errors must not break Tenrai results.
 }
-// v1.7.4: Automatic Japanese title lookup when the ordinary search has too few results.
-// Never runs while typing. Names are checked before being used to search Tenrai.
+
 const WIKI_AGENT={'Accept':'application/json','Api-User-Agent':'ANI-LOG/1.7.4 (https://github.com/goisu3000/Anime_Log)'};
 async function wikiFetchJSON(url,signal){
  const ctrl=new AbortController(),stop=()=>ctrl.abort();
@@ -1152,7 +1146,7 @@ async function wikipediaVariants(term,signal){
  if(cache&&cache.terms.length&&Date.now()-cache.at<30*86400000)return cache.terms;
  const advanced=advancedAliasCache.get(key);
  if(advanced&&Date.now()-advanced.at<(advanced.terms.length?30:1)*86400000)return advanced.terms;
- // Legacy exact redirect/title matching remains useful and inexpensive.
+
  let candidates=await wikipediaVariantsLegacy(term,signal);
  if(candidates.length)return candidates;
  let completedLookup=false;
@@ -1160,7 +1154,7 @@ async function wikipediaVariants(term,signal){
  if(!candidates.length)try{candidates=await wikipediaTextVariants(term,signal);completedLookup=true}catch(e){if(signal?.aborted)throw e}
  const out=[...new Map(candidates.filter(s=>typeof s==='string'&&s.length<=140&&normalizeSearch(s)!==key).map(s=>[normalizeSearch(s),s])).values()].slice(0,4);
  if(out.length)saveAutoAlias(key,out);
- // Never cache a temporary, all-source network failure as a confirmed "no match".
+
  if(out.length||completedLookup)storeAdvancedAlias(key,out);
  return out;
 }
@@ -1168,7 +1162,7 @@ async function wikipediaVariants(term,signal){
 function searchVariants(input){
  const original=String(input||'').trim().normalize('NFKC');if(!original)return [];
  const group=matchedAliasGroups(original)[0];
- // Try canonical titles first, then the user's original Japanese fragment.
+
  const cached=autoAliasCache.get(normalizeSearch(original));
  const candidates=group?[...(group.queries||[group.term]),original,...(cached?.terms||[])]:[original,...(cached?.terms||[])];
  return [...new Map(candidates.map(t=>[normalizeSearch(t),t])).values()].slice(0,3);
@@ -1180,11 +1174,9 @@ function localTitleMatch(item,input){const needle=normalizeSearch(input);if(!nee
  const group=matchedAliasGroups(input)[0];
  return Boolean(group&&[group.term,...(group.queries||[])].some(term=>fields.some(t=>t.includes(normalizeSearch(term)))));
 }
-// Already downloaded works remain searchable by any portion of their title
-// without more API calls. This is session-only to avoid large persistent storage.
+
 const searchMemory=new Map(),SEARCH_MEMORY_LIMIT=700;
-// Search suggestions stay entirely local: no keystroke-based API requests.
-// Retain a broader recent-history index for long-running series and older works.
+
 const TITLE_CACHE_LIMIT=1200, SUGGESTION_DISPLAY_LIMIT=12;
 const suggestionCache=new Map();
 try{const rows=JSON.parse(localStorage.getItem(TITLE_CACHE_KEY)||'[]');if(Array.isArray(rows))for(const a of rows.slice(-TITLE_CACHE_LIMIT)){
@@ -1192,7 +1184,7 @@ try{const rows=JSON.parse(localStorage.getItem(TITLE_CACHE_KEY)||'[]');if(Array.
 }}catch{}
 let cacheFlushTimer=null;
 function queueTitleCacheWrite(){if(cacheFlushTimer)return;cacheFlushTimer=setTimeout(()=>{cacheFlushTimer=null;try{
- // Retry with a smaller recent index on storage quota errors, never touch viewing records.
+
  const rows=[...suggestionCache.values()].slice(-TITLE_CACHE_LIMIT);
  for(let limit=rows.length;limit>=100;limit=Math.floor(limit*0.7)){
   try{localStorage.setItem(TITLE_CACHE_KEY,JSON.stringify(rows.slice(-limit)));break}catch{}
@@ -1234,8 +1226,7 @@ function relevanceScore(item,input){
  }
  return best;
 }
-// v1.3.2: The default is premiere recency rather than relevance.
-// Unknown year is always last, even when "oldest" is selected.
+
 function releaseParts(item){
  const raw=String(item.startDate||'');
  const date=/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw:'';
@@ -1250,7 +1241,7 @@ function premiereCompare(a,b,oldFirst=false){
  const direction=oldFirst?1:-1;
  if(x.year!==y.year)return direction*(x.year-y.year);
  if(x.season!==y.season)return direction*(x.season-y.season);
- // Within a broadcast season, prefer precise start dates if both are known.
+
  if(x.date&&y.date&&x.date!==y.date)return direction*x.date.localeCompare(y.date);
  if(x.date&&!y.date)return -1;
  if(!x.date&&y.date)return 1;
@@ -1264,12 +1255,12 @@ function sortSearchResults(){items.sort((a,b)=>{
  if(premiere)return premiere;
  return String(a.title||'').localeCompare(String(b.title||''),'ja')||String(a.id||'').localeCompare(String(b.id||''));
 })}
-// v1.1: reviews remain local unless explicitly included while generating a share URL.
+
 const REVIEW_ASPECTS={story:'ストーリー',visual:'映像',character:'キャラクター',music:'音楽'};
 const REVIEW_GRADES=['良くない','普通','良い','とても良い'];
 const REVIEW_LABELS=['','合わなかった','もう一歩','普通','良い','最高！'];
 let ratingOriginalReview=null;
-let ratingItemId=null,ratingDraft={overall:0,aspects:{},comment:''},unratedOnly=false,finishedYearFilter='all';
+let ratingItemId=null,ratingDraft={overall:0,aspects:{}},unratedOnly=false,finishedYearFilter='all';
 function readReview(value){
  if(!value||typeof value!=='object'||!Number.isInteger(value.overall)||value.overall<1||value.overall>5)return null;
  const aspects={};for(const key of Object.keys(REVIEW_ASPECTS)){const n=value.aspects?.[key];if(Number.isInteger(n)&&n>=1&&n<=4)aspects[key]=n}
@@ -1298,8 +1289,7 @@ $('#noteCancel').addEventListener('click',()=>$('#noteDialog').close());
 $('#noteText').addEventListener('input',()=>$('#noteCount').textContent=$('#noteText').value.length+' / 500文字');
 
 function reviewStars(n,owner="自分"){return `<span class="review-stars-mini" aria-label="${owner}の評価：5点中${n}点">${ratingIcons(n)}</span>`}
-// Store only the precision the user remembers: YYYY / YYYY-MM / YYYY-MM-DD.
-// Keep the original field for compatibility with old backups and all existing views.
+
 function localTodayParts(){const d=new Date();return [d.getFullYear(),d.getMonth()+1,d.getDate()]}
 function validCompletedOn(value){
  if(typeof value!=='string'||!/^\d{4}(?:-\d{2}(?:-\d{2})?)?$/.test(value))return false;
@@ -1348,8 +1338,7 @@ async function saveCompletionDateImpl(id,clear=false){
  if(!await persist()){saved[id]=old;return}
  renderDetailParts(detailNonce);toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
 }
-// v1.9.4: Overall rating uses five stars; the four optional aspects use the existing FOUR-grade scale.
-// Do not synthesize scores for fields the user has never rated.
+
 function reviewAspectStarMarkup(value){
  if(!Number.isInteger(value)||value<1||value>4)return '<span class="detail-aspect-unrated">未評価</span>';
  return `<span class="detail-aspect-stars" role="img" aria-label="4段階中${value}：${safeText(REVIEW_GRADES[value-1])}"><span class="detail-aspect-filled" aria-hidden="true">${'★'.repeat(value)}</span><span class="detail-aspect-empty" aria-hidden="true">${'☆'.repeat(4-value)}</span></span><span class="detail-aspect-value">${value}<small> / 4</small></span>`;
@@ -1361,7 +1350,7 @@ function reviewDetail(a){
  const score=r?`<div class="detail-rating-total"><span class="detail-rating-bigstars">${reviewStars(r.overall)}</span><span class="detail-rating-number">${r.overall}<small> / 5</small></span></div><span class="detail-rating-word">${safeText(REVIEW_LABELS[r.overall])}</span>`:`<div class="detail-rating-total"><span class="detail-rating-no-stars" aria-label="総合評価は未入力">☆☆☆☆☆</span><span class="detail-rating-no-score">未評価</span></div><span class="detail-rating-helper">まずは総合評価から記録できます</span>`;
  return `<div class="detail-rating-layout"><div class="detail-rating-header"><h3 class="detail-journal-cell-heading">自分の評価</h3><button type="button" class="detail-rating-edit" data-rate-id="${safeText(a.id)}">${uiIcon('edit')} ${r?'評価を編集する':'評価する'}</button></div><div class="detail-rating-body"><div class="detail-rating-primary"><div class="detail-rating-caption">総合評価</div>${score}</div><div class="detail-rating-aspects"><div class="detail-rating-caption detail-rating-subheading">詳細評価 <span>4段階・任意</span></div>${aspects}</div></div></div>`;
 }
-// Only values decoded from a shared snapshot are displayed in read-only mode.
+
 function publicReviewMarkup(a,compact=false){
  const r=a?.review;
  if(!r||typeof r!=='object')return '';
@@ -1386,13 +1375,13 @@ function ratingAspectHTML(){return Object.entries(REVIEW_ASPECTS).map(([key,labe
 function openRating(id){
  const item=saved[id];if(!item||item.status!=='watched'||mode==='share')return;
  ratingItemId=id;ratingOriginalReview=structuredClone(item.review??null);const previous=readReview(item.review);
- ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})},comment:previous?.comment||''};
+ ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})}};
  $('#ratingTitle').textContent=item.title;
  $('#ratingAspects').innerHTML=ratingAspectHTML();
  $('#ratingOptional').open=false; // The quick rating path stays compact, even when editing a detailed review.
  $('#ratingClear').hidden=!previous;
  updateRatingUI();$('#ratingDialog').showModal();
- // Always begin at the title when reopening after a long optional review.
+
  $('#ratingDialog').scrollTop=0;$('#ratingTitle').tabIndex=-1;$('#ratingTitle').focus({preventScroll:true});
 }
 function closeRating(){if($('#ratingDialog').open)$('#ratingDialog').close();ratingItemId=null}
@@ -1434,7 +1423,7 @@ async function setStatusImpl(id,status){const all=[...items,...rankingData,...Ob
  if(!validStatuses.has(status))delete saved[id];
  else {
   saved[id]={...candidate,...(saved[id]||{}),status,updatedAt:new Date().toISOString()};
-  // A work leaves Next Watch as soon as it is no longer in the Want to Watch list.
+
   if(status!=='planned'&&saved[id].nextWatchPinnedAt){
    delete saved[id].nextWatchPinnedAt;
    saved[id].nextWatchUpdatedAt=saved[id].updatedAt;
@@ -1455,7 +1444,7 @@ async function setStatusImpl(id,status){const all=[...items,...rankingData,...Ob
  else if(before&&before.status!==status)offerUndo(id,undoBefore,saved[id],`「${statusLabels[status]}」に変更しました`);
  else toast(`${candidate.title} を「${statusLabels[status]}」に登録しました`);
 }
-// Optional episode progress, stored only on this browser and in JSON backups.
+
 function watchedCount(a){const n=Number(saved[a.id]?.watchedEpisodes);return Number.isInteger(n)&&n>=0&&n<=9999?n:0}
 function totalEpisodes(a,extra){const n=Number(extra??saved[a.id]?.episodes??a.episodes);return Number.isInteger(n)&&n>0&&n<=9999?n:null}
 function progressCountLabel(n,total){return total!==null&&n<=total?`${n} / ${total}話`:`${n}話視聴`}
@@ -1468,7 +1457,7 @@ function progressMarkup(a,extra=null,inDetail=false){const s=saved[a.id]?.status
  if(!['watching','paused'].includes(s)||mode==='share')return '';
  const current=watchedCount(a),total=totalEpisodes(a,extra),usable=total!==null&&current<=total;
  const value=usable?Math.min(100,current/total*100):0;const hint=progressHint(current,total,inDetail);
- return `<div class="watch-progress${inDetail?' detail-progress':''}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" aria-label="視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" aria-label="視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
+ return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
 }
 function setWatchedProgress(...args){return queueRecordWrite(()=>setWatchedProgressImpl(...args))}
 async function setWatchedProgressImpl(id,requested){const item=saved[id];
@@ -1479,7 +1468,7 @@ async function setWatchedProgressImpl(id,requested){const item=saved[id];
  const oldUpdated=item.updatedAt;
  item.watchedEpisodes=next;item.updatedAt=new Date().toISOString();
  if(!await persist()){item.watchedEpisodes=before;item.updatedAt=oldUpdated;return false}
- // Refresh visible progress controls without rerendering detail or interrupting a PV.
+
  $$('[data-progress-for]').filter(el=>el.dataset.progressFor===id).forEach(el=>{
   const total=totalEpisodes(item,el.dataset.progressTotal?Number(el.dataset.progressTotal):null),usable=total!==null&&next<=total;
   const count=el.querySelector('[data-progress-count]');if(count)count.textContent=progressCountLabel(next,total);
@@ -1517,14 +1506,13 @@ async function commitProgressInput(input){const id=input.dataset.progressInput,r
  if(!await setWatchedProgress(id,value))input.value=String(watchedCount(saved[id]));
 }
 
-
 function posterMarkup(a){return a.image?`<img loading="lazy" referrerpolicy="no-referrer" src="${safeText(safeImage(a.image))}" alt="" onerror="this.remove()">`:`<span class="poster-fallback">${uiIcon('book')}<small>NO IMAGE</small></span>`}
 function recordTitle(a){return `<h3 class="card-title"><button type="button" class="title-button" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></h3>`}
 function stateMenu(a){const status=saved[a.id]?.status||'';return `<div class="record-menu record-select-Direct"><span class="record-select-label">${status?'状態を変更':'別の状態で登録'}${uiIcon('chevron-down')}</span><select data-status-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴状況"><option value="">${status?'リストから削除':'未登録'}</option>${Object.entries(statusLabels).filter(([s])=>validStatuses.has(s)).map(([s,l])=>`<option value="${s}" ${s===status?'selected':''}>${l}</option>`).join('')}</select></div>`}
 function quickStatus(a,status,label){return `<button type="button" class="record-primary" data-record-id="${safeText(a.id)}" data-quick-status="${status}">${uiIcon(status==='planned'?'plus':'play')}${label}</button>`}
 function card(a){return mode==='saved'?recordCard(a):discoveryCard(a)}
 function discoveryCard(a){const status=saved[a.id]?.status;return `<article class="anime-card discovery-card"><div class="poster-wrap"><button class="poster-button" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の詳細">${posterMarkup(a)}</button></div><div class="card-body">${recordTitle(a)}<div class="card-meta"><span>${a.year?a.year+'年':'放送年未登録'}${a.type?' · '+safeText(typeJa(a.type)):''}</span></div>${a.score?`<div class="public-score">MAL ${Number(a.score).toFixed(1)} / 10</div>`:''}<div class="discovery-actions">${status?`<button type="button" class="record-secondary" data-detail-id="${safeText(a.id)}">${safeText(statusLabels[status])} · 記録を開く</button>`:quickStatus(a,'planned','見たいに追加')}${stateMenu(a)}</div></div></article>`}
-// Pattern A: one consistent, information-first record card for all five statuses.
+
 function patternAStatusMenu(a){const status=a.status||'watched',id=safeText(a.id),label=safeText(statusLabels[status]||'未登録');
  return `<div class="record-menu pattern-a-status-menu"><div class="pattern-a-status-summary" aria-hidden="true">${savedStatusIcons[status]||uiIcon('check')}<span>${label}</span>${uiIcon('chevron-down')}</div><select data-status-id="${id}" aria-label="${safeText(a.title)}の視聴状況（現在：${label}）"><option value="">リストから削除</option>${Object.entries(statusLabels).filter(([v])=>validStatuses.has(v)).map(([v,l])=>`<option value="${v}" ${v===status?'selected':''}>${safeText(l)}</option>`).join('')}</select></div>`;
 }
@@ -1532,17 +1520,13 @@ function patternAReview(a){const r=readReview(saved[a.id]?.review);if(a.status!=
  if(!r)return `<div class="pattern-a-rating"><button type="button" class="pattern-a-rate-cta" data-rate-id="${safeText(a.id)}" aria-label="${safeText(a.title)}を評価する">${uiIcon('star')}<span>作品を評価する</span></button></div>`;
  const score=`${r.overall} / 5`;
  return `<div class="pattern-a-rating"><button type="button" class="pattern-a-rating-line" data-rate-id="${safeText(a.id)}" title="評価を編集する" aria-label="${safeText(a.title)}：自分の評価 ${score}。評価を編集"><span class="pattern-a-field-name pattern-a-rating-label">自分の評価</span>${reviewStars(r.overall)}<span class="pattern-a-rating-score">${r.overall} / 5</span><span class="pattern-a-rate-edit">評価を編集</span></button></div>`;}
-function patternAProgress(a){if(!['watching','paused'].includes(a.status))return '';
- const total=totalEpisodes(a),current=watchedCount(a),usable=total!==null&&current<=total,hint=progressHint(current,total);
- return `<div class="watch-progress pattern-a-progress" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${usable?'':'hidden'}><div class="watch-progress-fill" data-progress-bar style="width:${usable?Math.min(100,100*current/total):0}%"></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
-}
 function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}年`:'放送年未登録',a.type?typeJa(a.type):'',Number.isInteger(a.episodes)&&a.episodes>0?`全${a.episodes}話`:''].filter(Boolean);
  const tags=cleanAnalysisMeta(a.analysisMeta)?.genres?.slice(0,3)||[];
  return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:''}`;
 }
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?patternAProgress(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):status==='paused'?quickStatus(a,'watching','視聴を再開'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -1570,7 +1554,7 @@ function toggleFold(status,period){const key=foldKey(status,period);
  const button=$$('[data-fold-status]').find(el=>el.dataset.foldStatus===status&&el.dataset.foldPeriod===period);
  if(button){const folded=collapsedPeriods.has(key);button.setAttribute('aria-expanded',String(!folded));button.querySelector('.fold-symbol').innerHTML=uiIcon(folded?'chevron-right':'chevron-down');const grid=button.nextElementSibling;if(grid)grid.hidden=folded}
 }
-// Pinning is only a private local preference. Search and type filters are respected.
+
 function nextWatchGroups(list){
  if(statusFilter!=='all'&&statusFilter!=='planned')return savedGroups(list);
  const pinned=list.filter(pinnedNextWatch).sort((a,b)=>(Date.parse(b.nextWatchPinnedAt)||0)-(Date.parse(a.nextWatchPinnedAt)||0)||sortByBroadcast(a,b));
@@ -1579,7 +1563,7 @@ function nextWatchGroups(list){
  const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head">${uiIcon('pin')}<h3>次に観る</h3><span class="next-watch-count">${pinned.length}作品</span><span class="next-watch-desc">気になる作品を優先して表示</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
  return heading+(ordinary.length?'<div class="next-watch-other">その他の作品</div>'+savedGroups(ordinary):'');
 }
-// Pattern A: group by broadcast year first; status is shown inside each card.
+
 function savedGroups(list){
  const order=$('#savedOrder')?.value||'broadcast';
  const sorted=[...list].sort((a,b)=>{
@@ -1666,21 +1650,18 @@ async function fetchPage(reset=true){
  const scope=currentScope(),exact=/^\d{4}$/.test(scope),season=$('#seasonSelect').value;
  const seasonal=!query&&exact&&season!=='all';
  const baseParams=new URLSearchParams({limit:query?'50':'24'});
- // Send the media type to the API. A TV tab must not depend on the media mix
- // in the first unfiltered season page.
+
  const apiType=({TV:'tv',Movie:'movie',OVA:'ova',ONA:'ona'})[typeFilter];
  if(apiType)baseParams.set(seasonal?'filter':'type',apiType);
- // Keep R+ mainstream titles. Tenrai's SFW flag excludes those as well.
+
  if(query||!seasonal)baseParams.set('genres_exclude','12,49');
  if(!query){
   if(seasonal){
-   // Season endpoints support members and start_date ordering. Popular works
-   // should be discoverable without paging past numerous obscure shorts.
+
    baseParams.set('order_by','members');baseParams.set('sort','desc');
   }else{
    baseParams.set('order_by','start_date');
-   // A bounded scope requires a START-date bound, NOT end_date (which filters
-   // the ending of the entire broadcast and wrongly drops ongoing TV series).
+
    const dates=dateBounds();
    if(dates){baseParams.set('start_date',dates[0]);baseParams.set('sort','asc')}
    else baseParams.set('sort','desc');
@@ -1706,24 +1687,21 @@ async function fetchPage(reset=true){
  };
  try{
   if(query){
-   // Query every known title variant separately, then merge by MAL ID.
-   // For example: Cyberpunk + Cyberpunk: Edgerunners; Madoka Magica + Mahou Shoujo Madoka Magica.
-   // For a selected year/decade, scan a few more pages *only* if no result yet fits.
+
    for(const cursor of searchProgress){
     if(thisRequest!==requestCounter)return;
     if(!cursor.hasNext)continue;
     const maxScan=reset&&scope!=='all'?3:1;
     for(let attempt=0;attempt<maxScan&&cursor.hasNext;attempt++){
      const params=new URLSearchParams(baseParams);params.set('q',cursor.term);params.set('page',String(cursor.page));
-     // Do not use end_date: it limits the end of airing, not the premiere date.
-     // Local premiere-year filtering is reliable even for currently airing series.
+
      try{
       const payload=await getData(`${API}/anime?${params}`);
       if(!payload)return;
       cursor.hasNext=Boolean(payload.pagination?.has_next_page);cursor.page++;
      }catch(err){
       if(err.name==='AbortError'||thisRequest!==requestCounter)return;
-      // Another spelling may still work. Treat a failed variant as exhausted.
+
       cursor.hasNext=false;
       if(successful===0&&searchProgress.every(v=>!v.hasNext))throw err;
       break;
@@ -1731,13 +1709,10 @@ async function fetchPage(reset=true){
      if(scope==='all'||items.some(matchingPeriod))break;
     }
    }
-   // One bounded Wikipedia fallback for short Japanese aliases or partial titles.
-   // Each extra query is still Tenrai's regular title search, filtered by the user-selected broadcast period.
-   // Previously retrieved items remain visible if Wikipedia is unavailable.
+
    const relevant=items.filter(a=>matchingPeriod(a)&&(localTitleMatch(a,query)||relevanceScore(a,query)>0));
    const isExact=relevant.some(a=>titleFields(a).some(t=>t===normalizeSearch(query)));
-   // A local alias resolving to an actual matching title needs no external encyclopedia lookup.
-   // This avoids a redundant Wikipedia/Wikidata roundtrip for familiar nicknames.
+
    const knownAliasResolved=Boolean(matchedAliasGroups(query).length && relevant.length);
    if(reset && !knownAliasResolved && (relevant.length===0||(relevant.length===1&&!isExact))){
     const candidates=await wikipediaVariants(query,controller.signal);
@@ -1767,8 +1742,7 @@ async function fetchPage(reset=true){
    hasNext=Boolean(payload.pagination?.has_next_page);
    if(seasonal&&page===1&&typeFilter==='all'&&!items.some(a=>matchingPeriod(a)&&String(a.type||'').toLowerCase()==='tv')){const tvParams=new URLSearchParams(params);tvParams.set('filter','tv');try{const tvPayload=await getData(`${API}/seasons/${scope}/${season}?${tvParams}`);if(tvPayload)hasNext=hasNext||Boolean(tvPayload.pagination?.has_next_page)}catch(err){if(err.name==='AbortError'||thisRequest!==requestCounter)return}}
    if(seasonal&&page===1&&!items.some(a=>matchingPeriod(a)&&(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase()))){const plainParams=new URLSearchParams({limit:'24',page:'1'});if(apiType)plainParams.set('filter',apiType);try{const fb=await getData(`${API}/seasons/${scope}/${season}?${plainParams}`);if(fb)hasNext=Boolean(fb.pagination?.has_next_page)}catch(err){if(err.name==='AbortError'||thisRequest!==requestCounter)return}}
-   // General /anime results are sorted by premiere date ascending for bounded
-   // scopes. Stop offering pages once we have crossed the requested range.
+
    if(!seasonal&&scope!=='all'&&hasNext){
     const end=dateBounds()?.[1];
     if(end&&payload.data.some(a=>{const d=premiereDate(a);return d&&d>end}))hasNext=false;
@@ -1781,7 +1755,7 @@ async function fetchPage(reset=true){
   const blocked=err instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
   const reason=blocked?'外部のアニメデータAPIに接続できませんでした。通信・ブラウザの制限・API側の障害などが考えられます。':(err?.message||'通信環境やAPIの稼働状況を確認してください。');
   const fileNotice=location.protocol==='file:'?'<p>HTMLファイルを直接開いている場合、ブラウザの通信制限の影響を受けることがあります。公開サイト（https://）からの動作もお試しください。</p>':'';
-  // Use only records already stored locally. Do not claim this is the complete public catalog.
+
   let offlineList=[];
   try{
    const titles=[...suggestionCache.values()].filter(a=>a&&a.id&&a.title);
@@ -1801,7 +1775,6 @@ function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();c
 function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';render();fetchPage(true);window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
 
-// v2.0.3 | Annual recap. Never infer a completion year from broadcast year or updatedAt.
 let annualYear=new Date().getFullYear();
 function annualValidEntries(){return Object.values(saved).filter(a=>a?.status==='watched');}
 function annualDatedEntries(){return annualValidEntries().filter(a=>validCompletedOn(a.completedOn));}
@@ -1876,8 +1849,6 @@ $('#annualView').addEventListener('click',e=>{
  if(e.target.closest('[data-annual-insights]')){showRanking('mine');return}
 });
 
-// v1.7 - Ranking discovery uses Tenrai's documented Top and Seasons endpoints.
-// The personal ranking is entirely local. Manual tiebreakers only operate among equal ratings.
 let rankingTab='now', rankingSort='score', rankingYear=new Date().getFullYear(),rankingSeason=['winter','spring','summer','fall'][Math.floor(new Date().getMonth()/3)];
 let rankingData=[],rankingPage=1,rankingHasNext=false,rankingBusy=false,rankingRequestId=0,rankingCache={};
 let rankDraggedId=null;
@@ -1896,7 +1867,7 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const scoreText=rankingSort==='members'?`<strong>${Number(a.members||0).toLocaleString('ja-JP')}人</strong><small>登録者数 · MAL ${score>0?score.toFixed(2)+' / 10':'未評価'}</small>`:`<strong>MAL ${score>0?score.toFixed(2):'--'}</strong><small>10点満点</small><small>${votes>0?votes.toLocaleString('ja-JP')+'人が評価':'評価人数未登録'}</small>`;
  const metricMarkup=own?'':`<div class="rank-metric">${scoreText}</div>`;
  const img=a.image?`<img src="${safeText(safeImage(a.image))}" loading="lazy" referrerpolicy="no-referrer" alt="">`:'A:L';
- // All three public tabs now use an identical button element and sizing rules.
+
  const addedStatus=saved[a.id]?.status;
  const statusText=addedStatus?'見たいに登録済み':'見たいに登録';
  const addControl=own?'':`<button type="button" class="rank-register-control${addedStatus?' is-registered':''}" ${addedStatus?'disabled aria-disabled="true"':`data-rank-add="${safeText(a.id)}"`} aria-label="${safeText(statusText)}">${uiIcon(addedStatus?'check':'star')}<span>${safeText(statusText)}</span></button>`;
@@ -1907,7 +1878,7 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
 function renderRanking(){if(mode!=='ranking')return;
  $$('#rankingView [data-rank-tab]').forEach(b=>b.classList.toggle('active',b.dataset.rankTab===rankingTab));
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
- const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankPublicControls').classList.toggle('hidden',mine);$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
+ const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
  const names={now:'今期のアニメランキング',period:'年代・シーズン別ランキング',top:'歴代アニメランキング',mine:'マイランキング'};
  $('#rankingTitle').textContent=names[rankingTab];$('#breadcrumb').textContent=names[rankingTab];
@@ -1946,7 +1917,6 @@ async function moveRankImpl(id,direction){const before=myRatedItems(),item=saved
  renderRanking();
 }
 
-// v1.7.5: Analysis uses completed works only. Public metadata never changes the user's rating.
 const STUDIO_NAMES_JA={'Kyoto Animation':'京都アニメーション','Studio Ghibli':'スタジオジブリ','Wit Studio':'WIT STUDIO','Production I.G':'Production I.G','ufotable':'ufotable','MAPPA':'MAPPA'};
 let studioInsightSort='count',traitInsightSort='count',traitInsightCategory='genres',insightSelection=null;
 let analysisGeneration=0,analysisRunning=false,analysisError='',analysisSkipped=new Set();
@@ -2031,8 +2001,6 @@ $('#myInsights').addEventListener('click',e=>{
  const detail=e.target.closest('[data-detail-id]');if(detail){const item=saved[detail.dataset.detailId];if(item)openDetail(item);}
 });
 
-// Keep previously cached Top/Season ranking entries aligned with the stable MAL IDs
-// used throughout My List. Ignore cache rows without a reliable ID, never title-match.
 function normalizeRankingRow(raw){
  if(!raw||typeof raw!=='object')return null;
  const entry=raw.anime&&typeof raw.anime==='object'?raw.anime:raw;
@@ -2067,7 +2035,7 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
   const rawRows=Array.isArray(payload.data)?payload.data.map(v=>v?.anime&&typeof v.anime==='object'?v.anime:v):[];
   const entries=normalizeRankingRows(rawRows.filter(v=>v&&publicAnimeAllowed(v)));
   rankingData=[...new Map([...rankingData,...entries].map(a=>[a.id,a])).values()];rankingHasNext=Boolean(payload.pagination?.has_next_page);rankingPage++;
-  // Most useful for quick return visits. Cache only a bounded number of entries.
+
   rankingCache[key]={time:Date.now(),rows:rankingData.slice(0,96),next:rankingPage,hasNext:rankingHasNext};
   try{const keys=Object.entries(rankingCache).sort((a,b)=>b[1].time-a[1].time).slice(0,9);localStorage.setItem(RANK_CACHE_KEY,JSON.stringify(Object.fromEntries(keys)))}catch{}
   rankingBusy=false;renderRanking();
@@ -2104,7 +2072,6 @@ $('#rankResults').addEventListener('drop',e=>{e.preventDefault();const target=e.
 });});
 $('#rankResults').addEventListener('dragend',()=>{rankDraggedId=null;$$('#rankResults .rank-row').forEach(r=>r.classList.remove('dragging','drag-over'))});
 
-// Share v0.2: all data lives in the URL fragment. The server never stores a viewer's lists.
 const SHARE_VERSION=2, SHARE_PREFIX='#share=', SHARE_MAX=9000;
 let shareLinkBuilt='', shareNonce=0;
 function selectedForShare(scope){
@@ -2267,12 +2234,11 @@ years.addEventListener('change',()=>{periodTouched=true;if(/^\d{4}$/.test(years.
 $('#seasonSelect').addEventListener('change',()=>{periodTouched=true;if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render()});
 $('#searchForm').addEventListener('submit',e=>{e.preventDefault();closeSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
  query=$('#searchInput').value.trim();fetchPage(true)});
-// Local autocomplete: no new network requests while typing.
+
 let suggestionActive=-1;
 function getSuggestions(term){const needle=normalizeSearch(term);if(!needle)return [];
  const byId=new Map();
- // Newest title cache tends to have fuller alternate names than older saved entries.
- // Add saved works last to retain their local availability even if absent from cache.
+
  for(const a of [...suggestionCache.values(),...searchMemory.values(),...Object.values(saved)]){
   if(!a||!a.id)continue;
   const prev=byId.get(a.id);
@@ -2284,7 +2250,7 @@ function getSuggestions(term){const needle=normalizeSearch(term);if(!needle)retu
   const exact=titleFields(a).some(t=>t===needle);
   results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年 · ':'')+'取得済み',score:relevanceScore(a,term)+(exact?100:40),year:a.year||0});
  }
- // Also suggest titles automatically discovered by Wikipedia in earlier searches.
+
  for(const [alias,entry] of autoAliasCache){
   if(!entry.terms.length||!(alias.includes(needle)||needle.includes(alias)))continue;
   const official=entry.terms.find(t=>/[ぁ-んァ-ヶ一-龠]/.test(t))||entry.terms[0];
@@ -2330,7 +2296,7 @@ for(const region of ['#cards','#detailView']){
 
 $('#searchInput').addEventListener('input',()=>{refreshSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
  const val=$('#searchInput').value.trim();if(!val&&query){query='';fetchPage(true);return}
- // First title search should automatically span the whole catalog, unless the user chose a period.
+
  if(val&&!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();$('#searchGuide').textContent='全年代から検索します。特定の年代に絞り込みたい場合は、年代を選んでください。';periodTouched=true}
 });
 $('#searchSort').addEventListener('change',e=>{
@@ -2388,7 +2354,7 @@ function mergeEntry(current,backup,preferBackup=false){
  const ca=whenChanged(current),ba=whenChanged(backup);
  const base=ba>ca||ba===ca&&preferBackup?{...current,...backup}:{...backup,...current};
  const cr=reviewEventTime(current),br=reviewEventTime(backup);
- // Review creation and deletion each have timestamps. A previously deleted review must never reappear via an older backup.
+
  if(cr||br){const winner=br>cr?backup:cr>br?current:(preferBackup?backup:current);
   if(winner.review)base.review=structuredClone(winner.review);else delete base.review;
   if(winner.reviewDeletedAt)base.reviewDeletedAt=winner.reviewDeletedAt;else delete base.reviewDeletedAt;
@@ -2399,17 +2365,17 @@ function mergeEntry(current,backup,preferBackup=false){
  const noteOwner=bt>ct?backup:ct>bt?current:(preferBackup?backup:current),note=readNote(noteOwner);
  delete base.note;delete base.noteDeletedAt;
  if(note)base.note=structuredClone(note);else if(noteOwner.noteDeletedAt)base.noteDeletedAt=noteOwner.noteDeletedAt;
- // Public catalogue information is not a user action. Preserve it across old backup merges.
+
  const cMeta=cleanAnalysisMeta(current.analysisMeta),bMeta=cleanAnalysisMeta(backup.analysisMeta);
  if(cMeta||bMeta){const recent=!cMeta?bMeta:!bMeta?cMeta:(Date.parse(bMeta.fetchedAt||'')||0)>(Date.parse(cMeta.fetchedAt||'')||0)?bMeta:cMeta;base.analysisMeta=recent;}
- // Rank order is merged independently from status and review timestamps.
+
  const cRank=Date.parse(current.rankUpdatedAt||'')||0,bRank=Date.parse(backup.rankUpdatedAt||'')||0;
  const rankOwner=bRank>cRank?backup:cRank>bRank?current:(preferBackup?backup:current);
  if(Number.isInteger(rankOwner.myRankOrder))base.myRankOrder=rankOwner.myRankOrder;
  else delete base.myRankOrder;
  if(rankOwner.rankUpdatedAt)base.rankUpdatedAt=rankOwner.rankUpdatedAt;
  else delete base.rankUpdatedAt;
- // Merge pin changes independently, so an old backup cannot revive an unpinned work.
+
  const cPin=Date.parse(current.nextWatchUpdatedAt||current.nextWatchPinnedAt||'')||0;
  const bPin=Date.parse(backup.nextWatchUpdatedAt||backup.nextWatchPinnedAt||'')||0;
  const pinOwner=bPin>cPin?backup:cPin>bPin?current:(preferBackup?backup:current);
@@ -2442,9 +2408,7 @@ $('#importReplace').addEventListener('click',()=>commitImport(true));
 $('#importCancel').addEventListener('click',()=>$('#importModeDialog').close());
 $('#importModeDialog').addEventListener('close',()=>{importCandidate=null});
 
-// v0.8: detail on demand; Japanese summary when available, otherwise free on-device translation.
-// Viewing state and share format remain unchanged.
-let detailActiveItem=null, detailReturnScroll=0, detailNonce=0, detailEpisodePage=1, detailEpisodeHasNext=false, detailEpisodeBusy=false;
+let detailActiveItem=null, detailReturnScroll=0, detailNonce=0, detailEpisodePage=1, detailEpisodeBusy=false;
 let detailActiveTab='overview';
 const detailTabNames={overview:'概要',episodes:'エピソード',people:'キャスト・スタッフ',related:'関連作品'};
 const detailTabOrder=['overview','episodes','people','related'];
@@ -2454,8 +2418,7 @@ function safeLink(url){try{const u=new URL(url);return u.protocol==='https:'?u.h
 function detailHeading(name,body){return `<section class="detail-block"><h2 class="detail-section-title">${safeText(name)}</h2>${body}</section>`}
 function present(s){return s!==undefined&&s!==null&&String(s).trim()!==''}
 function detailPoster(url){const img=safeImage(url);return img?`<img alt="" referrerpolicy="no-referrer" src="${safeText(img)}" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'ANI:LOG'}))">`:'<div class="placeholder">A:L</div>'}
-// v1.6: deterministic Japanese genre/theme labels; no translation service or extra API usage.
-// Unknown taxonomy terms deliberately remain as supplied by Tenrai, instead of inventing a meaning.
+
 const JAPANESE_GENRES={
  'Action':'アクション','Adventure':'冒険','Avant Garde':'前衛・実験','Award Winning':'受賞作品',
  'Boys Love':'ボーイズラブ','Comedy':'コメディ','Drama':'ドラマ','Fantasy':'ファンタジー',
@@ -2510,13 +2473,12 @@ function detailHeader(a,full=null){
  const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
  const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:''}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:''}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:''}</div></section>`;
- // Completion date belongs to viewing status. Keep the editor collapsed until requested.
+
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'} ${uiIcon('down')}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
  const reviewPanel=`<div class="detail-journal-cell detail-journal-review">${mode==='share'?(publicReviewMarkup(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">共有されている評価はありません</p>'):(reviewDetail(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">視聴済みにすると★評価を記録できます</p>')}</div>`;
  const detailNote=saved[a.id]?readNote(saved[a.id]):null;
- // Detail page: put the editing action in the heading and show saved text directly
- // on the card surface. Do not reuse the bordered list-card note-preview button.
+
  const noteAction=saved[a.id]?`<button type="button" class="detail-note-edit" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${detailNote?.text?'編集':'追加'}">${uiIcon('edit')} ${detailNote?.text?'メモを編集する':'メモを書く'}</button>`:'';
  const noteContent=saved[a.id]?(detailNote?.text?`<p class="detail-note-text">${safeText(detailNote.text)}</p>`:'<p class="detail-note-empty">まだメモはありません</p>'):'<p class="detail-note-empty">作品を登録するとメモを残せます</p>';
  const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-note-heading"><div class="detail-journal-cell-heading">作品メモ</div>${noteAction}</div>${noteContent}</div>`;
@@ -2527,7 +2489,7 @@ function detailGeneral(d){const facts=[];
  const groups=[['原作',d.source],['放送期間',d.aired?.string],['海外年齢区分',d.rating]];
  for(const [label,value] of groups){let txt=Array.isArray(value)?value.map(x=>x?.name).filter(Boolean).join(' / '):value;if(label==='原作')txt=({'Manga':'漫画','Original':'オリジナル','Light novel':'ライトノベル','Game':'ゲーム','Novel':'小説','Web manga':'Web漫画','Visual novel':'ビジュアルノベル'}[txt]||txt);if(present(txt))facts.push(`<span><b>${safeText(label)}：</b>${safeText(txt)}</span>`)}
  return facts.length?detailHeading('制作・放送情報',`<div class="detail-panel">${facts.join('<div style="height:6px"></div>')}</div>`):''}
-// Only the currently opened title is checked; no catalogue-wide collection.
+
 const JA_SUMMARY_CACHE='anilog-ja-summary-v1', JA_SUMMARY_TTL=7*86400000, JA_SUMMARY_MISS_TTL=86400000;
 const LOCAL_TRANSLATION_CACHE='anilog-on-device-ja-v1';
 function smallCacheRead(key){try{const o=JSON.parse(localStorage.getItem(key)||'{}');return o&&typeof o==='object'&&!Array.isArray(o)?o:{}}catch{return {}}}
@@ -2554,8 +2516,7 @@ let onDeviceTranslator=null, onDeviceTranslatorPending=null;
 async function getOnDeviceTranslator(){
  if(onDeviceTranslator)return onDeviceTranslator;
  if(!('Translator' in self))throw Error('このブラウザは端末内翻訳に対応していません');
- // Call create() directly from the user's click when the model needs downloading.
- // Awaiting availability() first can lose user activation on some browsers.
+
  if(!onDeviceTranslatorPending)onDeviceTranslatorPending=self.Translator.create({sourceLanguage:'en',targetLanguage:'ja'}).then(t=>onDeviceTranslator=t).finally(()=>onDeviceTranslatorPending=null);
  return onDeviceTranslatorPending;
 }
@@ -2652,7 +2613,7 @@ function detailTabPanel(entry,full){
  if(detailActiveTab==='overview'){
   html=detailVideos(full,entry.videos)+'<div id="detailSynopsisSlot">'+detailSynopsis(full,entry)+'</div>'+detailGeneral(full)+detailLinks(full);
   if(detailFieldState(entry,'videos')==='loading'&&!getTrailerList(full,entry.videos).length)html=detailTabLoading('PV・予告映像を確認しています…')+html;
-  // A failed optional video endpoint must not obstruct synopsis and other content.
+
  }else if(detailActiveTab==='episodes'){
   html=detailEpisodesWrapper(entry)||detailTabError(entry,'episodes')||detailTabLoading('エピソードを読み込んでいます…');
  }else if(detailActiveTab==='people'){
@@ -2773,8 +2734,7 @@ $('#detailContent').addEventListener('click',e=>{
  const link=e.target.closest('[data-play-youtube]');if(link){
   const id=link.dataset.playYoutube;
   if(!/^[\w-]{11}$/.test(id))return;
-  // A file:// page cannot identify itself to the YouTube embed player (error 153).
-  // Open the official watch page directly instead of creating a player that cannot work.
+
   if(location.protocol==='file:'){
    window.open(`https://www.youtube.com/watch?v=${id}`,'_blank','noopener');
    return;
