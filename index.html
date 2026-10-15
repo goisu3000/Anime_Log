@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.7 | アニメ視聴管理</title>
+<title>ANI:LOG v2.2.9 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -230,7 +230,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .pattern-a-status-summary .ui-icon:last-child{margin-left:auto;color:var(--muted);width:13px;height:13px}
 .pattern-a-status-menu select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;background:var(--surface);color:var(--ink);color-scheme:dark}
 .pattern-a-status-menu select option{background:var(--surface);color:var(--ink)}
-.pattern-a-card .record-primary{width:170px;height:36px;min-height:36px;font-size:var(--fs-sm)}
+.pattern-a-card .record-primary{width:170px;height:36px;min-height:36px;padding:0 26px 0 6px;font-size:var(--fs-sm)}
 .pattern-a-date-watch,.pattern-a-date{font-size:var(--fs-xs);color:var(--muted);font-weight:var(--fw-semi);display:inline-flex;gap:6px;align-items:center;border:0;background:transparent;padding:2px 0;text-align:left}
 .watch-progress{width:100%;min-width:0}
 .watch-progress-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;font-size:var(--fs-xs);color:var(--muted);font-weight:var(--fw-semi)}
@@ -248,7 +248,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .progress-completion-copy{color:var(--accent);font-size:var(--fs-xs);font-weight:var(--fw-semi)}
 .progress-completion-btn{display:inline-flex;align-items:center;gap:4px;background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:6px 10px;font-size:var(--fs-xs);font-weight:var(--fw-bold)}
 .pattern-a-rating{width:100%;min-width:0}
-.pattern-a-rate-cta{display:flex;align-items:center;gap:8px;width:170px;height:38px;padding:0 11px;border:1px solid var(--accent-border);border-radius:var(--radius-sm);background:var(--accent-soft);color:var(--accent);font-size:var(--fs-sm);font-weight:var(--fw-bold)}
+.pattern-a-rate-cta{display:flex;align-items:center;justify-content:center;gap:6px;width:170px;height:38px;padding:0 24px 0 6px;border:1px solid var(--accent-border);border-radius:var(--radius-sm);background:var(--accent-soft);color:var(--accent);font-size:var(--fs-sm);font-weight:var(--fw-bold);white-space:nowrap}.pattern-a-rate-cta .ui-icon{width:15px;height:15px}
 .pattern-a-rating-line{appearance:none;display:inline-flex;align-items:center;gap:8px;min-height:28px;padding:0;border:0;background:transparent;color:inherit}
 .pattern-a-rating-label{font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--muted);white-space:nowrap}
 .review-stars-mini,.rank-group-stars{display:inline-flex;align-items:center;gap:4px;line-height:1}
@@ -260,7 +260,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .pattern-a-rating-score{font-size:var(--fs-sm);font-weight:var(--fw-bold);color:var(--ink);white-space:nowrap}
 .pattern-a-rate-edit{display:none;font-size:var(--fs-xs);color:var(--accent);text-decoration:underline}
 .pattern-a-rating-unavailable{font-size:var(--fs-xs);color:var(--muted);font-weight:var(--fw-semi)}
-.note-preview:not(.has-note){display:flex;align-items:center;gap:8px;width:170px;height:38px;padding:0 11px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold)}
+.note-preview:not(.has-note){display:flex;align-items:center;justify-content:center;gap:6px;width:170px;height:38px;padding:0 24px 0 6px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);white-space:nowrap}
 .note-preview:not(.has-note) .ui-icon{width:15px;height:15px;color:var(--accent)}
 .note-preview.has-note{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;height:38px;padding:2px 8px 2px 11px;border:0;border-left:2px solid var(--accent);border-radius:0 6px 6px 0;background:rgba(255,255,255,.03);color:var(--ink);text-align:left;overflow:hidden}
 .note-preview-quote{flex:1;min-width:0;font-size:var(--fs-sm);line-height:1.4;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
@@ -830,7 +830,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.7 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.2.9 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
