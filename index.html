@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#101219">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.0.2 | アニメ視聴管理</title>
+<title>ANI:LOG v2.0.3 | アニメ視聴管理</title>
 <style>
 :root{color-scheme:dark;--bg:#101219;--surface:#191c25;--surface2:#212530;--surface3:#2b303d;--ink:#f7f8fc;--muted:#969dab;--border:#333744;--accent:#c4f36e;--accent-dark:#1e2815;--cyan:#88dcee;--pink:#edb6dc;--radius:15px;--shadow:0 12px 40px rgba(0,0,0,.15)}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;letter-spacing:.012em}button,select,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
@@ -1485,6 +1485,77 @@ body.view-detail .detail-journal-watch>.next-watch-toggle{margin-top:12px}
  .next-watch-toggle{min-height:44px;font-size:12px;padding:10px 12px}
  .saved-mode #cards .record-main>.next-watch-toggle{margin-top:10px}
 }
+
+/* ANI:LOG v2.0.3 | Annual recap. All values are derived from local records. */
+.annual-side-link .ui-icon{width:18px;height:18px}
+.annual-entry{display:none;align-items:center;justify-content:space-between;gap:12px;padding:11px 15px;margin:0 0 18px;border:1px solid #425349;border-radius:11px;background:#202b29}
+body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-entry{display:flex}
+.annual-entry>span{display:flex;align-items:center;gap:9px;font-size:12px;color:#c9d6cd;font-weight:650}
+.annual-entry>span .ui-icon{width:17px;height:17px;color:#bddca1}
+.annual-entry button{display:inline-flex;align-items:center;gap:4px;min-height:40px;white-space:nowrap;border:1px solid #617951;color:#d6f1c1;background:#2b382d;padding:9px 13px;border-radius:8px;font-size:12px;font-weight:750}
+.annual-entry button:hover{background:#344632;border-color:#a4cd85}
+.annual-entry button .ui-icon{width:14px;height:14px}
+.view-annual #libraryView,.view-annual #rankingView,.view-annual #shareView,.view-annual .site-slogan{display:none!important}
+.view-annual #annualView{display:block!important}
+.view-detail #annualView{display:none!important}
+#annualView{color:#e5ecee}
+.annual-back-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 18px}
+.annual-back-row>span{color:#8ca8a1;font-weight:800;font-size:10px;letter-spacing:.15em}
+.annual-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden;border:1px solid #465449;background:linear-gradient(116deg,#27342f,#1c272d 64%,#1d252c);border-radius:18px;padding:33px 34px 29px;min-height:210px}
+.annual-hero-copy,.annual-year-control{position:relative;z-index:1}
+.annual-kicker,.annual-section-index{font-size:10px;letter-spacing:.17em;color:#b9d89e;font-weight:850}
+.annual-hero h1{font-size:clamp(39px,5vw,68px);letter-spacing:-.075em;margin:13px 0 7px;line-height:1.15;color:#f1f4ed;font-weight:850;font-variant-numeric:tabular-nums}
+.annual-heading-unit{font-size:clamp(18px,2.1vw,27px);letter-spacing:-.045em;margin-left:10px}
+.annual-hero-copy>p{color:#b2c0bd;margin:9px 0 0;font-size:13px;line-height:1.7}
+.annual-hero-outline{position:absolute;right:16%;bottom:-110px;color:#c2d6b90d;transform:rotate(-10deg);font-size:380px;pointer-events:none;line-height:1}
+.annual-year-control{display:flex;flex-direction:column;gap:8px;color:#b9cac5;font-size:11px;font-weight:700}
+.annual-year-control select{background:#17231f;border:1px solid #68806a;color:#e7f3e2;border-radius:9px;height:45px;min-width:148px;padding:0 12px;font-weight:750;font-size:14px}
+.annual-rule{margin:13px 2px 22px;color:#a8b5bd;font-size:12px;line-height:1.8}
+.annual-rule strong{color:#d5e2d5}
+.annual-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:0 0 20px}
+.annual-stat{background:#1d252a;border:1px solid #3b484a;border-radius:13px;padding:23px 23px 21px;min-width:0}
+.annual-stat-label{font-size:12px;color:#b7c5c5;font-weight:650}
+.annual-stat-value{display:block;font-size:40px;color:#e7f3e6;font-weight:850;letter-spacing:-.065em;line-height:1.3;font-variant-numeric:tabular-nums;margin:8px 0 5px}
+.annual-stat-value small{font-size:13px;color:#a9b9b0;font-weight:650;letter-spacing:0;margin-left:4px}
+.annual-stat-note{font-size:11px;color:#9aaab0;line-height:1.5}
+.annual-panels{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:18px;align-items:stretch}
+.annual-panel,.annual-coverage{background:#1a2227;border:1px solid #364449;border-radius:15px;padding:23px;min-width:0}
+.annual-panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-bottom:1px solid #344249;padding-bottom:16px;margin-bottom:17px}
+.annual-panel h2,.annual-coverage h2{font-size:19px;letter-spacing:-.04em;line-height:1.4;margin:7px 0 0}
+.annual-panel-note{font-size:11px;color:#a5b4bd;white-space:nowrap}
+.annual-favorite-list{display:grid;gap:10px}
+.annual-favorite{display:flex;align-items:center;gap:11px;background:#202a2d;border:1px solid #354348;border-radius:10px;padding:9px;width:100%;text-align:left;color:#e9f0ee;cursor:pointer;min-width:0}
+.annual-favorite:hover{border-color:#98b985;background:#27342f}
+.annual-favorite-pos{color:#adc8a2;font-size:15px;font-weight:850;min-width:22px;text-align:center;font-variant-numeric:tabular-nums}
+.annual-favorite-poster{width:45px;height:62px;border-radius:5px;object-fit:cover;flex:0 0 45px;background:#303c3c}
+.annual-favorite-fallback{display:grid;place-items:center;color:#8ca39b}
+.annual-favorite-info{flex:1;min-width:0;display:grid;gap:6px}
+.annual-favorite-name{font-size:12px;line-height:1.55;font-weight:750;overflow-wrap:anywhere}
+.annual-favorite-stars{display:inline-flex;align-items:center;gap:5px;color:#f1d183;font-size:11px;font-weight:800}
+.annual-favorite-stars .review-stars-mini{display:inline-flex;gap:0}
+.annual-favorite-stars .ui-icon{width:13px;height:13px;fill:#f1d18322}
+.annual-favorite-chevron{flex-shrink:0;color:#7f9795}
+.annual-genre-list{display:grid;gap:17px}
+.annual-genre-label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#d9e5e3;font-weight:700;margin-bottom:8px}
+.annual-genre-count{font-size:11px;color:#aebeb6;white-space:nowrap;font-variant-numeric:tabular-nums}
+.annual-genre-track{height:8px;border-radius:6px;background:#344144;overflow:hidden}
+.annual-genre-fill{height:100%;border-radius:6px;background:#aed688}
+.annual-genre-note{color:#a7b7bb;font-size:11px;line-height:1.8;margin:17px 0 0}
+.annual-empty{border:1px dashed #4a595c;border-radius:10px;padding:25px 15px;text-align:center;color:#a9b9bc;font-size:12px;line-height:1.8}
+.annual-empty strong{display:block;color:#e4eeeb;font-size:14px;margin-bottom:7px}
+.annual-coverage{margin-top:18px}
+.annual-coverage-head{margin-bottom:14px}
+.annual-coverage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.annual-coverage-item{background:#212b30;border:1px solid #36464b;border-radius:10px;padding:15px}
+.annual-coverage-item strong{display:block;font-size:15px;color:#e2efe2;margin:0 0 4px}
+.annual-coverage-item p{color:#b1c1c6;font-size:11px;line-height:1.65;margin:0 0 11px}
+.annual-coverage-item button{background:#303e3e;border:1px solid #5c7362;color:#d5edca;border-radius:8px;min-height:39px;padding:8px 11px;font-size:11px;font-weight:800}
+.annual-coverage-item button:hover{border-color:#a4ca8b}
+.annual-coverage-item button:disabled{opacity:.5;cursor:default}
+.annual-foot{margin:18px 0 0;font-size:11px;color:#93a5ac;line-height:1.85}
+@media(max-width:1050px){.annual-panels{grid-template-columns:minmax(0,1fr)}.annual-hero{min-height:180px}}
+@media(max-width:740px){.annual-entry{padding:10px 12px;margin-bottom:14px}.annual-entry>span{font-size:11px;gap:6px}.annual-entry button{font-size:11px;padding:8px 9px;min-height:44px}.annual-back-row{margin-bottom:15px}.annual-hero{padding:24px 20px;min-height:0;gap:20px}.annual-hero h1{font-size:44px}.annual-heading-unit{font-size:20px}.annual-hero-copy>p{font-size:12px}.annual-year-control{flex-direction:row;align-items:center;justify-content:space-between;width:100%}.annual-year-control select{height:44px;min-width:130px}.annual-rule{font-size:11px}.annual-stats{gap:8px}.annual-stat{padding:15px 11px}.annual-stat-label{font-size:11px}.annual-stat-value{font-size:29px}.annual-stat-note{font-size:10px}.annual-panel,.annual-coverage{padding:17px 14px}.annual-panel h2,.annual-coverage h2{font-size:17px}.annual-coverage-grid{grid-template-columns:1fr}.annual-favorite{min-height:72px}.annual-coverage-item button{min-height:44px}}
+@media(max-width:365px){.annual-entry>span>span{display:none}.annual-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.annual-stat:last-child{grid-column:1/-1}.annual-stat-value{font-size:32px}.annual-stat-value small{font-size:12px}.annual-panel-note{font-size:10px}}
 </style>
 </head>
 <body>
@@ -1495,6 +1566,7 @@ body.view-detail .detail-journal-watch>.next-watch-toggle{margin-top:12px}
     <div><div class="side-block-title">ライブラリ</div><nav class="nav" id="desktopNav">
       <button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>アニメを探す</button>
       <button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト <span class="count" id="savedBadge">0</span></button>
+      <button type="button" data-annual-open class="annual-side-link"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg>年間まとめ</button>
     </nav></div>
     <div><div class="side-block-title">視聴状況で絞り込み</div><nav class="nav" id="statusNav">
       <button data-status-filter="watching"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>見てる</button>
@@ -1514,12 +1586,13 @@ body.view-detail .detail-journal-watch>.next-watch-toggle{margin-top:12px}
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.0.1 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.0.3 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
 
     <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
+    <div class="annual-entry" id="annualEntry"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg><span>一年の視聴記録を振り返る</span></span><button type="button" data-annual-open>年間まとめを見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-chevron-right"/></svg></button></div>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
 <div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
 <details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
@@ -1537,6 +1610,22 @@ body.view-detail .detail-journal-watch>.next-watch-toggle{margin-top:12px}
       <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
 </div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span><select id="savedOrder" class="saved-order-select hidden" aria-label="マイリストの年内の並び順"><option value="broadcast">放送時期が新しい順</option><option value="updated">更新が新しい順</option><option value="title">作品名順</option></select></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はこのブラウザに保存され、別端末には自動同期されません。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
+    </section>
+    <section id="annualView" class="hidden" aria-label="年間アニメまとめ">
+      <div class="annual-back-row"><button type="button" id="annualBack" class="detail-back"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-back"/></svg> マイリストに戻る</button><span>YOUR ANIME YEAR</span></div>
+      <header class="annual-hero">
+        <div class="annual-hero-copy"><span class="annual-kicker">MY ANIME YEAR</span><h1><span id="annualHeadingYear">2026</span><span class="annual-heading-unit">年の視聴記録</span></h1><p>見終わった作品と思い出を、一年ごとに。</p></div>
+        <label class="annual-year-control" for="annualYear">集計する年<select id="annualYear" aria-label="年間まとめの対象年"></select></label>
+        <div class="annual-hero-outline" aria-hidden="true">✳</div>
+      </header>
+      <p class="annual-rule">集計は「見た」作品に入力された<strong>見終わった年</strong>を基準にしています。放送年ではありません。</p>
+      <div class="annual-stats" id="annualStats" aria-live="polite"></div>
+      <div class="annual-panels">
+        <section class="annual-panel" aria-labelledby="annualFavoritesTitle"><div class="annual-panel-head"><div><span class="annual-section-index">01 / FAVORITES</span><h2 id="annualFavoritesTitle">高評価作品</h2></div><span class="annual-panel-note">自分の★評価</span></div><div id="annualFavorites"></div></section>
+        <section class="annual-panel" aria-labelledby="annualGenresTitle"><div class="annual-panel-head"><div><span class="annual-section-index">02 / GENRES</span><h2 id="annualGenresTitle">よく観たジャンル</h2></div><span class="annual-panel-note">複数ジャンル集計</span></div><div id="annualGenres"></div></section>
+      </div>
+      <section class="annual-coverage" aria-labelledby="annualCoverageTitle"><div class="annual-coverage-head"><span class="annual-section-index">03 / DATA QUALITY</span><h2 id="annualCoverageTitle">記録の集計について</h2></div><div id="annualCoverage"></div></section>
+      <p class="annual-foot">すべてこの端末に保存された記録から集計しています。視聴完了日が未入力の作品を、自動で今年の作品として扱うことはありません。</p>
     </section>
     <section id="rankingView" class="hidden" aria-label="アニメランキング">
       <div class="section-header"><div><div class="rank-eyebrow">ANIME RANKINGS</div><h2 id="rankingTitle">ランキング</h2><p id="rankingDescription">世間の評価と、自分の記録を見比べよう。</p></div></div>
@@ -2462,6 +2551,7 @@ function setNav(){
  $$('[data-explore-status]').forEach(b=>{const active=mode==='season'&&b.dataset.exploreStatus===exploreStatusFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
 }
 function render(){
+ if(mode==='annual'){updateCounts();renderAnnual();return;}
  document.body.classList.toggle('saved-mode',mode==='saved');
  $('#cards').classList.toggle('saved-grid',mode==='saved');
  $('#collectionEyebrow').textContent=mode==='saved'?'YOUR ANIME JOURNAL':'DISCOVER ANIME';
@@ -2472,6 +2562,7 @@ function render(){
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
  $('#filterDisclosure').classList.toggle('has-filters',activeFilters.length>0);
+ $('#annualEntry').hidden=mode!=='saved';
  $('.stats').classList.toggle('hidden',mode!=='saved');
  updateCounts();setNav();if(mode==='share')return;if(mode==='ranking'){renderRanking();return;}
  const isSaved=mode==='saved', exploreRegistered=!isSaved&&exploreStatusFilter!=='all';
@@ -2656,9 +2747,84 @@ async function fetchPage(reset=true){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all'){exitRanking();closeSuggestions();closeDetail(false);exitSharedView();mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();window.scrollTo({top:0,behavior:'smooth'});}
-function showSeason(){exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';render();fetchPage(true);window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();window.scrollTo({top:0,behavior:'smooth'});}
+function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';render();fetchPage(true);window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
+
+// v2.0.3 | Annual recap. Never infer a completion year from broadcast year or updatedAt.
+let annualYear=new Date().getFullYear();
+function annualValidEntries(){return Object.values(saved).filter(a=>a?.status==='watched');}
+function annualDatedEntries(){return annualValidEntries().filter(a=>validCompletedOn(a.completedOn));}
+function annualYears(){
+ const current=new Date().getFullYear();
+ return [...new Set([current,...annualDatedEntries().map(a=>Number(a.completedOn.slice(0,4)))])].sort((a,b)=>b-a);
+}
+function annualData(year){
+ const all=annualValidEntries();
+ const dated=all.filter(a=>validCompletedOn(a.completedOn));
+ const works=dated.filter(a=>Number(a.completedOn.slice(0,4))===year);
+ const rated=works.filter(a=>readReview(a.review));
+ const missingDate=all.filter(a=>!validCompletedOn(a.completedOn));
+ const missingGenres=works.filter(a=>!(cleanAnalysisMeta(a.analysisMeta)?.genres||[]).length);
+ const genres=new Map();
+ for(const a of works){const tags=cleanAnalysisMeta(a.analysisMeta)?.genres||[];
+  for(const tag of tags){const key=tag.id?'id:'+tag.id:'name:'+tag.name.trim().toLowerCase();
+   if(!genres.has(key))genres.set(key,{name:genreJa(tag.name),count:0});
+   genres.get(key).count++;
+  }
+ }
+ const ranked=rated.sort((a,b)=>{
+  const v=readReview(b.review).overall-readReview(a.review).overall;
+  if(v)return v;
+  const ar=Number.isInteger(a.myRankOrder)?a.myRankOrder:999999,br=Number.isInteger(b.myRankOrder)?b.myRankOrder:999999;
+  return ar-br||sortByBroadcast(a,b);
+ });
+ return {all,works,rated,missingDate,missingGenres,ranked,genres:[...genres.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ja'))};
+}
+function annualNoContent(title,text){return `<div class="annual-empty"><strong>${safeText(title)}</strong>${safeText(text)}</div>`}
+function renderAnnual(){
+ if(mode!=='annual')return;
+ const options=annualYears();if(!options.includes(annualYear))annualYear=options[0];
+ $('#annualYear').innerHTML=options.map(y=>`<option value="${y}" ${y===annualYear?'selected':''}>${y}年</option>`).join('');
+ $('#annualHeadingYear').textContent=annualYear;
+ const d=annualData(annualYear);
+ const average=d.rated.length?d.rated.reduce((t,a)=>t+readReview(a.review).overall,0)/d.rated.length:null;
+ const metrics=[
+  {label:'視聴完了',value:d.works.length,unit:'作品',note:'見終わった年を記録した作品'},
+  {label:'評価した作品',value:d.rated.length,unit:'作品',note:`${d.works.length}作品中`},
+  {label:'自分の平均評価',value:average===null?'--':average.toFixed(2),unit:'/ 5',note:average===null?'この年は評価がありません':'★1〜5の平均'}
+ ];
+ $('#annualStats').innerHTML=metrics.map(m=>`<div class="annual-stat"><span class="annual-stat-label">${safeText(m.label)}</span><strong class="annual-stat-value">${safeText(m.value)}<small>${safeText(m.unit)}</small></strong><span class="annual-stat-note">${safeText(m.note)}</span></div>`).join('');
+ $('#annualFavorites').innerHTML=d.ranked.length?`<div class="annual-favorite-list">${d.ranked.slice(0,5).map((a,i)=>{
+   const img=safeImage(a.image);
+   const poster=img?`<img class="annual-favorite-poster" src="${safeText(img)}" alt="" loading="lazy" onerror="this.remove()">`:`<span class="annual-favorite-poster annual-favorite-fallback" aria-hidden="true">${uiIcon('book')}</span>`;
+   const score=readReview(a.review).overall;
+   return `<button type="button" class="annual-favorite" data-detail-id="${safeText(a.id)}"><span class="annual-favorite-pos">${i+1}</span>${poster}<span class="annual-favorite-info"><span class="annual-favorite-name">${safeText(a.title)}</span><span class="annual-favorite-stars">${reviewStars(score)} ${score} / 5</span></span><span class="annual-favorite-chevron" aria-hidden="true">${uiIcon('chevron-right')}</span></button>`;
+ }).join('')}</div><p class="annual-genre-note">同じ評価の場合は、マイランキングの順位を優先します。</p>`:annualNoContent('まだ評価した作品がありません',d.works.length?'この年に見終わった作品を★で評価すると、ここに表示されます。':'年を変更するか、作品の見終わった時期を登録してください。');
+ const max=d.genres.length?d.genres[0].count:1;
+ $('#annualGenres').innerHTML=d.genres.length?`<div class="annual-genre-list">${d.genres.slice(0,7).map(g=>`<div class="annual-genre-item"><div class="annual-genre-label"><span>${safeText(g.name)}</span><span class="annual-genre-count">${g.count}作品</span></div><div class="annual-genre-track"><div class="annual-genre-fill" style="width:${Math.max(0,Math.min(100,g.count/max*100)).toFixed(1)}%"></div></div></div>`).join('')}</div><p class="annual-genre-note">複数のジャンルを持つ作品は、それぞれに1作品として加算します。</p>`:annualNoContent('ジャンルデータがありません',d.works.length?'「マイランキング」の視聴分析で作品情報を取得すると集計できます。':'この年の視聴記録がありません。');
+ $('#annualCoverage').innerHTML=`<div class="annual-coverage-grid"><div class="annual-coverage-item"><strong>見終わった年が未登録：${d.missingDate.length}作品</strong><p>これは全期間の「見た」作品のうち、年が不明な件数です。${annualYear}年の作品とは限らないため、年間集計には含めていません。</p><button type="button" data-annual-missing ${d.missingDate.length?'':'disabled'}>未登録の作品を確認</button></div><div class="annual-coverage-item"><strong>ジャンル情報なし：${d.missingGenres.length}作品</strong><p>${annualYear}年に見終わった作品のうち、ジャンルを取得できていない件数です。未登録作品はジャンルランキングに含まれません。</p><button type="button" data-annual-insights ${d.missingGenres.length?'':'disabled'}>視聴分析で作品情報を確認</button></div></div>`;
+ $('#breadcrumb').textContent='年間まとめ';
+}
+function exitAnnual(){
+ if(mode==='annual'){$('#annualView').classList.add('hidden');document.body.classList.remove('view-annual');$$('[data-annual-open]').forEach(b=>b.classList.remove('active'));}
+}
+function showAnnual(){
+ closeSuggestions();closeDetail(false);exitSharedView();exitRanking();activeController?.abort();requestCounter++;loading=false;
+ mode='annual';document.body.classList.remove('saved-mode');document.body.classList.add('view-annual');$('#annualView').classList.remove('hidden');
+ $$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='saved'&&b.closest('.mobile-bottom')));
+ $$('[data-status-filter]').forEach(b=>b.classList.remove('active'));$$('[data-rank-open]').forEach(b=>b.classList.remove('rank-selected'));
+ $$('[data-annual-open]').forEach(b=>b.classList.add('active'));
+ renderAnnual();window.scrollTo({top:0,behavior:'instant'});
+}
+$$('[data-annual-open]').forEach(b=>b.addEventListener('click',showAnnual));
+$('#annualBack').addEventListener('click',()=>showSaved());
+$('#annualYear').addEventListener('change',e=>{const y=Number(e.target.value);if(annualYears().includes(y)){annualYear=y;renderAnnual()}});
+$('#annualView').addEventListener('click',e=>{
+ const b=e.target.closest('[data-detail-id]');if(b){openDetail(detailSource(b.dataset.detailId));return}
+ if(e.target.closest('[data-annual-missing]')){finishedYearFilter='unknown';showSaved('watched');return}
+ if(e.target.closest('[data-annual-insights]')){showRanking('mine');return}
+});
 
 // v1.7 - Ranking discovery uses Tenrai's documented Top and Seasons endpoints.
 // The personal ranking is entirely local. Manual tiebreakers only operate among equal ratings.
@@ -2705,7 +2871,7 @@ function renderRanking(){if(mode!=='ranking')return;
 }
 function showRanking(tab='now'){
  if(!['now','period','top','mine'].includes(tab))tab='now';
- closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;
+ exitAnnual();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;
  mode='ranking';rankingTab=tab;document.body.classList.add('view-ranking');$('#rankingView').classList.remove('hidden');
  $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
  $$('[data-view]').forEach(b=>b.classList.remove('active'));$$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
@@ -2946,7 +3112,7 @@ function shareError(message){
  $('#sharedItems').innerHTML=emptyCard('共有データが読み込めません',message+' URLが途中で切れていないか確認してください。','offline');
 }
 async function readShareFromHash(){
- const attempt=++shareNonce;if(!location.hash.startsWith(SHARE_PREFIX))return;
+ exitAnnual();const attempt=++shareNonce;if(!location.hash.startsWith(SHARE_PREFIX))return;
  try{
   const fragment=location.hash.slice(SHARE_PREFIX.length);const match=/^([gp])\.([A-Za-z0-9_-]+)$/.exec(fragment);if(!match)throw Error('共有URLが正しくありません');
   const json=await unpackShare(match[1],base64urlToBytes(match[2]));const data=validateSnapshot(JSON.parse(json));if(attempt===shareNonce)showShared(data);
@@ -3514,7 +3680,7 @@ async function detailMoreEpisodes(){const a=detailActiveItem;if(!a||detailEpisod
  catch{if(token===detailNonce)toast('エピソードを追加取得できませんでした','error')}
  finally{if(token===detailNonce){detailEpisodeBusy=false;renderDetailParts(token)}}
 }
-function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;detailNonce++;detailActiveItem=null;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
+function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;detailNonce++;detailActiveItem=null;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
 $('#detailBack').addEventListener('click',()=>closeDetail());
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#sharedItems').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
