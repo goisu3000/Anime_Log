@@ -2888,15 +2888,15 @@ function detailRelations(full){const relations=Array.isArray(full.relations)?ful
 function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
 const JP_STREAM_SITES=[{name:'ABEMA',domain:'abema.tv'},{name:'dアニメストア',domain:'animestore.docomo.ne.jp'},{name:'DMM TV',domain:'tv.dmm.com'},{name:'U-NEXT',domain:'video.unext.jp'},{name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video'},{name:'Netflix',domain:'netflix.com/jp'},{name:'FOD',domain:'fod.fujitv.co.jp'},{name:'Hulu',domain:'hulu.jp'}];
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
-function jpStreamingSearchLinks(title){
+function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
- return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.map(s=>`<a href="${safeText(jpStreamSearchUrl(s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
+ return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
  const allowedNames=new Map([['amazonprimevideo','Amazon Prime Video'],['primevideo','Amazon Prime Video'],['netflix','Netflix'],['fod','FOD'],['fodpremium','FOD'],['hulu','Hulu'],['unext','U-NEXT'],['disneyplus','Disney Plus'],['disney+','Disney Plus'],['ディズニープラス','Disney Plus']]);
  const links=(full?.streaming||[]).map(p=>{const key=String(p?.name||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_]/g,'');const name=allowedNames.get(key);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
  const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true});
- const jpSearch=jpStreamingSearchLinks(title);
+ const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
