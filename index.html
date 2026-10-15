@@ -1662,18 +1662,14 @@ function completionProposalMarkup(a,current,total){
 }
 function progressMarkup(a,extra=null,inDetail=false){const s=saved[a.id]?.status||'';
  if(mode==='share')return '';
- if(s==='dropped'){
-  const n=saved[a.id]?.watchedEpisodes,known=Number.isInteger(n)&&n>0&&n<=9999;
-  return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}"><div class="watch-progress-top"><span>中止した話数</span><strong>${known?`${n}話まで視聴`:'未登録'}</strong></div></div>`;
- }
- if(!['watching','paused'].includes(s))return '';
+ if(!['watching','paused','dropped'].includes(s))return '';
  const current=watchedCount(a),total=totalEpisodes(a,extra),usable=total!==null&&current<=total;
  const value=usable?Math.min(100,current/total*100):0;const hint=progressHint(current,total,inDetail);
- return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>視聴進捗</span><strong data-progress-count>${progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
+ return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>${s==='dropped'?'中止した話数':'視聴進捗'}</span><strong data-progress-count>${s==='dropped'?(current>0?`${current}話まで視聴`:'未登録'):progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"><span>話まで</span></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}<span>1話</span></button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
 }
 function setWatchedProgress(...args){return queueRecordWrite(()=>setWatchedProgressImpl(...args))}
 async function setWatchedProgressImpl(id,requested){const item=saved[id];
- if(!item||!['watching','paused'].includes(item.status)||mode==='share')return false;
+ if(!item||!['watching','paused','dropped'].includes(item.status)||mode==='share')return false;
  const next=Number(requested);
  if(!Number.isSafeInteger(next)||next<0||next>9999){toast('話数は0〜9999の整数で入力してください。','error');return false}
  const before=watchedCount(item);if(before===next)return true;
@@ -1683,7 +1679,7 @@ async function setWatchedProgressImpl(id,requested){const item=saved[id];
 
  $$('[data-progress-for]').filter(el=>el.dataset.progressFor===id).forEach(el=>{
   const total=totalEpisodes(item,el.dataset.progressTotal?Number(el.dataset.progressTotal):null),usable=total!==null&&next<=total;
-  const count=el.querySelector('[data-progress-count]');if(count)count.textContent=progressCountLabel(next,total);
+  const count=el.querySelector('[data-progress-count]');if(count)count.textContent=item.status==='dropped'?(next>0?`${next}話まで視聴`:'未登録'):progressCountLabel(next,total);
   const track=el.querySelector('.watch-progress-track');if(track)track.hidden=!usable;
   const bar=el.querySelector('[data-progress-bar]');if(bar)bar.style.width=usable?Math.min(100,next/total*100)+'%':'0%';
   const input=el.querySelector('[data-progress-input]');if(input)input.value=String(next);
