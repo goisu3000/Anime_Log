@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.1.8 | アニメ視聴管理</title>
+<title>ANI:LOG v2.1.9 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -645,6 +645,13 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   }
   .rank-row{padding:14px 12px;gap:12px}
 }
+
+/* v2.1.9 | Back to top button */
+.back-to-top{position:fixed;right:24px;bottom:24px;z-index:45;width:44px;height:44px;border-radius:50%;border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--ink);display:grid;place-items:center;box-shadow:0 8px 24px rgba(0,0,0,.45);opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .2s,transform .2s,border-color .16s,color .16s,background .16s}
+.back-to-top.show{opacity:1;pointer-events:auto;transform:translateY(0)}
+.back-to-top:hover{background:var(--surface-hover);border-color:var(--accent);color:var(--accent)}
+.back-to-top .ui-icon{width:20px;height:20px;vertical-align:0}
+@media(max-width:740px){.back-to-top{right:16px;bottom:calc(env(safe-area-inset-bottom) + 76px);width:40px;height:40px}}
 </style>
 </head>
 <body>
@@ -675,7 +682,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.1.8 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.1.9 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -784,6 +791,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   </dialog>
 <dialog id="importModeDialog"><h3>バックアップの読み込み</h3><p id="importPreview">読み込む作品を確認してください。</p><div class="import-detail" id="importDetails"></div><label class="import-conflict-label" for="importTiePreference">同じ更新日時で内容が異なる作品があった場合</label><select class="import-conflict-select" id="importTiePreference"><option value="current">現在の記録を優先（推奨）</option><option value="backup">バックアップを優先</option></select><div class="import-actions"><button type="button" id="importMerge" class="primary">既存と統合（推奨）</button><button type="button" id="importReplace" class="secondary">現在の記録と入れ替え</button><button type="button" id="importCancel" class="secondary">キャンセル</button></div><p class="import-hint">統合：作品ごとの更新日時を比較し、新しい記録を優先します。評価とメモも個別に比較します。入れ替え：現在の記録を消し、ファイル内の作品だけにします。</p></dialog>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
+<button type="button" class="back-to-top" id="backToTop" aria-label="ページの上部へ戻る" title="上へ戻る"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-up"/></svg></button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="noteDialog" aria-labelledby="noteTitle"><form id="noteForm" class="review-dialog-inner"><div class="review-dialog-eyebrow">作品メモ · 点数なしで保存</div><h2 id="noteTitle">メモ</h2><label for="noteText">感想・印象に残ったこと</label><textarea id="noteText" maxlength="500" placeholder="3話の演出がよかった、視聴を中止した理由など"></textarea><div class="review-meta"><span>空欄で保存すると削除します。共有は作成時に選べます。</span><span id="noteCount"></span></div><div class="review-dialog-actions"><button type="button" id="noteCancel" class="review-cancel">キャンセル</button><button type="submit" class="review-save">メモを保存</button></div></form></dialog>
@@ -2023,9 +2031,9 @@ function renderRanking(){if(mode!=='ranking')return;
   if(myRatingFilter){feedback.innerHTML=`<span>★${myRatingFilter}の作品だけを表示しています（${ratingCounts[myRatingFilter]}作品）</span><span>解除するには「すべて」を選択</span>`}
   if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','star');return}
   let result='',position=0;for(const stars of [5,4,3,2,1]){const group=rows.filter(a=>readReview(a.review)?.overall===stars);if(!group.length)continue;
-   if(myRatingFilter&&stars!==myRatingFilter){position+=group.length;continue}
+   if(myRatingFilter&&stars!==myRatingFilter)continue;
    result+=`<div class="rank-group-heading" aria-label="評価${stars}点：${group.length}作品"><span class="review-stars-mini rank-group-stars" aria-hidden="true">${ratingIcons(stars)}</span>　${group.length}作品</div>`;
-   for(let c=0;c<group.length;c+=10){const chunk=group.slice(c,c+10),rowsCount=Math.ceil(chunk.length/2);result+=`<div class="rank-two-col" style="--rank-rows:${rowsCount}">`;chunk.forEach((a,j)=>{position++;result+=makeRankRow(a,position,'mine',c+j,group)});result+='</div>'}}
+   for(let c=0;c<group.length;c+=10){const chunk=group.slice(c,c+10),rowsCount=Math.ceil(chunk.length/2);result+=`<div class="rank-two-col" style="--rank-rows:${rowsCount}">`;chunk.forEach((a,j)=>{result+=makeRankRow(a,c+j+1,'mine',c+j,group)});result+='</div>'}}
   $('#rankResults').innerHTML=result||emptyCard('該当する評価の作品がありません','別の★評価を選ぶか「すべて」に戻してください。','star');return;
  }
  const min=$('#rankMinVotes').checked;
@@ -2998,6 +3006,12 @@ try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}
 
 updateCounts();if(location.hash.startsWith(SHARE_PREFIX)){readShareFromHash()}else{render();fetchPage(true)}
 setTimeout(remindBackup,2200);
+const topBtn=$('#backToTop');
+if(topBtn){
+  window.addEventListener('scroll',()=>topBtn.classList.toggle('show',window.scrollY>320),{passive:true});
+  topBtn.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+}
+
 
 })();
 </script>
