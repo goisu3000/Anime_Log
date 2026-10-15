@@ -2893,8 +2893,9 @@ function jpStreamingSearchLinks(title){
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.map(s=>`<a href="${safeText(jpStreamSearchUrl(s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
- const links=(full?.streaming||[]).map(p=>({...p,category:'配信先リンク'}));const seen=new Set();
- const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});
+ const allowedNames=new Map([['amazonprimevideo','Amazon Prime Video'],['primevideo','Amazon Prime Video'],['netflix','Netflix'],['fod','FOD'],['fodpremium','FOD'],['hulu','Hulu'],['unext','U-NEXT'],['disneyplus','Disney Plus'],['disney+','Disney Plus'],['ディズニープラス','Disney Plus']]);
+ const links=(full?.streaming||[]).map(p=>{const key=String(p?.name||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_]/g,'');const name=allowedNames.get(key);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
+ const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true});
  const jpSearch=jpStreamingSearchLinks(title);
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
