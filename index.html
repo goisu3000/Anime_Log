@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.0 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.1 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -564,8 +564,6 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .share-risk{font-size:var(--fs-xs);color:var(--gold);line-height:1.6;margin:8px 0 0}
 .share-dialog-actions{display:flex;gap:8px;margin-top:10px}
 .share-dialog-actions button{flex:1}
-.share-link-list{display:flex;flex-direction:column;gap:16px}
-.share-link-row label{display:block;font-size:var(--fs-xs);font-weight:var(--fw-semi);color:var(--muted);margin-bottom:4px}
 .import-detail{background:var(--surface-input);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin:8px 0 14px;font-size:var(--fs-sm);line-height:1.7;color:var(--muted)}
 .import-actions{display:grid;gap:8px}
 .import-actions button{min-height:40px;border-radius:var(--radius-sm);font-size:var(--fs-sm);font-weight:var(--fw-bold)}
@@ -745,7 +743,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-today-label strong{color:var(--accent);font-size:25px;font-weight:var(--fw-bold);font-variant-numeric:tabular-nums}
 .weekly-toggle,.weekly-settings-btn,.weekly-edit{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);min-height:34px;padding:7px 9px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}
 /* The SVG uses no fill and a currentColor stroke; it must not render as a dark filled chevron. */
-.weekly-toggle{min-width:40px;height:40px;border-color:var(--border-ctrl);background:var(--surface2);color:var(--ink)}.weekly-toggle .ui-icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .16s}.weekly-calendar.is-open .weekly-toggle .ui-icon{transform:rotate(180deg)}
+.weekly-toggle{min-width:40px;height:40px}.weekly-toggle .ui-icon{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;transition:transform .16s}.weekly-calendar.is-open .weekly-toggle .ui-icon{transform:rotate(180deg)}
 .weekly-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;min-width:0}.weekly-summary:empty{display:none}
 .weekly-preview{display:inline-flex;align-items:center;gap:7px;min-width:0;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-size:var(--fs-xs)}
 .weekly-preview img{width:25px;height:33px;object-fit:contain;border-radius:3px}.weekly-preview span{max-width:230px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
@@ -775,7 +773,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-dialog menu button[type="submit"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .weekly-toggle:hover,.weekly-settings-btn:hover,.weekly-edit:hover{border-color:var(--accent-border);color:var(--accent)}
 .weekly-toggle:focus-visible,.weekly-settings-btn:focus-visible,.weekly-edit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-@media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-today-label{font-size:16px}.weekly-today-label strong{font-size:22px}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px}.weekly-item-meta{font-size:11px}.weekly-item{flex-wrap:wrap}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
+@media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-today-label{font-size:16px}.weekly-today-label strong{font-size:22px}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px;flex-wrap:wrap}.weekly-item-meta{font-size:11px}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
 
 /* Collapsed weekly calendar: approved right-side arrangement, refined proportions. */
 .weekly-calendar:not(.is-open) .weekly-heading{flex:1 1 35%}
@@ -893,7 +891,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 </style>
 </head>
 <body>
-<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-external" viewBox="0 0 24 24"><path d="M14 3h7v7m0-7L10 14m0-9H4v15h15v-6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8m4 0h4v4"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
+<svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8m4 0h4v4"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
 <div class="app">
   <aside class="sidebar" aria-label="サイドメニュー">
     <button type="button" class="brand" id="homeBrand" aria-label="ANI:LOG トップページへ戻る" title="トップページへ戻る"><span class="brand-mark">A</span><span class="brand-text"><span class="brand-name">ANI<span>:</span>LOG</span><span class="brand-desc">観たアニメ、<br>忘れずに残そう。</span></span></button>
@@ -920,7 +918,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.0 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.1 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -929,7 +927,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     <section class="weekly-calendar" id="weeklyCalendar" aria-labelledby="weeklyTitle" hidden>
       <header class="weekly-head"><div class="weekly-heading"><span class="weekly-eyebrow">WEEKLY VIEWING</span><h3 id="weeklyTitle">週間視聴カレンダー</h3><p class="weekly-description">自動取得した放送曜日をもとに、自分の視聴予定を管理。</p></div><div class="weekly-head-actions"><span class="weekly-today-label" id="weeklyTodayCount">今日の予定：確認中</span><div class="weekly-summary" id="weeklySummary"></div><button type="button" class="weekly-toggle" id="weeklyToggle" aria-expanded="false" aria-controls="weeklyContent" aria-label="週間視聴カレンダーを開く"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></button></div></header>
       <div class="weekly-content" id="weeklyContent" hidden><div class="weekly-toolbar"><span class="weekly-toolbar-note" id="weeklySourceNote">放送曜日は参考情報です。配信サービスの更新曜日とは異なる場合があります。</span><button type="button" id="weeklySettingsBtn" class="weekly-settings-btn" aria-expanded="false" aria-controls="weeklySettingsPanel">表示対象を設定</button></div><div class="weekly-settings-panel" id="weeklySettingsPanel" hidden><span>表示対象：</span><label><input type="checkbox" data-weekly-status="watching" checked>見てる</label><label><input type="checkbox" data-weekly-status="planned">見たい</label><label><input type="checkbox" data-weekly-status="paused">一時中断</label></div><div id="weeklyRows" class="weekly-rows"></div></div>
-      <button type="button" class="weekly-mobile-annual" data-annual-open>年間まとめを見る ${'→'}</button>
+      <button type="button" class="weekly-mobile-annual" data-annual-open>年間まとめを見る →</button>
     </section>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
 <div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-search"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
@@ -1092,7 +1090,7 @@ const COLLAPSED_KEY='anilog-collapsed-periods-v1', TITLE_CACHE_KEY='anilog-title
 const WIKI_ALIAS_KEY='anilog-wikipedia-alias-v1';
 const RANK_CACHE_KEY='anilog-ranking-cache-v1',MAL_METRIC_CACHE_KEY='anilog-mal-metrics-v1';
 const API='https://api.tenrai.org/v1'; // Jikan公開API終了(2026-10-01)に伴い移行
-function uiIcon(name){if(name==='external')return '';return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-'+name+'"/></svg>'}
+function uiIcon(name){return '<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-'+name+'"/></svg>'}
 function ratingIcons(n){return Array.from({length:5},(_,i)=>'<span class="'+(i<n?'rated-icon':'empty')+'">'+uiIcon('star')+'</span>').join('')}
 const $=sel=>document.querySelector(sel);
 const $$=sel=>[...document.querySelectorAll(sel)];
@@ -1158,15 +1156,8 @@ function offerUndo(id,oldItem,afterItem,label){
   const before=current?structuredClone(current):null;
   if(pendingUndo.oldItem)saved[id]=pendingUndo.oldItem;else delete saved[id];
   if(!await persist()){if(before)saved[id]=before;else delete saved[id];return}
-  pendingUndo=null;clearTimeout(undoTimer);(() => {
-  const m = (document.title + ' ' + ($('.side-foot')?.textContent || '')).match(/v\d+\.\d+\.\d+/g);
-  if (m?.length) {
-    const latest = m.sort((a, b) => a.localeCompare(b, undefined, {numeric: true})).at(-1);
-    document.title = document.title.replace(/v\d+\.\d+\.\d+/, latest);
-    const foot = $('.side-foot'); if (foot) foot.textContent = foot.textContent.replace(/v\d+\.\d+\.\d+/, latest);
-  }
-})();
-updateCounts();render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce);toast('直前の操作を取り消しました');
+  pendingUndo=null;clearTimeout(undoTimer);
+  updateCounts();render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce);toast('直前の操作を取り消しました');
  });
  node.append(btn);node.classList.add('show');clearTimeout(toastTimer);
  undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},9500);
@@ -1205,12 +1196,12 @@ async function persist(replace=false){
  const base=structuredClone(savedBaseline),draft=structuredClone(saved);
  try{
 
-  if(!navigator.locks?.request){toast('この環境では安全な保存を利用できません。最新版のChrome・Edge・Firefox・SafariでHTTPSのページを開いてください。','error');return false}
-  return await navigator.locks.request(STORAGE_KEY+'-write',async()=>{
+  const writeRecord=async()=>{
    const merged=mergeRecordChanges(base,draft,readRecordsStrict(),replace);
    localStorage.setItem(STORAGE_KEY,JSON.stringify(merged));
    saved=merged;savedBaseline=structuredClone(merged);return true;
-  });
+  };
+  return navigator.locks?.request?await navigator.locks.request(STORAGE_KEY+'-write',writeRecord):await writeRecord();
  }catch(error){
   pendingStorageRefresh=true;
   toast(error.recordConflict?'別のタブで同じ記録が変更されました。上書きせず最新の記録を取り込みます。内容を確認して再操作してください。':'保存に失敗しました。入力内容は保持しています。ブラウザの保存領域・設定を確認して再試行してください。','error');
@@ -1734,7 +1725,7 @@ async function toggleNextWatchImpl(id){
  return true;
 }
 document.addEventListener('click',e=>{const pin=e.target.closest('[data-next-watch-id]');if(pin)toggleNextWatch(pin.dataset.nextWatchId)});
-async function setStatusImpl(id,status){const all=[...items,...rankingData,...Object.values(saved),...(detailActiveItem?[detailActiveItem]:[])];const candidate=all.find(a=>a.id===id);if(!candidate)return;
+async function setStatusImpl(id,status){const candidate=saved[id]||(detailActiveItem?.id===id?detailActiveItem:null)||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id);if(!candidate)return;
  const before=saved[id]?structuredClone(saved[id]):null;
  if(!validStatuses.has(status))delete saved[id];
  else {
@@ -3568,7 +3559,7 @@ async function fetchAnimeFullShared(id,useThrottle=false){
  inFlightFullRequests.set(id,job);
  try{return await job}finally{inFlightFullRequests.delete(id)}
 }
-function detailSource(id){return (mode==='share'?sharedSnapshot?.items||[]:[...items,...Object.values(saved),...rankingData]).find(a=>a.id===id)}
+function detailSource(id){return mode==='share'?(sharedSnapshot?.items||[]).find(a=>a.id===id):saved[id]||(detailActiveItem?.id===id?detailActiveItem:null)||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id)}
 function detailShowScreen(){document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#breadcrumb').textContent='作品詳細'}
 function openDetail(item,related=false){
  if(!item)return;
@@ -3633,7 +3624,7 @@ $('#detailContent').addEventListener('keydown',e=>{
  e.preventDefault();selectDetailTab(visible[i],true);
 });
 $('#detailContent').addEventListener('click',e=>{
- const streamLink=e.target.closest('[data-stream-link]');if(streamLink&&detailActiveItem&&mode!=='share'){if(saved[detailActiveItem.id]?.status!=='watching')setStatus(detailActiveItem.id,'watching')}
+ const streamLink=e.target.closest('[data-stream-link]');if(streamLink&&detailActiveItem&&mode!=='share'){const curStatus=saved[detailActiveItem.id]?.status;if(!curStatus||curStatus==='planned')setStatus(detailActiveItem.id,'watching')}
  const rate=e.target.closest('[data-rate-id]');if(rate){openRating(rate.dataset.rateId);return}
  const tab=e.target.closest('[data-detail-tab]');if(tab){selectDetailTab(tab.dataset.detailTab);return}
  const retryField=e.target.closest('[data-detail-field-retry]');if(retryField&&detailActiveItem){ensureDetailField(detailActiveItem.id,retryField.dataset.detailFieldRetry,true);return}
