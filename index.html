@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.10 | アニメ視聴管理</title>
+<title>ANI:LOG v2.2.11 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -830,7 +830,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.10 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.2.11 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1980,9 +1980,21 @@ async function fetchPage(reset=true){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();window.scrollTo({top:0,behavior:aniHistoryRestoring?'instant':'smooth'});}
-function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';render();fetchPage(true);window.scrollTo({top:0,behavior:aniHistoryRestoring?'instant':'smooth'});}
-function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
+function showSaved(filter='all'){
+ if(document.body.classList.contains('view-detail')&&mode==='saved'&&statusFilter===filter&&!aniHistoryRestoring){closeDetail(true);return}
+ exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});
+}
+function showSeason(){
+ if(document.body.classList.contains('view-detail')&&mode==='season'&&!aniHistoryRestoring){closeDetail(true);return}
+ exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';
+ if(!loading&&items.length>0&&fetchedSeasonKey===currentSeasonFetchKey()){render()}else{render();fetchPage(true)}
+ if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});
+}
+function goHome(){
+ const today=new Date(),ty=today.getFullYear(),ts=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];
+ if(document.body.classList.contains('view-detail')&&mode==='season'&&years.value===String(ty)&&$('#seasonSelect').value===ts&&!query&&exploreStatusFilter==='all'&&typeFilter==='all'){closeDetail(true);return}
+ curYear=ty;curSeason=ts;years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();
+}
 
 let annualYear=new Date().getFullYear();
 function annualValidEntries(){return Object.values(saved).filter(a=>a?.status==='watched');}
@@ -3049,7 +3061,7 @@ function detailSource(id){return (mode==='share'?sharedSnapshot?.items||[]:[...i
 function detailShowScreen(){document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#breadcrumb').textContent='作品詳細'}
 function openDetail(item,related=false){
  if(!item)return;
- if(!related)detailReturnScroll=window.scrollY;
+ if(!related&&!document.body.classList.contains('view-detail'))detailReturnScroll=window.scrollY;
  const id=item.id;detailActiveItem=item;detailActiveTab='overview';
  const token=++detailNonce;detailEpisodeBusy=false;
  const cached=detailCache.get(id);detailEpisodePage=cached?.episodePage||1;
@@ -3160,6 +3172,7 @@ function aniHistorySave(){
 }
 function aniHistoryEnter(){
  if(!aniHistoryReady||aniHistoryRestoring)return null;
+ if(!document.body.classList.contains('view-detail'))detailReturnScroll=window.scrollY;
  const before=aniHistorySnapshot();aniHistorySave();aniHistoryTransition=true;return before;
 }
 function aniHistoryLeave(before){
@@ -3172,7 +3185,7 @@ function aniHistoryLeave(before){
  try{
   aniHistoryDepth++;
   history.pushState({...next,depth:aniHistoryDepth},'',location.hash.startsWith(SHARE_PREFIX)&&next.view!=='share'?location.href.split('#')[0]:location.href);
- }catch{aniHistoryDepth--;/* Existing in-app navigation continues if history is unavailable */}
+ }catch{aniHistoryDepth--;}
 }
 function aniHistoryWrap(original){
  return function(...args){const before=aniHistoryEnter();try{return original.apply(this,args)}finally{aniHistoryLeave(before)}};
@@ -3184,17 +3197,26 @@ showAnnual=aniHistoryWrap(showAnnual);
 openDetail=aniHistoryWrap(openDetail);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
+ window.scrollTo({top:target,behavior:'instant'});
  requestAnimationFrame(()=>requestAnimationFrame(()=>{if(ticket===aniHistoryRestoreTicket)window.scrollTo({top:target,behavior:'instant'})}));
 }
 async function aniHistoryRestore(state){
  if(!state||state[ANI_ROUTE]!==1)return;
  const ticket=++aniHistoryRestoreTicket;
  aniHistoryRestoring=true;aniHistoryDepth=Number(state.depth)||0;
+ const wasDetail=document.body.classList.contains('view-detail');
+ const targetScroll=(Number.isFinite(state.scrollY)&&state.scrollY>0)?state.scrollY:(wasDetail&&!state.detail?detailReturnScroll:0);
  try{
+  // 詳細画面から直前の画面へ戻るだけの場合は、一覧を破棄せずそのまま閉じてスクロール位置を復元
+  if(wasDetail&&!state.detail&&state.view===mode){
+   closeDetail(false);
+   aniHistoryScroll(targetScroll,ticket);
+   return;
+  }
   if(state.view==='saved'){
    const x=state.saved||{};unratedOnly=!!x.unrated;finishedYearFilter=x.finishedYear||'all';
    showSaved(x.filter||'all');unratedOnly=!!x.unrated;typeFilter=x.type||'all';$('#savedOrder').value=x.order||'broadcast';$('#searchInput').value=x.search||'';
-   $$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));render();
+   $('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));render();
   }else if(state.view==='season'){
    const x=state.season||{};
    exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();
@@ -3206,7 +3228,7 @@ async function aniHistoryRestore(state){
    $('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
    if(exploreStatusFilter!=='all'){activeController?.abort();requestCounter++;loading=false;render()}
    else if(!loading&&items.length>0&&fetchedSeasonKey===currentSeasonFetchKey()){if(query)sortSearchResults();render()}
-   else fetchPage(true);
+   else await fetchPage(true);
   }else if(state.view==='ranking'){
    const x=state.rank||{};
    const prevKey=rankKey(),prevTab=rankingTab;
@@ -3234,8 +3256,9 @@ async function aniHistoryRestore(state){
   if(state.detail){
    const ref=detailSource(state.detail.id)||saved[state.detail.id]||state.detail;
    openDetail(ref);
+  }else{
+   aniHistoryScroll(targetScroll,ticket);
   }
-  aniHistoryScroll(state.scrollY,ticket);
  }finally{aniHistoryRestoring=false}
 }
 window.addEventListener('popstate',e=>{
