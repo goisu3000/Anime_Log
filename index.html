@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.9 | アニメ視聴管理</title>
+<title>ANI:LOG v2.2.10 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -830,7 +830,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.9 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.2.10 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1845,12 +1845,13 @@ function render(){
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
-let lastRequestAt=0, activeController=null, searchProgress=[];
+let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='';
+function currentSeasonFetchKey(){return [currentScope(),$('#seasonSelect').value,typeFilter,query].join('|')}
 function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
 async function fetchPage(reset=true){
  if(loading&&!reset)return;
  if(mode==='season'&&exploreStatusFilter==='all'&&!$('#searchInput').value.trim()&&query)query='';
- if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;
+ if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
   searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
  }
  loading=true;requestCounter++;const thisRequest=requestCounter;
@@ -1956,7 +1957,7 @@ async function fetchPage(reset=true){
     if(end&&payload.data.some(a=>{const d=premiereDate(a);return d&&d>end}))hasNext=false;
    }
   }
-  if(thisRequest!==requestCounter)return;loading=false;$('#offlineNotice').classList.add('hidden');render();
+  if(thisRequest!==requestCounter)return;fetchedSeasonKey=currentSeasonFetchKey();loading=false;$('#offlineNotice').classList.add('hidden');render();
  }catch(err){
   if(thisRequest!==requestCounter||err.name==='AbortError')return;
   loading=false;hasNext=false;
@@ -3196,19 +3197,34 @@ async function aniHistoryRestore(state){
    $$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));render();
   }else if(state.view==='season'){
    const x=state.season||{};
-   curYear=x.year??curYear;curSeason=x.season||curSeason;
-   showSeason();
+   exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();
+   unratedOnly=false;mode='season';statusFilter='all';
    curYear=x.year??curYear;curSeason=x.season||curSeason;periodTouched=!!x.touched;
    years.value=x.yearValue||String(curYear);$('#seasonSelect').value=x.seasonValue||curSeason;
-   exploreStatusFilter=x.exploreStatus||'all';typeFilter=x.type||'all';query=x.query||'';$('#searchInput').value=x.search||query;
+   exploreStatusFilter=x.exploreStatus||'all';typeFilter=x.type||'all';query=x.query||'';$('#searchInput').value=x.search??query;
    searchSort=x.searchSort||searchSort;$('#searchSort').value=searchSort;
-   $$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
+   $('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
    if(exploreStatusFilter!=='all'){activeController?.abort();requestCounter++;loading=false;render()}
+   else if(!loading&&items.length>0&&fetchedSeasonKey===currentSeasonFetchKey()){if(query)sortSearchResults();render()}
    else fetchPage(true);
   }else if(state.view==='ranking'){
-   const x=state.rank||{};rankingSort=x.sort||rankingSort;rankingYear=x.year||rankingYear;rankingSeason=x.season||rankingSeason;
+   const x=state.rank||{};
+   const prevKey=rankKey(),prevTab=rankingTab;
+   rankingSort=x.sort||rankingSort;rankingYear=x.year||rankingYear;rankingSeason=x.season||rankingSeason;
    $('#rankSort').value=rankingSort;$('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-   $('#rankMinVotes').checked=!!x.minVotes;showRanking(x.tab||'now');myRatingFilter=x.rating||0;renderRanking();
+   $('#rankMinVotes').checked=!!x.minVotes;myRatingFilter=x.rating||0;
+   const nextTab=['now','period','top','mine'].includes(x.tab)?x.tab:'now';
+   rankingTab=nextTab;
+   if(nextTab!=='mine'&&!rankingBusy&&rankingData.length>0&&prevTab===nextTab&&prevKey===rankKey()){
+    exitAnnual();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;
+    mode='ranking';document.body.classList.add('view-ranking');$('#rankingView').classList.remove('hidden');
+    $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
+    $('[data-view]').forEach(b=>b.classList.remove('active'));$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
+    renderRanking();
+   }else{
+    showRanking(nextTab);
+    myRatingFilter=x.rating||0;renderRanking();
+   }
   }else if(state.view==='annual'){
    annualYear=Number(state.annualYear)||annualYear;showAnnual();
   }else if(state.view==='share'){
