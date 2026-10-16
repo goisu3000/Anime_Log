@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.2 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.3 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -918,7 +918,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.2 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.3 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -931,7 +931,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </section>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
 <div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-search"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
-<details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
+<details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">選択中の放送年・シーズン（または全年代）から作品名で検索します。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
       <div class="explore-status-row" id="exploreStatusTabs" role="group" aria-label="アニメを探す：視聴状況で絞り込み">
         <span class="explore-filter-label">視聴状況 <span class="mobile-swipe-hint">横にスワイプ ↔</span></span>
         <div class="explore-status-buttons">
@@ -1115,6 +1115,7 @@ let periodTouched=false;
 const seasonOrder=['winter','spring','summer','fall'];
 function currentScope(){return years.value}
 function periodLabel(){const v=currentScope();return v==='all'?'全年代':v.startsWith('decade:')?`${v.slice(7)}年代`:`${v}年`}
+function fullPeriodLabel(){const v=currentScope(),s=$('#seasonSelect').value;return v==='all'?'全年代':v.startsWith('decade:')?`${v.slice(7)}年代`:`${v}年 ${s==='all'?'通年':seasonLabels[s]||''}`.trim()}
 function matchingPeriod(a){const val=currentScope(),selSeason=$('#seasonSelect').value;if(val==='all')return true;if(a?.seasonalKey&&(selSeason==='all'?a.seasonalKey.startsWith(val+':'):a.seasonalKey===`${val}:${selSeason}`))return true;const year=Number(a?.year);if(!Number.isInteger(year))return false;if(val.startsWith('decade:'))return year>=Number(val.slice(7))&&year<Number(val.slice(7))+10;const itemSeason=typeof a?.season==='string'?a.season.trim().toLowerCase():'';return year===Number(val)&&(selSeason==='all'||itemSeason===selSeason)}
 function dateBounds(){const v=currentScope();if(v==='all')return null;
  const y=v.startsWith('decade:')?Number(v.slice(7)):Number(v), end=v.startsWith('decade:')?y+9:y;
@@ -2438,8 +2439,8 @@ async function fetchPage(reset=true,force=false){
  }
 }
 function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
-function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
-function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
+function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function goHome(){showSeason();}
 
 let annualYear=new Date().getFullYear();
 function annualValidEntries(){return Object.values(saved).filter(a=>a?.status==='watched');}
@@ -3056,10 +3057,11 @@ $('#ratingCancel').addEventListener('click',closeRating);
 $('#ratingClear').addEventListener('click',clearRating);
 $$('[data-type]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.type;if(next===typeFilter)return;typeFilter=next;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='season'&&exploreStatusFilter==='all')fetchPage(true);else render()}));
 $$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;exploreStatusFilter=next;if(next==='all'){fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}));
-years.addEventListener('change',()=>{periodTouched=true;if(/^\d{4}$/.test(years.value))curYear=Number(years.value);syncPeriodUI();if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render()});
-$('#seasonSelect').addEventListener('change',()=>{periodTouched=true;if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render()});
+let runSeasonSearch=function(nextQuery){query=String(nextQuery||'').trim();fetchPage(true)};
+years.addEventListener('change',()=>{periodTouched=true;if(/^\d{4}$/.test(years.value)){curYear=Number(years.value);if($('#seasonSelect').value==='all')$('#seasonSelect').value=curSeason}syncPeriodUI();if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()});
+$('#seasonSelect').addEventListener('change',()=>{periodTouched=true;if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()});
 $('#searchForm').addEventListener('submit',e=>{e.preventDefault();closeSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
- query=$('#searchInput').value.trim();fetchPage(true)});
+ runSeasonSearch($('#searchInput').value.trim())});
 
 let suggestionActive=-1;
 function getSuggestions(term){const needle=normalizeSearch(term);if(!needle)return [];
@@ -3100,12 +3102,11 @@ function refreshSuggestions(){if(mode==='share'||mode==='detail'){closeSuggestio
  el.classList.remove('hidden');$('#searchInput').setAttribute('aria-expanded','true');
 }
 function acceptSuggestion(text){$('#searchInput').value=text;closeSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
- if(!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();periodTouched=true}
- query=text;fetchPage(true);
+ runSeasonSearch(text);
 }
 $('#searchSuggest').addEventListener('pointerdown',e=>e.preventDefault());
 $('#searchSuggest').addEventListener('click',e=>{const b=e.target.closest('[data-suggest-value]');if(b)acceptSuggestion(b.dataset.suggestValue)});
-$('#searchInput').addEventListener('keydown',e=>{const options=$$('#searchSuggest [data-suggest-value]');if($('#searchSuggest').classList.contains('hidden')||!options.length)return;
+$('#searchInput').addEventListener('keydown',e=>{const options=$('#searchSuggest [data-suggest-value]');if($('#searchSuggest').classList.contains('hidden')||!options.length)return;
  if(e.key==='Escape'){e.preventDefault();closeSuggestions()}else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();suggestionActive=(suggestionActive+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options.forEach((b,i)=>b.setAttribute('aria-selected',String(i===suggestionActive)));options[suggestionActive].scrollIntoView({block:'nearest'})}
  else if(e.key==='Enter'&&suggestionActive>=0){e.preventDefault();acceptSuggestion(options[suggestionActive].dataset.suggestValue)}
 });
@@ -3121,9 +3122,7 @@ for(const region of ['#cards','#detailView']){
 }
 
 $('#searchInput').addEventListener('input',()=>{refreshSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
- const val=$('#searchInput').value.trim();if(!val&&query){query='';fetchPage(true);return}
-
- if(val&&!query&&!periodTouched){years.value='all';$('#seasonSelect').value='all';syncPeriodUI();$('#searchGuide').textContent='全年代から検索します。特定の年代に絞り込みたい場合は、年代を選んでください。';periodTouched=true}
+ const val=$('#searchInput').value.trim();if(!val&&query){runSeasonSearch('');return}
 });
 $('#searchSort').addEventListener('change',e=>{
  if(!['new','relevance','old'].includes(e.target.value))return;
