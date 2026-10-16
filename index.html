@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.15 | アニメ視聴管理</title>
+<title>ANI:LOG v2.3.0 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -732,6 +732,48 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .review-clear:hover{color:var(--danger);text-decoration:underline;text-underline-offset:3px}
 }
 
+
+/* Weekly viewing calendar | isolated ANI:LOG feature styles */
+.weekly-calendar{display:none;min-width:0;margin:0 0 20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px}
+body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-calendar{display:block}
+.weekly-head{display:flex;align-items:center;gap:18px;justify-content:space-between}
+.weekly-heading{min-width:0;flex:1}.weekly-eyebrow{color:var(--accent);font-size:var(--fs-xs);font-weight:var(--fw-semi);letter-spacing:var(--ls-wider)}
+.weekly-heading h3{font-size:var(--fs-xl);line-height:1.4;margin:4px 0 3px}.weekly-description{color:var(--muted);font-size:var(--fs-xs);line-height:1.6;margin:0}
+.weekly-head-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}.weekly-today-label{color:var(--muted);font-size:var(--fs-sm);white-space:nowrap}
+.weekly-today-label strong{color:var(--accent);font-weight:var(--fw-bold)}
+.weekly-toggle,.weekly-settings-btn,.weekly-edit,.weekly-unassigned-btn{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);min-height:34px;padding:7px 9px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}
+.weekly-toggle{min-width:36px;height:36px}.weekly-toggle .ui-icon{transition:transform .16s}.weekly-calendar.is-open .weekly-toggle .ui-icon{transform:rotate(180deg)}
+.weekly-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:12px;min-width:0}.weekly-summary:empty{display:none}
+.weekly-preview{display:inline-flex;align-items:center;gap:7px;min-width:0;padding:5px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-size:var(--fs-xs)}
+.weekly-preview img{width:25px;height:33px;object-fit:contain;border-radius:3px}.weekly-preview span{max-width:230px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.weekly-muted{font-size:var(--fs-xs);color:var(--muted)}
+.weekly-content{margin-top:16px;border-top:1px solid var(--border);padding-top:14px}
+.weekly-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;justify-content:space-between;margin-bottom:12px}.weekly-toolbar-note{color:var(--muted);font-size:var(--fs-xs);line-height:1.6}
+.weekly-settings-panel{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin:0 0 12px;font-size:var(--fs-sm);color:var(--muted)}
+.weekly-settings-panel[hidden]{display:none}.weekly-settings-panel label{display:inline-flex;align-items:center;gap:7px;cursor:pointer}.weekly-settings-panel input{accent-color:var(--accent);width:16px;height:16px}
+.weekly-rows{display:grid;gap:7px}.weekly-row{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:stretch;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface-input);min-height:50px}
+.weekly-day{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 7px;border-right:1px solid var(--border);gap:2px}
+.weekly-day strong{font-size:var(--fs-lg)}.weekly-day small{font-size:var(--fs-xs);color:var(--muted);font-variant-numeric:tabular-nums}
+.weekly-row.is-today{border-color:var(--accent-border);background:rgba(196,233,149,.035)}.weekly-row.is-today .weekly-day strong{color:var(--accent)}
+.weekly-row[data-day="5"] .weekly-day strong{color:var(--cyan)}.weekly-row[data-day="6"] .weekly-day strong{color:var(--danger)}
+.weekly-day-items{display:grid;min-width:0;padding:2px 12px}.weekly-item{display:flex;align-items:center;gap:12px;min-width:0;padding:7px 0}.weekly-item+.weekly-item{border-top:1px solid var(--border)}
+.weekly-poster{width:38px;height:48px;flex:0 0 38px;object-fit:contain;border-radius:4px;background:var(--surface2)}.weekly-item-body{display:grid;gap:3px;flex:1;min-width:0}
+.weekly-item-title{border:0;background:transparent;padding:0;color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);text-align:left;overflow-wrap:anywhere}
+.weekly-item-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:var(--fs-xs)}
+.weekly-tag{font-size:11px;border-radius:5px;border:1px solid var(--border-ctrl);color:var(--muted);padding:2px 6px;white-space:nowrap}.weekly-tag.manual{color:var(--accent);border-color:var(--accent-border);background:var(--accent-soft)}
+.weekly-empty{align-self:center;font-size:var(--fs-xs);color:var(--muted);padding:12px 2px}.weekly-edit{flex:0 0 auto;width:34px;height:34px}.weekly-edit .ui-icon{width:15px;height:15px}
+.weekly-unassigned{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}.weekly-unassigned-title{font-size:var(--fs-xs);color:var(--muted);margin:0 0 8px}
+.weekly-unassigned-list{display:flex;flex-wrap:wrap;gap:7px}.weekly-unassigned-btn{justify-content:flex-start;max-width:100%;overflow-wrap:anywhere}
+.weekly-mobile-annual{display:none}
+.weekly-dialog{width:min(470px,calc(100% - 30px));max-height:90vh;overflow:auto}.weekly-dialog h3{margin:0 0 9px;font-size:var(--fs-xl)}
+.weekly-dialog-intro{color:var(--muted);font-size:var(--fs-sm);line-height:1.65}.weekly-dialog .weekly-radio{display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--ink);font-size:var(--fs-sm)}
+.weekly-dialog input[type="radio"]{accent-color:var(--accent)}.weekly-dialog select,.weekly-dialog input[type="time"]{display:block;width:100%;height:42px;background:var(--surface2);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:6px;padding:8px;font-size:var(--fs-md);margin:8px 0}
+.weekly-dialog .weekly-fieldset[hidden]{display:none}.weekly-dialog menu{display:flex;gap:8px;justify-content:flex-end;padding:10px 0 0;margin:10px 0 0}.weekly-dialog menu button{padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-ctrl);background:var(--surface2);font-weight:var(--fw-semi)}
+.weekly-dialog menu button[type="submit"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.weekly-toggle:hover,.weekly-settings-btn:hover,.weekly-edit:hover,.weekly-unassigned-btn:hover{border-color:var(--accent-border);color:var(--accent)}
+.weekly-toggle:focus-visible,.weekly-settings-btn:focus-visible,.weekly-edit:focus-visible,.weekly-unassigned-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px}.weekly-item-meta{font-size:11px}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
+
 /* Responsive Breakpoints */
 @media(min-width:1051px){
   .rank-two-col{
@@ -830,13 +872,18 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.15 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.3.0 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
 
     <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
-    <div class="annual-entry" id="annualEntry"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg><span>一年の視聴記録を振り返る</span></span><button type="button" data-annual-open>年間まとめを見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-chevron-right"/></svg></button></div>
+    <section class="weekly-calendar" id="weeklyCalendar" aria-labelledby="weeklyTitle" hidden>
+      <header class="weekly-head"><div class="weekly-heading"><span class="weekly-eyebrow">WEEKLY VIEWING</span><h3 id="weeklyTitle">週間視聴カレンダー</h3><p class="weekly-description">自動取得した放送曜日をもとに、自分の視聴予定を管理。</p></div><div class="weekly-head-actions"><span class="weekly-today-label" id="weeklyTodayCount">今日の予定：確認中</span><button type="button" class="weekly-toggle" id="weeklyToggle" aria-expanded="false" aria-controls="weeklyContent" aria-label="週間視聴カレンダーを開く"><svg class="ui-icon" viewBox="0 0 24 24"><use href="#ui-chevron-down"/></svg></button></div></header>
+      <div class="weekly-summary" id="weeklySummary"></div>
+      <div class="weekly-content" id="weeklyContent" hidden><div class="weekly-toolbar"><span class="weekly-toolbar-note" id="weeklySourceNote">放送曜日は参考情報です。配信サービスの更新曜日とは異なる場合があります。</span><button type="button" id="weeklySettingsBtn" class="weekly-settings-btn" aria-expanded="false" aria-controls="weeklySettingsPanel">表示対象を設定</button></div><div class="weekly-settings-panel" id="weeklySettingsPanel" hidden><span>表示対象：</span><label><input type="checkbox" data-weekly-status="watching" checked>見てる</label><label><input type="checkbox" data-weekly-status="planned">見たい</label><label><input type="checkbox" data-weekly-status="paused">一時中断</label></div><div id="weeklyRows" class="weekly-rows"></div><section class="weekly-unassigned" id="weeklyUnassigned" hidden><p class="weekly-unassigned-title" id="weeklyUnassignedTitle"></p><div class="weekly-unassigned-list" id="weeklyUnassignedList"></div></section></div>
+      <button type="button" class="weekly-mobile-annual" data-annual-open>年間まとめを見る ${'→'}</button>
+    </section>
     <nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
 <div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-search"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
 <details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">作品名で検索すると、まず全年代から探します。放送年や年代を指定して絞り込みもできます。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
@@ -940,11 +987,12 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   <div class="share-meta" id="shareCount" aria-live="polite"></div><div id="shareRisk" class="share-risk hidden"></div><menu><button class="primary" type="button" id="generateShare">共有URLを作成</button><button class="secondary" type="button" id="closeShare">閉じる</button></menu>
   <div id="shareOutput" class="hidden"><label for="shareLink" style="margin-top:22px">生成された共有URL</label><input class="share-link" type="text" readonly id="shareLink" aria-label="共有URL"><div class="share-dialog-actions"><button type="button" class="primary" id="copyShare">URLをコピー</button><button type="button" class="secondary" id="previewShare">表示を確認</button></div><p class="share-help" id="shareLocalHelp"></p></div>
   </dialog>
-<dialog id="importModeDialog"><h3>バックアップの読み込み</h3><p id="importPreview">読み込む作品を確認してください。</p><div class="import-detail" id="importDetails"></div><label class="import-conflict-label" for="importTiePreference">同じ更新日時で内容が異なる作品があった場合</label><select class="import-conflict-select" id="importTiePreference"><option value="current">現在の記録を優先（推奨）</option><option value="backup">バックアップを優先</option></select><div class="import-actions"><button type="button" id="importMerge" class="primary">既存と統合（推奨）</button><button type="button" id="importReplace" class="secondary">現在の記録と入れ替え</button><button type="button" id="importCancel" class="secondary">キャンセル</button></div><p class="import-hint">統合：作品ごとの更新日時を比較し、新しい記録を優先します。評価とメモも個別に比較します。入れ替え：現在の記録を消し、ファイル内の作品だけにします。</p></dialog>
+<dialog id="importModeDialog"><h3>バックアップの読み込み</h3><p id="importPreview">読み込む作品を確認してください。</p><div class="import-detail" id="importDetails"></div><label class="import-conflict-label" for="importTiePreference">同じ更新日時で内容が異なる作品があった場合</label><select class="import-conflict-select" id="importTiePreference"><option value="current">現在の記録を優先（推奨）</option><option value="backup">バックアップを優先</option></select><label id="importWeeklyOptionsRow" class="import-conflict-label" hidden><input type="checkbox" id="importWeeklyOptions"> カレンダーの表示設定も復元する</label><div class="import-actions"><button type="button" id="importMerge" class="primary">既存と統合（推奨）</button><button type="button" id="importReplace" class="secondary">現在の記録と入れ替え</button><button type="button" id="importCancel" class="secondary">キャンセル</button></div><p class="import-hint">統合：作品ごとの更新日時を比較し、新しい記録を優先します。評価とメモも個別に比較します。入れ替え：現在の記録を消し、ファイル内の作品だけにします。</p></dialog>
 <input type="file" id="importFile" accept=".json,application/json" hidden>
 <button type="button" class="back-to-top" id="backToTop" aria-label="ページの上部へ戻る" title="上へ戻る"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-up"/></svg></button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<dialog id="weeklyEditDialog" class="weekly-dialog" aria-labelledby="weeklyEditTitle"><form id="weeklyEditForm"><div class="weekly-eyebrow">WEEKLY VIEWING</div><h3 id="weeklyEditTitle">視聴曜日を設定</h3><p id="weeklyEditName" class="weekly-dialog-intro"></p><p id="weeklyApiInfo" class="weekly-dialog-intro"></p><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="auto" checked>放送曜日を自動で使用</label><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="manual">自分で曜日を設定</label><div id="weeklyManualFields" class="weekly-fieldset" hidden><label for="weeklyEditDay">視聴曜日</label><select id="weeklyEditDay"><option value="0">月曜日</option><option value="1">火曜日</option><option value="2">水曜日</option><option value="3">木曜日</option><option value="4">金曜日</option><option value="5">土曜日</option><option value="6">日曜日</option></select><label for="weeklyEditTime">視聴時刻（任意）</label><input type="time" id="weeklyEditTime"></div><menu><button type="button" id="weeklyEditCancel">キャンセル</button><button type="submit">保存する</button></menu></form></dialog>
 <dialog id="noteDialog" aria-labelledby="noteTitle"><form id="noteForm" class="review-dialog-inner"><div class="review-dialog-eyebrow">作品メモ · 点数なしで保存</div><h2 id="noteTitle">メモ</h2><label for="noteText">感想・印象に残ったこと</label><textarea id="noteText" maxlength="500" placeholder="3話の演出がよかった、視聴を中止した理由など"></textarea><div class="review-meta"><span>空欄で保存すると削除します。共有は作成時に選べます。</span><span id="noteCount"></span></div><div class="review-dialog-actions"><button type="button" id="noteCancel" class="review-cancel">キャンセル</button><button type="submit" class="review-save">メモを保存</button></div></form></dialog>
 <dialog id="ratingDialog" aria-labelledby="ratingTitle">
   <form id="ratingForm" class="review-dialog-inner">
@@ -977,6 +1025,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 (() => {
 'use strict';
 const STORAGE_KEY='anilog-v1';
+const WEEKLY_OPTIONS_KEY='anilog-weekly-options-v1',WEEKLY_CACHE_KEY='anilog-weekly-api-cache-v1';
 const SEARCH_SORT_KEY='anilog-search-sort-v1';
 const BACKUP_AT_KEY='anilog-last-backup-v1',BACKUP_TOAST_KEY='anilog-backup-notified-v1';
 const COLLAPSED_KEY='anilog-collapsed-periods-v1', TITLE_CACHE_KEY='anilog-titles-cache-v1';
@@ -1792,6 +1841,146 @@ function setNav(){
  $$('[data-status-filter]').forEach(b=>b.classList.toggle('active',mode==='saved'&&b.dataset.statusFilter===statusFilter));
  $$('[data-explore-status]').forEach(b=>{const active=mode==='season'&&b.dataset.exploreStatus===exploreStatusFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
 }
+
+// Weekly viewing calendar. Auto data is ephemeral; manually edited choices live in each saved record.
+const WEEKLY_CACHE_TTL=24*60*60*1000,WEEKLY_DAY_NAMES=['月','火','水','木','金','土','日'];
+const WEEKLY_SOURCE_DAYS={mondays:0,tuesdays:1,wednesdays:2,thursdays:3,fridays:4,saturdays:5,sundays:6};
+function cleanWeeklySchedule(x){
+ if(!x||typeof x!=='object'||!['auto','manual'].includes(x.mode)||typeof x.updatedAt!=='string'||!Number.isFinite(Date.parse(x.updatedAt)))return null;
+ if(x.mode==='auto')return {mode:'auto',updatedAt:x.updatedAt};
+ if(!Number.isInteger(x.day)||x.day<0||x.day>6)return null;
+ const time=typeof x.time==='string'&&/^([01]\d|2[0-3]):[0-5]\d$/.test(x.time)?x.time:'';
+ return {mode:'manual',day:x.day,time,updatedAt:x.updatedAt};
+}
+function cleanWeeklyOptions(x){
+ if(!x||typeof x!=='object')return null;
+ const statuses=['watching','planned','paused'].filter(k=>Array.isArray(x.statuses)&&x.statuses.includes(k));
+ return {open:x.open===true,statuses:statuses.length?statuses:['watching']};
+}
+function loadWeeklyOptions(){try{return cleanWeeklyOptions(JSON.parse(localStorage.getItem(WEEKLY_OPTIONS_KEY)||'null'))||{open:false,statuses:['watching']}}catch{return {open:false,statuses:['watching']}}}
+let weeklyOptions=loadWeeklyOptions(),weeklySettingsOpen=false,weeklyEditId=null,weeklyFetching=null,weeklyRetryAfter=0;
+function loadWeeklyCache(){try{const c=JSON.parse(localStorage.getItem(WEEKLY_CACHE_KEY)||'null');return c&&typeof c==='object'&&Number.isFinite(c.at)&&c.at<=Date.now()&&c.data&&typeof c.data==='object'&&!Array.isArray(c.data)?c:null}catch{return null}}
+let weeklyApiCache=loadWeeklyCache();
+function storeWeeklyOptions(next){
+ const previous=weeklyOptions;const clean=cleanWeeklyOptions(next);if(!clean)return false;
+ try{localStorage.setItem(WEEKLY_OPTIONS_KEY,JSON.stringify(clean));weeklyOptions=clean;renderWeeklyCalendar();return true}
+ catch{weeklyOptions=previous;toast('カレンダーの表示設定を保存できませんでした','error');return false}
+}
+function isWeeklyCalendarVisible(){return mode==='saved'&&!document.body.classList.contains('view-detail')&&!document.body.classList.contains('view-annual')}
+function weeklyTokyoDate(){
+ const bits=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,Number(p.value)]));
+ const today=new Date(Date.UTC(bits.year,bits.month-1,bits.day));
+ return {day:(today.getUTCDay()+6)%7,monday:new Date(today.getTime()-((today.getUTCDay()+6)%7)*86400000)};
+}
+function weeklyMalId(id){const m=/^(?:jikan:)?(\d+)$/.exec(String(id||''));return m?m[1]:null}
+function weeklyAutomatic(a){
+ const item=weeklyApiCache?.data?.[weeklyMalId(a.id)];if(!item||!Number.isInteger(item.day)||item.day<0||item.day>6)return null;
+ return {day:item.day,time:typeof item.time==='string'?item.time:'',source:'auto'};
+}
+function weeklyPlanned(a){
+ const manual=cleanWeeklySchedule(a.weeklySchedule);
+ if(manual?.mode==='manual')return {...manual,source:'manual'};
+ return weeklyAutomatic(a);
+}
+function weeklyRelevant(){return Object.values(saved).filter(a=>a&&weeklyOptions.statuses.includes(a.status)).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ja'))}
+function weeklyPoster(a){const u=safeImage(a.image);return u?`<img class="weekly-poster" src="${safeText(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
+function weeklyEntryMarkup(a,info,preview=false){
+ if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span>${safeText(a.title)}</span></span>`;
+ return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${info.time?`<span>${safeText(info.time)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span></div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
+}
+function renderWeeklyCalendar(){
+ const el=$('#weeklyCalendar');if(!el)return;
+ el.hidden=!isWeeklyCalendarVisible();if(el.hidden)return;
+ const {day:today,monday}=weeklyTokyoDate(),relevant=weeklyRelevant(),grouped=Array.from({length:7},()=>[]),unknown=[];
+ for(const a of relevant){const info=weeklyPlanned(a);if(info)grouped[info.day].push({a,info});else unknown.push(a)}
+ const todays=grouped[today];
+ $('#weeklyTodayCount').innerHTML=`今日の予定 <strong>${todays.length}作品</strong>`;
+ $('#weeklyToggle').setAttribute('aria-expanded',String(weeklyOptions.open));$('#weeklyToggle').setAttribute('aria-label',weeklyOptions.open?'週間視聴カレンダーを閉じる':'週間視聴カレンダーを開く');
+ el.classList.toggle('is-open',weeklyOptions.open);
+ $('#weeklyContent').hidden=!weeklyOptions.open;
+ $('#weeklySummary').innerHTML=weeklyOptions.open?'':todays.length?`${todays.slice(0,3).map(({a,info})=>weeklyEntryMarkup(a,info,true)).join('')}${todays.length>3?`<span class="weekly-muted">ほか${todays.length-3}作品</span>`:''}`:`<span class="weekly-muted">${relevant.length?'今日の予定はありません':'「見てる」に作品を登録すると予定が表示されます'}</span>`;
+ if(!weeklyOptions.open)return;
+ $$('#weeklySettingsPanel [data-weekly-status]').forEach(cb=>{cb.checked=weeklyOptions.statuses.includes(cb.dataset.weeklyStatus)});
+ $('#weeklySettingsPanel').hidden=!weeklySettingsOpen;$('#weeklySettingsBtn').setAttribute('aria-expanded',String(weeklySettingsOpen));
+ $('#weeklySourceNote').textContent=weeklyFetching?'放送予定を確認中…':!weeklyApiCache?'放送予定をまだ取得できていません。手動設定は利用できます。':Date.now()-weeklyApiCache.at>WEEKLY_CACHE_TTL?'前回取得した放送情報を参考表示しています。手動設定が優先されます。':'自動はテレビ放送の予定です。サービスごとの配信日とは異なる場合があります。';
+ $('#weeklyRows').innerHTML=grouped.map((entries,i)=>{
+  const d=new Date(monday.getTime()+i*86400000),date=`${d.getUTCMonth()+1}/${d.getUTCDate()}`;
+  return `<div class="weekly-row ${i===today?'is-today':''}" data-day="${i}"><div class="weekly-day"><strong>${WEEKLY_DAY_NAMES[i]}</strong><small>${date}</small></div><div class="weekly-day-items">${entries.length?entries.map(({a,info})=>weeklyEntryMarkup(a,info)).join(''):'<span class="weekly-empty">予定なし</span>'}</div></div>`;
+ }).join('');
+ $('#weeklyUnassigned').hidden=!unknown.length;
+ $('#weeklyUnassignedTitle').textContent=`曜日未設定の作品（${unknown.length}作品） · タップして曜日を設定`;
+ $('#weeklyUnassignedList').innerHTML=unknown.map(a=>`<button class="weekly-unassigned-btn" type="button" data-weekly-edit="${safeText(a.id)}">${uiIcon('plus')} ${safeText(a.title)}</button>`).join('');
+}
+function weeklyExtract(data){
+ const result=Object.create(null),dayKeys=WEEKLY_SOURCE_DAYS;
+ for(const a of data){
+  if(!Number.isInteger(a?.mal_id))continue;
+  const dayString=String(a.broadcast?.day||'').toLowerCase().trim();
+  if(!Object.hasOwn(dayKeys,dayString))continue;
+  const tz=String(a.broadcast?.timezone||'').trim();
+  // Time can only be shown as Japan local if source clearly identifies Japan time.
+  // Non-JST day values are not converted speculatively.
+  if(tz&&!['Asia/Tokyo','JST'].includes(tz))continue;
+  const raw=String(a.broadcast?.time||'');const time=tz&&/^([01]\d|2[0-3]):[0-5]\d$/.test(raw)?raw:'';
+  result[String(a.mal_id)]={day:dayKeys[dayString],time};
+ }
+ return result;
+}
+async function ensureWeeklySchedules(){
+ if(!isWeeklyCalendarVisible()||weeklyFetching||Date.now()<weeklyRetryAfter||!weeklyRelevant().some(a=>weeklyMalId(a.id)&&cleanWeeklySchedule(a.weeklySchedule)?.mode!=='manual'))return;
+ if(weeklyApiCache&&Date.now()-weeklyApiCache.at<WEEKLY_CACHE_TTL)return;
+ weeklyFetching=(async()=>{
+  try{
+   const records=[],ids=new Set(),seenPages=new Set();let page=1,complete=false;
+   while(page<=40){
+    if(seenPages.has(page))throw Error('repeated schedule page');seenPages.add(page);
+    const res=await fetch(`${API}/schedules?page=${page}&limit=100`,{headers:{Accept:'application/json'}});
+    if(!res.ok){if(res.status===429){const secs=Number(res.headers.get('Retry-After'));if(Number.isFinite(secs)&&secs>0)weeklyRetryAfter=Date.now()+Math.min(secs*1000,3600000)}throw Error('schedule '+res.status)}
+    const json=await res.json();if(!Array.isArray(json?.data)||!json.pagination)throw Error('invalid schedule response');
+    for(const entry of json.data){if(entry&&Number.isInteger(entry.mal_id)&&!ids.has(entry.mal_id)){ids.add(entry.mal_id);records.push(entry)}}
+    if(json.pagination.has_next_page===false){complete=true;break}
+    if(json.pagination.has_next_page!==true||!json.data.length)throw Error('incomplete schedule pagination');
+    page++;await new Promise(r=>setTimeout(r,300));
+   }
+   if(!complete)throw Error('schedule page limit');
+   const newCache={at:Date.now(),data:weeklyExtract(records)};
+   localStorage.setItem(WEEKLY_CACHE_KEY,JSON.stringify(newCache));weeklyApiCache=newCache;
+  }catch(error){weeklyRetryAfter=Math.max(weeklyRetryAfter,Date.now()+15*60000)}
+  finally{weeklyFetching=null;renderWeeklyCalendar()}
+ })();renderWeeklyCalendar();return weeklyFetching;
+}
+function openWeeklyEdit(id){
+ const a=saved[id];if(!a)return;
+ weeklyEditId=id;$('#weeklyEditName').textContent=a.title;
+ const automatic=weeklyAutomatic(a);$('#weeklyApiInfo').textContent=automatic?`自動取得：${WEEKLY_DAY_NAMES[automatic.day]}曜日${automatic.time?' '+automatic.time:''}（テレビ放送予定）`:'自動取得した放送曜日はありません。手動で設定できます。';
+ const record=cleanWeeklySchedule(a.weeklySchedule),modeValue=record?.mode==='manual'?'manual':'auto';
+ $$('[name="weeklyEditMode"]').forEach(r=>{r.checked=r.value===modeValue});
+ $('#weeklyEditDay').value=String(record?.mode==='manual'?record.day:automatic?.day??0);
+ $('#weeklyEditTime').value=record?.mode==='manual'?record.time||'':'';
+ $('#weeklyManualFields').hidden=modeValue!=='manual';
+ $('#weeklyEditDialog').showModal();
+}
+function storeWeeklyEdit(){return queueRecordWrite(async()=>{
+ const id=weeklyEditId,a=saved[id];if(!a)return false;
+ const modeValue=$('[name="weeklyEditMode"]:checked')?.value,day=Number($('#weeklyEditDay').value),time=$('#weeklyEditTime').value;
+ if(!['auto','manual'].includes(modeValue)||(modeValue==='manual'&&(!Number.isInteger(day)||day<0||day>6||time&&!/^([01]\d|2[0-3]):[0-5]\d$/.test(time)))){toast('曜日または時刻の入力を確認してください','error');return false}
+ const before=structuredClone(a);a.weeklySchedule=modeValue==='auto'?{mode:'auto',updatedAt:new Date().toISOString()}:{mode:'manual',day,time,updatedAt:new Date().toISOString()};
+ if(!await persist()){saved[id]=before;return false}
+ $('#weeklyEditDialog').close();weeklyEditId=null;renderWeeklyCalendar();toast('視聴曜日を保存しました');return true;
+})}
+$('#weeklyToggle').addEventListener('click',()=>storeWeeklyOptions({...weeklyOptions,open:!weeklyOptions.open}));
+$('#weeklySettingsBtn').addEventListener('click',()=>{weeklySettingsOpen=!weeklySettingsOpen;renderWeeklyCalendar()});
+$('#weeklySettingsPanel').addEventListener('change',e=>{const cb=e.target.closest('[data-weekly-status]');if(!cb)return;const statuses=$$('#weeklySettingsPanel [data-weekly-status]:checked').map(x=>x.dataset.weeklyStatus);if(!statuses.length){cb.checked=true;toast('表示対象は少なくとも1つ選択してください','error');return}storeWeeklyOptions({...weeklyOptions,statuses})});
+$('#weeklyCalendar').addEventListener('click',e=>{
+ const edit=e.target.closest('[data-weekly-edit]');if(edit){openWeeklyEdit(edit.dataset.weeklyEdit);return}
+ const detail=e.target.closest('[data-detail-id]');if(detail){const a=saved[detail.dataset.detailId];if(a)openDetail(a);return}
+});
+$$('[name="weeklyEditMode"]').forEach(x=>x.addEventListener('change',()=>{$('#weeklyManualFields').hidden=$('[name="weeklyEditMode"]:checked')?.value!=='manual'}));
+$('#weeklyEditCancel').addEventListener('click',()=>$('#weeklyEditDialog').close());
+$('#weeklyEditForm').addEventListener('submit',e=>{e.preventDefault();storeWeeklyEdit()});
+window.addEventListener('storage',e=>{if(e.storageArea!==localStorage)return;if(e.key===WEEKLY_OPTIONS_KEY){weeklyOptions=loadWeeklyOptions();renderWeeklyCalendar()}else if(e.key===WEEKLY_CACHE_KEY){weeklyApiCache=loadWeeklyCache();renderWeeklyCalendar()}});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isWeeklyCalendarVisible()){renderWeeklyCalendar();ensureWeeklySchedules()}});
+
 function render(){
  if(mode==='annual'){updateCounts();renderAnnual();return;}
  document.body.classList.toggle('saved-mode',mode==='saved');
@@ -1804,7 +1993,7 @@ function render(){
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
  $('#filterDisclosure').classList.toggle('has-filters',activeFilters.length>0);
- $('#annualEntry').hidden=mode!=='saved';
+ if(isWeeklyCalendarVisible()) { renderWeeklyCalendar(); ensureWeeklySchedules(); }
  $('.stats').classList.toggle('hidden',mode!=='saved');
  updateCounts();setNav();if(mode==='share')return;if(mode==='ranking'){renderRanking();return;}
  const isSaved=mode==='saved', exploreRegistered=!isSaved&&exploreStatusFilter!=='all';
@@ -2717,23 +2906,25 @@ $('#addForm').addEventListener('submit',e=>{
  }).finally(()=>{addingCustom=false;button.disabled=false});
 });
 function download(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
-function exportData(){const dump={app:'ANI:LOG',version:3,exportedAt:new Date().toISOString(),items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
+function exportData(){const dump={app:'ANI:LOG',version:4,exportedAt:new Date().toISOString(),weeklyOptions,items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
 $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEventListener('click',()=>$('#backupDialog').showModal());$('#mobileDownloadBtn').addEventListener('click',()=>{exportData();$('#backupDialog').close()});$('#mobileImportBtn').addEventListener('click',()=>{$('#backupDialog').close();$('#importFile').click()});$('#mobileCloseBackup').addEventListener('click',()=>$('#backupDialog').close());
 $('#importBtn').addEventListener('click',()=>$('#importFile').click());
-let importCandidate=null;
+let importCandidate=null,importCandidateWeeklyOptions=null;
 function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))throw Error('形式が違います');const result=Object.create(null);
  for(const a of data.items){if(!a||typeof a.id!=='string'||typeof a.title!=='string'||!validStatuses.has(a.status)||a.id.length>150||a.title.length>200||['__proto__','constructor','prototype'].includes(a.id))continue;
  const ep=Number(a.watchedEpisodes);
  const note=readNote(a);
  result[a.id]={...(note?{note}:{}),...(typeof a.noteDeletedAt==='string'&&Number.isFinite(Date.parse(a.noteDeletedAt))?{noteDeletedAt:a.noteDeletedAt}:{}),id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{}),
   ...(a.status==='planned'&&typeof a.nextWatchPinnedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchPinnedAt))?{nextWatchPinnedAt:a.nextWatchPinnedAt}:{}),
-  ...(typeof a.nextWatchUpdatedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchUpdatedAt))?{nextWatchUpdatedAt:a.nextWatchUpdatedAt}:{})};
+  ...(typeof a.nextWatchUpdatedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchUpdatedAt))?{nextWatchUpdatedAt:a.nextWatchUpdatedAt}:{}),
+  ...(cleanWeeklySchedule(a.weeklySchedule)?{weeklySchedule:cleanWeeklySchedule(a.weeklySchedule)}:{})};
  }
  if(!Object.keys(result).length)throw Error('有効な作品がありません');return result;
 }
 $('#importFile').addEventListener('change',async e=>{const file=e.target.files?.[0];e.target.value='';if(!file)return;
  if(file.size>4*1024*1024){toast('4MB以下のバックアップを選択してください','error');return}
- try{const candidate=cleanImport(JSON.parse(await file.text()));importCandidate=candidate;
+ try{const raw=JSON.parse(await file.text());const candidate=cleanImport(raw);importCandidate=candidate;importCandidateWeeklyOptions=cleanWeeklyOptions(raw.weeklyOptions);
+ $('#importWeeklyOptionsRow').hidden=!importCandidateWeeklyOptions;$('#importWeeklyOptions').checked=false;
  $('#importPreview').textContent=`バックアップ：${Object.keys(candidate).length}作品 ／ 現在の記録：${Object.keys(saved).length}作品。`;
  $('#importDetails').textContent=mergePreview(candidate);$('#importTiePreference').value='current';
  $('#importModeDialog').showModal();
@@ -2778,6 +2969,12 @@ function mergeEntry(current,backup,preferBackup=false){
  if(pinOwner.nextWatchUpdatedAt)base.nextWatchUpdatedAt=pinOwner.nextWatchUpdatedAt;
  else if(pinOwner.nextWatchPinnedAt)base.nextWatchUpdatedAt=pinOwner.nextWatchPinnedAt;
  else delete base.nextWatchUpdatedAt;
+ const cw=cleanWeeklySchedule(current.weeklySchedule),bw=cleanWeeklySchedule(backup.weeklySchedule);
+ if(cw||bw){
+  const ct=Date.parse(cw?.updatedAt||'')||0,bt=Date.parse(bw?.updatedAt||'')||0;
+  const owner=bt>ct?bw:ct>bt?cw:(preferBackup?bw:cw);
+  if(owner)base.weeklySchedule=structuredClone(owner);else delete base.weeklySchedule;
+ }else delete base.weeklySchedule;
  return base;
 }
 function mergePreview(candidate){let additions=0,updates=0,keeps=0,ties=0;
@@ -2795,12 +2992,13 @@ async function commitImportImpl(replace){if(!importCandidate)return;
  if(!replace)for(const [id,entry] of Object.entries(importCandidate))merged[id]=mergeEntry(saved[id],entry,$('#importTiePreference').value==='backup');
  for(const entry of Object.values(merged))if(entry?.status!=='planned'&&entry?.nextWatchPinnedAt)delete entry.nextWatchPinnedAt;
  saved=merged;if(!await persist(replace)){saved=before;return}
- importCandidate=null;$('#importModeDialog').close();updateCounts();toast(`${count}作品を${replace?'入れ替え':'安全に統合'}しました`);showSaved();
+ const restoreWeekly=$('#importWeeklyOptions').checked?importCandidateWeeklyOptions:null;
+ importCandidate=null;$('#importModeDialog').close();if(restoreWeekly)storeWeeklyOptions(restoreWeekly);updateCounts();toast(`${count}作品を${replace?'入れ替え':'安全に統合'}しました`);showSaved();
 }
 $('#importMerge').addEventListener('click',()=>commitImport(false));
 $('#importReplace').addEventListener('click',()=>commitImport(true));
 $('#importCancel').addEventListener('click',()=>$('#importModeDialog').close());
-$('#importModeDialog').addEventListener('close',()=>{importCandidate=null});
+$('#importModeDialog').addEventListener('close',()=>{importCandidate=null;importCandidateWeeklyOptions=null});
 
 let detailActiveItem=null, detailReturnScroll=0, detailNonce=0, detailEpisodePage=1, detailEpisodeBusy=false;
 let detailActiveTab='overview';
