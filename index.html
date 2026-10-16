@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.14 | アニメ視聴管理</title>
+<title>ANI:LOG v2.2.15 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -830,7 +830,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.14 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.2.15 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2005,8 +2005,8 @@ async function fetchPage(reset=true,force=false){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
-function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
 
 let annualYear=new Date().getFullYear();
@@ -3280,7 +3280,7 @@ async function aniHistoryRestore(state){
   if(state.view==='saved'){
    const x=state.saved||{};unratedOnly=!!x.unrated;finishedYearFilter=x.finishedYear||'all';
    showSaved(x.filter||'all');unratedOnly=!!x.unrated;typeFilter=x.type||'all';$('#savedOrder').value=x.order||'broadcast';$('#searchInput').value=x.search||'';
-   $('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));render();
+   $$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));render();
   }else if(state.view==='season'){
    const x=state.season||{};
    exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();
@@ -3289,7 +3289,7 @@ async function aniHistoryRestore(state){
    years.value=x.yearValue||String(curYear);$('#seasonSelect').value=x.seasonValue||curSeason;
    exploreStatusFilter=x.exploreStatus||'all';typeFilter=x.type||'all';query=x.query||'';$('#searchInput').value=x.search??query;
    searchSort=x.searchSort||searchSort;$('#searchSort').value=searchSort;
-   $('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
+   $$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
    if(exploreStatusFilter!=='all'){activeController?.abort();requestCounter++;loading=false;render()}
    else await fetchPage(true);
   }else if(state.view==='ranking'){
@@ -3304,7 +3304,7 @@ async function aniHistoryRestore(state){
     exitAnnual();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;
     mode='ranking';document.body.classList.add('view-ranking');$('#rankingView').classList.remove('hidden');
     $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
-    $('[data-view]').forEach(b=>b.classList.remove('active'));$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
+    $$('[data-view]').forEach(b=>b.classList.remove('active'));$$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
     renderRanking();
    }else{
     showRanking(nextTab);
