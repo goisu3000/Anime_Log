@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.2.12 | アニメ視聴管理</title>
+<title>ANI:LOG v2.2.13 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -830,7 +830,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button><button type="button" class="outline-btn" id="importBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.2.12 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.2.13 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1845,16 +1845,39 @@ function render(){
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
-let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='';
-function currentSeasonFetchKey(){return [currentScope(),$('#seasonSelect').value,typeFilter,query].join('|')}
+let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='', activeSeasonKey='';
+const SEASON_CACHE_TTL=10*60000, seasonResultCache=new Map();
+function currentSeasonFetchKey(){return [currentScope(),$('#seasonSelect').value,typeFilter,String(query||'').trim().normalize('NFKC')].join('|')}
+function saveSeasonCache(key){
+ if(!key||!items.length)return;
+ seasonResultCache.delete(key);
+ seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),at:Date.now()});
+ while(seasonResultCache.size>15)seasonResultCache.delete(seasonResultCache.keys().next().value);
+}
+function restoreSeasonCache(key){
+ const hit=seasonResultCache.get(key);
+ if(!hit||Date.now()-hit.at>SEASON_CACHE_TTL)return false;
+ items=hit.items.slice();page=hit.page;hasNext=hit.hasNext;searchProgress=structuredClone(hit.searchProgress);
+ fetchedSeasonKey=key;loading=false;$('#offlineNotice').classList.add('hidden');
+ if(query)sortSearchResults();
+ render();return true;
+}
 function delay(ms){return new Promise(resolve=>setTimeout(resolve,ms))}
-async function fetchPage(reset=true){
+async function fetchPage(reset=true,force=false){
  if(loading&&!reset)return;
  if(mode==='season'&&exploreStatusFilter==='all'&&!$('#searchInput').value.trim()&&query)query='';
+ const targetKey=currentSeasonFetchKey();
+ if(reset&&!force){
+  if(loading&&activeSeasonKey===targetKey)return;
+  if(!loading&&items.length>0&&fetchedSeasonKey===targetKey&&$('#offlineNotice').classList.contains('hidden')){
+   if(query)sortSearchResults();render();return;
+  }
+  if(restoreSeasonCache(targetKey))return;
+ }
  if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
   searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
  }
- loading=true;requestCounter++;const thisRequest=requestCounter;
+ loading=true;activeSeasonKey=targetKey;requestCounter++;const thisRequest=requestCounter;
  const controller=new AbortController();activeController=controller;render();
  const scope=currentScope(),exact=/^\d{4}$/.test(scope),season=$('#seasonSelect').value;
  const seasonal=!query&&exact&&season!=='all';
@@ -1888,6 +1911,7 @@ async function fetchPage(reset=true){
   if(thisRequest!==requestCounter)return null;
   successful++;
   const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)&&publicAnimeAllowed(a)).map(a=>{
+   cacheMalMetric('jikan:'+a.mal_id,a,false);
    const m=model(a);if(seasonal){m.seasonalKey=`${scope}:${season}`;m.year=Number(scope);m.season=season;if(!m.type&&apiType)m.type=typeFilter}return m;
   });
   for(const a of incoming)rememberAnime(a);
@@ -1957,10 +1981,11 @@ async function fetchPage(reset=true){
     if(end&&payload.data.some(a=>{const d=premiereDate(a);return d&&d>end}))hasNext=false;
    }
   }
-  if(thisRequest!==requestCounter)return;fetchedSeasonKey=currentSeasonFetchKey();loading=false;$('#offlineNotice').classList.add('hidden');render();
+  if(thisRequest!==requestCounter)return;fetchedSeasonKey=targetKey;loading=false;activeSeasonKey='';saveSeasonCache(targetKey);if(mode==='season'){$('#offlineNotice').classList.add('hidden');render();}
  }catch(err){
   if(thisRequest!==requestCounter||err.name==='AbortError')return;
-  loading=false;hasNext=false;
+  loading=false;activeSeasonKey='';hasNext=false;fetchedSeasonKey='';
+  if(mode!=='season'||exploreStatusFilter!=='all')return;
   const blocked=err instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
   const reason=blocked?'外部のアニメデータAPIに接続できませんでした。通信・ブラウザの制限・API側の障害などが考えられます。':(err?.message||'通信環境やAPIの稼働状況を確認してください。');
   const fileNotice=location.protocol==='file:'?'<p>HTMLファイルを直接開いている場合、ブラウザの通信制限の影響を受けることがあります。公開サイト（https://）からの動作もお試しください。</p>':'';
@@ -1980,8 +2005,8 @@ async function fetchPage(reset=true){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
-function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';if(!loading&&items.length>0&&fetchedSeasonKey===currentSeasonFetchKey()){render()}else{render();fetchPage(true)}if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;periodTouched=false;showSeason();}
 
 let annualYear=new Date().getFullYear();
@@ -2093,29 +2118,33 @@ function updateVisibleMalMetric(id){
  const metric=row?.querySelector('.rank-metric');if(!metric)return;
  const m=malMetricData(item);metric.innerHTML=malScoreMarkup(m.score,m.scoredBy);
 }
-function cacheMalMetric(id,raw){
- if(!/^jikan:[1-9]\d*$/.test(id)||!raw||typeof raw!=='object')return;
- const score=validMalScore(raw.score),scoredBy=validMalVotes(raw.scoredBy??raw.scored_by);
- // Do not overwrite a previously useful result with an empty/partial response.
- const previous=malMetricCache[id];
- malMetricCache[id]={score:score??validMalScore(previous?.score),scoredBy:scoredBy??validMalVotes(previous?.scoredBy),at:Date.now()};
+let malMetricFlushTimer=null;
+function flushMalMetricCache(){
+ if(malMetricFlushTimer){clearTimeout(malMetricFlushTimer);malMetricFlushTimer=null}
  try{
   const top=Object.entries(malMetricCache).filter(([,v])=>v&&Number.isFinite(v.at)).sort((a,b)=>b[1].at-a[1].at).slice(0,350);
   localStorage.setItem(MAL_METRIC_CACHE_KEY,JSON.stringify(Object.fromEntries(top)));
  }catch{/* MAL metrics are optional; storage issues must not affect viewing records. */}
+}
+function cacheMalMetric(id,raw,immediate=true){
+ if(!/^jikan:[1-9]\d*$/.test(id)||!raw||typeof raw!=='object')return;
+ const score=validMalScore(raw.score),scoredBy=validMalVotes(raw.scoredBy??raw.scored_by);
+ if(score===null&&scoredBy===null)return;
+ const previous=malMetricCache[id];
+ malMetricCache[id]={score:score??validMalScore(previous?.score),scoredBy:scoredBy??validMalVotes(previous?.scoredBy),at:Date.now()};
+ if(immediate)flushMalMetricCache();
+ else if(!malMetricFlushTimer)malMetricFlushTimer=setTimeout(flushMalMetricCache,600);
  updateVisibleMalMetric(id);
 }
 function malMetricNeedsFetch(item){
  if(!/^jikan:[1-9]\d*$/.test(item.id)||malMetricFailedIds.has(item.id))return false;
  const cached=malMetricCache[item.id];
  if(cached&&Date.now()-cached.at<(validMalScore(cached.score)!==null&&validMalVotes(cached.scoredBy)!==null?MAL_METRIC_TTL:MAL_METRIC_RETRY_TTL))return false;
- // Even complete old records are refreshed after a week, but their existing values
- // remain visible while the background request runs. No record is mutated.
  return true;
 }
 function scheduleMalMetricEnrichment(){
- const gen=++malMetricGeneration;
  if(malMetricRunning||Date.now()<malMetricCooldownUntil)return;
+ const gen=++malMetricGeneration;
  Promise.resolve().then(()=>enrichMalMetrics(gen));
 }
 async function enrichMalMetrics(gen){
@@ -2124,25 +2153,17 @@ async function enrichMalMetrics(gen){
  try{
   while(gen===malMetricGeneration&&mode==='ranking'&&rankingTab==='mine'){
    const all=myRatedItems();
-   // Fetch the selected rating group first, without changing total ranking order.
    const prioritized=myRatingFilter?[...all.filter(a=>readReview(a.review)?.overall===myRatingFilter),...all.filter(a=>readReview(a.review)?.overall!==myRatingFilter)]:all;
    const next=prioritized.find(malMetricNeedsFetch);
    if(!next||Date.now()<malMetricCooldownUntil)break;
    const full=detailCache.get(next.id)?.full;
    if(full){cacheMalMetric(next.id,full);continue}
-   // The existing viewing-insights task already fetches /full. Wait and reuse its response.
    if(analysisRunning){await analysisSleep(1200);continue}
    try{
-    const response=await fetch(`${API}/anime/${next.id.split(':')[1]}/full`,{headers:{Accept:'application/json'}});
+    await fetchAnimeFullShared(next.id,false);
     if(gen!==malMetricGeneration)break;
-    if(!response.ok){if(response.status===429){malMetricCooldownUntil=Date.now()+30*60000;break}throw Error('HTTP '+response.status)}
-    const data=(await response.json())?.data;
-    if(gen!==malMetricGeneration)break;
-    if(!data||typeof data!=='object')throw Error('MAL data missing');
-    detailCache.set(next.id,{...(detailCache.get(next.id)||{}),full:data});cacheMalMetric(next.id,data);
-    if(saved[next.id]?.status==='watched'&&extractAnalysisMeta(data))await storeAnalysisMeta(next.id,data);
-   }catch{malMetricFailedIds.add(next.id)}
-   await analysisSleep(1400); // Below ~43 requests/minute, excluding existing analysis requests.
+   }catch(err){if(err?.status===429){malMetricCooldownUntil=Date.now()+30*60000;break}malMetricFailedIds.add(next.id)}
+   await analysisSleep(1400);
   }
  }finally{
   malMetricRunning=false;
@@ -2274,7 +2295,10 @@ function renderInsights(){if(mode!=='ranking'||rankingTab!=='mine')return;
  renderInsightMatches('#studioMatches','studios');renderInsightMatches('#traitMatches',traitInsightCategory);
 }
 const analysisSleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-function scheduleInsightEnrichment(){const gen=++analysisGeneration;analysisSkipped=new Set();analysisError='';if(analysisRunning)return;
+function scheduleInsightEnrichment(){
+ analysisSkipped=new Set();analysisError='';
+ if(analysisRunning)return;
+ const gen=++analysisGeneration;
  Promise.resolve().then(()=>enrichWatchedAnalysis(gen));
 }
 async function enrichWatchedAnalysis(gen){analysisRunning=true;let failures=0;try{
@@ -2283,13 +2307,16 @@ async function enrichWatchedAnalysis(gen){analysisRunning=true;let failures=0;tr
    if(!next)break;
    const cached=detailCache.get(next.id)?.full;
    if(cached&&extractAnalysisMeta(cached)){if(!await storeAnalysisMeta(next.id,cached)){analysisSkipped.add(next.id);analysisError='保存領域が不足している可能性があります。';}renderInsights();continue}
-   try{const r=await fetch(`${API}/anime/${next.id.split(':')[1]}/full`,{headers:{Accept:'application/json'}});
-    if(gen!==analysisGeneration)break;
-    if(!r.ok){if(r.status===429){analysisError='APIの利用制限に達しました。少し時間をおいて再試行できます。';break}throw Error('HTTP '+r.status)}
-    const payload=await r.json();if(payload.data){detailCache.set(next.id,{...(detailCache.get(next.id)||{}),full:payload.data});cacheMalMetric(next.id,payload.data)}if(!extractAnalysisMeta(payload.data))throw Error('分類データがありません');
-    if(!await storeAnalysisMeta(next.id,payload.data)){analysisSkipped.add(next.id);analysisError='作品情報の保存に失敗しました。ブラウザの空き容量を確認してください。';break}analysisError='';failures=0;
-   }catch(err){analysisSkipped.add(next.id);failures++;analysisError='作品情報を一部取得できませんでした。時間をおいて再試行できます。';if(failures>=2)break}
-   if(gen!==analysisGeneration)break;renderInsights();await analysisSleep(1050); // About 57 requests/min maximum.
+   try{
+    const data=await fetchAnimeFullShared(next.id,false);
+    if(!extractAnalysisMeta(data))throw Error('分類データがありません');
+    if(!analysisReady(saved[next.id])){analysisSkipped.add(next.id);analysisError='作品情報の保存に失敗しました。ブラウザの空き容量を確認してください。';break}
+    analysisError='';failures=0;
+   }catch(err){
+    if(err?.status===429){analysisError='APIの利用制限に達しました。少し時間をおいて再試行できます。';break}
+    analysisSkipped.add(next.id);failures++;analysisError='作品情報を一部取得できませんでした。時間をおいて再試行できます。';if(failures>=2)break;
+   }
+   if(gen!==analysisGeneration)break;renderInsights();await analysisSleep(1050);
   }
  }finally{analysisRunning=false;if(gen!==analysisGeneration&&mode==='ranking'&&rankingTab==='mine')Promise.resolve().then(()=>enrichWatchedAnalysis(analysisGeneration));else if(gen===analysisGeneration)renderInsights()}
 }
@@ -2322,27 +2349,33 @@ function rankEndpoint(page){const query=new URLSearchParams({limit:'24',page:Str
  if(rankingTab==='now'){const [ny,ns]=rankNowParts();return `/seasons/${ny}/${ns}?`+query}
  return `/seasons/${rankingYear}/${rankingSeason}?${query}`;
 }
+let activeRankingKey='';
 async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')return;
- const key=rankKey();if(reset){rankingRequestId++;rankingData=[];rankingPage=1;rankingHasNext=false;
+ const key=rankKey();if(reset){
+  if(rankingBusy&&activeRankingKey===key)return;
+  if(!rankingBusy&&rankingData.length>0&&activeRankingKey===key){renderRanking();return;}
+  rankingRequestId++;rankingData=[];rankingPage=1;rankingHasNext=false;
   const cached=rankingCache[key];if(cached&&Date.now()-cached.time<3*3600000&&Array.isArray(cached.rows)){
    const restored=normalizeRankingRows(cached.rows);
-   if(restored.length){rankingData=restored;rankingPage=cached.next||1;rankingHasNext=Boolean(cached.hasNext);rankingBusy=false;renderRanking();return;}
+   if(restored.length){rankingData=restored;rankingPage=cached.next||1;rankingHasNext=Boolean(cached.hasNext);rankingBusy=false;activeRankingKey=key;renderRanking();return;}
   }
  }else if(rankingBusy||!rankingHasNext)return;
  const requestId=rankingRequestId,activeTab=rankingTab,activeKey=key,currentPage=rankingPage;
- rankingBusy=true;renderRanking();
+ rankingBusy=true;activeRankingKey=key;renderRanking();
  try{
   const res=await fetch(API+rankEndpoint(currentPage),{headers:{Accept:'application/json'}});
   if(!res.ok)throw Error(res.status===429?'アクセスが集中しています（429）。少し時間をおいてください。':`API応答エラー（${res.status}）`);
   const payload=await res.json();if(requestId!==rankingRequestId||mode!=='ranking'||rankingTab!==activeTab||rankKey()!==activeKey)return;
   const rawRows=Array.isArray(payload.data)?payload.data.map(v=>v?.anime&&typeof v.anime==='object'?v.anime:v):[];
-  const entries=normalizeRankingRows(rawRows.filter(v=>v&&publicAnimeAllowed(v)));
+  const allowedRows=rawRows.filter(v=>v&&publicAnimeAllowed(v));
+  for(const v of allowedRows){if(Number.isInteger(v.mal_id))cacheMalMetric('jikan:'+v.mal_id,v,false);}
+  const entries=normalizeRankingRows(allowedRows);
   rankingData=[...new Map([...rankingData,...entries].map(a=>[a.id,a])).values()];rankingHasNext=Boolean(payload.pagination?.has_next_page);rankingPage++;
 
   rankingCache[key]={time:Date.now(),rows:rankingData.slice(0,96),next:rankingPage,hasNext:rankingHasNext};
   try{const keys=Object.entries(rankingCache).sort((a,b)=>b[1].time-a[1].time).slice(0,9);localStorage.setItem(RANK_CACHE_KEY,JSON.stringify(Object.fromEntries(keys)))}catch{}
   rankingBusy=false;renderRanking();
- }catch(err){if(requestId!==rankingRequestId)return;rankingBusy=false;rankingHasNext=false;renderRanking();
+ }catch(err){if(requestId!==rankingRequestId)return;rankingBusy=false;activeRankingKey='';rankingHasNext=false;renderRanking();
   const node=$('#rankResults');if(!rankingData.length)node.innerHTML=emptyCard('ランキングを取得できませんでした',err?.message||'時間をおいてもう一度お試しください。','offline');
   else $('#rankNotice').textContent='追加のデータを取得できませんでした。現在表示している作品は引き続き閲覧できます。';
  }
@@ -2445,7 +2478,7 @@ function sharedCard(a){
  return `<article class="anime-card shared-card"><div class="poster-wrap"><button type="button" class="poster-button detail-trigger" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の作品詳細を開く">${img}</button><span class="type-pill">${safeText(typeJa(knownType))}</span><span class="status-pill ${a.status}">${statusLabels[a.status]}</span></div><div class="card-body"><div class="card-title"><button type="button" class="title-button detail-trigger" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="card-meta"><span>${safeText(a.year?a.year+'年':'作品情報')}</span></div>${publicReviewMarkup(a,true)}<div class="readonly-line">${uiIcon('check')} 閲覧専用の共有リスト</div></div></article>`;
 }
 function showShared(snapshot){
- exitRanking();closeDetail(false);sharedSnapshot=snapshot;mode='share';document.body.classList.add('view-sharing');$('#shareView').classList.remove('hidden');$('#breadcrumb').textContent='共有リスト';
+ exitRanking();closeDetail(false);activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');sharedSnapshot=snapshot;mode='share';document.body.classList.add('view-sharing');$('#shareView').classList.remove('hidden');$('#breadcrumb').textContent='共有リスト';
  $('#sharedTitle').textContent=shareHeading(snapshot);$('#sharedTag').textContent=`${snapshot.items.length}作品 · 閲覧専用`;
  $('#sharedCreated').textContent=`共有URLの作成日：${new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'}).format(new Date(snapshot.created))}`;
  const types=['作品名・視聴状況',...(snapshot.options?.overall?['総合評価']:[]),...(snapshot.options?.details?['詳細評価']:[]),...(snapshot.options?.comment?['感想']:[])];
@@ -2668,7 +2701,7 @@ $('#searchSort').addEventListener('change',e=>{
 });
 $('#loadMore').addEventListener('click',()=>{if(loading)return;if(!query)page++;fetchPage(false)});
 $('#cards').addEventListener('change',e=>{const t=e.target;if(t.matches('[data-status-id]'))setStatus(t.dataset.statusId,t.value)});
-$('#cards').addEventListener('click',e=>{const t=e.target.closest('[data-state-action]');if(t){t.dataset.stateAction==='reload'?fetchPage(true):showSeason()}});
+$('#cards').addEventListener('click',e=>{const t=e.target.closest('[data-state-action]');if(t){t.dataset.stateAction==='reload'?fetchPage(true,true):showSeason()}});
 $('#addCustomBtn').addEventListener('click',()=>{$('#customTitle').value='';$('#customStatus').value='watched';$('#addDialog').showModal()});
 $('#cancelDialog').addEventListener('click',()=>$('#addDialog').close());
 let addingCustom=false;
@@ -2859,18 +2892,24 @@ const jaSummaryCache=smallCacheRead(JA_SUMMARY_CACHE),jaTranslationCache=smallCa
 const likelyJapanese=text=>/[ぁ-んァ-ン一-龥]/.test(String(text||''));
 function wikiNormalize(name){return String(name||'').normalize('NFKC').replace(/\s*（[^）]*）\s*$/, '').replace(/\s*\([^)]*\)\s*$/, '').replace(/[\s　・!:：-]/g,'').toLowerCase()}
 function wikiNameFrom(full,item){const title=full?.title_japanese||item?.title||'';return likelyJapanese(title)&&title.length<=110?title:''}
+const inFlightJaSummary=new Map();
 async function findJapaneseSummary(title){
  const entry=jaSummaryCache[title];if(entry&&Date.now()-entry.at<(entry.found?JA_SUMMARY_TTL:JA_SUMMARY_MISS_TTL))return entry.found?entry.data:null;
- const params=new URLSearchParams({action:'query',format:'json',formatversion:'2',prop:'extracts|info',inprop:'url',exintro:'1',explaintext:'1',exchars:'700',redirects:'1',titles:title,origin:'*'});
- const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),5500);
- try{const resp=await fetch('https://ja.wikipedia.org/w/api.php?'+params,{signal:controller.signal,headers:{Accept:'application/json'}});if(!resp.ok)throw Error('Wikipedia '+resp.status);
- const payload=await resp.json();const page=payload?.query?.pages?.[0];let candidate=null;
- if(page&&!page.missing&&page.ns===0&&wikiNormalize(page.title)===wikiNormalize(title)){
-  const extract=String(page.extract||'').trim().slice(0,850);
-  if(extract.length>=50&&!extract.includes('曖昧さ回避')&&!/この項目では/.test(extract.slice(0,60)))candidate={text:extract,url:page.fullurl||'https://ja.wikipedia.org/wiki/'+encodeURIComponent(page.title),title:page.title};
- }
- jaSummaryCache[title]={at:Date.now(),found:!!candidate,data:candidate};smallCacheWrite(JA_SUMMARY_CACHE,jaSummaryCache,70);return candidate;
- }finally{clearTimeout(timeout)}
+ if(inFlightJaSummary.has(title))return inFlightJaSummary.get(title);
+ const job=(async()=>{
+  const params=new URLSearchParams({action:'query',format:'json',formatversion:'2',prop:'extracts|info',inprop:'url',exintro:'1',explaintext:'1',exchars:'700',redirects:'1',titles:title,origin:'*'});
+  const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),5500);
+  try{const resp=await fetch('https://ja.wikipedia.org/w/api.php?'+params,{signal:controller.signal,headers:{Accept:'application/json'}});if(!resp.ok)throw Error('Wikipedia '+resp.status);
+  const payload=await resp.json();const page=payload?.query?.pages?.[0];let candidate=null;
+  if(page&&!page.missing&&page.ns===0&&wikiNormalize(page.title)===wikiNormalize(title)){
+   const extract=String(page.extract||'').trim().slice(0,850);
+   if(extract.length>=50&&!extract.includes('曖昧さ回避')&&!/この項目では/.test(extract.slice(0,60)))candidate={text:extract,url:page.fullurl||'https://ja.wikipedia.org/wiki/'+encodeURIComponent(page.title),title:page.title};
+  }
+  jaSummaryCache[title]={at:Date.now(),found:!!candidate,data:candidate};smallCacheWrite(JA_SUMMARY_CACHE,jaSummaryCache,70);return candidate;
+  }finally{clearTimeout(timeout);inFlightJaSummary.delete(title)}
+ })();
+ inFlightJaSummary.set(title,job);
+ return job;
 }
 function translationCacheKey(text){let v=2166136261;for(let i=0;i<text.length;i++){v^=text.charCodeAt(i);v=Math.imul(v,16777619)}return String(text.length)+'-'+(v>>>0).toString(36)}
 let onDeviceTranslator=null, onDeviceTranslatorPending=null;
@@ -2893,14 +2932,14 @@ async function translateLocalSynopsis(id,token){
  finally{entry.translateBusy=false;if(token===detailNonce)refreshDetailSynopsis(token)}
 }
 async function localizeSynopsis(id,token){
- const entry=detailCache.get(id),full=entry?.full;if(!full||likelyJapanese(full.synopsis))return;
+ const entry=detailCache.get(id),full=entry?.full;if(!full||likelyJapanese(full.synopsis)||entry.localized||entry.localizeChecked)return;
  const cacheKey=translationCacheKey(String(full.synopsis||''));
- if(full.synopsis&&jaTranslationCache[cacheKey]?.text){entry.localized={kind:'translated',text:jaTranslationCache[cacheKey].text};if(token===detailNonce)refreshDetailSynopsis(token);return}
+ if(full.synopsis&&jaTranslationCache[cacheKey]?.text){entry.localized={kind:'translated',text:jaTranslationCache[cacheKey].text};entry.localizeChecked=true;if(token===detailNonce)refreshDetailSynopsis(token);return}
  const jpTitle=wikiNameFrom(full,detailActiveItem);
- if(jpTitle){try{const w=await findJapaneseSummary(jpTitle);if(w){entry.localized={kind:'wiki',...w};if(token===detailNonce)refreshDetailSynopsis(token);return}}catch{/* unavailable Wikipedia should not block the title */}}
- if(!full.synopsis)return;
- if('Translator' in self){try{const state=await self.Translator.availability({sourceLanguage:'en',targetLanguage:'ja'});if(state==='available'){await translateLocalSynopsis(id,token);return}}catch{/* fall back to original */}}
- entry.offerTranslation='Translator' in self;if(token===detailNonce)refreshDetailSynopsis(token);
+ if(jpTitle){try{const w=await findJapaneseSummary(jpTitle);if(w){entry.localized={kind:'wiki',...w};entry.localizeChecked=true;if(token===detailNonce)refreshDetailSynopsis(token);return}}catch{/* unavailable Wikipedia should not block the title */}}
+ if(!full.synopsis){entry.localizeChecked=true;return}
+ if('Translator' in self){try{const state=await self.Translator.availability({sourceLanguage:'en',targetLanguage:'ja'});if(state==='available'){await translateLocalSynopsis(id,token);entry.localizeChecked=true;return}}catch{/* fall back to original */}}
+ entry.offerTranslation='Translator' in self;entry.localizeChecked=true;if(token===detailNonce)refreshDetailSynopsis(token);
 }
 function refreshDetailSynopsis(token){
  if(token!==detailNonce||detailActiveTab!=='overview'||!detailActiveItem)return;
@@ -3014,14 +3053,21 @@ async function ensureDetailField(id,field,force=false){
  const entry=detailCache.get(id);
  if(!entry?.full||!['videos','episodes','characters','staff'].includes(field))return;
  entry.fieldStates ||= {};
- if(entry.fieldStates[field]==='loading'||(!force&&entry.fieldStates[field]==='done'))return;
+ entry.fieldPromises ||= {};
+ if(!force&&entry.fieldStates[field]==='done')return;
+ if(!force&&entry.fieldPromises[field]){await entry.fieldPromises[field];return}
  entry.fieldStates[field]='loading';
  if(detailActiveItem?.id===id)renderDetailParts(detailNonce);
- try{
-  const result=await detailFetch(`/anime/${id.split(':')[1]}/${field}`);
-  entry[field]=result;entry.fieldStates[field]='done';
-  if(field==='episodes'){entry.episodePage=1;if(detailActiveItem?.id===id)detailEpisodePage=1}
- }catch(e){entry.fieldStates[field]='error';entry.fieldErrors||={};entry.fieldErrors[field]=e?.message||'取得できませんでした'}
+ const p=(async()=>{
+  try{
+   const result=await detailFetch(`/anime/${id.split(':')[1]}/${field}`);
+   entry[field]=result;entry.fieldStates[field]='done';
+   if(field==='episodes'){entry.episodePage=1;if(detailActiveItem?.id===id)detailEpisodePage=1}
+  }catch(e){entry.fieldStates[field]='error';entry.fieldErrors||={};entry.fieldErrors[field]=e?.message||'取得できませんでした'}
+  finally{delete entry.fieldPromises[field]}
+ })();
+ entry.fieldPromises[field]=p;
+ await p;
  if(detailActiveItem?.id===id){
   const was=detailActiveTab;
   renderDetailParts(detailNonce);
@@ -3045,6 +3091,30 @@ function selectDetailTab(tab,focus=false){
  ensureDetailTab(tab,detailActiveItem.id);
 }
 async function detailFetch(path){const time=Math.max(0,370-(Date.now()-detailReqAt));if(time)await delay(time);detailReqAt=Date.now();const resp=await fetch(`${API}${path}`,{headers:{Accept:'application/json'}});if(!resp.ok)throw Error(resp.status===429?'リクエスト制限（429）':`HTTP ${resp.status}`);return resp.json()}
+const inFlightFullRequests=new Map();
+async function fetchAnimeFullShared(id,useThrottle=false){
+ if(inFlightFullRequests.has(id))return inFlightFullRequests.get(id);
+ const malId=String(id||'').split(':')[1];
+ const job=(async()=>{
+  let data;
+  if(useThrottle){
+   const result=await detailFetch(`/anime/${malId}/full`);
+   data=result?.data||null;
+  }else{
+   const resp=await fetch(`${API}/anime/${malId}/full`,{headers:{Accept:'application/json'}});
+   if(!resp.ok){const err=Error(resp.status===429?'リクエスト制限（429）':`HTTP ${resp.status}`);err.status=resp.status;throw err}
+   data=(await resp.json())?.data||null;
+  }
+  if(!data||typeof data!=='object')throw Error('作品詳細データが空です');
+  const prev=detailCache.get(id)||{};
+  detailCache.set(id,{...prev,full:data,loading:false,fullError:''});
+  cacheMalMetric(id,data);
+  if(saved[id]?.status==='watched'&&extractAnalysisMeta(data))await storeAnalysisMeta(id,data);
+  return data;
+ })();
+ inFlightFullRequests.set(id,job);
+ try{return await job}finally{inFlightFullRequests.delete(id)}
+}
 function detailSource(id){return (mode==='share'?sharedSnapshot?.items||[]:[...items,...Object.values(saved),...rankingData]).find(a=>a.id===id)}
 function detailShowScreen(){document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#breadcrumb').textContent='作品詳細'}
 function openDetail(item,related=false){
@@ -3055,27 +3125,34 @@ function openDetail(item,related=false){
  const cached=detailCache.get(id);detailEpisodePage=cached?.episodePage||1;
  detailShowScreen();renderDetailParts(token);window.scrollTo({top:0,behavior:'instant'});
  if(!/^jikan:\d+$/.test(id))return;
- if(cached?.full){renderDetailParts(token);ensureDetailTab('overview',id);return}
+ if(cached?.full){
+  detailActiveItem={...model(cached.full),...detailActiveItem};
+  renderDetailParts(token);
+  if(!cached.localizeChecked)localizeSynopsis(id,token);
+  ensureDetailTab('overview',id);
+  return;
+ }
  loadDetail(id,token);
 }
 async function loadDetail(id,token,force=false){
  let entry=detailCache.get(id)||{};
- if(entry.loading&&!force)return;
  entry={...entry,loading:true,fullError:''};detailCache.set(id,entry);
  renderDetailParts(token);
  try{
-  const result=await detailFetch(`/anime/${id.split(':')[1]}/full`);
-  entry.full=result.data||null;if(!entry.full)throw Error('作品詳細データが空です');cacheMalMetric(id,entry.full);
-  if(saved[id]?.status==='watched'&&extractAnalysisMeta(entry.full))storeAnalysisMeta(id,entry.full);
-  entry.loading=false;
+  if(force)inFlightFullRequests.delete(id);
+  const full=await fetchAnimeFullShared(id,true);
+  entry=detailCache.get(id)||{full};
+  entry.loading=false;entry.fullError='';
   if(detailActiveItem?.id===id&&token===detailNonce){
-   detailActiveItem={...model(entry.full),...detailActiveItem};
+   detailActiveItem={...model(full),...detailActiveItem};
    renderDetailParts(token);
-   localizeSynopsis(id,token); // Japanese information is optional and does not block the UI.
-   ensureDetailTab(detailActiveTab,id); // Only Overview videos are loaded initially.
+   localizeSynopsis(id,token);
+   ensureDetailTab(detailActiveTab,id);
   }
  }catch(err){
+  entry=detailCache.get(id)||{};
   entry.fullError=err?.message||'通信に失敗しました';entry.loading=false;
+  detailCache.set(id,entry);
   if(detailActiveItem?.id===id&&token===detailNonce)renderDetailParts(token);
  }
 }
@@ -3214,7 +3291,6 @@ async function aniHistoryRestore(state){
    searchSort=x.searchSort||searchSort;$('#searchSort').value=searchSort;
    $('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
    if(exploreStatusFilter!=='all'){activeController?.abort();requestCounter++;loading=false;render()}
-   else if(!loading&&items.length>0&&fetchedSeasonKey===currentSeasonFetchKey()){if(query)sortSearchResults();render()}
    else await fetchPage(true);
   }else if(state.view==='ranking'){
    const x=state.rank||{};
