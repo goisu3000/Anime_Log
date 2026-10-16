@@ -777,13 +777,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-toggle:focus-visible,.weekly-settings-btn:focus-visible,.weekly-edit:focus-visible,.weekly-unassigned-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-today-label{font-size:16px}.weekly-today-label strong{font-size:22px}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px}.weekly-item-meta{font-size:11px;justify-content:flex-start;flex:1 0 100%;padding-left:37px;order:3}.weekly-item{flex-wrap:wrap}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
 
-/* Collapsed weekly calendar: headline on the left, today's count and compact previews on the right. */
-.weekly-calendar:not(.is-open) .weekly-heading{flex:1 1 43%}
-.weekly-calendar:not(.is-open) .weekly-head-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) 40px;flex:1 1 57%;gap:18px;min-width:0}
+/* Collapsed weekly calendar: approved right-side arrangement, refined proportions. */
+.weekly-calendar:not(.is-open) .weekly-heading{flex:1 1 35%}
+.weekly-calendar:not(.is-open) .weekly-head-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) 40px;flex:1 1 65%;gap:18px;min-width:0}
+.weekly-calendar:not(.is-open) .weekly-today-label{font-size:17px;gap:8px}
+.weekly-calendar:not(.is-open) .weekly-today-number{display:inline-flex;align-items:baseline;gap:4px;font-size:inherit;font-weight:inherit}
+.weekly-calendar:not(.is-open) .weekly-today-label strong{font-size:27px;line-height:1;color:var(--accent)}
 .weekly-calendar:not(.is-open) .weekly-summary:not(:empty){display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:4px;min-width:0;margin:0;padding:0 0 0 16px;border-left:1px solid var(--border)}
-.weekly-calendar:not(.is-open) .weekly-preview{display:flex;align-items:center;min-width:0;gap:9px;height:30px;padding:0;background:transparent;border:0;border-radius:0;font-size:var(--fs-xs)}
+.weekly-calendar:not(.is-open) .weekly-preview{display:flex;align-items:center;min-width:0;gap:27px;height:30px;padding:0;background:transparent;border:0;border-radius:0;font-size:var(--fs-xs)}
 .weekly-calendar:not(.is-open) .weekly-preview .weekly-poster{width:28px;height:28px;flex:0 0 28px;object-fit:cover}
-.weekly-calendar:not(.is-open) .weekly-preview-title{flex:1;min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:var(--fw-semi)}
+.weekly-calendar:not(.is-open) .weekly-preview-body{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:visible}
+.weekly-calendar:not(.is-open) .weekly-preview-title{flex:0 1 auto;min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:var(--fw-semi)}
 .weekly-calendar:not(.is-open) .weekly-preview .weekly-tag{flex:0 0 auto;max-width:none;overflow:visible}
 .weekly-calendar:not(.is-open) .weekly-summary .weekly-muted{font-size:var(--fs-xs);line-height:1.5}
 @media(max-width:1100px){
@@ -792,11 +796,12 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .weekly-calendar:not(.is-open) .weekly-head-actions{flex:1 1 100%}
 }
 @media(max-width:740px){
-  .weekly-calendar:not(.is-open) .weekly-head-actions{grid-template-columns:minmax(0,max-content) minmax(0,1fr) 40px;gap:8px}
-  .weekly-calendar:not(.is-open) .weekly-summary:not(:empty){padding-left:8px}
-  .weekly-calendar:not(.is-open) .weekly-preview .weekly-tag{display:none}
-  .weekly-calendar:not(.is-open) .weekly-today-label{font-size:14px}
-  .weekly-calendar:not(.is-open) .weekly-today-label strong{font-size:19px}
+  /* Keep the date/count and chevron aligned while giving previews a full-width second row. */
+  .weekly-calendar:not(.is-open) .weekly-head-actions{grid-template-columns:minmax(0,1fr) 40px;gap:8px}
+  .weekly-calendar:not(.is-open) .weekly-today-label{grid-column:1;grid-row:1;font-size:14px;gap:6px}
+  .weekly-calendar:not(.is-open) .weekly-today-label strong{font-size:22px}
+  .weekly-calendar:not(.is-open) .weekly-head-actions .weekly-toggle{grid-column:2;grid-row:1}
+  .weekly-calendar:not(.is-open) .weekly-summary:not(:empty){grid-column:1/-1;grid-row:2;border-left:0;border-top:1px solid var(--border);padding:8px 0 0}
 }
 
 /* Responsive Breakpoints */
@@ -1909,7 +1914,7 @@ function weeklyPlanned(a){
 function weeklyRelevant(){return Object.values(saved).filter(a=>a&&weeklyOptions.statuses.includes(a.status)).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ja'))}
 function weeklyPoster(a){const u=safeImage(a.image);return u?`<img class="weekly-poster" src="${safeText(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
 function weeklyEntryMarkup(a,info,preview=false){
- if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-title" title="${safeText(a.title)}">${safeText(a.title)}</span><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span>`;
+ if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><span class="weekly-preview-title" title="${safeText(a.title)}">${safeText(a.title)}</span><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span></span>`;
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
  return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="weekly-item-meta">${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
@@ -1920,7 +1925,8 @@ function renderWeeklyCalendar(){
  const {day:today,monday}=weeklyTokyoDate(),relevant=weeklyRelevant(),grouped=Array.from({length:7},()=>[]),unknown=[];
  for(const a of relevant){const info=weeklyPlanned(a);if(info)grouped[info.day].push({a,info});else unknown.push(a)}
  const todays=grouped[today];
- $('#weeklyTodayCount').innerHTML=`今日の予定 <strong>${todays.length}作品</strong>`;
+ const displayDate=new Date(monday.getTime()+today*86400000);
+ $('#weeklyTodayCount').innerHTML=`<span>今日 ${displayDate.getUTCMonth()+1}/${displayDate.getUTCDate()} (${WEEKLY_DAY_NAMES[today]}) の予定</span><span class="weekly-today-number"><strong>${todays.length}</strong>作品</span>`;
  $('#weeklyToggle').setAttribute('aria-expanded',String(weeklyOptions.open));$('#weeklyToggle').setAttribute('aria-label',weeklyOptions.open?'週間視聴カレンダーを閉じる':'週間視聴カレンダーを開く');
  el.classList.toggle('is-open',weeklyOptions.open);
  $('#weeklyContent').hidden=!weeklyOptions.open;
