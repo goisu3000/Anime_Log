@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.3.7 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.0 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -804,6 +804,24 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .weekly-calendar:not(.is-open) .weekly-summary:not(:empty){grid-column:1/-1;grid-row:2;border-left:0;border-top:1px solid var(--border);padding:8px 0 0}
 }
 
+
+/* My List: one preferred viewing service per title (no change to the card grid). */
+.stream-inline{display:flex;align-items:center;gap:8px;min-width:0;margin-top:9px;flex-wrap:wrap}
+.stream-inline-link,.stream-inline-empty{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:28px;width:fit-content;border:1px solid var(--border-ctrl);border-radius:6px;padding:4px 9px;background:var(--surface2);color:var(--ink);font-size:var(--fs-xs);font-weight:var(--fw-semi);line-height:1.35;text-decoration:none;white-space:normal;text-align:left;overflow-wrap:anywhere}
+.stream-inline-link{border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
+.stream-inline-empty{color:var(--muted);background:transparent}
+.stream-inline-edit{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:6px;width:28px;height:28px;padding:4px}
+.stream-inline-edit .ui-icon{width:14px;height:14px}
+.stream-inline-link:hover,.stream-inline-empty:hover,.stream-inline-edit:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-hover)}
+.stream-inline-link:focus-visible,.stream-inline-empty:focus-visible,.stream-inline-edit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stream-dialog-intro{color:var(--muted);font-size:var(--fs-sm);line-height:1.65;margin:6px 0 12px}
+.stream-dialog-hint{color:var(--muted);font-size:var(--fs-xs);line-height:1.65;margin:8px 0 12px}
+.stream-dialog-find{align-self:flex-start;border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--ink);border-radius:var(--radius-sm);padding:8px 12px;font-size:var(--fs-sm);font-weight:var(--fw-semi)}
+.stream-dialog-find:hover{border-color:var(--accent);color:var(--accent)}
+.stream-dialog-find:disabled{opacity:.5}
+.stream-dialog-notice{font-size:var(--fs-xs);line-height:1.6;color:var(--muted);margin:8px 0}
+.stream-dialog-notice.error{color:var(--danger)}
+
 /* Responsive Breakpoints */
 @media(min-width:1051px){
   .rank-two-col{
@@ -902,7 +920,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.3.7 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.0 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1022,6 +1040,19 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <dialog id="weeklyEditDialog" class="weekly-dialog" aria-labelledby="weeklyEditTitle"><form id="weeklyEditForm"><div class="weekly-eyebrow">WEEKLY VIEWING</div><h3 id="weeklyEditTitle">視聴曜日を設定</h3><p id="weeklyEditName" class="weekly-dialog-intro"></p><p id="weeklyApiInfo" class="weekly-dialog-intro"></p><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="auto" checked>放送曜日を自動で使用</label><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="manual">自分で曜日を設定</label><div id="weeklyManualFields" class="weekly-fieldset" hidden><label for="weeklyEditDay">視聴曜日</label><select id="weeklyEditDay"><option value="0">月曜日</option><option value="1">火曜日</option><option value="2">水曜日</option><option value="3">木曜日</option><option value="4">金曜日</option><option value="5">土曜日</option><option value="6">日曜日</option></select><label for="weeklyEditTime">視聴時刻（任意）</label><input type="time" id="weeklyEditTime"></div><menu><button type="button" id="weeklyEditCancel">キャンセル</button><button type="submit">保存する</button></menu></form></dialog>
+<dialog id="streamDialog" aria-labelledby="streamDialogTitle"><form id="streamForm">
+  <div class="review-dialog-eyebrow">MY LIST · WATCH LINK</div>
+  <h3 id="streamDialogTitle">視聴サイトを設定</h3>
+  <p id="streamAnimeTitle" class="stream-dialog-intro"></p>
+  <label for="streamService">普段見るサービス</label>
+  <select id="streamService"></select>
+  <label for="streamExactUrl">作品ページのURL（任意）</label>
+  <input id="streamExactUrl" type="url" inputmode="url" maxlength="2048" placeholder="https://..." autocomplete="off" spellcheck="false">
+  <p class="stream-dialog-hint">作品URLを登録すると、そのページへ直接移動します。未登録なら選んだサービスの作品を検索します。配信中かどうかは保証しません。</p>
+  <button type="button" id="streamFindUrl" class="stream-dialog-find">公開データの作品リンクを確認（任意）</button>
+  <p id="streamFindResult" class="stream-dialog-notice" role="status" aria-live="polite"></p>
+  <menu><button class="secondary" type="button" id="streamCancel">キャンセル</button><button class="primary" type="submit" id="streamSave">保存する</button></menu>
+</form></dialog>
 <dialog id="noteDialog" aria-labelledby="noteTitle"><form id="noteForm" class="review-dialog-inner"><div class="review-dialog-eyebrow">作品メモ · 点数なしで保存</div><h2 id="noteTitle">メモ</h2><label for="noteText">感想・印象に残ったこと</label><textarea id="noteText" maxlength="500" placeholder="3話の演出がよかった、視聴を中止した理由など"></textarea><div class="review-meta"><span>空欄で保存すると削除します。共有は作成時に選べます。</span><span id="noteCount"></span></div><div class="review-dialog-actions"><button type="button" id="noteCancel" class="review-cancel">キャンセル</button><button type="submit" class="review-save">メモを保存</button></div></form></dialog>
 <dialog id="ratingDialog" aria-labelledby="ratingTitle">
   <form id="ratingForm" class="review-dialog-inner">
@@ -1810,9 +1841,122 @@ function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}
  const tags=cleanAnalysisMeta(a.analysisMeta)?.genres?.slice(0,3)||[];
  return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:''}`;
 }
+
+// A saved title can have one private, explicitly selected viewing service.
+// Never guess whether a title is licensed in Japan and never auto-change watch status.
+const STREAM_SERVICES=[
+ {name:'Netflix',domain:'netflix.com',hosts:['netflix.com']},
+ {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com']},
+ {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp']},
+ {name:'DMM TV',domain:'tv.dmm.com',hosts:['tv.dmm.com','dmm.com']},
+ {name:'U-NEXT',domain:'video.unext.jp',hosts:['video.unext.jp','unext.jp']},
+ {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv']},
+ {name:'Hulu',domain:'hulu.jp',hosts:['hulu.jp']},
+ {name:'Disney Plus',domain:'disneyplus.com',hosts:['disneyplus.com']},
+ {name:'FOD',domain:'fod.fujitv.co.jp',hosts:['fod.fujitv.co.jp']},
+ {name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']}
+];
+function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||null}
+function streamAllowedUrl(name,value){
+ const site=streamService(name);if(!site||typeof value!=='string'||value.length>2048)return '';
+ try{
+  const url=new URL(value.trim());
+  if(url.protocol!=='https:'||url.username||url.password||url.port)return '';
+  const host=url.hostname.toLowerCase();
+  if(!site.hosts.some(allowed=>host===allowed||host.endsWith('.'+allowed)))return '';
+  return url.href;
+ }catch{return ''}
+}
+function cleanStreamPreference(x){
+ if(!x||typeof x!=='object'||typeof x.updatedAt!=='string'||!Number.isFinite(Date.parse(x.updatedAt)))return null;
+ if(x.service==='')return {service:'',url:'',updatedAt:x.updatedAt}; // deletion marker for safe backup merge
+ if(!streamService(x.service))return null;
+ const url=streamAllowedUrl(x.service,x.url||'');
+ return {service:x.service,url,updatedAt:x.updatedAt};
+}
+function streamRowMarkup(a){
+ const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
+ const label=selected?`${selected}で${pref.url?'見る':'探す'}`:'視聴サイトを設定';
+ const action=selected
+  ?`<a class="stream-inline-link" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)} <span aria-hidden="true">↗</span></a>`
+  :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}">${uiIcon('plus')}<span>${label}</span></button>`;
+ return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
+}
+let streamEditingId=null,streamEditOriginal=null;
+$('#streamService').innerHTML='<option value="">未設定（リンクを削除）</option>'+STREAM_SERVICES.map(s=>`<option value="${safeText(s.name)}">${safeText(s.name)}</option>`).join('');
+function openStreamDialog(id){
+ if(mode!=='saved'||!saved[id])return;
+ streamEditingId=id;streamEditOriginal=structuredClone(cleanStreamPreference(saved[id].streamPreference));
+ const pref=streamEditOriginal;
+ $('#streamAnimeTitle').textContent=saved[id].title;
+ $('#streamService').value=pref?.service||'';
+ $('#streamExactUrl').value=pref?.url||'';
+ $('#streamFindResult').textContent='';$('#streamFindResult').classList.remove('error');
+ $('#streamFindUrl').disabled=!/^jikan:\d+$/.test(id)||!$('#streamService').value;
+ $('#streamExactUrl').disabled=!$('#streamService').value;
+ $('#streamDialog').showModal();$('#streamService').focus();
+}
+function closeStreamDialog(){if($('#streamDialog').open)$('#streamDialog').close()}
+$('#streamDialog').addEventListener('close',()=>{streamEditingId=null;streamEditOriginal=null});
+$('#streamCancel').addEventListener('click',closeStreamDialog);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-stream-edit]');if(b)openStreamDialog(b.dataset.streamEdit)});
+$('#streamService').addEventListener('change',()=>{
+ // Never retain a URL belonging to a previously selected service.
+ const selected=$('#streamService').value;
+ const alreadyLoaded=detailCache.get(streamEditingId)?.full?.streaming;
+ const cached=(Array.isArray(alreadyLoaded)?alreadyLoaded:[]).find(x=>streamNameMatches(x.name,selected)&&streamAllowedUrl(selected,x.url));
+ $('#streamExactUrl').value=cached?streamAllowedUrl(selected,cached.url):'';
+ $('#streamExactUrl').disabled=!selected;
+ $('#streamFindUrl').disabled=!selected||!/^jikan:\d+$/.test(streamEditingId||'');
+ $('#streamFindResult').textContent=cached?'取得済みの作品情報からリンク候補を表示しました。保存前にリンク先をご確認ください。':'';
+ $('#streamFindResult').classList.remove('error');
+});
+function streamNameMatches(source,selected){
+ const name=String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'');
+ const aliases={
+  'Amazon Prime Video':['amazonprimevideo','primevideo'],
+  'Disney Plus':['disneyplus','disney+','disneyプラス','ディズニープラス'],
+  'U-NEXT':['unext'],
+  'DMM TV':['dmmtv'],
+  'dアニメストア':['dアニメストア','danimestore']
+ };
+ return (aliases[selected]||[selected.normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')]).some(alias=>name===alias.replace('+',''));
+}
+$('#streamFindUrl').addEventListener('click',async()=>{
+ const id=streamEditingId,service=$('#streamService').value;
+ if(!id||!/^jikan:\d+$/.test(id)||!streamService(service))return;
+ const button=$('#streamFindUrl');button.disabled=true;button.textContent='照会中…';
+ const result=$('#streamFindResult');result.classList.remove('error');result.textContent='';
+ try{
+  // User-initiated only: one short request, never automatically for each My List item.
+  const response=await detailFetch(`/anime/${id.slice(6)}/streaming`);
+  if(streamEditingId!==id||$('#streamService').value!==service)return;
+  const found=(Array.isArray(response?.data)?response.data:[]).find(x=>streamNameMatches(x.name,service)&&streamAllowedUrl(service,x.url));
+  if(found){$('#streamExactUrl').value=streamAllowedUrl(service,found.url);result.textContent='このサービスの登録済みリンクを見つけました。保存前にリンク先をご確認ください。'}
+  else result.textContent='このサービスの作品URLは登録されていません。URLを手入力するか、検索リンクをご利用ください。';
+ }catch{if(streamEditingId===id){result.textContent='リンクを取得できませんでした。URLを手入力するか、検索リンクをご利用ください。';result.classList.add('error')}}
+ finally{button.textContent='公開データの作品リンクを確認（任意）';if(streamEditingId===id)button.disabled=!streamService($('#streamService').value)}
+});
+$('#streamForm').addEventListener('submit',e=>{e.preventDefault();queueRecordWrite(saveStreamPreference)});
+async function saveStreamPreference(){
+ const id=streamEditingId,record=saved[id];if(!record||mode!=='saved')return false;
+ const service=$('#streamService').value,raw=$('#streamExactUrl').value.trim();
+ if(service&&!streamService(service)){toast('対応していないサービスです。','error');return false}
+ const url=service&&raw?streamAllowedUrl(service,raw):'';
+ if(raw&&!url){toast('選択したサービスのHTTPS作品URLを入力してください。','error');return false}
+ if(!sameRecordValue(cleanStreamPreference(record.streamPreference),streamEditOriginal)){
+  toast('別のタブで視聴サイトが変更されました。閉じて最新の設定をご確認ください。','error');return false;
+ }
+ const before=structuredClone(record);
+ record.streamPreference={service,url,updatedAt:new Date().toISOString()};
+ if(!await persist()){saved[id]=before;return false}
+ closeStreamDialog();render();toast(service?`${service}を視聴サイトに設定しました`:'視聴サイトの設定を解除しました');
+ return true;
+}
+
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main">${recordTitle(a)}${patternARecordMeta(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${uiIcon('book')}${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -3022,7 +3166,8 @@ function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))
  result[a.id]={...(note?{note}:{}),...(typeof a.noteDeletedAt==='string'&&Number.isFinite(Date.parse(a.noteDeletedAt))?{noteDeletedAt:a.noteDeletedAt}:{}),id:a.id,title:a.title,english:typeof a.english==='string'?a.english.slice(0,200):'',image:safeImage(a.image),year:Number.isInteger(a.year)?a.year:null,season:typeof a.season==='string'?a.season.slice(0,20):null,type:typeof a.type==='string'?a.type.slice(0,30):null,episodes:Number.isInteger(a.episodes)?a.episodes:null,score:typeof a.score==='number'&&Number.isFinite(a.score)?a.score:null,status:a.status,updatedAt:typeof a.updatedAt==='string'&&Number.isFinite(Date.parse(a.updatedAt))?a.updatedAt:'',...(validCompletedOn(a.completedOn)?{completedOn:a.completedOn}:{}),...(Number.isInteger(ep)&&ep>=0&&ep<=9999?{watchedEpisodes:ep}:{}),...(readReview(a.review)?{review:readReview(a.review)}:{}),...(typeof a.reviewDeletedAt==='string'&&Number.isFinite(Date.parse(a.reviewDeletedAt))?{reviewDeletedAt:a.reviewDeletedAt}:{}),...(Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0&&a.myRankOrder<=9999?{myRankOrder:a.myRankOrder}:{}),...(typeof a.rankUpdatedAt==='string'&&Number.isFinite(Date.parse(a.rankUpdatedAt))?{rankUpdatedAt:a.rankUpdatedAt}:{}),...(cleanAnalysisMeta(a.analysisMeta)?{analysisMeta:cleanAnalysisMeta(a.analysisMeta)}:{}),
   ...(a.status==='planned'&&typeof a.nextWatchPinnedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchPinnedAt))?{nextWatchPinnedAt:a.nextWatchPinnedAt}:{}),
   ...(typeof a.nextWatchUpdatedAt==='string'&&Number.isFinite(Date.parse(a.nextWatchUpdatedAt))?{nextWatchUpdatedAt:a.nextWatchUpdatedAt}:{}),
-  ...(cleanWeeklySchedule(a.weeklySchedule)?{weeklySchedule:cleanWeeklySchedule(a.weeklySchedule)}:{})};
+  ...(cleanWeeklySchedule(a.weeklySchedule)?{weeklySchedule:cleanWeeklySchedule(a.weeklySchedule)}:{}),
+  ...(cleanStreamPreference(a.streamPreference)?{streamPreference:cleanStreamPreference(a.streamPreference)}:{})};
  }
  if(!Object.keys(result).length)throw Error('有効な作品がありません');return result;
 }
@@ -3080,6 +3225,11 @@ function mergeEntry(current,backup,preferBackup=false){
   const owner=bt>ct?bw:ct>bt?cw:(preferBackup?bw:cw);
   if(owner)base.weeklySchedule=structuredClone(owner);else delete base.weeklySchedule;
  }else delete base.weeklySchedule;
+ const cp=cleanStreamPreference(current.streamPreference),bp=cleanStreamPreference(backup.streamPreference);
+ if(cp||bp){
+  const ct=Date.parse(cp?.updatedAt||'')||0,bt=Date.parse(bp?.updatedAt||'')||0;
+  base.streamPreference=structuredClone(bt>ct?bp:ct>bt?cp:(preferBackup?bp:cp));
+ }else delete base.streamPreference;
  return base;
 }
 function mergePreview(candidate){let additions=0,updates=0,keeps=0,ties=0;
