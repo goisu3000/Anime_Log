@@ -927,7 +927,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 <nav class="mobile-bottom" aria-label="モバイルメニュー"><button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg>アニメを探す</button><button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト</button><button type="button" id="mobileRanking" data-rank-open="now"><span class="mobile-ranking-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>ランキング</button><button id="mobileShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"/></svg>共有する</button><button id="mobileExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></svg>バックアップ</button></nav>
 <dialog id="addDialog"><form method="dialog" id="addForm"><h3>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
 <dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu><button type="button" class="secondary" id="mobileImportBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button><button type="button" class="primary" id="mobileDownloadBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></menu><menu><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
-<dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有URLに含めます。リンクを知っている人は誰でも閲覧できます。</p>
+<dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有します。短縮URL方式では共有データのコピーをCloudflareに365日間保存します。リンクを知っている人は誰でも閲覧できます。</p>
   <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">選択中のシーズンで見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
   <div class="share-permissions" role="group" aria-labelledby="sharePermissionsTitle">
     <h4 id="sharePermissionsTitle">共有する情報を選択</h4>
@@ -935,7 +935,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
     <label class="share-permission"><input type="checkbox" id="shareOverall" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 総合評価 <small class="share-description"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>1〜5の評価を共有</small></span></label>
     <label class="share-permission"><input type="checkbox" id="shareDetails" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg> 詳細評価 <small class="share-description">ストーリー・映像・キャラクター・音楽を共有</small></span></label>
     <label class="share-permission"><input type="checkbox" id="shareComment"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> メモ・感想 <small class="share-description">点数のない作品も含め、メモ本文を共有</small></span></label>
-    <p class="share-privacy-note">※ メモは点数のない作品も共有できます。共有リンクを開いた人に感想も読まれます。チェックを外した情報はURLにも含めません。</p>
+    <p class="share-privacy-note">※ メモは点数のない作品も共有できます。共有リンクを開いた人に感想も読まれます。チェックを外した情報は共有データに含めません。</p>
   </div>
   <div class="share-meta" id="shareCount" aria-live="polite"></div><div id="shareRisk" class="share-risk hidden"></div><menu><button class="primary" type="button" id="generateShare">共有URLを作成</button><button class="secondary" type="button" id="closeShare">閉じる</button></menu>
   <div id="shareOutput" class="hidden"><label for="shareLink" style="margin-top:22px">生成された共有URL</label><input class="share-link" type="text" readonly id="shareLink" aria-label="共有URL"><div class="share-dialog-actions"><button type="button" class="primary" id="copyShare">URLをコピー</button><button type="button" class="secondary" id="previewShare">表示を確認</button></div><p class="share-help" id="shareLocalHelp"></p></div>
@@ -2376,7 +2376,12 @@ $('#rankResults').addEventListener('drop',e=>{e.preventDefault();const target=e.
 $('#rankResults').addEventListener('dragend',()=>{rankDraggedId=null;$$('#rankResults .rank-row').forEach(r=>r.classList.remove('dragging','drag-over'))});
 
 const SHARE_VERSION=2, SHARE_PREFIX='#share=', SHARE_MAX=9000;
-let shareLinkBuilt='', shareNonce=0;
+// 安全な段階導入: Workerの保存機能と実地テストが完了するまで短縮URLの発行を無効にする。
+const SHARE_SHORT_ENABLED=true;
+const SHARE_WORKER_URL='https://anilog-share-api.neosuigo.workers.dev';
+const SHARE_SHORT_MAX=200000, SHARE_SHORT_ITEM_LIMIT=1500, SHARE_SHORT_UNPACK_MAX=3000000;
+let shareLinkBuilt='', shareNonce=0, lastShortSignature='', lastShortLink='', shareLoadingHash='';
+
 function selectedForShare(scope){
  const all=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
  if(scope==='all')return all;
@@ -2389,13 +2394,13 @@ function compactImg(link){
 function restoreImg(path){return typeof path==='string'&&/^\/images\/[a-zA-Z0-9/_-]+\.(?:jpg|jpeg|png|webp)$/i.test(path)?'https://cdn.myanimelist.net'+path:''}
 function utf8Bytes(s){return new TextEncoder().encode(s)}
 function bytesToBase64url(bytes){let binary='';for(let i=0;i<bytes.length;i+=16384){binary+=String.fromCharCode(...bytes.subarray(i,i+16384))}return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
-function base64urlToBytes(str){if(!/^[A-Za-z0-9_-]+$/.test(str)||str.length>SHARE_MAX)throw Error('共有URLが長すぎるか形式が違います');const binary=atob(str.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-str.length%4)%4));return Uint8Array.from(binary,c=>c.charCodeAt(0))}
+function base64urlToBytes(str,maxLen=SHARE_MAX){if(!/^[A-Za-z0-9_-]+$/.test(str)||str.length>maxLen)throw Error('共有URLが長すぎるか形式が違います');const binary=atob(str.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-str.length%4)%4));return Uint8Array.from(binary,c=>c.charCodeAt(0))}
 async function compressShare(bytes){if(!('CompressionStream' in window))return {mode:'p',bytes};const packed=await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer();return {mode:'g',bytes:new Uint8Array(packed)}}
-async function unpackShare(mode,bytes){
- if(mode==='p'){if(bytes.length>90000)throw Error('共有データが大きすぎます');return new TextDecoder('utf-8',{fatal:true}).decode(bytes)}
+async function unpackShare(mode,bytes,maxBytes=90000){
+ if(mode==='p'){if(bytes.length>maxBytes)throw Error('共有データが大きすぎます');return new TextDecoder('utf-8',{fatal:true}).decode(bytes)}
  if(mode!=='g'||!('DecompressionStream' in window))throw Error('このブラウザでは共有URLの解凍ができません');
  const reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();const parts=[];let length=0;
- while(true){const {value,done}=await reader.read();if(done)break;length+=value.byteLength;if(length>90000){await reader.cancel();throw Error('共有データが大きすぎます')}parts.push(value)}
+ while(true){const {value,done}=await reader.read();if(done)break;length+=value.byteLength;if(length>maxBytes){await reader.cancel();throw Error('共有データが大きすぎます')}parts.push(value)}
  const all=new Uint8Array(length);let off=0;for(const part of parts){all.set(part,off);off+=part.length}return new TextDecoder('utf-8',{fatal:true}).decode(all);
 }
 function reviewForShare(raw,options,noteText=''){
@@ -2406,9 +2411,9 @@ function reviewForShare(raw,options,noteText=''){
  const comment=options.comment&&noteText?noteText:null;
  return overall||aspectData||comment?[overall,aspectData,comment]:null;
 }
-function validateSnapshot(payload){
+function validateSnapshot(payload,maxItems=250){
  const version=payload?.v;
- if(!payload||(version!==1&&version!==SHARE_VERSION)||!['season','watching','all'].includes(payload.scope)||!Array.isArray(payload.items)||payload.items.length>250)throw Error('対応していない共有URLです');
+ if(!payload||(version!==1&&version!==SHARE_VERSION)||!['season','watching','all'].includes(payload.scope)||!Array.isArray(payload.items)||payload.items.length>maxItems)throw Error('対応していない共有URLです');
  if(!Number.isSafeInteger(payload.created)||payload.created<0)throw Error('作成日時の形式が違います');
  if(payload.scope==='season'&&(!Number.isInteger(payload.year)||!seasonLabels[payload.season]))throw Error('シーズン情報が正しくありません');
  const options=version===1?{overall:false,details:false,comment:false}:payload.options;
@@ -2453,11 +2458,38 @@ function shareError(message){
  $('#sharedItems').innerHTML=emptyCard('共有データが読み込めません',message+' URLが途中で切れていないか確認してください。','offline');
 }
 async function readShareFromHash(){
- exitAnnual();const attempt=++shareNonce;if(!location.hash.startsWith(SHARE_PREFIX))return;
+ exitAnnual();if(!location.hash.startsWith(SHARE_PREFIX)||shareLoadingHash===location.hash)return;
+ const requestHash=location.hash;shareLoadingHash=requestHash;const attempt=++shareNonce;
  try{
-  const fragment=location.hash.slice(SHARE_PREFIX.length);const match=/^([gp])\.([A-Za-z0-9_-]+)$/.exec(fragment);if(!match)throw Error('共有URLが正しくありません');
-  const json=await unpackShare(match[1],base64urlToBytes(match[2]));const data=validateSnapshot(JSON.parse(json));if(attempt===shareNonce)showShared(data);
- }catch(e){if(attempt===shareNonce)shareError(e.message||'');}
+  const fragment=location.hash.slice(SHARE_PREFIX.length);
+  const match=/^([gps])\.([A-Za-z0-9_-]+)$/.exec(fragment);if(!match)throw Error('共有URLが正しくありません');
+  const short=match[1]==='s';
+  let packed=fragment;
+  if(short){
+   if(!/^[A-Za-z0-9_-]{16}$/.test(match[2]))throw Error('短縮共有URLの形式が正しくありません');
+   if(location.protocol==='file:')throw Error('短縮共有URLは公開サイトで開いてください');
+   // KVは保存直後の反映が遅れる場合があるため、404だけ数回再試行する。
+   for(let n=0;n<4;n++){
+    if(attempt!==shareNonce)return;
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),12000);
+    let response;
+    try{response=await fetch(SHARE_WORKER_URL+'/share?id='+encodeURIComponent(match[2]),{headers:{Accept:'application/json'},signal:controller.signal,cache:'no-store'});}
+    catch(e){throw Error(e?.name==='AbortError'?'共有サーバーの応答がタイムアウトしました':'共有サーバーに接続できませんでした');}
+    finally{clearTimeout(timeout);}
+    if(attempt!==shareNonce)return;
+    if(response.status===404&&n<3){await new Promise(resolve=>setTimeout(resolve,[1500,3000,6000][n]));continue;}
+    if(!response.ok)throw Error(response.status===404?'共有データが見つかりません。有効期限の1年が経過した可能性があります':response.status===429?'アクセスが集中しています。少し待ってから再試行してください':'共有データを取得できませんでした（HTTP '+response.status+'）');
+    const result=await response.json();
+    if(typeof result?.data!=='string'||result.data.length>SHARE_SHORT_MAX)throw Error('共有データの形式またはサイズが正しくありません');
+    packed=result.data;break;
+   }
+  }
+  const decoded=/^([gp])\.([A-Za-z0-9_-]+)$/.exec(packed);if(!decoded)throw Error('共有URLが正しくありません');
+  const json=await unpackShare(decoded[1],base64urlToBytes(decoded[2],short?SHARE_SHORT_MAX:SHARE_MAX),short?SHARE_SHORT_UNPACK_MAX:90000);
+  const data=validateSnapshot(JSON.parse(json),short?SHARE_SHORT_ITEM_LIMIT:250);
+  if(attempt===shareNonce&&location.hash===requestHash){showShared(data);if(short)$('#sharedCreated').textContent+='（短縮URLの有効期限：作成から365日）';}
+ }catch(e){if(attempt===shareNonce&&location.hash===requestHash)shareError(e.message||'');}
+ finally{if(shareLoadingHash===requestHash)shareLoadingHash='';}
 }
 function exitSharedView(){
  if(mode==='share'){++shareNonce;if(!aniHistoryTransition&&!aniHistoryRestoring)history.replaceState(history.state,'',location.href.split('#')[0]);document.body.classList.remove('view-sharing');$('#shareView').classList.add('hidden')}
@@ -2476,28 +2508,52 @@ function updateShareDialog(){
  const withNotes=list.filter(a=>readNote(a)?.text).length;
  $('#shareCount').textContent=(scope==='season'?`${curYear}年 ${seasonLabels[curSeason]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（感想登録 ${withNotes}作品）`:''}`;
  const chars=list.reduce((n,a)=>n+(($('#shareComment').checked?readNote(a)?.text:'')||'').length,0);
- const risk=$('#shareRisk');const risky=count>60||chars>1800;
+ const risk=$('#shareRisk');const localMode=!SHARE_SHORT_ENABLED||location.protocol==='file:';
+ const risky=localMode?(count>60||chars>1800):(count>1000||chars>120000);
  risk.classList.toggle('hidden',!risky);
- risk.textContent=risky?'作品数や感想が多いため共有URLが長くなる可能性があります。生成できない場合はシーズンを絞るか、感想の共有を外してください。':'';
+ risk.textContent=risky?(localMode?'作品数や感想が多いため共有URLが長くなる可能性があります。生成できない場合はシーズンを絞るか、感想の共有を外してください。':'共有データの量が大きい場合、サーバーの保存上限に達する可能性があります。'):'';
  $('#shareOutput').classList.add('hidden');shareLinkBuilt='';
 }
 async function generateShare(){
  const scope=$('#shareScope').value;const list=selectedForShare(scope);if(!list.length){toast('共有する作品がありません。「見てる作品すべて」に切り替えるか、作品を「見てる」に登録してください。','error');return}
- if(list.length>250){toast('共有対象が250作品を超えています。範囲を絞ってください','error');return}
+ const short=SHARE_SHORT_ENABLED&&location.protocol==='https:';
+ if(list.length>(short?SHARE_SHORT_ITEM_LIMIT:250)){toast(short?'共有対象が1,500作品を超えています。範囲を絞ってください':'共有対象が250作品を超えています。範囲を絞ってください','error');return}
  const button=$('#generateShare');button.disabled=true;button.textContent='作成中…';
  try{
   const options={overall:$('#shareOverall').checked,details:$('#shareDetails').checked,comment:$('#shareComment').checked};
-  const data={v:SHARE_VERSION,scope,created:Date.now(),year:curYear,season:curSeason,options,items:list.map(a=>{
+  const items=list.map(a=>{
    const row=[a.id,a.title,a.status,a.year||null,a.season||null,a.type||null,compactImg(a.image)];
    const review=reviewForShare(a.review,options,readNote(a)?.text);if(review)row.push(review);
    return row;
-  })};
-  const encoded=await compressShare(utf8Bytes(JSON.stringify(data)));
-  const href=new URL(window.location.href);href.hash='share='+encoded.mode+'.'+bytesToBase64url(encoded.bytes);
-  if(href.hash.length>SHARE_MAX)throw Error('共有URLが長くなりすぎました。作品数を絞るか「感想」のチェックを外して再作成してください');
+  });
+  const signature=short?JSON.stringify([scope,curYear,curSeason,options,items]):'';
+  let href=new URL(window.location.href);
+  if(short&&lastShortSignature===signature&&lastShortLink){href=new URL(lastShortLink);}
+  else{
+   const data={v:SHARE_VERSION,scope,created:Date.now(),year:curYear,season:curSeason,options,items};
+   const encoded=await compressShare(utf8Bytes(JSON.stringify(data)));
+   const packed=encoded.mode+'.'+bytesToBase64url(encoded.bytes);
+   if(short){
+    if(packed.length>SHARE_SHORT_MAX)throw Error('共有データの容量が保存上限を超えました。作品数を絞るか、感想の共有を外してください');
+    const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),20000);
+    let response;
+    try{response=await fetch(SHARE_WORKER_URL+'/share',{method:'POST',headers:{'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({data:packed}),signal:controller.signal});}
+    catch(e){throw Error(e?.name==='AbortError'?'共有サーバーの応答がタイムアウトしました':'共有サーバーに接続できませんでした');}
+    finally{clearTimeout(timeout);}
+    const result=await response.json().catch(()=>({}));
+    if(!response.ok)throw Error(response.status===503?'短縮共有URL機能は現在準備中です':response.status===429?'共有URLの作成が集中しています。少し待ってください':result?.error||'短縮共有URLを作成できませんでした');
+    if(!/^[A-Za-z0-9_-]{16}$/.test(result?.id||''))throw Error('共有サーバーから正しいIDが返されませんでした');
+    href.hash='share=s.'+result.id;
+    lastShortSignature=signature;lastShortLink=href.href;
+   }else{
+    href.hash='share='+packed;
+    if(href.hash.length>SHARE_MAX)throw Error('共有URLが長くなりすぎました。作品数を絞るか「感想」のチェックを外して再作成してください');
+   }
+  }
   shareLinkBuilt=href.href;$('#shareLink').value=shareLinkBuilt;
   const fileProtocol=location.protocol==='file:';
-  $('#copyShare').disabled=fileProtocol;$('#shareLocalHelp').textContent=fileProtocol?'ローカルファイルを開いています。このURLは他の端末からアクセスできません。Vercel等でHTTPS公開した後に共有してください。':'共有時点の固定リストです。更新した内容を送りたいときは、新しいURLを発行してください。';
+  $('#copyShare').disabled=fileProtocol;
+  $('#shareLocalHelp').textContent=fileProtocol?'ローカルファイルを開いています。このURLは他の端末からアクセスできません。Vercel等でHTTPS公開した後に共有してください。':short?'共有データはCloudflareに365日間保存されます。更新した内容を送りたいときは、新しいURLを発行してください。':'共有時点の固定リストです。更新した内容を送りたいときは、新しいURLを発行してください。';
   $('#shareOutput').classList.remove('hidden');toast('共有URLを作成しました');
  }catch(e){toast(e.message||'URLの生成に失敗しました','error')}finally{button.disabled=false;button.textContent='共有URLを作成'}
 }
@@ -2516,7 +2572,7 @@ $('#shareScope').addEventListener('change',updateShareDialog);
 $('#generateShare').addEventListener('click',generateShare);
 $('#closeShare').addEventListener('click',()=>$('#shareDialog').close());
 $('#copyShare').addEventListener('click',copyShare);
-$('#previewShare').addEventListener('click',()=>{if(!shareLinkBuilt)return;$('#shareDialog').close();aniHistorySave();window.location.hash=new URL(shareLinkBuilt).hash;readShareFromHash()});
+$('#previewShare').addEventListener('click',()=>{if(!shareLinkBuilt)return;$('#shareDialog').close();aniHistorySave();window.location.hash=new URL(shareLinkBuilt).hash});
 $('#backFromShare').addEventListener('click',()=>showSaved());
 window.addEventListener('hashchange',()=>{if(aniHistoryRestoring)return;if(location.hash.startsWith(SHARE_PREFIX)){if(mode==='share'&&history.state?.__aniLogRouteV1&&history.state.view==='share')return;if(aniHistoryReady)aniHistoryDepth++;readShareFromHash()}else if(mode==='share'){exitSharedView();showSaved()}});
 $('#homeBrand').addEventListener('click',goHome);
