@@ -777,6 +777,28 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-toggle:focus-visible,.weekly-settings-btn:focus-visible,.weekly-edit:focus-visible,.weekly-unassigned-btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-today-label{font-size:16px}.weekly-today-label strong{font-size:22px}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px}.weekly-item-meta{font-size:11px;justify-content:flex-start;flex:1 0 100%;padding-left:37px;order:3}.weekly-item{flex-wrap:wrap}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
 
+/* Collapsed weekly calendar: headline on the left, today's count and compact previews on the right. */
+.weekly-calendar:not(.is-open) .weekly-heading{flex:1 1 43%}
+.weekly-calendar:not(.is-open) .weekly-head-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) 40px;flex:1 1 57%;gap:18px;min-width:0}
+.weekly-calendar:not(.is-open) .weekly-summary:not(:empty){display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:4px;min-width:0;margin:0;padding:0 0 0 16px;border-left:1px solid var(--border)}
+.weekly-calendar:not(.is-open) .weekly-preview{display:flex;align-items:center;min-width:0;gap:9px;height:30px;padding:0;background:transparent;border:0;border-radius:0;font-size:var(--fs-xs)}
+.weekly-calendar:not(.is-open) .weekly-preview .weekly-poster{width:28px;height:28px;flex:0 0 28px;object-fit:cover}
+.weekly-calendar:not(.is-open) .weekly-preview-title{flex:1;min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:var(--fw-semi)}
+.weekly-calendar:not(.is-open) .weekly-preview .weekly-tag{flex:0 0 auto;max-width:none;overflow:visible}
+.weekly-calendar:not(.is-open) .weekly-summary .weekly-muted{font-size:var(--fs-xs);line-height:1.5}
+@media(max-width:1100px){
+  .weekly-calendar:not(.is-open) .weekly-head{flex-wrap:wrap;gap:12px}
+  .weekly-calendar:not(.is-open) .weekly-heading{flex:1 0 100%}
+  .weekly-calendar:not(.is-open) .weekly-head-actions{flex:1 1 100%}
+}
+@media(max-width:740px){
+  .weekly-calendar:not(.is-open) .weekly-head-actions{grid-template-columns:minmax(0,max-content) minmax(0,1fr) 40px;gap:8px}
+  .weekly-calendar:not(.is-open) .weekly-summary:not(:empty){padding-left:8px}
+  .weekly-calendar:not(.is-open) .weekly-preview .weekly-tag{display:none}
+  .weekly-calendar:not(.is-open) .weekly-today-label{font-size:14px}
+  .weekly-calendar:not(.is-open) .weekly-today-label strong{font-size:19px}
+}
+
 /* Responsive Breakpoints */
 @media(min-width:1051px){
   .rank-two-col{
@@ -882,8 +904,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 
     <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
     <section class="weekly-calendar" id="weeklyCalendar" aria-labelledby="weeklyTitle" hidden>
-      <header class="weekly-head"><div class="weekly-heading"><span class="weekly-eyebrow">WEEKLY VIEWING</span><h3 id="weeklyTitle">週間視聴カレンダー</h3><p class="weekly-description">自動取得した放送曜日をもとに、自分の視聴予定を管理。</p></div><div class="weekly-head-actions"><span class="weekly-today-label" id="weeklyTodayCount">今日の予定：確認中</span><button type="button" class="weekly-toggle" id="weeklyToggle" aria-expanded="false" aria-controls="weeklyContent" aria-label="週間視聴カレンダーを開く"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></button></div></header>
-      <div class="weekly-summary" id="weeklySummary"></div>
+      <header class="weekly-head"><div class="weekly-heading"><span class="weekly-eyebrow">WEEKLY VIEWING</span><h3 id="weeklyTitle">週間視聴カレンダー</h3><p class="weekly-description">自動取得した放送曜日をもとに、自分の視聴予定を管理。</p></div><div class="weekly-head-actions"><span class="weekly-today-label" id="weeklyTodayCount">今日の予定：確認中</span><div class="weekly-summary" id="weeklySummary"></div><button type="button" class="weekly-toggle" id="weeklyToggle" aria-expanded="false" aria-controls="weeklyContent" aria-label="週間視聴カレンダーを開く"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></button></div></header>
       <div class="weekly-content" id="weeklyContent" hidden><div class="weekly-toolbar"><span class="weekly-toolbar-note" id="weeklySourceNote">放送曜日は参考情報です。配信サービスの更新曜日とは異なる場合があります。</span><button type="button" id="weeklySettingsBtn" class="weekly-settings-btn" aria-expanded="false" aria-controls="weeklySettingsPanel">表示対象を設定</button></div><div class="weekly-settings-panel" id="weeklySettingsPanel" hidden><span>表示対象：</span><label><input type="checkbox" data-weekly-status="watching" checked>見てる</label><label><input type="checkbox" data-weekly-status="planned">見たい</label><label><input type="checkbox" data-weekly-status="paused">一時中断</label></div><div id="weeklyRows" class="weekly-rows"></div><section class="weekly-unassigned" id="weeklyUnassigned" hidden><p class="weekly-unassigned-title" id="weeklyUnassignedTitle"></p><div class="weekly-unassigned-list" id="weeklyUnassignedList"></div></section></div>
       <button type="button" class="weekly-mobile-annual" data-annual-open>年間まとめを見る ${'→'}</button>
     </section>
@@ -1888,7 +1909,7 @@ function weeklyPlanned(a){
 function weeklyRelevant(){return Object.values(saved).filter(a=>a&&weeklyOptions.statuses.includes(a.status)).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ja'))}
 function weeklyPoster(a){const u=safeImage(a.image);return u?`<img class="weekly-poster" src="${safeText(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
 function weeklyEntryMarkup(a,info,preview=false){
- if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span>${safeText(a.title)}</span></span>`;
+ if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-title" title="${safeText(a.title)}">${safeText(a.title)}</span><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span>`;
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
  return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="weekly-item-meta">${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
