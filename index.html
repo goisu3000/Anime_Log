@@ -1853,10 +1853,16 @@ const STREAM_SERVICES=[
  {name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']}
 ];
 function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||null}
+function isStreamSearchUrl(value){
+ try{const u=new URL(String(value||'').trim());return u.protocol==='https:'&&(u.hostname==='www.google.com'||u.hostname==='google.com')&&u.pathname==='/search'&&Boolean(u.searchParams.get('q')?.startsWith('site:'))}catch{return false}
+}
 function streamAllowedUrl(name,value){
  const site=streamService(name);if(!site||typeof value!=='string'||value.length>2048)return '';
+ const trimmed=value.trim();if(!trimmed)return '';
+ if(isStreamSearchUrl(trimmed))return trimmed;
  try{
-  const url=new URL(value.trim());
+  const normalized=trimmed.startsWith('http://')?'https://'+trimmed.slice(7):trimmed;
+  const url=new URL(normalized);
   if(url.protocol!=='https:'||url.username||url.password||url.port)return '';
   const host=url.hostname.toLowerCase();
   if(!site.hosts.some(allowed=>host===allowed||host.endsWith('.'+allowed)))return '';
@@ -1870,17 +1876,97 @@ function cleanStreamPreference(x){
  const url=streamAllowedUrl(x.service,x.url||'');
  return {service:x.service,url,updatedAt:x.updatedAt};
 }
+let streamEditingId=null,streamEditOriginal=null,streamLookupCache=new Map();
+function streamNameMatches(source,selected){
+ const clean=s=>String(s||'').normalize('NFKC').toLowerCase().replace(/[^a-z0-9\u3040-\u30ff\u3400-\u9fff+]/g,'');
+ const name=clean(source);
+ const aliases={
+  'Amazon Prime Video':['amazonprimevideo','primevideo'],
+  'Disney Plus':['disneyplus','disney+','disneyプラス','ディズニープラス'],
+  'FOD':['fod','fodpremium'],
+  'U-NEXT':['unext'],
+  'DMM TV':['dmmtv'],
+  'dアニメストア':['dアニメストア','danimestore']
+ };
+ return (aliases[selected]||[clean(selected)]).some(alias=>name===alias.replace('+',''));
+}
+function streamCachedList(id){
+ const fullList=detailCache.get(id)?.full?.streaming;
+ if(Array.isArray(fullList))return fullList;
+ return streamLookupCache.has(id)?streamLookupCache.get(id):null;
+}
+function streamFindOfficialUrl(list,service){
+ if(!Array.isArray(list)||!streamService(service))return '';
+ for(const x of list){
+  if(!streamNameMatches(x?.name,service))continue;
+  const u=streamAllowedUrl(service,x?.url||'');
+  if(u&&!isStreamSearchUrl(u))return u;
+ }
+ return '';
+}
+function streamResolvedUrlFor(id,service,customTitle=''){
+ const site=streamService(service);if(!site)return '';
+ const official=streamFindOfficialUrl(streamCachedList(id),service);
+ if(official)return official;
+ const title=customTitle||saved[id]?.title||detailSource(id)?.title||'';
+ return title?jpStreamSearchUrl(site.domain,title):'';
+}
 function streamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
- const resolvedUrl=selected?(pref.url||streamFindMatchingUrl(streamCachedList(a.id),selected)):'';
- const label=selected?`${selected}で${resolvedUrl?'見る':'探す'}`:'視聴サイトを設定';
+ const officialUrl=selected?streamFindOfficialUrl(streamCachedList(a.id),selected):'';
+ const savedDirectUrl=selected&&pref.url&&!isStreamSearchUrl(pref.url)?pref.url:'';
+ const directUrl=savedDirectUrl||officialUrl;
+ const targetUrl=selected?(directUrl||pref.url||streamResolvedUrlFor(a.id,selected,a.title)):'';
+ const label=selected?`${selected}で${directUrl?'見る':'探す'}`:'視聴サイトを設定';
  const action=selected
-  ?`<a class="stream-inline-link" href="${safeText(resolvedUrl||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(resolvedUrl?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)} <span aria-hidden="true">↗</span></a>`
+  ?`<a class="stream-inline-link" href="${safeText(targetUrl)}" target="_blank" rel="noopener noreferrer" title="${safeText(directUrl?'登録された作品ページを開く':'作品詳細と同じリンク先を開く')}">${safeText(label)} <span aria-hidden="true">↗</span></a>`
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}">${uiIcon('plus')}<span>${label}</span></button>`;
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
 }
-let streamEditingId=null,streamEditOriginal=null;
 $('#streamService').innerHTML='<option value="">未設定（リンクを削除）</option>'+STREAM_SERVICES.map(s=>`<option value="${safeText(s.name)}">${safeText(s.name)}</option>`).join('');
+async function autoPopulateStreamUrl(id,service,force=false){
+ const result=$('#streamFindResult'),button=$('#streamFindUrl');
+ result.classList.remove('error');
+ if(!service||!streamService(service)){$('#streamExactUrl').value='';result.textContent='';return}
+ const title=saved[id]?.title||'';
+ const cached=force?null:streamCachedList(id);
+ const immediateOfficial=streamFindOfficialUrl(cached,service);
+ const fallbackUrl=streamResolvedUrlFor(id,service,title);
+ $('#streamExactUrl').value=immediateOfficial||fallbackUrl;
+ if(!/^jikan:\d+$/.test(id||'')){
+  result.textContent='作品詳細と同じ検索URLを自動入力しました（直接の作品ページURLに書き換えることもできます）。';
+  return;
+ }
+ if(cached){
+  result.textContent=immediateOfficial?'公開データから作品ページの公式URLを自動入力しました。':'公開データに個別URLがないため、作品詳細と同じ検索URLを自動入力しました。';
+  return;
+ }
+ button.disabled=true;button.textContent='リンクを確認中…';
+ result.textContent='作品詳細のリンク情報を確認しています…';
+ try{
+  const response=await detailFetch(`/anime/${id.slice(6)}/streaming`);
+  const list=Array.isArray(response?.data)?response.data:[];
+  streamLookupCache.set(id,list);
+  if(streamEditingId!==id||$('#streamService').value!==service)return;
+  const official=streamFindOfficialUrl(list,service);
+  const currentVal=$('#streamExactUrl').value.trim();
+  if(official&&(force||!currentVal||isStreamSearchUrl(currentVal))){
+   $('#streamExactUrl').value=official;
+   result.textContent='公開データから作品ページの公式URLを自動入力しました。';
+  }else{
+   if(!currentVal)$('#streamExactUrl').value=fallbackUrl;
+   result.textContent=official?'作品ページの公式URLを利用できます。':'公開データに個別URLがないため、作品詳細と同じ検索URLを自動入力しました。';
+  }
+ }catch{
+  if(streamEditingId===id&&$('#streamService').value===service){
+   if(!$('#streamExactUrl').value.trim())$('#streamExactUrl').value=fallbackUrl;
+   result.textContent='作品詳細と同じ検索URLを自動入力しました（直接の作品ページURLに書き換えることもできます）。';
+  }
+ }finally{
+  button.textContent='公開データの作品リンクを再確認';
+  if(streamEditingId===id)button.disabled=!streamService($('#streamService').value)||!/^jikan:\d+$/.test(id);
+ }
+}
 function openStreamDialog(id){
  if(mode!=='saved'||!saved[id])return;
  streamEditingId=id;streamEditOriginal=structuredClone(cleanStreamPreference(saved[id].streamPreference));
@@ -1892,48 +1978,20 @@ function openStreamDialog(id){
  $('#streamFindUrl').disabled=!/^jikan:\d+$/.test(id)||!$('#streamService').value;
  $('#streamExactUrl').disabled=!$('#streamService').value;
  $('#streamDialog').showModal();$('#streamService').focus();
+ if(pref?.service&&(!pref?.url||isStreamSearchUrl(pref.url)))autoPopulateStreamUrl(id,pref.service,false);
 }
 function closeStreamDialog(){if($('#streamDialog').open)$('#streamDialog').close()}
 $('#streamDialog').addEventListener('close',()=>{streamEditingId=null;streamEditOriginal=null});
 $('#streamCancel').addEventListener('click',closeStreamDialog);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-stream-edit]');if(b)openStreamDialog(b.dataset.streamEdit)});
 $('#streamService').addEventListener('change',()=>{
- // Never retain a URL belonging to a previously selected service.
  const selected=$('#streamService').value;
- const alreadyLoaded=detailCache.get(streamEditingId)?.full?.streaming;
- const cached=(Array.isArray(alreadyLoaded)?alreadyLoaded:[]).find(x=>streamNameMatches(x.name,selected)&&streamAllowedUrl(selected,x.url));
- $('#streamExactUrl').value=cached?streamAllowedUrl(selected,cached.url):'';
+ $('#streamExactUrl').value='';
  $('#streamExactUrl').disabled=!selected;
  $('#streamFindUrl').disabled=!selected||!/^jikan:\d+$/.test(streamEditingId||'');
- $('#streamFindResult').textContent=cached?'取得済みの作品情報からリンク候補を表示しました。保存前にリンク先をご確認ください。':'';
- $('#streamFindResult').classList.remove('error');
+ autoPopulateStreamUrl(streamEditingId,selected,false);
 });
-function streamNameMatches(source,selected){
- const name=String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'');
- const aliases={
-  'Amazon Prime Video':['amazonprimevideo','primevideo'],
-  'Disney Plus':['disneyplus','disney+','disneyプラス','ディズニープラス'],
-  'U-NEXT':['unext'],
-  'DMM TV':['dmmtv'],
-  'dアニメストア':['dアニメストア','danimestore']
- };
- return (aliases[selected]||[selected.normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')]).some(alias=>name===alias.replace('+',''));
-}
-$('#streamFindUrl').addEventListener('click',async()=>{
- const id=streamEditingId,service=$('#streamService').value;
- if(!id||!/^jikan:\d+$/.test(id)||!streamService(service))return;
- const button=$('#streamFindUrl');button.disabled=true;button.textContent='照会中…';
- const result=$('#streamFindResult');result.classList.remove('error');result.textContent='';
- try{
-  // User-initiated only: one short request, never automatically for each My List item.
-  const response=await detailFetch(`/anime/${id.slice(6)}/streaming`);
-  if(streamEditingId!==id||$('#streamService').value!==service)return;
-  const found=(Array.isArray(response?.data)?response.data:[]).find(x=>streamNameMatches(x.name,service)&&streamAllowedUrl(service,x.url));
-  if(found){$('#streamExactUrl').value=streamAllowedUrl(service,found.url);result.textContent='このサービスの登録済みリンクを見つけました。保存前にリンク先をご確認ください。'}
-  else result.textContent='このサービスの作品URLは登録されていません。URLを手入力するか、検索リンクをご利用ください。';
- }catch{if(streamEditingId===id){result.textContent='リンクを取得できませんでした。URLを手入力するか、検索リンクをご利用ください。';result.classList.add('error')}}
- finally{button.textContent='公開データの作品リンクを確認（任意）';if(streamEditingId===id)button.disabled=!streamService($('#streamService').value)}
-});
+$('#streamFindUrl').addEventListener('click',()=>autoPopulateStreamUrl(streamEditingId,$('#streamService').value,true));
 $('#streamForm').addEventListener('submit',e=>{e.preventDefault();queueRecordWrite(saveStreamPreference)});
 async function saveStreamPreference(){
  const id=streamEditingId,record=saved[id];if(!record||mode!=='saved')return false;
@@ -3485,7 +3543,7 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
- const links=(full?.streaming||[]).map(p=>{const svc=STREAM_SERVICES.find(s=>streamNameMatches(p?.name,s.name));const u=svc?streamAllowedUrl(svc.name,p?.url||safeLink(p?.url)):'';return svc&&u?{...p,name:svc.name,url:u,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
+ const links=(full?.streaming||[]).map(p=>{const svc=STREAM_SERVICES.find(s=>streamNameMatches(p?.name,s.name));const u=svc?streamAllowedUrl(svc.name,p?.url||safeLink(p?.url)):'';return svc&&u&&!isStreamSearchUrl(u)?{...p,name:svc.name,url:u,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
  const unique=links.filter(p=>{if(seen.has(p.name))return false;seen.add(p.name);return true});
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
