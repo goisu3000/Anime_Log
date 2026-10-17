@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.4 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.5 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -139,6 +139,8 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .searchbox #searchBtn{background:var(--surface2);border:1px solid var(--border-ctrl);color:var(--ink);border-radius:6px;padding:6px 13px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
 .search-suggest{position:absolute;top:calc(100% + 5px);left:0;right:0;z-index:20;max-height:330px;overflow-y:auto;border:1px solid var(--border-ctrl);border-radius:var(--radius);background:var(--surface2);box-shadow:0 20px 50px rgba(0,0,0,.6);padding:6px}
 .search-suggest button{width:100%;display:flex;text-align:left;align-items:center;justify-content:space-between;gap:10px;background:transparent;color:var(--ink);border:0;border-radius:var(--radius-sm);padding:10px 12px;font-size:var(--fs-sm)}
+.search-suggest button.suggest-all-years{border-top:1px solid var(--border);margin-top:4px;padding-top:11px;color:var(--accent);font-weight:var(--fw-semi)}
+.search-suggest button.suggest-all-years:first-child{border-top:0;margin-top:0;padding-top:10px}
 .search-suggest button[aria-selected="true"]{background:var(--surface-hover);color:var(--accent)}
 .search-suggest small,.search-suggest-note{font-size:var(--fs-xs);color:var(--muted)}
 .search-suggest-note{margin:5px 10px 4px}
@@ -918,7 +920,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.4 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.5 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1952,7 +1954,7 @@ function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching'
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
-function emptyCard(title,msg,icon='grid',btn=''){return `<div class="state"><div class="state-icon">${uiIcon(icon)}</div><h3>${safeText(title)}</h3><p>${safeText(msg)}</p>${btn?`<button data-state-action="${btn==='再読み込み'?'reload':'season'}">${safeText(btn)}</button>`:''}</div>`}
+function emptyCard(title,msg,icon='grid',btn='',action=''){return `<div class="state"><div class="state-icon">${uiIcon(icon)}</div><h3>${safeText(title)}</h3><p>${safeText(msg)}</p>${btn?`<button data-state-action="${safeText(action||(btn==='再読み込み'?'reload':'season'))}">${safeText(btn)}</button>`:''}</div>`}
 const savedStatusOrder=['watching','planned','watched','paused','dropped'];
 const savedStatusIcons={watching:uiIcon('play'),planned:uiIcon('star'),paused:uiIcon('pause'),watched:uiIcon('check'),dropped:uiIcon('stop')};
 const seasonRank={winter:1,spring:2,summer:3,fall:4};
@@ -2273,7 +2275,8 @@ function render(){
  if(loading&&!isSaved&&!exploreRegistered&&page===1)grid.innerHTML=emptyCard('作品一覧を取得中…','公開アニメデータベースにアクセスしています。','loading');
  else if(!filtered.length){
   grid.innerHTML=isSaved?emptyCard('該当する作品がありません','視聴状況や検索条件を変更するか、アニメを探して作品を登録してください。','book','アニメを探す'):
-   exploreRegistered?emptyCard('この条件で登録した作品はありません','放送年・季節を変えるか、上の「すべて」で作品を探して登録してください。','search'):
+   exploreRegistered?emptyCard('この条件で登録した作品はありません','放送年・季節を変えるか、上の「すべて」で作品を探して登録してください。','search',currentScope()!=='all'?'全年代の登録作品を表示':'','explore-all-years'):
+   (query&&!hasNext&&currentScope()!=='all')?emptyCard(`「${fullPeriodLabel()}」に該当する作品がありません`,`選択中の期間（${fullPeriodLabel()}）では「${query}」に一致する作品が見つかりませんでした。全年代に切り替えて検索できます。`,'search',`全年代から「${query}」を検索`,'search-all-years'):
    emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
@@ -3057,58 +3060,89 @@ $('#ratingCancel').addEventListener('click',closeRating);
 $('#ratingClear').addEventListener('click',clearRating);
 $$('[data-type]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.type;if(next===typeFilter)return;typeFilter=next;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='season'&&exploreStatusFilter==='all')fetchPage(true);else render()}));
 $$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;exploreStatusFilter=next;if(next==='all'){fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}));
-let runSeasonSearch=function(nextQuery){query=String(nextQuery||'').trim();fetchPage(true)};
-years.addEventListener('change',()=>{periodTouched=true;if(/^\d{4}$/.test(years.value)){curYear=Number(years.value);if($('#seasonSelect').value==='all')$('#seasonSelect').value=curSeason}syncPeriodUI();if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()});
-$('#seasonSelect').addEventListener('change',()=>{periodTouched=true;if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()});
+let periodBeforeAutoAll=null;
+let runSeasonSearch=function(nextQuery,allYears=false){
+ const trimmed=String(nextQuery||'').trim();
+ if(allYears&&currentScope()!=='all'){
+  periodBeforeAutoAll={yearValue:years.value,seasonValue:$('#seasonSelect').value};
+  years.value='all';$('#seasonSelect').value='all';syncPeriodUI();periodTouched=true;
+ }else if(!trimmed&&periodBeforeAutoAll){
+  years.value=periodBeforeAutoAll.yearValue;$('#seasonSelect').value=periodBeforeAutoAll.seasonValue;
+  if(/^\d{4}$/.test(years.value))curYear=Number(years.value);
+  if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;
+  syncPeriodUI();periodBeforeAutoAll=null;
+ }
+ query=trimmed;fetchPage(true);
+};
+years.addEventListener('change',()=>{periodBeforeAutoAll=null;periodTouched=true;if(/^\d{4}$/.test(years.value)){curYear=Number(years.value);if($('#seasonSelect').value==='all')$('#seasonSelect').value=curSeason}syncPeriodUI();if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()});
+$('#seasonSelect').addEventListener('change',()=>{periodBeforeAutoAll=null;periodTouched=true;if($('#seasonSelect').value!=='all')curSeason=$('#seasonSelect').value;if(mode!=='season')return;if(exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()});
 $('#searchForm').addEventListener('submit',e=>{e.preventDefault();closeSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
  runSeasonSearch($('#searchInput').value.trim())});
 
 let suggestionActive=-1;
-function getSuggestions(term){const needle=normalizeSearch(term);if(!needle)return [];
+function getSuggestions(term){
+ const raw=String(term||'').trim(),needle=normalizeSearch(raw);if(!needle)return [];
+ const isSaved=mode==='saved',exploreReg=mode==='season'&&exploreStatusFilter!=='all',scoped=mode==='season'&&currentScope()!=='all';
+ const matchType=a=>typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase();
  const byId=new Map();
-
- for(const a of [...suggestionCache.values(),...searchMemory.values(),...Object.values(saved)]){
+ const sources=isSaved||exploreReg?Object.values(saved):[...suggestionCache.values(),...searchMemory.values(),...Object.values(saved)];
+ for(const a of sources){
   if(!a||!a.id)continue;
+  if(isSaved&&(!validStatuses.has(a.status)||(statusFilter!=='all'&&a.status!==statusFilter)))continue;
+  if(exploreReg&&a.status!==exploreStatusFilter)continue;
+  if(!isSaved&&scoped&&!matchingPeriod(a))continue;
+  if(!matchType(a))continue;
   const prev=byId.get(a.id);
   byId.set(a.id,prev?{...prev,...a,synonyms:(a.synonyms?.length?a.synonyms:prev.synonyms)||[]}:a);
  }
  const results=[];
  for(const a of byId.values()){
-  if(!localTitleMatch(a,term))continue;
+  if(!localTitleMatch(a,raw))continue;
   const exact=titleFields(a).some(t=>t===needle);
-  results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年 · ':'')+'取得済み',score:relevanceScore(a,term)+(exact?100:40),year:a.year||0});
+  const statusText=isSaved&&statusLabels[a.status]?statusLabels[a.status]:'取得済み';
+  results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年'+(seasonLabels[a.season]?' '+seasonLabels[a.season]:'')+' · ':'')+statusText,score:relevanceScore(a,raw)+(exact?100:40),year:a.year||0});
  }
-
- for(const [alias,entry] of autoAliasCache){
-  if(!entry.terms.length||!(alias.includes(needle)||needle.includes(alias)))continue;
-  const official=entry.terms.find(t=>/[ぁ-んァ-ヶ一-龠]/.test(t))||entry.terms[0];
-  if(results.some(r=>normalizeSearch(r.value)===normalizeSearch(official)))continue;
-  results.push({value:official,label:official,detail:'以前の検索から自動補完',score:340,year:0});
+ if(!isSaved&&!exploreReg&&!scoped){
+  for(const [alias,entry] of autoAliasCache){
+   if(!entry.terms.length||!(alias.includes(needle)||needle.includes(alias)))continue;
+   const official=entry.terms.find(t=>/[ぁ-んァ-ヶ一-龠]/.test(t))||entry.terms[0];
+   if(results.some(r=>normalizeSearch(r.value)===normalizeSearch(official)))continue;
+   results.push({value:official,label:official,detail:'以前の検索から自動補完',score:340,year:0});
+  }
+  for(const group of aliasGroups){const names=[...group.names,group.term,...(group.queries||[])];if(!names.some(n=>normalizeSearch(n).includes(needle)||needle.includes(normalizeSearch(n))))continue;
+   const display=group.names.find(n=>/[ぁ-んァ-ヶ一-龠]/.test(n)&&n.length>4)||group.names[0];
+   const key=normalizeSearch(display);if(!key||results.some(r=>normalizeSearch(r.value)===key))continue;
+   results.push({value:display,label:display,detail:'別名・略称から検索',score:300,year:0});
+  }
  }
- for(const group of aliasGroups){const names=[...group.names,group.term,...(group.queries||[])];if(!names.some(n=>normalizeSearch(n).includes(needle)||needle.includes(normalizeSearch(n))))continue;
-  const display=group.names.find(n=>/[ぁ-んァ-ヶ一-龠]/.test(n)&&n.length>4)||group.names[0];
-  const key=normalizeSearch(display);if(!key||results.some(r=>normalizeSearch(r.value)===key))continue;
-  results.push({value:display,label:display,detail:'別名・略称から検索',score:300,year:0});
+ const sorted=results.sort((a,b)=>b.score-a.score||b.year-a.year||a.label.localeCompare(b.label,'ja')).slice(0,SUGGESTION_DISPLAY_LIMIT);
+ if(scoped){
+  sorted.push({value:raw,label:`「${raw}」を全年代から${exploreReg?'絞り込む':'検索する'}`,detail:`現在：${fullPeriodLabel()}`,allYears:true});
  }
- return results.sort((a,b)=>b.score-a.score||b.year-a.year||a.label.localeCompare(b.label,'ja')).slice(0,SUGGESTION_DISPLAY_LIMIT);
+ return sorted;
 }
 function closeSuggestions(){const el=$('#searchSuggest');el.classList.add('hidden');el.replaceChildren();$('#searchInput').setAttribute('aria-expanded','false');suggestionActive=-1}
-function refreshSuggestions(){if(mode==='share'||mode==='detail'){closeSuggestions();return}const list=getSuggestions($('#searchInput').value.trim());
+function refreshSuggestions(){if(mode==='share'||mode==='detail'||document.body.classList.contains('view-detail')){closeSuggestions();return}const list=getSuggestions($('#searchInput').value.trim());
  const el=$('#searchSuggest');el.replaceChildren();suggestionActive=-1;
  if(!list.length){closeSuggestions();return}
- for(const [idx,a] of list.entries()){const b=document.createElement('button');b.type='button';b.dataset.suggestValue=a.value;b.dataset.suggestIdx=String(idx);b.setAttribute('role','option');b.setAttribute('aria-selected','false');
+ for(const [idx,a] of list.entries()){const b=document.createElement('button');b.type='button';if(a.allYears){b.className='suggest-all-years';b.dataset.suggestAllYears='true'}b.dataset.suggestValue=a.value;b.dataset.suggestIdx=String(idx);b.setAttribute('role','option');b.setAttribute('aria-selected','false');
   const name=document.createElement('span');name.textContent=a.label;const info=document.createElement('small');info.textContent=a.detail;b.append(name,info);el.append(b)}
- const note=document.createElement('div');note.className='search-suggest-note';note.textContent='候補にない作品も「検索」ボタンで探せます。';el.append(note);
+ const note=document.createElement('div');note.className='search-suggest-note';note.textContent=mode==='season'&&currentScope()!=='all'?`Enterまたは「検索」で${fullPeriodLabel()}内を検索します。`:'候補にない作品も「検索」ボタンで探せます。';el.append(note);
  el.classList.remove('hidden');$('#searchInput').setAttribute('aria-expanded','true');
 }
-function acceptSuggestion(text){$('#searchInput').value=text;closeSuggestions();if(mode==='saved'||(mode==='season'&&exploreStatusFilter!=='all')){render();return}
- runSeasonSearch(text);
+function acceptSuggestion(text,allYears=false){$('#searchInput').value=text;closeSuggestions();
+ if(mode==='saved'){render();return}
+ if(mode==='season'&&exploreStatusFilter!=='all'){
+  if(allYears&&currentScope()!=='all'){periodBeforeAutoAll={yearValue:years.value,seasonValue:$('#seasonSelect').value};years.value='all';$('#seasonSelect').value='all';syncPeriodUI();periodTouched=true}
+  render();aniHistorySave();return;
+ }
+ runSeasonSearch(text,allYears);
 }
 $('#searchSuggest').addEventListener('pointerdown',e=>e.preventDefault());
-$('#searchSuggest').addEventListener('click',e=>{const b=e.target.closest('[data-suggest-value]');if(b)acceptSuggestion(b.dataset.suggestValue)});
-$('#searchInput').addEventListener('keydown',e=>{const options=$('#searchSuggest [data-suggest-value]');if($('#searchSuggest').classList.contains('hidden')||!options.length)return;
+$('#searchSuggest').addEventListener('click',e=>{const b=e.target.closest('[data-suggest-value]');if(b)acceptSuggestion(b.dataset.suggestValue,b.dataset.suggestAllYears==='true')});
+$('#searchInput').addEventListener('keydown',e=>{const options=$$('#searchSuggest [data-suggest-value]');if($('#searchSuggest').classList.contains('hidden')||!options.length)return;
  if(e.key==='Escape'){e.preventDefault();closeSuggestions()}else if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();suggestionActive=(suggestionActive+(e.key==='ArrowDown'?1:-1)+options.length)%options.length;options.forEach((b,i)=>b.setAttribute('aria-selected',String(i===suggestionActive)));options[suggestionActive].scrollIntoView({block:'nearest'})}
- else if(e.key==='Enter'&&suggestionActive>=0){e.preventDefault();acceptSuggestion(options[suggestionActive].dataset.suggestValue)}
+ else if(e.key==='Enter'&&suggestionActive>=0){e.preventDefault();const sel=options[suggestionActive];acceptSuggestion(sel.dataset.suggestValue,sel.dataset.suggestAllYears==='true')}
 });
 document.addEventListener('click',e=>{if(!e.target.closest('.searchbox-shell'))closeSuggestions()});
 $('#cards').addEventListener('click',e=>{const fold=e.target.closest('[data-fold-status]');if(fold)toggleFold(fold.dataset.foldStatus,fold.dataset.foldPeriod);
@@ -3132,7 +3166,13 @@ $('#searchSort').addEventListener('change',e=>{
 });
 $('#loadMore').addEventListener('click',()=>{if(loading)return;if(!query)page++;fetchPage(false)});
 $('#cards').addEventListener('change',e=>{const t=e.target;if(t.matches('[data-status-id]'))setStatus(t.dataset.statusId,t.value)});
-$('#cards').addEventListener('click',e=>{const t=e.target.closest('[data-state-action]');if(t){t.dataset.stateAction==='reload'?fetchPage(true,true):showSeason()}});
+$('#cards').addEventListener('click',e=>{const t=e.target.closest('[data-state-action]');if(!t)return;
+ const act=t.dataset.stateAction;
+ if(act==='reload')fetchPage(true,true);
+ else if(act==='search-all-years')runSeasonSearch(query||$('#searchInput').value.trim(),true);
+ else if(act==='explore-all-years'){periodBeforeAutoAll={yearValue:years.value,seasonValue:$('#seasonSelect').value};years.value='all';$('#seasonSelect').value='all';syncPeriodUI();periodTouched=true;render();aniHistorySave()}
+ else showSeason();
+});
 $('#addCustomBtn').addEventListener('click',()=>{$('#customTitle').value='';$('#customStatus').value='watched';$('#addDialog').showModal()});
 $('#cancelDialog').addEventListener('click',()=>$('#addDialog').close());
 let addingCustom=false;
