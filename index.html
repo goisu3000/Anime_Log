@@ -1885,7 +1885,7 @@ function streamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
  const label=selected?`${selected}で${pref.url?'見る':'探す'}`:'視聴サイトを設定';
  const action=selected
-  ?`<a class="stream-inline-link" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)} <span aria-hidden="true">↗</span></a>`
+  ?`<a class="stream-inline-link" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)}</a>`
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}">${uiIcon('plus')}<span>${label}</span></button>`;
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
 }
