@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.8 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.9 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -922,7 +922,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.8 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.9 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1872,10 +1872,9 @@ function cleanStreamPreference(x){
 }
 function streamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
- const resolvedUrl=selected?(pref.url||streamFindMatchingUrl(streamCachedList(a.id),selected)):'';
- const label=selected?`${selected}で${resolvedUrl?'見る':'探す'}`:'視聴サイトを設定';
+ const label=selected?`${selected}で${pref.url?'見る':'探す'}`:'視聴サイトを設定';
  const action=selected
-  ?`<a class="stream-inline-link" href="${safeText(resolvedUrl||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(resolvedUrl?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)} <span aria-hidden="true">↗</span></a>`
+  ?`<a class="stream-inline-link" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)} <span aria-hidden="true">↗</span></a>`
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}">${uiIcon('plus')}<span>${label}</span></button>`;
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
 }
@@ -3478,18 +3477,19 @@ function detailVideos(full,videos){
 function detailEpisodes(data){const list=data?.data||[];if(!Array.isArray(list)||!list.length)return '';const body=list.map((ep,i)=>{const num=Number.isInteger(ep.mal_id)?ep.mal_id:i+1;const title=ep.title_japanese||ep.title||`第${num}話`;const alt=ep.title_japanese&&ep.title&&ep.title!==ep.title_japanese?ep.title:'';return `<div class="detail-episode"><span class="detail-episode-num">第${safeText(num)}話</span><div><div class="detail-episode-title">${safeText(title)}</div>${alt?`<div class="detail-episode-sub">${safeText(alt)}</div>`:''}${ep.aired?`<div class="detail-episode-sub">${safeText(String(ep.aired).slice(0,10))}</div>`:''}</div>${ep.synopsis?`<details><summary>この話のあらすじ（ネタバレ注意）</summary>${safeText(ep.synopsis)}</details>`:''}</div>`}).join('');return body}
 function detailRelations(full){const relations=Array.isArray(full.relations)?full.relations:[];const entries=[];for(const group of relations){for(const e of group.entry||[]){if(String(e.type).toLowerCase()!=='anime'||!Number.isInteger(e.mal_id))continue;const im=safeImage(e.images?.jpg?.image_url||e.images?.jpg?.large_image_url||'');entries.push({...e,relationship:group.relation,image:im})}}return entries.length?detailHeading('関連作品',`<div class="detail-related-grid">${entries.slice(0,24).map(e=>`<button type="button" class="detail-related-item" data-related-id="jikan:${e.mal_id}" data-related-title="${safeText(e.name)}">${e.image?`<img loading="lazy" src="${safeText(e.image)}" alt="" referrerpolicy="no-referrer">`:''}<span class="detail-related-label">${safeText(e.relationship||'関連作品')}</span><span class="detail-related-name">${safeText(e.name)}</span></button>`).join('')}</div>`):''}
 function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
-const JP_STREAM_SITES=STREAM_SERVICES;
+const JP_STREAM_SITES=[{name:'ABEMA',domain:'abema.tv'},{name:'dアニメストア',domain:'animestore.docomo.ne.jp'},{name:'DMM TV',domain:'tv.dmm.com'},{name:'U-NEXT',domain:'video.unext.jp'},{name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video'},{name:'Netflix',domain:'netflix.com/jp'},{name:'FOD',domain:'fod.fujitv.co.jp'},{name:'Hulu',domain:'hulu.jp'}];
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
- const links=(full?.streaming||[]).map(p=>{const svc=STREAM_SERVICES.find(s=>streamNameMatches(p?.name,s.name));const u=svc?streamAllowedUrl(svc.name,p?.url||safeLink(p?.url)):'';return svc&&u?{...p,name:svc.name,url:u,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
- const unique=links.filter(p=>{if(seen.has(p.name))return false;seen.add(p.name);return true});
+ const allowedNames=new Map([['amazonprimevideo','Amazon Prime Video'],['primevideo','Amazon Prime Video'],['netflix','Netflix'],['fod','FOD'],['fodpremium','FOD'],['hulu','Hulu'],['unext','U-NEXT'],['disneyplus','Disney Plus'],['disney+','Disney Plus'],['ディズニープラス','Disney Plus']]);
+ const links=(full?.streaming||[]).map(p=>{const key=String(p?.name||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_]/g,'');const name=allowedNames.get(key);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
+ const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true});
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
- return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(x.url)}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
+ return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
 function detailPeople(characters,staff){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
  if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(jap.person?.name||'')}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
