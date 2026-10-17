@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.11 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.12 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -922,7 +922,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.11 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.12 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1854,10 +1854,21 @@ const STREAM_SERVICES=[
 ];
 function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||null}
 function streamAllowedUrl(name,value){
- const site=streamService(name);if(!site||typeof value!=='string'||value.length>2048)return '';
+ const site=streamService(name);if(!site||typeof value!=='string'||value.length>4096)return '';
  try{
-  const url=new URL(value.trim());
+  let url=new URL(value.trim());
   if(url.protocol!=='https:'||url.username||url.password||url.port)return '';
+  // Jikan may return JustWatch click-out links. Use only the explicit `r`
+  // destination, never the intermediate tracking URL or the `cx` payload.
+  if(url.hostname.toLowerCase()==='click.justwatch.com'){
+   if(url.pathname!=='/a')return '';
+   const destination=url.searchParams.get('r');
+   if(!destination||destination.length>2048)return '';
+   url=new URL(destination);
+   // Do not auto-fill a provider home page as if it were a title page.
+   if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?)?\/?$/i.test(url.pathname))return '';
+  }
+  if(url.protocol!=='https:'||url.username||url.password||url.port||url.href.length>2048)return '';
   const host=url.hostname.toLowerCase();
   if(!site.hosts.some(allowed=>host===allowed||host.endsWith('.'+allowed)))return '';
   return url.href;
@@ -1905,14 +1916,14 @@ function streamNameMatches(source,selected){
  return (aliases[selected]||[selected.normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')]).some(alias=>name===alias.replace('+',''));
 }
 function streamMatchingUrl(links,service){
- const valid=(Array.isArray(links)?links:[]).filter(x=>streamAllowedUrl(service,x?.url));
+ const valid=(Array.isArray(links)?links:[]).map(x=>({name:x?.name,url:streamAllowedUrl(service,x?.url)})).filter(x=>x.url);
  // Match the registered streaming provider name first, just like detail view.
- const named=valid.find(x=>streamNameMatches(x?.name,service));
- if(named)return streamAllowedUrl(service,named.url);
+ const named=valid.find(x=>streamNameMatches(x.name,service));
+ if(named)return named.url;
  // A provider may be labeled differently in API responses. Accept an explicit
  // title/watch/series URL at the selected provider's own domain, never a homepage.
  const byAddress=valid.find(x=>/^\/(?:[a-z]{2}\/)?(?:title|watch|series|detail|video|contents|play)\//i.test(new URL(x.url).pathname));
- return byAddress?streamAllowedUrl(service,byAddress.url):'';
+ return byAddress?byAddress.url:'';
 }
 async function streamFetchLinks(id,service,refresh=false){
  const cached=streamKnownLinks(id),entry=detailCache.get(id);
