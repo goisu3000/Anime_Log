@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.5 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.6 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -920,7 +920,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.5 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.6 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1113,7 +1113,7 @@ addYearOption('all','全年代');
 const decades=[];for(let d=Math.floor((curYear+1)/10)*10;d>=1970;d-=10){if(d>curYear+1)continue;decades.push(d);addYearOption(`decade:${d}`,`${d}年代`)}
 for(let y=curYear+1;y>=1970;y--)addYearOption(String(y),`${y}年`);
 years.value=String(curYear);$('#seasonSelect').value=curSeason;
-let periodTouched=false;
+let periodTouched=false,periodBeforeAutoAll=null;
 const seasonOrder=['winter','spring','summer','fall'];
 function currentScope(){return years.value}
 function periodLabel(){const v=currentScope();return v==='all'?'全年代':v.startsWith('decade:')?`${v.slice(7)}年代`:`${v}年`}
@@ -1126,7 +1126,7 @@ function dateBounds(){const v=currentScope();if(v==='all')return null;
  const idx=seasonOrder.indexOf($('#seasonSelect').value);if(idx<0)return [`${y}-01-01`,`${end}-12-31`];
  return [`${y}-${String(idx*3+1).padStart(2,'0')}-01`,`${y}-${String(idx*3+3).padStart(2,'0')}-${[31,(y%4===0&& (y%100!==0||y%400===0))?29:28,31,30,31,30,31,31,30,31,30,31][idx*3+2]}`];
 }
-function syncPeriodUI(){const specificYear=/^\d{4}$/.test(currentScope());$('#seasonSelect').disabled=!specificYear;$('#seasonSelect').title=specificYear?'季節でさらに絞り込む':'季節の指定は年を選択したときに利用できます'};
+function syncPeriodUI(){const specificYear=/^\d{4}$/.test(currentScope());if(!specificYear)$('#seasonSelect').value='all';$('#seasonSelect').disabled=!specificYear;$('#seasonSelect').title=specificYear?'季節でさらに絞り込む':'季節の指定は年を選択したときに利用できます'};
 function clearDialogNotice(dialog){
  if(!dialog)return;const notice=dialog.querySelector('.dialog-notice');
  if(notice){notice.hidden=true;notice.textContent='';notice.classList.remove('error')}
@@ -2051,24 +2051,24 @@ function weeklyEpisodeMatchesSlot(monday,scheduled,airingAt){
 }
 function weeklyEpisodeScope(){
  const {monday}=weeklyTokyoDate();
- const ids=[...new Set(weeklyRelevant().filter(a=>weeklyPlanned(a)?.source==='auto').map(a=>weeklyMalId(a.id)).filter(Boolean).map(Number))].sort((a,b)=>a-b);
- return {monday,week:monday.toISOString().slice(0,10),ids};
+ const ids=[...new Set(weeklyRelevant().filter(a=>weeklyPlanned(a)).map(a=>weeklyMalId(a.id)).filter(Boolean).map(Number))].sort((a,b)=>a-b);
+ return {monday,week:monday.toISOString().slice(0,10),ids,idSet:new Set(ids),key:ids.join(',')};
 }
-function weeklyEpisodeFor(a,info){
- if(info.source!=='auto'||!weeklyEpisodeCache)return null;
- const {monday,week,ids}=weeklyEpisodeScope(),id=Number(weeklyMalId(a.id));
- if(weeklyEpisodeCache.week!==week||!ids.includes(id)||weeklyEpisodeCache.ids.join(',')!==ids.join(','))return null;
+function weeklyEpisodeFor(a,info,scope=null){
+ if(!info||!weeklyEpisodeCache)return null;
+ const {monday,week,idSet,key}=scope||weeklyEpisodeScope(),id=Number(weeklyMalId(a.id));
+ if(weeklyEpisodeCache.week!==week||!idSet.has(id)||weeklyEpisodeCache.ids.join(',')!==key)return null;
  const data=weeklyEpisodeCache.data[id];
  if(!data||!Number.isInteger(data.episode)||data.episode<1||!Number.isInteger(data.airingAt))return null;
- return weeklyEpisodeMatchesSlot(monday,info,data.airingAt)?data.episode:null;
+ return info.source==='manual'||weeklyEpisodeMatchesSlot(monday,info,data.airingAt)?data.episode:null;
 }
 async function ensureWeeklyEpisodes(){
  if(!isWeeklyCalendarVisible()||!weeklyOptions.open||weeklyFetching||weeklyEpisodeFetching||Date.now()<weeklyEpisodeRetryAfter)return;
- const {monday,week,ids}=weeklyEpisodeScope();if(!ids.length)return;
- if(weeklyEpisodeCache&&weeklyEpisodeCache.week===week&&weeklyEpisodeCache.ids.join(',')===ids.join(',')&&Date.now()-weeklyEpisodeCache.at<WEEKLY_EPISODES_TTL)return;
+ const {monday,week,ids,key}=weeklyEpisodeScope();if(!ids.length)return;
+ if(weeklyEpisodeCache&&weeklyEpisodeCache.week===week&&weeklyEpisodeCache.ids.join(',')===key&&Date.now()-weeklyEpisodeCache.at<WEEKLY_EPISODES_TTL)return;
  weeklyEpisodeFetching=(async()=>{
   try{
-   const start=Math.floor((monday.getTime()-9*3600000)/1000)-6*3600,end=start+7*86400+12*3600;
+   const weekStart=Math.floor((monday.getTime()-9*3600000)/1000),start=weekStart-6*3600,end=start+7*86400+12*3600;
    const data=Object.create(null);
    for(let i=0;i<ids.length;i+=WEEKLY_EPISODES_BATCH){
     const chunk=ids.slice(i,i+WEEKLY_EPISODES_BATCH);
@@ -2078,12 +2078,13 @@ async function ensureWeeklyEpisodes(){
     const payload=await res.json();if(payload.errors?.length||!Array.isArray(payload.data?.Page?.media))throw Error('Invalid AniList response');
     for(const media of payload.data.Page.media){
      const id=media?.idMal;if(!Number.isInteger(id)||!chunk.includes(id))continue;
-     const scheduled=weeklyApiCache?.data?.[id];
-     if(!scheduled||!Number.isInteger(scheduled.day))continue;
+     const scheduled=weeklyApiCache?.data?.[id],manual=cleanWeeklySchedule(saved['jikan:'+id]?.weeklySchedule);
      const candidates=[...(Array.isArray(media.airingSchedule?.nodes)?media.airingSchedule.nodes:[]),media.nextAiringEpisode];
-     const episodes=[];
-     for(const item of candidates){
-      if(item&&Number.isInteger(item.episode)&&item.episode>0&&item.episode<=99999&&Number.isInteger(item.airingAt)&&item.airingAt>=start&&item.airingAt<end&&weeklyEpisodeMatchesSlot(monday,scheduled,item.airingAt)&&!episodes.some(x=>x.episode===item.episode&&x.airingAt===item.airingAt))episodes.push(item);
+     const valid=candidates.filter((item,idx,arr)=>item&&Number.isInteger(item.episode)&&item.episode>0&&item.episode<=99999&&Number.isInteger(item.airingAt)&&item.airingAt>=start&&item.airingAt<end&&arr.findIndex(x=>x&&x.episode===item.episode&&x.airingAt===item.airingAt)===idx);
+     let episodes=scheduled&&Number.isInteger(scheduled.day)?valid.filter(item=>weeklyEpisodeMatchesSlot(monday,scheduled,item.airingAt)):[];
+     if(episodes.length!==1&&manual?.mode==='manual'){
+      episodes=valid.filter(item=>weeklyEpisodeMatchesSlot(monday,manual,item.airingAt));
+      if(!episodes.length)episodes=valid.filter(item=>item.airingAt>=weekStart&&item.airingAt<weekStart+7*86400+6*3600);
      }
      if(episodes.length===1)data[id]={episode:episodes[0].episode,airingAt:episodes[0].airingAt};
     }
@@ -2121,11 +2122,11 @@ function weeklyPlanned(a){
 }
 function weeklyRelevant(){return Object.values(saved).filter(a=>a&&weeklyOptions.statuses.includes(a.status)).sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ja'))}
 function weeklyPoster(a){const u=safeImage(a.image);return u?`<img class="weekly-poster" src="${safeText(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
-function weeklyEntryMarkup(a,info,preview=false){
+function weeklyEntryMarkup(a,info,preview=false,scope=null){
  if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><span class="weekly-preview-title" title="${safeText(a.title)}">${safeText(a.title)}</span><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span></span>`;
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
- const episode=weeklyEpisodeFor(a,info);
+ const episode=weeklyEpisodeFor(a,info,scope);
  return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span></div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
 }
 function renderWeeklyCalendar(){
@@ -2141,12 +2142,13 @@ function renderWeeklyCalendar(){
  $('#weeklyContent').hidden=!weeklyOptions.open;
  $('#weeklySummary').innerHTML=weeklyOptions.open?'':todays.length?`${todays.slice(0,3).map(({a,info})=>weeklyEntryMarkup(a,info,true)).join('')}${todays.length>3?`<span class="weekly-muted">ほか${todays.length-3}作品</span>`:''}`:`<span class="weekly-muted">${relevant.length?'今日の予定はありません':'「見てる」に作品を登録すると予定が表示されます'}</span>`;
  if(!weeklyOptions.open)return;
+ const epScope=weeklyEpisodeScope();
  $$('#weeklySettingsPanel [data-weekly-status]').forEach(cb=>{cb.checked=weeklyOptions.statuses.includes(cb.dataset.weeklyStatus)});
  $('#weeklySettingsPanel').hidden=!weeklySettingsOpen;$('#weeklySettingsBtn').setAttribute('aria-expanded',String(weeklySettingsOpen));
  $('#weeklySourceNote').textContent=weeklyFetching?'放送予定を確認中…':!weeklyApiCache?'放送予定をまだ取得できていません。手動設定は利用できます。':Date.now()-weeklyApiCache.at>WEEKLY_CACHE_TTL?'前回取得した放送情報を参考表示しています。手動設定が優先されます。':'自動はテレビ放送の予定です。サービスごとの配信日とは異なる場合があります。';
  $('#weeklyRows').innerHTML=grouped.map((entries,i)=>{
   const d=new Date(monday.getTime()+i*86400000),date=`${d.getUTCMonth()+1}/${d.getUTCDate()}`;
-  return `<div class="weekly-row ${i===today?'is-today':''}" data-day="${i}"><div class="weekly-day"><strong>${WEEKLY_DAY_NAMES[i]}</strong><small>${date}</small></div><div class="weekly-day-items">${entries.length?entries.map(({a,info})=>weeklyEntryMarkup(a,info)).join(''):'<span class="weekly-empty">予定なし</span>'}</div></div>`;
+  return `<div class="weekly-row ${i===today?'is-today':''}" data-day="${i}"><div class="weekly-day"><strong>${WEEKLY_DAY_NAMES[i]}</strong><small>${date}</small></div><div class="weekly-day-items">${entries.length?entries.map(({a,info})=>weeklyEntryMarkup(a,info,false,epScope)).join(''):'<span class="weekly-empty">予定なし</span>'}</div></div>`;
  }).join('');
 }
 function weeklyBroadcastStation(a){
@@ -2227,7 +2229,10 @@ $('#weeklyEditForm').addEventListener('submit',e=>{e.preventDefault();storeWeekl
 window.addEventListener('storage',e=>{if(e.storageArea!==localStorage)return;if(e.key===WEEKLY_OPTIONS_KEY){weeklyOptions=loadWeeklyOptions();renderWeeklyCalendar();ensureWeeklyEpisodes()}else if(e.key===WEEKLY_CACHE_KEY){weeklyApiCache=loadWeeklyCache();renderWeeklyCalendar();ensureWeeklyEpisodes()}else if(e.key===WEEKLY_EPISODES_KEY){weeklyEpisodeCache=loadWeeklyEpisodeCache();renderWeeklyCalendar()}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&isWeeklyCalendarVisible()){ensureWeeklySchedules();renderWeeklyCalendar();ensureWeeklyEpisodes()}});
 
+let pendingViewRender=false;
 function render(){
+ if(document.body.classList.contains('view-detail')){updateCounts();setNav();pendingViewRender=true;return;}
+ pendingViewRender=false;
  if(mode==='annual'){updateCounts();renderAnnual();return;}
  document.body.classList.toggle('saved-mode',mode==='saved');
  $('#cards').classList.toggle('saved-grid',mode==='saved');
@@ -2441,8 +2446,8 @@ async function fetchPage(reset=true,force=false){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
-function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;periodBeforeAutoAll=null;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){showSeason();}
 
 let annualYear=new Date().getFullYear();
@@ -3058,9 +3063,8 @@ $('#ratingDialog').addEventListener('click',e=>{const star=e.target.closest('[da
 $('#ratingForm').addEventListener('submit',e=>{e.preventDefault();saveRating()});
 $('#ratingCancel').addEventListener('click',closeRating);
 $('#ratingClear').addEventListener('click',clearRating);
-$$('[data-type]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.type;if(next===typeFilter)return;typeFilter=next;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='season'&&exploreStatusFilter==='all')fetchPage(true);else render()}));
-$$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;exploreStatusFilter=next;if(next==='all'){fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}));
-let periodBeforeAutoAll=null;
+$$('[data-type]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.type;if(next===typeFilter)return;typeFilter=next;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='season'&&exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()}));
+$$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;const before=aniHistoryEnter();try{exploreStatusFilter=next;if(next==='all'){fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}finally{aniHistoryLeave(before)}}));
 let runSeasonSearch=function(nextQuery,allYears=false){
  const trimmed=String(nextQuery||'').trim();
  if(allYears&&currentScope()!=='all'){
@@ -3471,7 +3475,7 @@ function detailVideos(full,videos){
 function detailEpisodes(data){const list=data?.data||[];if(!Array.isArray(list)||!list.length)return '';const body=list.map((ep,i)=>{const num=Number.isInteger(ep.mal_id)?ep.mal_id:i+1;const title=ep.title_japanese||ep.title||`第${num}話`;const alt=ep.title_japanese&&ep.title&&ep.title!==ep.title_japanese?ep.title:'';return `<div class="detail-episode"><span class="detail-episode-num">第${safeText(num)}話</span><div><div class="detail-episode-title">${safeText(title)}</div>${alt?`<div class="detail-episode-sub">${safeText(alt)}</div>`:''}${ep.aired?`<div class="detail-episode-sub">${safeText(String(ep.aired).slice(0,10))}</div>`:''}</div>${ep.synopsis?`<details><summary>この話のあらすじ（ネタバレ注意）</summary>${safeText(ep.synopsis)}</details>`:''}</div>`}).join('');return body}
 function detailRelations(full){const relations=Array.isArray(full.relations)?full.relations:[];const entries=[];for(const group of relations){for(const e of group.entry||[]){if(String(e.type).toLowerCase()!=='anime'||!Number.isInteger(e.mal_id))continue;const im=safeImage(e.images?.jpg?.image_url||e.images?.jpg?.large_image_url||'');entries.push({...e,relationship:group.relation,image:im})}}return entries.length?detailHeading('関連作品',`<div class="detail-related-grid">${entries.slice(0,24).map(e=>`<button type="button" class="detail-related-item" data-related-id="jikan:${e.mal_id}" data-related-title="${safeText(e.name)}">${e.image?`<img loading="lazy" src="${safeText(e.image)}" alt="" referrerpolicy="no-referrer">`:''}<span class="detail-related-label">${safeText(e.relationship||'関連作品')}</span><span class="detail-related-name">${safeText(e.name)}</span></button>`).join('')}</div>`):''}
 function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
-const JP_STREAM_SITES=[{name:'ABEMA',domain:'abema.tv'},{name:'dアニメストア',domain:'animestore.docomo.ne.jp'},{name:'DMM TV',domain:'tv.dmm.com'},{name:'U-NEXT',domain:'video.unext.jp'},{name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video'},{name:'Netflix',domain:'netflix.com/jp'},{name:'FOD',domain:'fod.fujitv.co.jp'},{name:'Hulu',domain:'hulu.jp'}];
+const JP_STREAM_SITES=[{name:'ABEMA',domain:'abema.tv'},{name:'dアニメストア',domain:'animestore.docomo.ne.jp'},{name:'DMM TV',domain:'tv.dmm.com'},{name:'U-NEXT',domain:'video.unext.jp'},{name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video'},{name:'Netflix',domain:'netflix.com'},{name:'FOD',domain:'fod.fujitv.co.jp'},{name:'Hulu',domain:'hulu.jp'}];
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
@@ -3603,9 +3607,12 @@ async function fetchAnimeFullShared(id,useThrottle=false){
 }
 function detailSource(id){return mode==='share'?(sharedSnapshot?.items||[]).find(a=>a.id===id):saved[id]||(detailActiveItem?.id===id?detailActiveItem:null)||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id)}
 function detailShowScreen(){document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#breadcrumb').textContent='作品詳細'}
+let detailHistorySteps=0;
 function openDetail(item,related=false){
  if(!item)return;
- if(!related&&!document.body.classList.contains('view-detail'))detailReturnScroll=window.scrollY;
+ const wasInDetail=document.body.classList.contains('view-detail');
+ if(!related&&!wasInDetail)detailReturnScroll=window.scrollY;
+ if(!aniHistoryRestoring)detailHistorySteps=wasInDetail?detailHistorySteps+1:1;
  const id=item.id;detailActiveItem=item;detailActiveTab='overview';
  const token=++detailNonce;detailEpisodeBusy=false;
  const cached=detailCache.get(id);detailEpisodePage=cached?.episodePage||1;
@@ -3648,8 +3655,8 @@ async function detailMoreEpisodes(){const a=detailActiveItem;if(!a||detailEpisod
  catch{if(token===detailNonce)toast('エピソードを追加取得できませんでした','error')}
  finally{if(token===detailNonce){detailEpisodeBusy=false;renderDetailParts(token)}}
 }
-function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;detailNonce++;detailActiveItem=null;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
-$('#detailBack').addEventListener('click',()=>{if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){history.back()}else{closeDetail()}});
+function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;detailNonce++;detailActiveItem=null;detailHistorySteps=0;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';if(restoreScroll&&pendingViewRender)render();else pendingViewRender=false;$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
+$('#detailBack').addEventListener('click',()=>{if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){const steps=Math.min(aniHistoryDepth,Math.max(1,detailHistorySteps||1));history.go(-steps)}else{closeDetail()}});
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#sharedItems').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#detailContent').addEventListener('change',e=>{if(e.target.id==='detailStatus'&&detailActiveItem){setStatus(detailActiveItem.id,e.target.value)}});
@@ -3709,6 +3716,7 @@ function aniHistorySnapshot(){
  return {
   [ANI_ROUTE]:1,depth:aniHistoryDepth,view:mode,
   detail:document.body.classList.contains('view-detail')?aniHistoryDetailRef(detailActiveItem):null,
+  detailSteps:document.body.classList.contains('view-detail')?detailHistorySteps:0,
   scrollY:window.scrollY,
   saved:{filter:statusFilter,unrated:unratedOnly,finishedYear:finishedYearFilter,order:$('#savedOrder').value,search:$('#searchInput').value,type:typeFilter},
   season:{year:curYear,season:curSeason,yearValue:years.value,seasonValue:$('#seasonSelect').value,touched:periodTouched,exploreStatus:exploreStatusFilter,search:exploreStatusFilter==='all'?query:$('#searchInput').value,query,searchSort,type:typeFilter},
@@ -3760,8 +3768,16 @@ async function aniHistoryRestore(state){
  const targetScroll=(Number.isFinite(state.scrollY)&&state.scrollY>0)?state.scrollY:(wasDetail&&!state.detail?detailReturnScroll:0);
  try{
   if(wasDetail&&!state.detail&&state.view===mode){
+   const needsRender=pendingViewRender;
    closeDetail(false);
+   if(needsRender)render();
    aniHistoryScroll(targetScroll,ticket);
+   return;
+  }
+  if(wasDetail&&state.detail&&state.view===mode){
+   detailHistorySteps=Number(state.detailSteps)||1;
+   const ref=detailSource(state.detail.id)||saved[state.detail.id]||state.detail;
+   openDetail(ref,true);
    return;
   }
   if(state.view==='saved'){
@@ -3804,6 +3820,7 @@ async function aniHistoryRestore(state){
    else{showSaved()}
   }
   if(state.detail){
+   detailHistorySteps=Number(state.detailSteps)||1;
    const ref=detailSource(state.detail.id)||saved[state.detail.id]||state.detail;
    openDetail(ref);
   }else{
