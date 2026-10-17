@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.12 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.15 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -431,13 +431,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-status-area select{width:100%;min-height:42px;background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);padding:0 12px;font-size:var(--fs-md);font-weight:var(--fw-semi);cursor:pointer}
 .detail-readonly{display:block;font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--accent)}
 .detail-journal-cell .detail-progress{margin-top:16px}
-.detail-status-completion{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.detail-status-completion{position:relative;display:block;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 .detail-date-current{display:grid;gap:4px}
 .detail-date-current span{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--muted)}
 .detail-date-current strong{font-size:var(--fs-md);font-weight:var(--fw-bold)}
 .detail-date-disclosure>summary,.detail-rating-edit,.detail-note-edit{cursor:pointer;list-style:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);padding:6px 10px;min-height:35px;font-size:var(--fs-xs);font-weight:var(--fw-bold);white-space:nowrap}
+.detail-date-disclosure{display:block}
 .detail-date-disclosure>summary::-webkit-details-marker{display:none}
-.detail-date-disclosure[open]{grid-column:1/-1}
+/* Keep the edit button in place; expand only the form beneath the entire row. */
+.detail-date-disclosure>summary{position:absolute;top:14px;right:0}
+.detail-date-disclosure[open]>.watch-date{width:100%;min-width:0}
+@media(max-width:420px){.detail-date-disclosure>summary{position:static;margin:9px 0 0 auto}}
 .watch-date{padding-top:12px}
 .watch-date-title{display:none}
 .watch-date-help,.watch-date-hint{font-size:var(--fs-xs);line-height:1.65;color:var(--muted);margin:0 0 8px}
@@ -891,6 +895,12 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .rank-two-col{position:relative;column-gap:40px}
   .rank-two-col.has-right-col::before{content:"";position:absolute;top:8px;bottom:8px;left:50%;width:1px;background:var(--border);pointer-events:none}
 }
+
+/* The mid-width 2-column detail rule must not override the mobile one-column view. */
+@media(max-width:740px){
+  .detail-journal-grid:not(.detail-journal-shared){grid-template-columns:minmax(0,1fr)}
+  .detail-journal-review:has(.detail-rating-layout){grid-column:auto;grid-row:auto}
+}
 </style>
 </head>
 <body>
@@ -924,7 +934,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.12 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.15 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -3449,7 +3459,7 @@ function detailHeader(a,full=null){
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
  const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}</div></section>`;
 
- const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'} ${uiIcon('down')}</summary>${date}</details></div>`:'';
+ const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
  const reviewPanel=`<div class="detail-journal-cell detail-journal-review">${mode==='share'?(publicReviewMarkup(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">共有されている評価はありません</p>'):(reviewDetail(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">「見てる」などに登録すると★評価を記録できます</p>')}</div>`;
  const detailNote=saved[a.id]?readNote(saved[a.id]):null;
@@ -3885,6 +3895,7 @@ async function aniHistoryRestore(state){
    searchSort=x.searchSort||searchSort;$('#searchSort').value=searchSort;
    $$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type===typeFilter));
    if(exploreStatusFilter!=='all'){activeController?.abort();requestCounter++;loading=false;render()}
+   else if(state.detail){void fetchPage(true)} // Restore the detail immediately; load the background list without blocking it.
    else await fetchPage(true);
   }else if(state.view==='ranking'){
    const x=state.rank||{};
@@ -3924,11 +3935,21 @@ window.addEventListener('popstate',e=>{
  else if(location.hash.startsWith(SHARE_PREFIX)){readShareFromHash()}
 });
 if('scrollRestoration' in history)history.scrollRestoration='manual';
+// Preserve the current entry's screen before initialization overwrites history.state.
+// Reloading a detail page must keep that detail, not silently reset to Discover.
+const aniInitialHistoryState=history.state?.[ANI_ROUTE]===1&&
+ ['season','saved','ranking','annual'].includes(history.state.view)&&
+ (!history.state.detail||(typeof history.state.detail.id==='string'&&history.state.detail.id.length<=150))
+ ?history.state:null;
 aniHistoryReady=true;
-// A direct shared URL is decoded asynchronously; showShared() will update the state.
-try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}
+// Direct share hashes take priority. Do not replace valid history state on reload.
+if(!aniInitialHistoryState){try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}}
 
-updateCounts();if(location.hash.startsWith(SHARE_PREFIX)){readShareFromHash()}else{render();fetchPage(true)}
+updateCounts();
+if(location.hash.startsWith(SHARE_PREFIX)){readShareFromHash()}
+else if(aniInitialHistoryState){
+ void aniHistoryRestore(aniInitialHistoryState).catch(()=>{render();fetchPage(true)});
+}else{render();fetchPage(true)}
 setTimeout(remindBackup,2200);
 const topBtn=$('#backToTop');
 if(topBtn){
