@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.3 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.4 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -918,7 +918,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.3 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.4 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2242,11 +2242,11 @@ function render(){
  updateCounts();setNav();if(mode==='share')return;if(mode==='ranking'){renderRanking();return;}
  const isSaved=mode==='saved', exploreRegistered=!isSaved&&exploreStatusFilter!=='all';
  $('#breadcrumb').textContent=isSaved?'マイリスト':'アニメを探す';
- $('#sectionTitle').textContent=isSaved?'マイリスト':(query?`「${query}」の検索結果 · ${periodLabel()}`:currentScope()==='all'?'全年代のアニメ':currentScope().startsWith('decade:')?`${periodLabel()}のアニメ`:`${periodLabel()} ${$('#seasonSelect').value==='all'?'通年':seasonLabels[$('#seasonSelect').value]}アニメ`);
- $('#sectionDescription').textContent=isSaved?'観た時間を、あなたの記録に。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${periodLabel()}）。`:'';
+ $('#sectionTitle').textContent=isSaved?'マイリスト':(query?`「${query}」の検索結果 · ${fullPeriodLabel()}`:currentScope()==='all'?'全年代のアニメ':currentScope().startsWith('decade:')?`${periodLabel()}のアニメ`:`${periodLabel()} ${$('#seasonSelect').value==='all'?'通年':seasonLabels[$('#seasonSelect').value]}アニメ`);
+ $('#sectionDescription').textContent=isSaved?'観た時間を、あなたの記録に。':exploreRegistered?'指定した年代・放送時期に登録した作品です。':query?`作品名・略称・タイトルの一部を検索しています（対象：${fullPeriodLabel()}）。`:'';
  $('#sectionDescription').hidden=!(isSaved||exploreRegistered||query);
  years.classList.toggle('hidden',isSaved);$('#seasonSelect').classList.toggle('hidden',isSaved);$('#searchGuide').classList.toggle('hidden',isSaved||(!exploreRegistered&&!query));syncPeriodUI();
- $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${periodLabel()}。タイトル検索の結果を放送開始年で絞ります。`:'';
+ $('#searchGuide').textContent=exploreRegistered?'登録済みの作品を年代で絞り込めます。':query?`放送開始時期：${fullPeriodLabel()}。タイトル検索の結果を放送開始年・季節で絞ります。`:'';
  $('#exploreStatusTabs').classList.toggle('hidden',isSaved);
  $('#searchSortWrap').classList.toggle('hidden',isSaved||exploreRegistered||!query);
  $('#searchBtn').textContent='検索';
@@ -2439,7 +2439,7 @@ async function fetchPage(reset=true,force=false){
  }
 }
 function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
-function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){showSeason();}
 
 let annualYear=new Date().getFullYear();
