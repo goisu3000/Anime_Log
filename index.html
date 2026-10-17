@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.9 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.10 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -922,7 +922,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.9 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.10 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1050,8 +1050,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   <select id="streamService"></select>
   <label for="streamExactUrl">作品ページのURL（任意）</label>
   <input id="streamExactUrl" type="url" inputmode="url" maxlength="2048" placeholder="https://..." autocomplete="off" spellcheck="false">
-  <p class="stream-dialog-hint">作品URLを登録すると、そのページへ直接移動します。未登録なら選んだサービスの作品を検索します。配信中かどうかは保証しません。</p>
-  <button type="button" id="streamFindUrl" class="stream-dialog-find">公開データの作品リンクを確認（任意）</button>
+  <p class="stream-dialog-hint">サービスを選ぶと登録済みの作品URLを自動確認します。見つからない場合は検索リンクを使用できます。配信中かどうかは保証しません。</p>
+  <button type="button" id="streamFindUrl" class="stream-dialog-find">公開データの作品リンクを再確認</button>
   <p id="streamFindResult" class="stream-dialog-notice" role="status" aria-live="polite"></p>
   <menu><button class="secondary" type="button" id="streamCancel">キャンセル</button><button class="primary" type="submit" id="streamSave">保存する</button></menu>
 </form></dialog>
@@ -1879,34 +1879,18 @@ function streamRowMarkup(a){
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
 }
 let streamEditingId=null,streamEditOriginal=null;
+// Cache streaming links by anime ID for this tab. Never fetch links for every My List card.
+const streamLinkRequests=new Map();
+let streamLookupSerial=0,streamUserEditedUrl=false;
+const STREAM_LOOKUP_LABEL='公開データの作品リンクを再確認';
 $('#streamService').innerHTML='<option value="">未設定（リンクを削除）</option>'+STREAM_SERVICES.map(s=>`<option value="${safeText(s.name)}">${safeText(s.name)}</option>`).join('');
-function openStreamDialog(id){
- if(mode!=='saved'||!saved[id])return;
- streamEditingId=id;streamEditOriginal=structuredClone(cleanStreamPreference(saved[id].streamPreference));
- const pref=streamEditOriginal;
- $('#streamAnimeTitle').textContent=saved[id].title;
- $('#streamService').value=pref?.service||'';
- $('#streamExactUrl').value=pref?.url||'';
- $('#streamFindResult').textContent='';$('#streamFindResult').classList.remove('error');
- $('#streamFindUrl').disabled=!/^jikan:\d+$/.test(id)||!$('#streamService').value;
- $('#streamExactUrl').disabled=!$('#streamService').value;
- $('#streamDialog').showModal();$('#streamService').focus();
+function streamKnownLinks(id){
+ const entry=detailCache.get(id);
+ // A prior explicit link lookup takes precedence over an older full-detail response.
+ if(Array.isArray(entry?.streamLinks))return entry.streamLinks;
+ if(Array.isArray(entry?.full?.streaming))return entry.full.streaming;
+ return null;
 }
-function closeStreamDialog(){if($('#streamDialog').open)$('#streamDialog').close()}
-$('#streamDialog').addEventListener('close',()=>{streamEditingId=null;streamEditOriginal=null});
-$('#streamCancel').addEventListener('click',closeStreamDialog);
-document.addEventListener('click',e=>{const b=e.target.closest('[data-stream-edit]');if(b)openStreamDialog(b.dataset.streamEdit)});
-$('#streamService').addEventListener('change',()=>{
- // Never retain a URL belonging to a previously selected service.
- const selected=$('#streamService').value;
- const alreadyLoaded=detailCache.get(streamEditingId)?.full?.streaming;
- const cached=(Array.isArray(alreadyLoaded)?alreadyLoaded:[]).find(x=>streamNameMatches(x.name,selected)&&streamAllowedUrl(selected,x.url));
- $('#streamExactUrl').value=cached?streamAllowedUrl(selected,cached.url):'';
- $('#streamExactUrl').disabled=!selected;
- $('#streamFindUrl').disabled=!selected||!/^jikan:\d+$/.test(streamEditingId||'');
- $('#streamFindResult').textContent=cached?'取得済みの作品情報からリンク候補を表示しました。保存前にリンク先をご確認ください。':'';
- $('#streamFindResult').classList.remove('error');
-});
 function streamNameMatches(source,selected){
  const name=String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'');
  const aliases={
@@ -1918,20 +1902,99 @@ function streamNameMatches(source,selected){
  };
  return (aliases[selected]||[selected.normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')]).some(alias=>name===alias.replace('+',''));
 }
-$('#streamFindUrl').addEventListener('click',async()=>{
- const id=streamEditingId,service=$('#streamService').value;
- if(!id||!/^jikan:\d+$/.test(id)||!streamService(service))return;
- const button=$('#streamFindUrl');button.disabled=true;button.textContent='照会中…';
- const result=$('#streamFindResult');result.classList.remove('error');result.textContent='';
- try{
-  // User-initiated only: one short request, never automatically for each My List item.
+function streamMatchingUrl(links,service){
+ const match=(Array.isArray(links)?links:[]).find(x=>streamNameMatches(x?.name,service)&&streamAllowedUrl(service,x?.url));
+ return match?streamAllowedUrl(service,match.url):'';
+}
+async function streamFetchLinks(id,refresh=false){
+ if(!refresh){const links=streamKnownLinks(id);if(links!==null)return links}
+ // Multiple rapid service changes share a single request for all streaming providers.
+ if(streamLinkRequests.has(id))return streamLinkRequests.get(id);
+ const job=(async()=>{
   const response=await detailFetch(`/anime/${id.slice(6)}/streaming`);
-  if(streamEditingId!==id||$('#streamService').value!==service)return;
-  const found=(Array.isArray(response?.data)?response.data:[]).find(x=>streamNameMatches(x.name,service)&&streamAllowedUrl(service,x.url));
-  if(found){$('#streamExactUrl').value=streamAllowedUrl(service,found.url);result.textContent='このサービスの登録済みリンクを見つけました。保存前にリンク先をご確認ください。'}
-  else result.textContent='このサービスの作品URLは登録されていません。URLを手入力するか、検索リンクをご利用ください。';
- }catch{if(streamEditingId===id){result.textContent='リンクを取得できませんでした。URLを手入力するか、検索リンクをご利用ください。';result.classList.add('error')}}
- finally{button.textContent='公開データの作品リンクを確認（任意）';if(streamEditingId===id)button.disabled=!streamService($('#streamService').value)}
+  if(!Array.isArray(response?.data))throw Error('配信リンク情報が取得できませんでした');
+  const entry=detailCache.get(id)||{};
+  detailCache.set(id,{...entry,streamLinks:response.data});
+  return response.data;
+ })();
+ streamLinkRequests.set(id,job);
+ try{return await job}finally{if(streamLinkRequests.get(id)===job)streamLinkRequests.delete(id)}
+}
+function streamLookupNotice(message,error=false){
+ const notice=$('#streamFindResult');notice.textContent=message;notice.classList.toggle('error',error);
+}
+async function streamAutoFillUrl(refresh=false){
+ const id=streamEditingId,service=$('#streamService').value,serial=++streamLookupSerial;
+ const button=$('#streamFindUrl'),input=$('#streamExactUrl');
+ if(!id||!/^jikan:\d+$/.test(id)||!streamService(service))return;
+ // A previously saved or newly typed URL must never be replaced automatically.
+ if(input.value.trim()&&!refresh)return;
+ const known=refresh?null:streamKnownLinks(id),needsRequest=known===null;
+ if(needsRequest){button.disabled=true;button.textContent='リンクを照会中…';streamLookupNotice('作品URLを自動確認しています…')}
+ try{
+  const links=needsRequest?await streamFetchLinks(id,refresh):known;
+  if(serial!==streamLookupSerial||streamEditingId!==id||!$('#streamDialog').open||$('#streamService').value!==service||streamUserEditedUrl)return;
+  const found=streamMatchingUrl(links,service);
+  if(found){
+   input.value=found;
+   streamLookupNotice('作品詳細と同じ登録済みリンクを自動入力しました。保存前にリンク先をご確認ください。');
+  }else{
+   streamLookupNotice('このサービスの作品URLは登録されていません。URLを手入力するか、検索リンクをご利用ください。');
+  }
+ }catch{
+  if(serial===streamLookupSerial&&streamEditingId===id&&$('#streamDialog').open&&$('#streamService').value===service&&!streamUserEditedUrl){
+   streamLookupNotice('リンクを取得できませんでした。URLを手入力するか、検索リンクをご利用ください。',true);
+  }
+ }finally{
+  if(serial===streamLookupSerial){
+   button.textContent=STREAM_LOOKUP_LABEL;
+   button.disabled=!streamService($('#streamService').value)||!/^jikan:\d+$/.test(streamEditingId||'');
+  }
+ }
+}
+function openStreamDialog(id){
+ if(mode!=='saved'||!saved[id])return;
+ ++streamLookupSerial; // Any in-flight lookup from an earlier dialog cannot update this one.
+ streamEditingId=id;streamEditOriginal=structuredClone(cleanStreamPreference(saved[id].streamPreference));
+ const pref=streamEditOriginal;
+ $('#streamAnimeTitle').textContent=saved[id].title;
+ $('#streamService').value=pref?.service||'';
+ $('#streamExactUrl').value=pref?.url||'';
+ streamUserEditedUrl=!!pref?.url;
+ streamLookupNotice('');
+ $('#streamFindUrl').textContent=STREAM_LOOKUP_LABEL;
+ $('#streamFindUrl').disabled=!/^jikan:\d+$/.test(id)||!$('#streamService').value;
+ $('#streamExactUrl').disabled=!$('#streamService').value;
+ $('#streamDialog').showModal();$('#streamService').focus();
+ if(pref?.service&&!pref?.url)void streamAutoFillUrl();
+}
+function closeStreamDialog(){if($('#streamDialog').open)$('#streamDialog').close()}
+$('#streamDialog').addEventListener('close',()=>{++streamLookupSerial;streamEditingId=null;streamEditOriginal=null;streamUserEditedUrl=false});
+$('#streamCancel').addEventListener('click',closeStreamDialog);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-stream-edit]');if(b)openStreamDialog(b.dataset.streamEdit)});
+$('#streamExactUrl').addEventListener('input',()=>{streamUserEditedUrl=true});
+$('#streamService').addEventListener('change',()=>{
+ // Selecting a different provider must clear the previous provider's URL.
+ ++streamLookupSerial;
+ const selected=$('#streamService').value;
+ const original=streamEditOriginal;
+ const existing=original?.service===selected?original.url||'':'';
+ $('#streamExactUrl').value=existing;
+ streamUserEditedUrl=!!existing;
+ $('#streamExactUrl').disabled=!selected;
+ $('#streamFindUrl').disabled=!selected||!/^jikan:\d+$/.test(streamEditingId||'');
+ $('#streamFindUrl').textContent=STREAM_LOOKUP_LABEL;
+ streamLookupNotice(existing?'保存済みの作品URLを維持しています。':'');
+ if(selected&&!existing)void streamAutoFillUrl();
+});
+$('#streamFindUrl').addEventListener('click',()=>{
+ if(!streamEditingId||!/^jikan:\d+$/.test(streamEditingId)||!streamService($('#streamService').value))return;
+ if(streamUserEditedUrl&&$('#streamExactUrl').value.trim()){
+  streamLookupNotice('手入力したURLを保持しています。再取得したい場合はURL欄を空にしてから再確認してください。');
+  return;
+ }
+ streamUserEditedUrl=false;
+ void streamAutoFillUrl(true);
 });
 $('#streamForm').addEventListener('submit',e=>{e.preventDefault();queueRecordWrite(saveStreamPreference)});
 async function saveStreamPreference(){
