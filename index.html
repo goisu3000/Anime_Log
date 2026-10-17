@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.10 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.11 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -922,7 +922,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.10 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.11 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1886,10 +1886,12 @@ const STREAM_LOOKUP_LABEL='公開データの作品リンクを再確認';
 $('#streamService').innerHTML='<option value="">未設定（リンクを削除）</option>'+STREAM_SERVICES.map(s=>`<option value="${safeText(s.name)}">${safeText(s.name)}</option>`).join('');
 function streamKnownLinks(id){
  const entry=detailCache.get(id);
- // A prior explicit link lookup takes precedence over an older full-detail response.
- if(Array.isArray(entry?.streamLinks))return entry.streamLinks;
- if(Array.isArray(entry?.full?.streaming))return entry.full.streaming;
- return null;
+ // Both routes expose streaming links. An empty response from one route must
+ // never hide a valid link already present in the other route.
+ const fullLinks=Array.isArray(entry?.full?.streaming)?entry.full.streaming:null;
+ const directLinks=Array.isArray(entry?.streamLinks)?entry.streamLinks:null;
+ if(fullLinks===null&&directLinks===null)return null;
+ return [...(fullLinks||[]),...(directLinks||[])];
 }
 function streamNameMatches(source,selected){
  const name=String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'');
@@ -1903,19 +1905,48 @@ function streamNameMatches(source,selected){
  return (aliases[selected]||[selected.normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')]).some(alias=>name===alias.replace('+',''));
 }
 function streamMatchingUrl(links,service){
- const match=(Array.isArray(links)?links:[]).find(x=>streamNameMatches(x?.name,service)&&streamAllowedUrl(service,x?.url));
- return match?streamAllowedUrl(service,match.url):'';
+ const valid=(Array.isArray(links)?links:[]).filter(x=>streamAllowedUrl(service,x?.url));
+ // Match the registered streaming provider name first, just like detail view.
+ const named=valid.find(x=>streamNameMatches(x?.name,service));
+ if(named)return streamAllowedUrl(service,named.url);
+ // A provider may be labeled differently in API responses. Accept an explicit
+ // title/watch/series URL at the selected provider's own domain, never a homepage.
+ const byAddress=valid.find(x=>/^\/(?:[a-z]{2}\/)?(?:title|watch|series|detail|video|contents|play)\//i.test(new URL(x.url).pathname));
+ return byAddress?streamAllowedUrl(service,byAddress.url):'';
 }
-async function streamFetchLinks(id,refresh=false){
- if(!refresh){const links=streamKnownLinks(id);if(links!==null)return links}
- // Multiple rapid service changes share a single request for all streaming providers.
+async function streamFetchLinks(id,service,refresh=false){
+ const cached=streamKnownLinks(id),entry=detailCache.get(id);
+ if(!refresh&&(streamMatchingUrl(cached,service)||Array.isArray(entry?.streamLinks)))return cached||[];
+ // Deduplicate simultaneous provider changes for the same title.
  if(streamLinkRequests.has(id))return streamLinkRequests.get(id);
  const job=(async()=>{
-  const response=await detailFetch(`/anime/${id.slice(6)}/streaming`);
-  if(!Array.isArray(response?.data))throw Error('配信リンク情報が取得できませんでした');
-  const entry=detailCache.get(id)||{};
-  detailCache.set(id,{...entry,streamLinks:response.data});
-  return response.data;
+  const malId=id.slice(6);
+  let fullLinks=Array.isArray(detailCache.get(id)?.full?.streaming)?detailCache.get(id).full.streaming:null;
+  let fullError=null;
+  // The detail page uses /full. Consult that same source first.
+  if(refresh||fullLinks===null){
+   try{
+    const response=await detailFetch(`/anime/${malId}/full`);
+    if(!response?.data||typeof response.data!=='object')throw Error('作品詳細が取得できませんでした');
+    const entry=detailCache.get(id)||{};
+    detailCache.set(id,{...entry,full:response.data});
+    fullLinks=Array.isArray(response.data.streaming)?response.data.streaming:[];
+   }catch(e){fullError=e}
+  }
+  const fromDetail=streamKnownLinks(id);
+  if(streamMatchingUrl(fromDetail,service))return fromDetail;
+  // If /full has no match, check the dedicated route once, without discarding
+  // any links already present in the full detail response.
+  try{
+   const response=await detailFetch(`/anime/${malId}/streaming`);
+   if(!Array.isArray(response?.data))throw Error('配信リンク情報が取得できませんでした');
+   const entry=detailCache.get(id)||{};
+   detailCache.set(id,{...entry,streamLinks:response.data});
+   return streamKnownLinks(id)||[];
+  }catch(e){
+   if(fullError&&fullLinks===null)throw e;
+   return streamKnownLinks(id)||[];
+  }
  })();
  streamLinkRequests.set(id,job);
  try{return await job}finally{if(streamLinkRequests.get(id)===job)streamLinkRequests.delete(id)}
@@ -1929,17 +1960,18 @@ async function streamAutoFillUrl(refresh=false){
  if(!id||!/^jikan:\d+$/.test(id)||!streamService(service))return;
  // A previously saved or newly typed URL must never be replaced automatically.
  if(input.value.trim()&&!refresh)return;
- const known=refresh?null:streamKnownLinks(id),needsRequest=known===null;
+ const known=refresh?null:streamKnownLinks(id);
+ const needsRequest=refresh||(!streamMatchingUrl(known,service)&&!Array.isArray(detailCache.get(id)?.streamLinks));
  if(needsRequest){button.disabled=true;button.textContent='リンクを照会中…';streamLookupNotice('作品URLを自動確認しています…')}
  try{
-  const links=needsRequest?await streamFetchLinks(id,refresh):known;
+  const links=needsRequest?await streamFetchLinks(id,service,refresh):known;
   if(serial!==streamLookupSerial||streamEditingId!==id||!$('#streamDialog').open||$('#streamService').value!==service||streamUserEditedUrl)return;
   const found=streamMatchingUrl(links,service);
   if(found){
    input.value=found;
    streamLookupNotice('作品詳細と同じ登録済みリンクを自動入力しました。保存前にリンク先をご確認ください。');
   }else{
-   streamLookupNotice('このサービスの作品URLは登録されていません。URLを手入力するか、検索リンクをご利用ください。');
+   streamLookupNotice(`公開データにこの作品の直接URLが見つかりませんでした。作品詳細の「${service}で検索」は作品URLではありません。URLを手入力するか、検索リンクをご利用ください。`);
   }
  }catch{
   if(serial===streamLookupSerial&&streamEditingId===id&&$('#streamDialog').open&&$('#streamService').value===service&&!streamUserEditedUrl){
