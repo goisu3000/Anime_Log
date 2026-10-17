@@ -818,9 +818,6 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .stream-inline-link:focus-visible,.stream-inline-empty:focus-visible,.stream-inline-edit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .stream-dialog-intro{color:var(--muted);font-size:var(--fs-sm);line-height:1.65;margin:6px 0 12px}
 .stream-dialog-hint{color:var(--muted);font-size:var(--fs-xs);line-height:1.65;margin:8px 0 12px}
-.stream-dialog-find{align-self:flex-start;border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--ink);border-radius:var(--radius-sm);padding:8px 12px;font-size:var(--fs-sm);font-weight:var(--fw-semi)}
-.stream-dialog-find:hover{border-color:var(--accent);color:var(--accent)}
-.stream-dialog-find:disabled{opacity:.5}
 .stream-dialog-notice{font-size:var(--fs-xs);line-height:1.6;color:var(--muted);margin:8px 0}
 .stream-dialog-notice.error{color:var(--danger)}
 
@@ -1051,7 +1048,6 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   <label for="streamExactUrl">作品ページのURL（任意）</label>
   <input id="streamExactUrl" type="url" inputmode="url" maxlength="2048" placeholder="https://..." autocomplete="off" spellcheck="false">
   <p class="stream-dialog-hint">サービスを選ぶと登録済みの作品URLを自動確認します。見つからない場合は検索リンクを使用できます。配信中かどうかは保証しません。</p>
-  <button type="button" id="streamFindUrl" class="stream-dialog-find">公開データの作品リンクを再確認</button>
   <p id="streamFindResult" class="stream-dialog-notice" role="status" aria-live="polite"></p>
   <menu><button class="secondary" type="button" id="streamCancel">キャンセル</button><button class="primary" type="submit" id="streamSave">保存する</button></menu>
 </form></dialog>
@@ -1893,7 +1889,6 @@ let streamEditingId=null,streamEditOriginal=null;
 // Cache streaming links by anime ID for this tab. Never fetch links for every My List card.
 const streamLinkRequests=new Map();
 let streamLookupSerial=0,streamUserEditedUrl=false;
-const STREAM_LOOKUP_LABEL='公開データの作品リンクを再確認';
 $('#streamService').innerHTML='<option value="">未設定（リンクを削除）</option>'+STREAM_SERVICES.map(s=>`<option value="${safeText(s.name)}">${safeText(s.name)}</option>`).join('');
 function streamKnownLinks(id){
  const entry=detailCache.get(id);
@@ -1925,9 +1920,9 @@ function streamMatchingUrl(links,service){
  const byAddress=valid.find(x=>/^\/(?:[a-z]{2}\/)?(?:title|watch|series|detail|video|contents|play)\//i.test(new URL(x.url).pathname));
  return byAddress?byAddress.url:'';
 }
-async function streamFetchLinks(id,service,refresh=false){
+async function streamFetchLinks(id,service){
  const cached=streamKnownLinks(id),entry=detailCache.get(id);
- if(!refresh&&(streamMatchingUrl(cached,service)||Array.isArray(entry?.streamLinks)))return cached||[];
+ if(streamMatchingUrl(cached,service)||Array.isArray(entry?.streamLinks))return cached||[];
  // Deduplicate simultaneous provider changes for the same title.
  if(streamLinkRequests.has(id))return streamLinkRequests.get(id);
  const job=(async()=>{
@@ -1935,7 +1930,7 @@ async function streamFetchLinks(id,service,refresh=false){
   let fullLinks=Array.isArray(detailCache.get(id)?.full?.streaming)?detailCache.get(id).full.streaming:null;
   let fullError=null;
   // The detail page uses /full. Consult that same source first.
-  if(refresh||fullLinks===null){
+  if(fullLinks===null){
    try{
     const response=await detailFetch(`/anime/${malId}/full`);
     if(!response?.data||typeof response.data!=='object')throw Error('作品詳細が取得できませんでした');
@@ -1965,17 +1960,17 @@ async function streamFetchLinks(id,service,refresh=false){
 function streamLookupNotice(message,error=false){
  const notice=$('#streamFindResult');notice.textContent=message;notice.classList.toggle('error',error);
 }
-async function streamAutoFillUrl(refresh=false){
+async function streamAutoFillUrl(){
  const id=streamEditingId,service=$('#streamService').value,serial=++streamLookupSerial;
- const button=$('#streamFindUrl'),input=$('#streamExactUrl');
+ const input=$('#streamExactUrl');
  if(!id||!/^jikan:\d+$/.test(id)||!streamService(service))return;
  // A previously saved or newly typed URL must never be replaced automatically.
- if(input.value.trim()&&!refresh)return;
- const known=refresh?null:streamKnownLinks(id);
- const needsRequest=refresh||(!streamMatchingUrl(known,service)&&!Array.isArray(detailCache.get(id)?.streamLinks));
- if(needsRequest){button.disabled=true;button.textContent='リンクを照会中…';streamLookupNotice('作品URLを自動確認しています…')}
+ if(input.value.trim())return;
+ const known=streamKnownLinks(id);
+ const needsRequest=!streamMatchingUrl(known,service)&&!Array.isArray(detailCache.get(id)?.streamLinks);
+ if(needsRequest)streamLookupNotice('作品URLを自動確認しています…');
  try{
-  const links=needsRequest?await streamFetchLinks(id,service,refresh):known;
+  const links=needsRequest?await streamFetchLinks(id,service):known;
   if(serial!==streamLookupSerial||streamEditingId!==id||!$('#streamDialog').open||$('#streamService').value!==service||streamUserEditedUrl)return;
   const found=streamMatchingUrl(links,service);
   if(found){
@@ -1987,11 +1982,6 @@ async function streamAutoFillUrl(refresh=false){
  }catch{
   if(serial===streamLookupSerial&&streamEditingId===id&&$('#streamDialog').open&&$('#streamService').value===service&&!streamUserEditedUrl){
    streamLookupNotice('リンクを取得できませんでした。URLを手入力するか、検索リンクをご利用ください。',true);
-  }
- }finally{
-  if(serial===streamLookupSerial){
-   button.textContent=STREAM_LOOKUP_LABEL;
-   button.disabled=!streamService($('#streamService').value)||!/^jikan:\d+$/.test(streamEditingId||'');
   }
  }
 }
@@ -2005,8 +1995,6 @@ function openStreamDialog(id){
  $('#streamExactUrl').value=pref?.url||'';
  streamUserEditedUrl=!!pref?.url;
  streamLookupNotice('');
- $('#streamFindUrl').textContent=STREAM_LOOKUP_LABEL;
- $('#streamFindUrl').disabled=!/^jikan:\d+$/.test(id)||!$('#streamService').value;
  $('#streamExactUrl').disabled=!$('#streamService').value;
  $('#streamDialog').showModal();$('#streamService').focus();
  if(pref?.service&&!pref?.url)void streamAutoFillUrl();
@@ -2025,19 +2013,8 @@ $('#streamService').addEventListener('change',()=>{
  $('#streamExactUrl').value=existing;
  streamUserEditedUrl=!!existing;
  $('#streamExactUrl').disabled=!selected;
- $('#streamFindUrl').disabled=!selected||!/^jikan:\d+$/.test(streamEditingId||'');
- $('#streamFindUrl').textContent=STREAM_LOOKUP_LABEL;
  streamLookupNotice(existing?'保存済みの作品URLを維持しています。':'');
  if(selected&&!existing)void streamAutoFillUrl();
-});
-$('#streamFindUrl').addEventListener('click',()=>{
- if(!streamEditingId||!/^jikan:\d+$/.test(streamEditingId)||!streamService($('#streamService').value))return;
- if(streamUserEditedUrl&&$('#streamExactUrl').value.trim()){
-  streamLookupNotice('手入力したURLを保持しています。再取得したい場合はURL欄を空にしてから再確認してください。');
-  return;
- }
- streamUserEditedUrl=false;
- void streamAutoFillUrl(true);
 });
 $('#streamForm').addEventListener('submit',e=>{e.preventDefault();queueRecordWrite(saveStreamPreference)});
 async function saveStreamPreference(){
