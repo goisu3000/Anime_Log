@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.37">
+<meta name="ani-log-version" content="2.4.38">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -419,7 +419,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-profile>.detail-series{grid-column:1;grid-row:2}
 @media(max-width:740px){.detail-profile:has(> .detail-series) .detail-head-info{grid-column:2;grid-row:1}.detail-profile>.detail-series{grid-column:1/-1;grid-row:2}}
 .detail-series{border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);padding:12px;background:var(--surface2);min-width:0}
-.detail-series-heading{color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);margin:0 0 12px}
+.detail-series-heading{color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);margin:0 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.detail-series-scope{font-size:var(--fs-xs);font-weight:var(--fw-normal);color:var(--muted);white-space:nowrap}
 .detail-series-group+.detail-series-group{margin-top:12px}
 .detail-series-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}
 .detail-series-row>span{color:var(--muted)}
@@ -3870,7 +3871,7 @@ function seriesWatchSummary(id,full){
  });
  const note='取得できた関連作品の範囲で集計。必要に応じて関連情報を少数ずつ自動補完します。表示件数は公式の全作品数ではなく、100%でもシリーズ全体の完走を意味しません。';
  const unknown=series.unknown?`<br>作品形式を確認できない${series.unknown}作品は集計対象外です。`:'';
- return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況</h2>${groups.map(g=>g.markup).join('')}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${groups.map(g=>g.details).join('')}</div></details><p class="detail-series-note">${safeText(note)}${unknown}</p></section>`;
+ return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況<span class="detail-series-scope">取得できた作品内</span></h2>${groups.map(g=>g.markup).join('')}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${groups.map(g=>g.details).join('')}</div></details><p class="detail-series-note">${safeText(note)}${unknown}</p></section>`;
 }
 function detailHeader(a,full=null){
  const d=full||{},record=saved[a.id]||null;
