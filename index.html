@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
-<title>ANI:LOG v2.4.15 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.16 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -431,8 +431,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-status-area select{width:100%;min-height:42px;background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);padding:0 12px;font-size:var(--fs-md);font-weight:var(--fw-semi);cursor:pointer}
 .detail-readonly{display:block;font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--accent)}
 .detail-journal-cell .detail-progress{margin-top:16px}
-.detail-status-completion{position:relative;display:block;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
-.detail-date-current{display:grid;gap:4px}
+.detail-status-completion{position:relative;display:block;container-type:inline-size;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+/* Reserve space for the edit action when it can share the date row. */
+.detail-date-current{display:grid;gap:4px;padding-right:calc(129px + var(--sp-3))}
 .detail-date-current span{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--muted)}
 .detail-date-current strong{font-size:var(--fs-md);font-weight:var(--fw-bold)}
 .detail-date-disclosure>summary,.detail-rating-edit,.detail-note-edit{cursor:pointer;list-style:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);padding:6px 10px;min-height:35px;font-size:var(--fs-xs);font-weight:var(--fw-bold);white-space:nowrap}
@@ -441,7 +442,6 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 /* Keep the edit button in place; expand only the form beneath the entire row. */
 .detail-date-disclosure>summary{position:absolute;top:14px;right:0}
 .detail-date-disclosure[open]>.watch-date{width:100%;min-width:0}
-@media(max-width:420px){.detail-date-disclosure>summary{position:static;margin:9px 0 0 auto}}
 .watch-date{padding-top:12px}
 .watch-date-title{display:none}
 .watch-date-help,.watch-date-hint{font-size:var(--fs-xs);line-height:1.65;color:var(--muted);margin:0 0 8px}
@@ -451,6 +451,13 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .watch-date-fields input,.watch-date-fields select{width:100%;min-height:40px;padding:6px 8px;background:var(--surface-input);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:6px;font-size:var(--fs-md)}
 .watch-date-actions{display:flex;gap:8px}
 .watch-date-actions button{font-size:var(--fs-sm);border:1px solid var(--border-ctrl);border-radius:6px;background:var(--surface);color:var(--ink);padding:8px 12px;font-weight:var(--fw-semi)}
+/* Switch by the actual card width rather than the browser viewport. */
+@container (max-width:300px){
+ .detail-date-current{padding-right:0}
+ .detail-date-disclosure>summary{position:static;display:flex;width:max-content;max-width:100%;margin:var(--sp-3) 0 0 auto}
+ .watch-date-fields{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .watch-date-field:first-child{grid-column:1/-1}
+}
 .detail-rating-body{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:16px;align-items:center}
 .detail-rating-primary{display:flex;flex-direction:column;align-items:flex-start;gap:10px}
 .detail-rating-caption{color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi)}
@@ -935,7 +942,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.15 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.16 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -2387,19 +2394,36 @@ function render(){
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
-let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='', activeSeasonKey='';
+let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='', activeSeasonKey='', browseCursor=null;
 const SEASON_CACHE_TTL=10*60000, seasonResultCache=new Map();
+// Decade/whole-year browse: recent seasons first, paging lazily within each season.
+// No additional background API requests. Keyword search is unchanged.
+function periodBrowseYears(){
+ const v=currentScope();if(v==='all')return [];
+ const lower=v.startsWith('decade:')?Number(v.slice(7)):Number(v);
+ const upper=v.startsWith('decade:')?lower+9:lower;
+ const thisYear=new Date().getFullYear();
+ const newest=lower>thisYear?lower:Math.min(upper,thisYear);
+ if(!Number.isInteger(lower)||lower>newest)return [];
+ return Array.from({length:newest-lower+1},(_,i)=>newest-i);
+}
+function makeBrowseCursor(){
+ const seasons=['fall','summer','spring','winter'];
+ const steps=periodBrowseYears().flatMap(year=>seasons.map(season=>({year,season})));
+ return {steps,index:0,subPage:1};
+}
+
 function currentSeasonFetchKey(){return [currentScope(),$('#seasonSelect').value,typeFilter,String(query||'').trim().normalize('NFKC')].join('|')}
 function saveSeasonCache(key){
  if(!key||!items.length)return;
  seasonResultCache.delete(key);
- seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),at:Date.now()});
+ seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),browseCursor:structuredClone(browseCursor),at:Date.now()});
  while(seasonResultCache.size>15)seasonResultCache.delete(seasonResultCache.keys().next().value);
 }
 function restoreSeasonCache(key){
  const hit=seasonResultCache.get(key);
  if(!hit||Date.now()-hit.at>SEASON_CACHE_TTL)return false;
- items=hit.items.slice();page=hit.page;hasNext=hit.hasNext;searchProgress=structuredClone(hit.searchProgress);
+ items=hit.items.slice();page=hit.page;hasNext=hit.hasNext;searchProgress=structuredClone(hit.searchProgress);browseCursor=structuredClone(hit.browseCursor||null);
  fetchedSeasonKey=key;loading=false;$('#offlineNotice').classList.add('hidden');
  if(query)sortSearchResults();
  render();return true;
@@ -2418,6 +2442,7 @@ async function fetchPage(reset=true,force=false){
  }
  if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
   searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
+  browseCursor=!query&&currentScope()!=='all'&&$('#seasonSelect').value==='all'?makeBrowseCursor():null;
  }
  loading=true;activeSeasonKey=targetKey;requestCounter++;const thisRequest=requestCounter;
  const controller=new AbortController();activeController=controller;render();
@@ -2510,6 +2535,24 @@ async function fetchPage(reset=true,force=false){
     }
    }
    sortSearchResults();hasNext=searchProgress.some(c=>c.hasNext);
+  }else if(browseCursor){
+   // Limit work to one non-empty season per user action. Skip empty seasons,
+   // without requesting all 40 quarters upfront.
+   let gotVisible=false,probed=0;
+   // A period without seasonal records must not start dozens of requests at once.
+   while(browseCursor.index<browseCursor.steps.length&&!gotVisible&&probed<6){
+    probed++;
+    const step=browseCursor.steps[browseCursor.index];
+    const params=new URLSearchParams({limit:'24',page:String(browseCursor.subPage),order_by:'members',sort:'desc'});
+    if(apiType)params.set('filter',apiType);
+    const beforeSize=items.length;
+    const payload=await getData(`${API}/seasons/${step.year}/${step.season}?${params}`);
+    if(!payload)return;
+    gotVisible=items.length>beforeSize;
+    if(payload.pagination?.has_next_page)browseCursor.subPage++;
+    else{browseCursor.index++;browseCursor.subPage=1}
+   }
+   hasNext=browseCursor.index<browseCursor.steps.length;
   }else{
    const params=new URLSearchParams(baseParams);params.set('page',String(page));
    const url=seasonal?`${API}/seasons/${scope}/${season}?${params}`:`${API}/anime?${params}`;
@@ -3166,7 +3209,7 @@ $('#ratingForm').addEventListener('submit',e=>{e.preventDefault();saveRating()})
 $('#ratingCancel').addEventListener('click',closeRating);
 $('#ratingClear').addEventListener('click',clearRating);
 $$('[data-type]').forEach(b=>b.addEventListener('click',()=>{const next=b.dataset.type;if(next===typeFilter)return;typeFilter=next;$$('[data-type]').forEach(x=>x.classList.toggle('active',x===b));if(mode==='season'&&exploreStatusFilter==='all')fetchPage(true);else render();aniHistorySave()}));
-$$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;const before=aniHistoryEnter();try{exploreStatusFilter=next;if(next==='all'){fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}finally{aniHistoryLeave(before)}}));
+$$('[data-explore-status]').forEach(b=>b.addEventListener('click',()=>{if(mode!=='season')return;const next=b.dataset.exploreStatus;if(next===exploreStatusFilter)return;const before=aniHistoryEnter();try{exploreStatusFilter=next;if(next==='all'){query=$('#searchInput').value.trim();fetchPage(true)}else{activeController?.abort();requestCounter++;loading=false;hasNext=false;render()}}finally{aniHistoryLeave(before)}}));
 let runSeasonSearch=function(nextQuery,allYears=false){
  const trimmed=String(nextQuery||'').trim();
  if(allYears&&currentScope()!=='all'){
@@ -3775,7 +3818,6 @@ $('#detailContent').addEventListener('keydown',e=>{
  e.preventDefault();selectDetailTab(visible[i],true);
 });
 $('#detailContent').addEventListener('click',e=>{
- const streamLink=e.target.closest('[data-stream-link]');if(streamLink&&detailActiveItem&&mode!=='share'){const curStatus=saved[detailActiveItem.id]?.status;if(!curStatus||curStatus==='planned')setStatus(detailActiveItem.id,'watching')}
  const rate=e.target.closest('[data-rate-id]');if(rate){openRating(rate.dataset.rateId);return}
  const tab=e.target.closest('[data-detail-tab]');if(tab){selectDetailTab(tab.dataset.detailTab);return}
  const retryField=e.target.closest('[data-detail-field-retry]');if(retryField&&detailActiveItem){ensureDetailField(detailActiveItem.id,retryField.dataset.detailFieldRetry,true);return}
