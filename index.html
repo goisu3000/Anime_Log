@@ -797,29 +797,29 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-toggle:focus-visible,.weekly-settings-btn:focus-visible,.weekly-edit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-today-label{font-size:14px;gap:6px}.weekly-today-label strong{font-size:22px}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px;flex-wrap:wrap}.weekly-item-meta{font-size:11px}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
 
-/* Collapsed weekly calendar: approved right-side arrangement, refined proportions.
-   The date/count typography and spacing are shared with the expanded state. */
-.weekly-calendar:not(.is-open) .weekly-heading{flex:1 1 35%}
-.weekly-calendar:not(.is-open) .weekly-head-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) 40px;flex:1 1 65%;gap:18px;min-width:0}
-.weekly-calendar:not(.is-open) .weekly-summary:not(:empty){display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:4px;min-width:0;margin:0;padding:0 0 0 18px;border-left:1px solid var(--border)}
-.weekly-calendar:not(.is-open) .weekly-preview{display:flex;align-items:center;min-width:0;gap:9px;height:30px;padding:0;background:transparent;border:0;border-radius:0;font-size:var(--fs-xs)}
-.weekly-calendar:not(.is-open) .weekly-preview .weekly-poster{width:28px;height:28px;flex:0 0 28px;object-fit:cover}
-.weekly-calendar:not(.is-open) .weekly-preview-body{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:visible}
-.weekly-calendar:not(.is-open) .weekly-preview-title{appearance:none;border:0;background:transparent;padding:0;color:var(--ink);text-align:left;flex:0 1 auto;min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:var(--fw-semi)}
-@media(hover:hover){.weekly-calendar:not(.is-open) .weekly-preview-title:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}}
-.weekly-calendar:not(.is-open) .weekly-preview .weekly-tag{flex:0 0 auto;max-width:none;overflow:visible}
-.weekly-calendar:not(.is-open) .weekly-summary .weekly-muted{font-size:var(--fs-xs);line-height:1.5}
+/* Stable weekly calendar header: preserve the approved compact summary in both
+   expanded and collapsed states. Only the detail section and chevron change. */
+.weekly-calendar .weekly-heading{flex:1 1 35%}
+.weekly-calendar .weekly-head-actions{display:grid;grid-template-columns:max-content minmax(0,1fr) 40px;flex:1 1 65%;gap:18px;min-width:0}
+.weekly-calendar .weekly-summary:not(:empty){display:grid;grid-template-columns:minmax(0,1fr);align-content:center;gap:4px;min-width:0;margin:0;padding:0 0 0 18px;border-left:1px solid var(--border)}
+.weekly-calendar .weekly-preview{display:flex;align-items:center;min-width:0;gap:9px;height:30px;padding:0;background:transparent;border:0;border-radius:0;font-size:var(--fs-xs)}
+.weekly-calendar .weekly-preview .weekly-poster{width:28px;height:28px;flex:0 0 28px;object-fit:cover}
+.weekly-calendar .weekly-preview-body{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;overflow:visible}
+.weekly-calendar .weekly-preview-title{appearance:none;border:0;background:transparent;padding:0;color:var(--ink);text-align:left;flex:0 1 auto;min-width:0;max-width:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:var(--fw-semi)}
+@media(hover:hover){.weekly-calendar .weekly-preview-title:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}}
+.weekly-calendar .weekly-preview .weekly-tag{flex:0 0 auto;max-width:none;overflow:visible}
+.weekly-calendar .weekly-summary .weekly-muted{font-size:var(--fs-xs);line-height:1.5}
 @media(max-width:1100px){
-  .weekly-calendar:not(.is-open) .weekly-head{flex-wrap:wrap;gap:12px}
-  .weekly-calendar:not(.is-open) .weekly-heading{flex:1 0 100%}
-  .weekly-calendar:not(.is-open) .weekly-head-actions{flex:1 1 100%}
+  .weekly-calendar .weekly-head{flex-wrap:wrap;gap:12px}
+  .weekly-calendar .weekly-heading{flex:1 0 100%}
+  .weekly-calendar .weekly-head-actions{flex:1 1 100%}
 }
 @media(max-width:740px){
-  /* Keep the date/count and chevron aligned while giving previews a full-width second row. */
-  .weekly-calendar:not(.is-open) .weekly-head-actions{grid-template-columns:minmax(0,1fr) 40px;gap:8px}
-  .weekly-calendar:not(.is-open) .weekly-today-label{grid-column:1;grid-row:1}
-  .weekly-calendar:not(.is-open) .weekly-head-actions .weekly-toggle{grid-column:2;grid-row:1}
-  .weekly-calendar:not(.is-open) .weekly-summary:not(:empty){grid-column:1/-1;grid-row:2;border-left:0;border-top:1px solid var(--border);padding:8px 0 0}
+  /* Keep the same date/count and chevron positions and preview row in both states. */
+  .weekly-calendar .weekly-head-actions{grid-template-columns:minmax(0,1fr) 40px;gap:8px}
+  .weekly-calendar .weekly-today-label{grid-column:1;grid-row:1}
+  .weekly-calendar .weekly-head-actions .weekly-toggle{grid-column:2;grid-row:1}
+  .weekly-calendar .weekly-summary:not(:empty){grid-column:1/-1;grid-row:2;border-left:0;border-top:1px solid var(--border);padding:8px 0 0}
 }
 
 
@@ -2314,7 +2314,7 @@ function renderWeeklyCalendar(){
  $('#weeklyToggle').setAttribute('aria-expanded',String(weeklyOptions.open));$('#weeklyToggle').setAttribute('aria-label',weeklyOptions.open?'週間視聴カレンダーを閉じる':'週間視聴カレンダーを開く');
  el.classList.toggle('is-open',weeklyOptions.open);
  $('#weeklyContent').hidden=!weeklyOptions.open;
- $('#weeklySummary').innerHTML=weeklyOptions.open?'':todays.length?`${todays.slice(0,3).map(({a,info})=>weeklyEntryMarkup(a,info,true)).join('')}${todays.length>3?`<span class="weekly-muted">ほか${todays.length-3}作品</span>`:''}`:`<span class="weekly-muted">${relevant.length?'今日の予定はありません':'「見てる」に作品を登録すると予定が表示されます'}</span>`;
+ $('#weeklySummary').innerHTML=todays.length?`${todays.slice(0,3).map(({a,info})=>weeklyEntryMarkup(a,info,true)).join('')}${todays.length>3?`<span class="weekly-muted">ほか${todays.length-3}作品</span>`:''}`:`<span class="weekly-muted">${relevant.length?'今日の予定はありません':'「見てる」に作品を登録すると予定が表示されます'}</span>`;
  if(!weeklyOptions.open)return;
  const epScope=weeklyEpisodeScope();
  $$('#weeklySettingsPanel [data-weekly-status]').forEach(cb=>{cb.checked=weeklyOptions.statuses.includes(cb.dataset.weeklyStatus)});
