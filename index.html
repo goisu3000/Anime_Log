@@ -2002,7 +2002,7 @@ async function streamAutoFillUrl(){
    input.value=found;
    streamLookupNotice('作品詳細と同じ登録済みリンクを自動入力しました。保存前にリンク先をご確認ください。');
   }else{
-   streamLookupNotice(`公開データにこの作品の直接URLが見つかりませんでした。作品詳細の「${service}で検索」は作品URLではありません。URLを手入力するか、検索リンクをご利用ください。`);
+   streamLookupNotice(`公開データにこの作品の直接URLが見つかりませんでした。作品詳細の「日本の配信サービスで検索」にある「${service}」は作品URLではありません。URLを手入力するか、検索リンクをご利用ください。`);
   }
  }catch{
   if(serial===streamLookupSerial&&streamEditingId===id&&$('#streamDialog').open&&$('#streamService').value===service&&!streamUserEditedUrl){
@@ -3651,7 +3651,7 @@ const JP_STREAM_SITES=[...STREAM_SERVICES].sort((a,b)=>a.searchOrder-b.searchOrd
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
- return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
+ return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
  const links=(full?.streaming||[]).map(p=>{const name=streamCanonicalName(p?.name);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
