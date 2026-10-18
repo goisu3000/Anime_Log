@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.36">
+<meta name="ani-log-version" content="2.4.37">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -3676,11 +3676,133 @@ function seriesRelationKind(value){
  if(AUTO_SERIES_EXTRA_RELATIONS.has(name))return 'extra';
  return '';
 }
+/* Series discovery is separate from the user's saved records and from full-detail caching.
+   Lightweight /relations responses are reused across visits; no extra full-detail calls.
+   Bounded, serialized background work only runs on open detail pages, never on search. */
+const SERIES_REL_CACHE_KEY='anilog-series-relations-v1';
+const SERIES_REL_TTL=14*24*60*60*1000;
+const SERIES_MAX_PER_DETAIL=6,SERIES_REL_CACHE_MAX_ITEMS=96,SERIES_REL_CACHE_MAX_CHARS=95000;
+let seriesExtraRequests=0,seriesExploreGeneration=0,seriesNextFetchAt=0,seriesThrottleTail=Promise.resolve(),seriesBackoffUntil=0;
+const seriesFailedThisSession=new Map();
+function loadSeriesRelationCache(){
+ try{
+  const raw=JSON.parse(localStorage.getItem(SERIES_REL_CACHE_KEY)||'{}');
+  const result=Object.create(null),now=Date.now();
+  if(!raw||typeof raw!=='object'||Array.isArray(raw))return result;
+  for(const [id,entry] of Object.entries(raw)){
+   if(/^jikan:\d+$/.test(id)&&Number.isFinite(entry?.at)&&now-entry.at>=0&&now-entry.at<SERIES_REL_TTL&&Array.isArray(entry.relations))result[id]=entry;
+  }
+  return result;
+ }catch{return Object.create(null)}
+}
+const seriesRelationCache=loadSeriesRelationCache();
+function seriesCompactRelations(groups){
+ return groups.slice(0,35).map(group=>({relation:String(group?.relation||'').slice(0,70),entry:(Array.isArray(group?.entry)?group.entry:[]).slice(0,80).filter(e=>e?.type==='anime'&&Number.isSafeInteger(e.mal_id)&&e.mal_id>0).map(e=>({mal_id:e.mal_id,type:'anime',name:String(e.name||'').slice(0,170),media_type:String(e.media_type||'').slice(0,35)}))}));
+}
+function rememberSeriesRelations(id,relations){
+ if(!/^jikan:\d+$/.test(id)||!Array.isArray(relations))return;
+ seriesRelationCache[id]={at:Date.now(),relations:seriesCompactRelations(relations)};
+ let ordered=Object.entries(seriesRelationCache).sort((a,b)=>a[1].at-b[1].at);
+ while(ordered.length>SERIES_REL_CACHE_MAX_ITEMS){const [remove]=ordered.shift();delete seriesRelationCache[remove]}
+ let json=JSON.stringify(seriesRelationCache);
+ while(json.length>SERIES_REL_CACHE_MAX_CHARS&&ordered.length){const [remove]=ordered.shift();delete seriesRelationCache[remove];json=JSON.stringify(seriesRelationCache)}
+ try{localStorage.setItem(SERIES_REL_CACHE_KEY,json)}catch{/* Quota: keep in-memory graph; never touch viewing records. */}
+}
+function knownSeriesRelations(id,full){
+ const known=new Map();
+ for(const [key,record] of Object.entries(seriesRelationCache)){
+  if(Date.now()-record.at<SERIES_REL_TTL)known.set(key,{relations:record.relations});
+ }
+ for(const [key,entry] of detailCache){
+  if(/^jikan:\d+$/.test(key)&&Array.isArray(entry?.full?.relations))known.set(key,entry.full);
+ }
+ if(full&&Array.isArray(full.relations))known.set(id,full);
+ return known;
+}
+/* Only direct sequel/prequel edges create traversal paths; a side story must not
+   bring a different franchise into the series graph by accident. */
+function seriesPrimaryFrontier(id,full){
+ const known=knownSeriesRelations(id,full),neighbors=new Map();
+ function connect(a,b){if(!neighbors.has(a))neighbors.set(a,new Set());neighbors.get(a).add(b)}
+ for(const [from,record] of known){
+  for(const group of record.relations||[]){
+   if(seriesRelationKind(group?.relation)!=='primary')continue;
+   for(const e of group.entry||[]){
+    if(e?.type!=='anime'||!Number.isSafeInteger(e.mal_id)||e.mal_id<=0)continue;
+    if(['cm','pv','music'].includes(String(e.media_type||'').toLowerCase()))continue;
+    const to=`jikan:${e.mal_id}`;
+    connect(from,to);connect(to,from);
+   }
+  }
+ }
+ const visited=new Set([id]),queue=[id],missing=[];
+ for(let i=0;i<queue.length&&i<200;i++){
+  const at=queue[i];
+  if(!known.has(at))missing.push(at);
+  for(const next of neighbors.get(at)||[]){if(!visited.has(next)&&visited.size<200){visited.add(next);queue.push(next)}}
+ }
+ return missing;
+}
+/* A single narrow request queue, deliberately well below Tenrai's public rate limit.
+   Requests already made may be cached even if the user navigates away mid-flight. */
+function fetchMissingSeriesRelations(id,generation){
+ const job=seriesThrottleTail.catch(()=>{}).then(async()=>{
+  const remain=seriesNextFetchAt-Date.now();if(remain>0)await delay(remain);
+  if(generation!==seriesExploreGeneration||Date.now()<seriesBackoffUntil)return null;
+  seriesNextFetchAt=Date.now()+1100;
+  seriesExtraRequests++;
+  const response=await fetch(`${API}/anime/${id.slice(6)}/relations`,{headers:{Accept:'application/json'}});
+  if(!response.ok){
+   const error=Error(`series /relations HTTP ${response.status}`);error.status=response.status;
+   error.retryAfter=Number(response.headers?.get('Retry-After'))||0;
+   throw error;
+  }
+  const body=await response.json();
+  if(!Array.isArray(body?.data))throw Error('Invalid series relations response');
+  return body.data;
+ });
+ seriesThrottleTail=job.catch(()=>{});
+ return job;
+}
+function refreshSeriesSection(id,generation){
+ if(generation!==seriesExploreGeneration||detailActiveItem?.id!==id||mode==='share')return;
+ const panel=$('#detailContent .detail-profile'),full=detailCache.get(id)?.full;
+ if(!panel||!full)return;
+ const before=panel.querySelector(':scope > .detail-series');
+ const after=seriesWatchSummary(id,full);
+ if(before&&before.outerHTML===after)return;
+ const expanded=before?.querySelector('details')?.open||false;
+ if(before)before.remove();
+ if(after){panel.insertAdjacentHTML('beforeend',after);const details=panel.querySelector(':scope > .detail-series details');if(details)details.open=expanded}
+}
+function exploreSeriesInBackground(id,full){
+ const generation=seriesExploreGeneration;
+ if(mode==='share'||!/^jikan:\d+$/.test(id)||!Array.isArray(full?.relations))return;
+ void (async()=>{
+  let attempted=0,changed=false;
+  while(generation===seriesExploreGeneration&&attempted<SERIES_MAX_PER_DETAIL&&Date.now()>=seriesBackoffUntil){
+   const next=seriesPrimaryFrontier(id,full).find(x=>(seriesFailedThisSession.get(x)||0)<=Date.now());
+   if(!next)break;
+   // Mark while in-flight to avoid repeating failures on the same session.
+   seriesFailedThisSession.set(next,Date.now()+180000);
+   attempted++;
+   try{
+    const relations=await fetchMissingSeriesRelations(next,generation);
+    if(!relations){seriesFailedThisSession.delete(next);break}
+    rememberSeriesRelations(next,relations);changed=true;
+    seriesFailedThisSession.delete(next);
+   }catch(error){
+    if(error?.status===429){seriesBackoffUntil=Date.now()+Math.max(30000,Math.min(3600000,(error.retryAfter||60)*1000));seriesFailedThisSession.delete(next);break}
+    // Missing works are retried on a future visit; transient failures cool down briefly.
+    seriesFailedThisSession.set(next,Date.now()+(error?.status===404?3600000:180000));
+   }
+  }
+  if(changed)refreshSeriesSection(id,generation);
+ })();
+}
 function collectCachedSeries(id,full){
  if(!/^jikan:\d+$/.test(id)||!full||!Array.isArray(full.relations))return null;
- const known=new Map();
- for(const [key,entry] of detailCache){if(/^jikan:\d+$/.test(key)&&Array.isArray(entry?.full?.relations))known.set(key,entry.full)}
- known.set(id,full);
+ const known=knownSeriesRelations(id,full);
  const mainLinks=new Map(),suppLinks=[],meta=new Map();
  const addMain=(a,b)=>{if(!mainLinks.has(a))mainLinks.set(a,new Set());mainLinks.get(a).add(b)};
  const setMeta=(key,name,type)=>{
@@ -3746,7 +3868,7 @@ function seriesWatchSummary(id,full){
   }).join('');
   return {markup,details:`<div class="detail-series-subheading">${safeText(group.name)}</div>${rows}`};
  });
- const note='この画面と取得済み作品の関連情報から発見した範囲で自動集計。閲覧により対象が増えることがあります。100%表示でもシリーズ全体の完走を意味しません。';
+ const note='取得できた関連作品の範囲で集計。必要に応じて関連情報を少数ずつ自動補完します。表示件数は公式の全作品数ではなく、100%でもシリーズ全体の完走を意味しません。';
  const unknown=series.unknown?`<br>作品形式を確認できない${series.unknown}作品は集計対象外です。`:'';
  return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況</h2>${groups.map(g=>g.markup).join('')}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${groups.map(g=>g.details).join('')}</div></details><p class="detail-series-note">${safeText(note)}${unknown}</p></section>`;
 }
@@ -4018,6 +4140,7 @@ function openDetail(item,related=false){
  const wasInDetail=document.body.classList.contains('view-detail');
  if(!related&&!wasInDetail)detailReturnScroll=window.scrollY;
  if(!aniHistoryRestoring)detailHistorySteps=wasInDetail?detailHistorySteps+1:1;
+ seriesExploreGeneration++;
  const id=item.id;detailActiveItem=item;detailActiveTab='overview';
  const token=++detailNonce;detailEpisodeBusy=false;
  const cached=detailCache.get(id);detailEpisodePage=cached?.episodePage||1;
@@ -4028,6 +4151,7 @@ function openDetail(item,related=false){
   renderDetailParts(token);
   if(!cached.localizeChecked)localizeSynopsis(id,token);
   ensureDetailTab('overview',id);
+  exploreSeriesInBackground(id,cached.full);
   return;
  }
  loadDetail(id,token);
@@ -4046,6 +4170,7 @@ async function loadDetail(id,token,force=false){
    renderDetailParts(token);
    localizeSynopsis(id,token);
    ensureDetailTab(detailActiveTab,id);
+   exploreSeriesInBackground(id,full);
   }
  }catch(err){
   entry=detailCache.get(id)||{};
@@ -4060,7 +4185,7 @@ async function detailMoreEpisodes(){const a=detailActiveItem;if(!a||detailEpisod
  catch{if(token===detailNonce)toast('エピソードを追加取得できませんでした','error')}
  finally{if(token===detailNonce){detailEpisodeBusy=false;renderDetailParts(token)}}
 }
-function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;detailNonce++;detailActiveItem=null;detailHistorySteps=0;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';if(restoreScroll&&pendingViewRender)render();else pendingViewRender=false;$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
+function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;seriesExploreGeneration++;detailNonce++;detailActiveItem=null;detailHistorySteps=0;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';if(restoreScroll&&pendingViewRender)render();else pendingViewRender=false;$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
 $('#detailBack').addEventListener('click',()=>{if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){const steps=Math.min(aniHistoryDepth,Math.max(1,detailHistorySteps||1));history.go(-steps)}else{closeDetail()}});
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#sharedItems').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
