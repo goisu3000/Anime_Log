@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.33">
+<meta name="ani-log-version" content="2.4.34">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -410,6 +410,34 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .insights-selection li{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
 .insights-selection li button{background:none;border:0;color:var(--ink);text-align:left;font-size:var(--fs-sm);flex:1}
 .insights-selection-close{border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--ink);padding:6px 12px;border-radius:6px;font-size:var(--fs-xs);margin-top:10px}
+
+
+/* Verified series overview: only series with reviewed edition/season grouping.
+   A low-profile summary beneath the poster; unrelated detail screens remain unchanged. */
+.detail-profile:has(> .detail-series){row-gap:12px}
+.detail-profile:has(> .detail-series) .detail-head-info{grid-column:2;grid-row:1 / span 2}
+.detail-profile>.detail-series{grid-column:1;grid-row:2}
+@media(max-width:740px){.detail-profile:has(> .detail-series) .detail-head-info{grid-column:2;grid-row:1}.detail-profile>.detail-series{grid-column:1/-1;grid-row:2}}
+.detail-series{border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);padding:12px;background:var(--surface2);min-width:0}
+.detail-series-heading{color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);margin:0 0 12px}
+.detail-series-group+.detail-series-group{margin-top:12px}
+.detail-series-row{display:flex;justify-content:space-between;align-items:baseline;gap:6px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}
+.detail-series-row>span{color:var(--muted)}
+.detail-series-row>strong{font-weight:var(--fw-bold);font-variant-numeric:tabular-nums;white-space:nowrap}
+.detail-series-track{height:4px;margin-top:7px;background:var(--border);border-radius:4px;overflow:hidden}
+.detail-series-track>span{display:block;height:100%;background:var(--accent);border-radius:inherit}
+.detail-series-note{font-size:11px;line-height:1.6;color:var(--muted);margin:12px 0 0}
+.detail-series-details{border-top:1px solid var(--border);margin-top:12px;padding-top:9px}
+.detail-series-details>summary{cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:6px;color:var(--muted);font-weight:var(--fw-semi);font-size:var(--fs-xs);list-style:none;min-height:26px}
+.detail-series-details>summary::-webkit-details-marker{display:none}
+.detail-series-details>summary .ui-icon{width:13px;height:13px;transition:transform .16s}
+.detail-series-details[open]>summary .ui-icon{transform:rotate(180deg)}
+.detail-series-details>summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.detail-series-entries{display:grid;gap:8px;margin-top:10px}
+.detail-series-entry{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:var(--fs-xs);line-height:1.5}
+.detail-series-entry>span:first-child{color:var(--muted);min-width:0}
+.detail-series-entry .detail-series-state{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--ink);font-weight:var(--fw-semi)}
+.detail-series-state .ui-icon{width:13px;height:13px;color:var(--accent);flex:0 0 13px}
 
 /* Detail View (streaming links and Japanese provider search) */
 .view-detail .stats,.view-detail #libraryView,.view-detail #shareView,.view-detail .site-slogan{display:none!important}
@@ -3618,6 +3646,56 @@ const STAFF_ROLES_JA={
 function roleJa(text){return STAFF_ROLES_JA[text]||text}
 function genreJa(value){const original=String(value??'').trim();return JAPANESE_GENRES[original]||original}
 function typeJa(value){const original=String(value??'').trim();return JAPANESE_TYPES[original]||original}
+
+/* Verified edition grouping, not a guess from search hits or raw related-entry count.
+   Extend this reviewed catalog only when official season/edition mapping and MAL IDs are verified.
+   For unknown franchises return no overview rather than a misleading series-wide denominator. */
+const VERIFIED_SERIES_CATALOG=[{
+ key:'re-zero-tv-2026',
+ title:'Re:ゼロから始める異世界生活',
+ groups:[
+  {name:'TV本編',units:[
+   {name:'第1期',ids:['jikan:31240']},
+   {name:'第2期（前編＋後編）',ids:['jikan:39587','jikan:42203']},
+   {name:'第3期',ids:['jikan:54857']},
+   {name:'第4期',ids:['jikan:61316']}
+  ]},
+  {name:'劇場上映OVA',units:[
+   {name:'Memory Snow',ids:['jikan:36286']},
+   {name:'氷結の絆',ids:['jikan:38414']}
+  ]}
+ ],
+ note:'第2期は前・後編の両方が「見た」で完了。新編集版・短編・CMは集計対象外。'
+}];
+function verifiedSeriesFor(id){
+ return VERIFIED_SERIES_CATALOG.find(series=>series.groups.some(group=>group.units.some(unit=>unit.ids.includes(id))))||null;
+}
+function seriesUnitStatus(unit){
+ const statuses=unit.ids.map(id=>saved[id]?.status||'');
+ if(statuses.every(status=>status==='watched'))return {completed:true,status:'watched',label:'見た'};
+ if(statuses.includes('watched'))return {completed:false,status:'',label:'一部視聴'};
+ if(statuses.includes('watching'))return {completed:false,status:'watching',label:'見てる'};
+ if(statuses.includes('paused'))return {completed:false,status:'paused',label:'一時中断'};
+ if(statuses.includes('dropped'))return {completed:false,status:'dropped',label:'視聴中止'};
+ if(statuses.includes('planned'))return {completed:false,status:'planned',label:'見たい'};
+ return {completed:false,status:'',label:'未登録'};
+}
+function seriesWatchSummary(id){
+ if(mode==='share')return '';
+ const series=verifiedSeriesFor(id);
+ if(!series)return '';
+ const groups=series.groups.map(group=>{
+  const statuses=group.units.map(seriesUnitStatus),done=statuses.filter(x=>x.completed).length,total=group.units.length;
+  const percentage=Math.round(done/total*100);
+  const markup=`<div class="detail-series-group"><div class="detail-series-row"><span>${safeText(group.name)}</span><strong>${done} / ${total} 見た</strong></div><div class="detail-series-track" role="progressbar" aria-label="${safeText(group.name)}の視聴済み割合" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><span style="width:${percentage}%"></span></div></div>`;
+  return {markup,units:group.units.map((unit,i)=>{
+   const state=statuses[i],icon=state.status?savedStatusIcons[state.status]:'';
+   return `<div class="detail-series-entry"><span>${safeText(unit.name)}</span><span class="detail-series-state">${icon}<span>${safeText(state.label)}</span></span></div>`;
+  })};
+ });
+ return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況</h2>${groups.map(g=>g.markup).join('')}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${groups.flatMap(g=>g.units).join('')}</div></details><p class="detail-series-note">${safeText(series.note)}<br>公式区分で確認できた作品のみ集計。登録状況は作品IDで照合。</p></section>`;
+}
+
 function detailHeader(a,full=null){
  const d=full||{},record=saved[a.id]||null;
  const year=d.year||a.year||d.aired?.prop?.from?.year,season=d.season||a.season;
@@ -3630,7 +3708,7 @@ function detailHeader(a,full=null){
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
  const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
- const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}</div></section>`;
+ const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}</div>${seriesWatchSummary(a.id)}</section>`;
 
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
