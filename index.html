@@ -917,11 +917,11 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 }
 
 /* Native dropdown design rule:
-   Icon: 16px shared chevron, right inset: 12px (trial), text clearance: --sp-2 (8px).
+   Icon: 16px shared chevron, right inset: 10px (trial), text clearance: --sp-2 (8px).
    Arrow uses the current --muted palette color (#c2d0da).
    Exclude transparent status select overlays; they already have custom SVG chevrons.
    Preserve each control's existing dimensions, colors, native options and selection behavior. */
-:root{--dropdown-chevron-size:16px;--dropdown-chevron-inset:12px}
+:root{--dropdown-chevron-size:16px;--dropdown-chevron-inset:10px}
 select:not([data-status-id]){
   -webkit-appearance:none;appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2d0da' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
