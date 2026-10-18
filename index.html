@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.35">
+<meta name="ani-log-version" content="2.4.36">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -3649,74 +3649,107 @@ function roleJa(text){return STAFF_ROLES_JA[text]||text}
 function genreJa(value){const original=String(value??'').trim();return JAPANESE_GENRES[original]||original}
 function typeJa(value){const original=String(value??'').trim();return JAPANESE_TYPES[original]||original}
 
-/* Auto-classified, DIRECT relations only.  No series-specific catalog, no new API calls,
-   no persistent series storage.  The denominator describes available directly related
-   database entries, NOT official seasons or an exhaustive franchise catalog. */
+/* Automatic series discovery from the ALREADY fetched detailed relations graph.
+   Traverse only sequel/prequel links; attach non-primary works as one-hop satellites.
+   No additional API, persistence, fuzzy names, or series-specific catalogs.
+   More visited/cached full records can expand the provisional, discovered set. */
 const AUTO_SERIES_GROUPS=[
  {key:'tv',name:'TVアニメ'}, {key:'movie',name:'劇場版'}, {key:'ova',name:'OVA'},
  {key:'ona',name:'Web配信'}, {key:'tv special',name:'TVスペシャル'}, {key:'special',name:'特別編'}
 ];
-const AUTO_SERIES_RELATIONS=new Set([
- 'sequel','prequel','side story','spin off','alternative version',
- 'alternative setting','summary','parent story','full story'
+const AUTO_SERIES_PRIMARY_RELATIONS=new Set(['sequel','prequel']);
+const AUTO_SERIES_EXTRA_RELATIONS=new Set([
+ 'side story','spin off','alternative version','alternative setting','summary','parent story','full story'
 ]);
 function seriesMediaGroup(value){
  const t=String(value||'').trim().toLowerCase().replace(/[\s_-]+/g,' ');
  return AUTO_SERIES_GROUPS.find(x=>x.key===t)?.key||'';
 }
 function seriesTypeFromExistingData(id){
- // Same IDs as the saved records.  No fuzzy title matching or additional requests.
+ // Exact ID match only. The cache holds data already fetched for other existing features.
  const local=saved[id]||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id);
  return seriesMediaGroup(detailCache.get(id)?.full?.type||local?.type||'');
 }
-function collectDirectSeries(id,full){
+function seriesRelationKind(value){
+ const name=String(value||'').toLowerCase().replace(/[\s_-]+/g,' ').trim();
+ if(AUTO_SERIES_PRIMARY_RELATIONS.has(name))return 'primary';
+ if(AUTO_SERIES_EXTRA_RELATIONS.has(name))return 'extra';
+ return '';
+}
+function collectCachedSeries(id,full){
  if(!/^jikan:\d+$/.test(id)||!full||!Array.isArray(full.relations))return null;
- const rootType=seriesMediaGroup(full.type)||seriesTypeFromExistingData(id);
- if(!rootType)return null;
- const rows=new Map([[id,{id,name:full.title_japanese||full.title||detailActiveItem?.title||'この作品',type:rootType}]]);
- let unknown=0,linked=0;
- const unknownIds=new Set();
- for(const group of full.relations){
-  const relation=String(group?.relation||'').toLowerCase().replace(/[\s_-]+/g,' ').trim();
-  if(!AUTO_SERIES_RELATIONS.has(relation))continue;
-  for(const e of group.entry||[]){
-   if(String(e?.type||'').toLowerCase()!=='anime'||!Number.isSafeInteger(e.mal_id)||e.mal_id<=0)continue;
-   const entryId=`jikan:${e.mal_id}`;
-   if(entryId===id)continue;
-   // CM, PV and music videos are known promotional formats, not 'unknown'.
-   if(['cm','pv','music'].includes(String(e.media_type||'').trim().toLowerCase()))continue;
-   const media=seriesMediaGroup(e.media_type)||seriesTypeFromExistingData(entryId);
-   if(!media){if(!unknownIds.has(entryId)&&!rows.has(entryId)){unknownIds.add(entryId);unknown++}continue}
-   // An identified media type takes precedence over an earlier missing type.
-   if(unknownIds.delete(entryId))unknown--;
-   if(rows.has(entryId))continue;
-   rows.set(entryId,{id:entryId,name:e.name||saved[entryId]?.title||'関連作品',type:media});
-   linked++;
+ const known=new Map();
+ for(const [key,entry] of detailCache){if(/^jikan:\d+$/.test(key)&&Array.isArray(entry?.full?.relations))known.set(key,entry.full)}
+ known.set(id,full);
+ const mainLinks=new Map(),suppLinks=[],meta=new Map();
+ const addMain=(a,b)=>{if(!mainLinks.has(a))mainLinks.set(a,new Set());mainLinks.get(a).add(b)};
+ const setMeta=(key,name,type)=>{
+  const old=meta.get(key);
+  if(!old)meta.set(key,{id:key,name:name||'関連作品',type:type||''});
+  else{if(!old.type&&type)old.type=type;if((!old.name||old.name==='関連作品')&&name)old.name=name}
+ };
+ for(const [key,record] of known){
+  setMeta(key,record.title_japanese||record.title||saved[key]?.title||'',seriesMediaGroup(record.type));
+  for(const group of record.relations){
+   const kind=seriesRelationKind(group?.relation);
+   if(!kind)continue;
+   for(const e of group.entry||[]){
+    if(String(e?.type||'').toLowerCase()!=='anime'||!Number.isSafeInteger(e.mal_id)||e.mal_id<=0)continue;
+    // Promotions are not series episodes, regardless of their relation label.
+    if(['cm','pv','music'].includes(String(e.media_type||'').trim().toLowerCase()))continue;
+    const target=`jikan:${e.mal_id}`;
+    if(target===key)continue;
+    setMeta(target,e.name||saved[target]?.title||'',seriesMediaGroup(e.media_type));
+    if(kind==='primary'){addMain(key,target);addMain(target,key)}
+    else suppLinks.push({source:key,target});
+   }
   }
  }
- if(!linked)return null; // Avoid presenting a misleading 1/1 when related types are unknown.
- const groups=AUTO_SERIES_GROUPS.map(type=>({name:type.name,rows:[...rows.values()].filter(row=>row.type===type.key)})).filter(g=>g.rows.length);
- return {groups,unknown};
+ // The same discovered sequel/prequel chain is used regardless of the opened installment.
+ // Unfetched nodes can connect two cached nodes, without triggering new API calls.
+ const core=new Set([id]),queue=[id];
+ for(let at=0;at<queue.length&&at<200;at++){
+  for(const target of mainLinks.get(queue[at])||[]){
+   if(!core.has(target)&&core.size<200){core.add(target);queue.push(target)}
+  }
+ }
+ const included=new Set(core);
+ for(const {source,target} of suppLinks){
+  if(core.has(source))included.add(target);
+  if(core.has(target))included.add(source);
+ }
+ const result=[],unknownIds=new Set();
+ for(const key of included){
+  // Freshly cached full data is authoritative for media type; incoming media_type is fallback.
+  const m=meta.get(key)||{id:key,name:'関連作品',type:''};
+  const type=seriesMediaGroup(known.get(key)?.type)||m.type||seriesTypeFromExistingData(key);
+  if(!type){unknownIds.add(key);continue}
+  result.push({id:key,name:m.name||saved[key]?.title||'関連作品',type});
+ }
+ // Stable order independent of the detail page opened (IDs are not official season numbers).
+ result.sort((a,b)=>Number(a.id.slice(6))-Number(b.id.slice(6)));
+ if(result.length<2)return null; // Do not show a 1 / 1 completion bar.
+ const groups=AUTO_SERIES_GROUPS.map(type=>({name:type.name,rows:result.filter(row=>row.type===type.key)})).filter(g=>g.rows.length);
+ return {groups,unknown:unknownIds.size,discovered:result.length,complete:false};
 }
 function seriesWatchSummary(id,full){
  if(mode==='share')return '';
- const series=collectDirectSeries(id,full);
+ const series=collectCachedSeries(id,full);
  if(!series)return '';
  const groups=series.groups.map(group=>{
   const total=group.rows.length,done=group.rows.filter(row=>saved[row.id]?.status==='watched').length;
   const percentage=Math.round(done/total*100);
-  const markup=`<div class="detail-series-group"><div class="detail-series-row"><span>${safeText(group.name)}</span><strong>${done} / ${total} 見た</strong></div><div class="detail-series-track" role="progressbar" aria-label="${safeText(group.name)}の視聴済み作品数" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><span style="width:${percentage}%"></span></div></div>`;
+  const markup=`<div class="detail-series-group"><div class="detail-series-row"><span>${safeText(group.name)}</span><strong>${done} / ${total} 見た</strong></div><div class="detail-series-track" role="progressbar" aria-label="${safeText(group.name)}の確認済み作品に対する視聴済み数" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${done}"><span style="width:${percentage}%"></span></div></div>`;
   const rows=group.rows.map(row=>{
    const status=saved[row.id]?.status||'',label=statusLabels[status]||'未登録';
    return `<div class="detail-series-entry"><span>${safeText(row.name)}</span><span class="detail-series-state">${validStatuses.has(status)?savedStatusIcons[status]:''}<span>${safeText(label)}</span></span></div>`;
   }).join('');
   return {markup,details:`<div class="detail-series-subheading">${safeText(group.name)}</div>${rows}`};
  });
- const note='この作品と直接つながる関連作品の範囲で自動集計。公式のシーズン数・シリーズ全体の網羅を示すものではありません。';
+ const note='この画面と取得済み作品の関連情報から発見した範囲で自動集計。閲覧により対象が増えることがあります。100%表示でもシリーズ全体の完走を意味しません。';
  const unknown=series.unknown?`<br>作品形式を確認できない${series.unknown}作品は集計対象外です。`:'';
  return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況</h2>${groups.map(g=>g.markup).join('')}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${groups.map(g=>g.details).join('')}</div></details><p class="detail-series-note">${safeText(note)}${unknown}</p></section>`;
 }
-
 function detailHeader(a,full=null){
  const d=full||{},record=saved[a.id]||null;
  const year=d.year||a.year||d.aired?.prop?.from?.year,season=d.season||a.season;
