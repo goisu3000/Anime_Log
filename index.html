@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
-<title>ANI:LOG v2.4.16 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.18 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -124,7 +124,7 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .share-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--accent-border);background:var(--accent-soft);color:var(--accent);border-radius:var(--radius-sm);padding:10px 14px;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
 .add-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border-ctrl);background:var(--surface);color:var(--ink);border-radius:var(--radius-sm);padding:10px 14px;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
 
-/* Status Tabs & Toolbar (Exact index_5 design & border colors) */
+/* Status Tabs & Toolbar (shared design-system spacing and borders) */
 .stats{display:flex;gap:24px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;margin:0 0 20px;padding:0;border-bottom:1px solid var(--border)}
 .stats .stat{flex:0 0 auto;display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:10px 2px 14px;border:0;background:none;color:var(--muted);font-size:var(--fs-md);font-weight:var(--fw-semi);white-space:nowrap}
 .stats .stat[aria-current="true"]{color:var(--accent);box-shadow:inset 0 -2px var(--accent)}
@@ -172,7 +172,7 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{display:none!important}
 .offline-note{border:1px solid var(--accent-border);background:var(--surface);color:var(--ink);padding:16px 16px;border-radius:var(--radius);margin:0 0 16px;font-size:var(--fs-sm);line-height:1.7}
 
-/* Discovery Grid & Cards (Exact index_5 rules) */
+/* Discovery Grid & Cards (shared layout rules) */
 .cards:not(.saved-grid){display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:24px 20px}
 .discovery-card{display:flex;flex-direction:column;min-width:0;background:transparent;border:0}
 .poster-wrap{position:relative;aspect-ratio:2/3;border-radius:var(--radius-sm);background:var(--surface);overflow:hidden;display:flex}
@@ -233,7 +233,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 .pattern-a-status-summary .ui-icon:last-child{margin-left:auto;color:var(--muted);width:13px;height:13px}
 .pattern-a-status-menu select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;margin:0;background:var(--surface);color:var(--ink);color-scheme:dark}
 .pattern-a-status-menu select option{background:var(--surface);color:var(--ink)}
-.pattern-a-card .record-primary{width:170px;height:36px;min-height:36px;padding:0 26px 0 6px;font-size:var(--fs-sm)}
+.pattern-a-card .record-primary{width:170px;height:38px;min-height:38px;padding:0 26px 0 6px;font-size:var(--fs-sm)}
 .pattern-a-date-watch,.pattern-a-date{font-size:var(--fs-xs);color:var(--muted);font-weight:var(--fw-semi);display:inline-flex;gap:6px;align-items:center;border:0;background:transparent;padding:2px 0;text-align:left}
 .watch-progress{width:100%;min-width:0}
 .watch-progress-top{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:5px;font-size:var(--fs-xs);color:var(--muted);font-weight:var(--fw-semi)}
@@ -394,7 +394,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .insights-selection li button{background:none;border:0;color:var(--ink);text-align:left;font-size:var(--fs-sm);flex:1}
 .insights-selection-close{border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--ink);padding:6px 12px;border-radius:6px;font-size:var(--fs-xs);margin-top:10px}
 
-/* Detail View (with index_5 detail-streaming-card & detail-jp-search) */
+/* Detail View (streaming links and Japanese provider search) */
 .view-detail .stats,.view-detail #libraryView,.view-detail #shareView,.view-detail .site-slogan{display:none!important}
 .detail-navigation{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 20px}
 .detail-back{background:var(--surface);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);font-weight:var(--fw-semi);padding:10px 16px;font-size:var(--fs-sm);display:inline-flex;align-items:center;gap:8px}
@@ -569,6 +569,10 @@ dialog menu{display:flex;justify-content:flex-end;gap:8px;padding:0;margin:10px 
 dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);padding:10px 16px;font-size:var(--fs-sm);font-weight:var(--fw-bold)}
 .secondary,.review-cancel{background:transparent;color:var(--ink);border:1px solid var(--border-ctrl)}
 .primary,.review-save{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent)}
+.share-season-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3);margin:0 0 var(--sp-3)}
+.share-season-fields[hidden]{display:none}
+.share-season-fields label{min-width:0}
+.share-season-fields select{margin-bottom:0!important}
 .share-permissions{padding:16px;border:1px solid var(--border);background:var(--surface2);border-radius:var(--radius-sm);margin:14px 0 12px}
 .share-permissions h4{margin:0 0 10px;font-size:var(--fs-sm)}
 .share-required{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:var(--fs-xs);border-bottom:1px solid var(--border);padding-bottom:10px;margin-bottom:6px}
@@ -881,6 +885,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .pattern-a-watch-column{grid-row:2}.pattern-a-personal-column{grid-row:3}
   .pattern-a-status-menu,.pattern-a-rate-cta,.note-preview:not(.has-note){width:155px;max-width:155px;height:42px}
   .pattern-a-status-summary{height:42px}
+  .pattern-a-card .record-primary{height:42px;min-height:42px}
   .note-preview.has-note{flex:1 1 160px;max-width:60%;height:42px}
   .pattern-a-rate-edit{display:inline-flex}
   .detail-profile{grid-template-columns:108px minmax(0,1fr);gap:16px;padding:16px}
@@ -943,7 +948,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.16 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.18 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1045,7 +1050,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 <dialog id="addDialog"><form method="dialog" id="addForm"><h3>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
 <dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu><button type="button" class="secondary" id="mobileImportBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button><button type="button" class="primary" id="mobileDownloadBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></menu><menu><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
 <dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有します。短縮URL方式では共有データのコピーをCloudflareに365日間保存します。リンクを知っている人は誰でも閲覧できます。</p>
-  <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">選択中のシーズンで見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
+  <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">年・シーズンを指定して見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
+  <div class="share-season-fields" id="shareSeasonFields" hidden><label for="shareYear">年<select id="shareYear"></select></label><label for="shareSeason">シーズン<select id="shareSeason"><option value="winter">冬</option><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option></select></label></div>
   <div class="share-permissions" role="group" aria-labelledby="sharePermissionsTitle">
     <h4 id="sharePermissionsTitle">共有する情報を選択</h4>
     <div class="share-required"><span class="mark"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg></span><span>作品名・視聴状況 <small>（必須・常に共有）</small></span></div>
@@ -1860,19 +1866,24 @@ function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}
 
 // A saved title can have one private, explicitly selected viewing service.
 // Never guess whether a title is licensed in Japan and never auto-change watch status.
+// Single source of truth for Japanese viewing-service choices, API name matching,
+// authorized URL hosts and search links. Existing Japanese search order retained.
 const STREAM_SERVICES=[
- {name:'Netflix',domain:'netflix.com',hosts:['netflix.com']},
- {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com']},
- {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp']},
- {name:'DMM TV',domain:'tv.dmm.com',hosts:['tv.dmm.com','dmm.com']},
- {name:'U-NEXT',domain:'video.unext.jp',hosts:['video.unext.jp','unext.jp']},
- {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv']},
- {name:'Hulu',domain:'hulu.jp',hosts:['hulu.jp']},
- {name:'Disney Plus',domain:'disneyplus.com',hosts:['disneyplus.com']},
- {name:'FOD',domain:'fod.fujitv.co.jp',hosts:['fod.fujitv.co.jp']},
- {name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']}
+ {name:'Netflix',domain:'netflix.com',searchDomain:'netflix.com/jp',hosts:['netflix.com'],aliases:['netflix'],searchOrder:6},
+ {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','primevideo'],searchOrder:5},
+ {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp'],aliases:['dアニメストア','danimestore'],searchOrder:1},
+ {name:'DMM TV',domain:'tv.dmm.com',hosts:['tv.dmm.com','dmm.com'],aliases:['dmmtv'],searchOrder:2},
+ {name:'U-NEXT',domain:'video.unext.jp',hosts:['video.unext.jp','unext.jp'],aliases:['unext'],searchOrder:3},
+ {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv'],aliases:['abema'],searchOrder:0},
+ {name:'Hulu',domain:'hulu.jp',hosts:['hulu.jp'],aliases:['hulu'],searchOrder:7},
+ {name:'Disney Plus',domain:'disneyplus.com',hosts:['disneyplus.com'],aliases:['disneyplus','disney+','disneyプラス','ディズニープラス'],searchOrder:8},
+ {name:'FOD',domain:'fod.fujitv.co.jp',hosts:['fod.fujitv.co.jp'],aliases:['fod','fodpremium'],searchOrder:6.5}
 ];
-function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||null}
+// Legacy-only validation keeps existing Lemino records/backups usable; no new selection.
+const LEGACY_STREAM_SERVICE={name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']};
+function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||(name==='Lemino'?LEGACY_STREAM_SERVICE:null)}
+function streamNameKey(source){return String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')}
+function streamCanonicalName(source){const key=streamNameKey(source);return STREAM_SERVICES.find(s=>s.aliases.some(a=>streamNameKey(a)===key))?.name||''}
 function streamAllowedUrl(name,value){
  const site=streamService(name);if(!site||typeof value!=='string'||value.length>4096)return '';
  try{
@@ -1923,17 +1934,7 @@ function streamKnownLinks(id){
  if(fullLinks===null&&directLinks===null)return null;
  return [...(fullLinks||[]),...(directLinks||[])];
 }
-function streamNameMatches(source,selected){
- const name=String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'');
- const aliases={
-  'Amazon Prime Video':['amazonprimevideo','primevideo'],
-  'Disney Plus':['disneyplus','disney+','disneyプラス','ディズニープラス'],
-  'U-NEXT':['unext'],
-  'DMM TV':['dmmtv'],
-  'dアニメストア':['dアニメストア','danimestore']
- };
- return (aliases[selected]||[selected.normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')]).some(alias=>name===alias.replace('+',''));
-}
+function streamNameMatches(source,selected){return streamCanonicalName(source)===selected}
 function streamMatchingUrl(links,service){
  const valid=(Array.isArray(links)?links:[]).map(x=>({name:x?.name,url:streamAllowedUrl(service,x?.url)})).filter(x=>x.url);
  // Match the registered streaming provider name first, just like detail view.
@@ -2015,10 +2016,11 @@ function openStreamDialog(id){
  streamEditingId=id;streamEditOriginal=structuredClone(cleanStreamPreference(saved[id].streamPreference));
  const pref=streamEditOriginal;
  $('#streamAnimeTitle').textContent=saved[id].title;
- $('#streamService').value=pref?.service||'';
- $('#streamExactUrl').value=pref?.url||'';
- streamUserEditedUrl=!!pref?.url;
- streamLookupNotice('');
+ const legacy=!!pref?.service&&!STREAM_SERVICES.some(s=>s.name===pref.service);
+ $('#streamService').value=legacy?'':pref?.service||'';
+ $('#streamExactUrl').value=legacy?'':pref?.url||'';
+ streamUserEditedUrl=!legacy&&!!pref?.url;
+ streamLookupNotice(legacy?'以前のLeminoリンクは保存されています。変更する場合は視聴サイトを選び直すか、未設定で保存してください。':'');
  $('#streamExactUrl').disabled=!$('#streamService').value;
  $('#streamDialog').showModal();$('#streamService').focus();
  if(pref?.service&&!pref?.url)void streamAutoFillUrl();
@@ -2656,7 +2658,7 @@ function showAnnual(){
  closeSuggestions();closeDetail(false);exitSharedView();exitRanking();activeController?.abort();requestCounter++;loading=false;
  mode='annual';document.body.classList.remove('saved-mode');document.body.classList.add('view-annual');$('#annualView').classList.remove('hidden');
  $$('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view==='saved'&&b.closest('.mobile-bottom')));
- $$('[data-status-filter]').forEach(b=>b.classList.remove('active'));$$('[data-rank-open]').forEach(b=>b.classList.remove('rank-selected'));
+ $$('[data-status-filter]').forEach(b=>b.classList.remove('active'));$$('[data-rank-open]').forEach(b=>b.classList.remove('rank-selected'));$('#mobileRanking').classList.remove('active');
  $$('[data-annual-open]').forEach(b=>b.classList.add('active'));
  renderAnnual();window.scrollTo({top:0,behavior:'instant'});
 }
@@ -2675,7 +2677,7 @@ let rankDraggedId=null, myRatingFilter=0; // 0 = all, 1..5 = selected rating (vi
 try{const c=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||'{}');if(c&&typeof c==='object'&&!Array.isArray(c))rankingCache=c}catch{}
 for(let y=new Date().getFullYear()+1;y>=1970;y--){const op=document.createElement('option');op.value=String(y);op.textContent=y+'年';$('#rankYear').append(op)}
 $('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-function exitRanking(){if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
+function exitRanking(){$('#mobileRanking').classList.remove('active');if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
 function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watched'&&readReview(a.review)).sort((a,b)=>{
  const ar=readReview(a.review).overall,br=readReview(b.review).overall;if(ar!==br)return br-ar;
  const an=Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0?a.myRankOrder:999999;
@@ -2774,6 +2776,7 @@ function makeRankRow(a,pos,kind='public',i=0,group=[]){const own=kind==='mine';c
  const medalClass=pos===1?' rank-medal-1':pos===2?' rank-medal-2':pos===3?' rank-medal-3':'';
  return `<article class="rank-row${medalClass}" data-ranked-id="${safeText(a.id)}" ${own&&same?'draggable="true"':''}><div class="rank-num">${pos}</div><div class="rank-poster">${img}</div><div class="rank-item-main"><button type="button" class="rank-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="rank-meta">${a.year?a.year+'年':'放送年未登録'} ${seasonLabels[a.season]||''} ${a.type?' · '+safeText(typeJa(a.type)):''}</div>${controls}${addControl}</div>${metricMarkup}${own&&same?'<span class="rank-handle" title="同じ評価の作品内でドラッグして並び替え">'+uiIcon('grip')+'</span>':''}</article>`}
 function renderRanking(){if(mode!=='ranking')return;
+ $('#mobileRanking').classList.add('active');
  $$('#rankingView [data-rank-tab]').forEach(b=>b.classList.toggle('active',b.dataset.rankTab===rankingTab));
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
  const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankRatingFilter').hidden=!mine;$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
@@ -2968,7 +2971,14 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
 }
 $('#statusDisclosure').addEventListener('click',()=>{const expanded=$('#statusDisclosure').getAttribute('aria-expanded')==='true';$('#statusDisclosure').setAttribute('aria-expanded',String(!expanded));$('#statusSubnav').hidden=expanded});
 $('#rankingDisclosure').addEventListener('click',()=>{const expanded=$('#rankingDisclosure').getAttribute('aria-expanded')==='true';$('#rankingDisclosure').setAttribute('aria-expanded',String(!expanded));$('#rankingSubnav').hidden=expanded});
-$$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankOpen)));
+$$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>{
+ if(b.id==='mobileRanking'){
+  // Return to the last ranking tab; tapping the current section does not reset it.
+  if(mode==='ranking'&&!document.body.classList.contains('view-detail'))return;
+  showRanking(rankingTab);return;
+ }
+ showRanking(b.dataset.rankOpen);
+}));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
 $('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();scheduleMalMetricEnrichment()});
 $('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;loadRanking(true)});
@@ -2997,7 +3007,7 @@ $('#rankResults').addEventListener('drop',e=>{e.preventDefault();const target=e.
 $('#rankResults').addEventListener('dragend',()=>{rankDraggedId=null;$$('#rankResults .rank-row').forEach(r=>r.classList.remove('dragging','drag-over'))});
 
 const SHARE_VERSION=2, SHARE_PREFIX='#share=', SHARE_MAX=9000;
-// 安全な段階導入: Workerの保存機能と実地テストが完了するまで短縮URLの発行を無効にする。
+// HTTPS公開時のみCloudflare Workersによる短縮共有URLを有効にする。ローカルファイルでは従来方式を使用。
 const SHARE_SHORT_ENABLED=true;
 const SHARE_WORKER_URL='https://anilog-share-api.neosuigo.workers.dev';
 const SHARE_SHORT_MAX=200000, SHARE_SHORT_ITEM_LIMIT=1500, SHARE_SHORT_UNPACK_MAX=3000000;
@@ -3007,7 +3017,8 @@ function selectedForShare(scope){
  const all=Object.values(saved).filter(a=>a&&validStatuses.has(a.status));
  if(scope==='all')return all;
  if(scope==='watching')return all.filter(a=>a.status==='watching');
- return all.filter(a=>a.status==='watching' && a.year===curYear && a.season===curSeason);
+ const shareYear=Number($('#shareYear').value),shareSeason=$('#shareSeason').value;
+ return all.filter(a=>a.status==='watching' && a.year===shareYear && a.season===shareSeason);
 }
 function compactImg(link){
  try{const u=new URL(link);return u.protocol==='https:' && u.hostname==='cdn.myanimelist.net' && u.pathname.startsWith('/images/')?u.pathname:''}catch{return ''}
@@ -3118,16 +3129,17 @@ function exitSharedView(){
 function showShareDialog(){
  if(mode==='share'){toast('自分のリストに戻ってから共有してください');return}
  $('#shareOutput').classList.add('hidden');shareLinkBuilt='';
- const seasonAvailable=/^\d{4}$/.test(currentScope())&&$('#seasonSelect').value!=='all';
- const seasonOption=$('#shareScope').querySelector('option[value="season"]');seasonOption.disabled=!seasonAvailable;
- seasonOption.textContent=seasonAvailable?'選択中のシーズンで見てる作品':'シーズン指定なし（年・季節を選ぶと利用可能）';
+ const current=new Date(),todayYear=current.getFullYear();
+ $('#shareYear').innerHTML=Array.from({length:todayYear+2-1970},(_,i)=>{const year=todayYear+1-i;return `<option value="${year}">${year}年</option>`}).join('');
+ $('#shareYear').value=String(todayYear);
+ $('#shareSeason').value=['winter','spring','summer','fall'][Math.floor(current.getMonth()/3)];
  $('#shareScope').value='all';clearDialogNotice($('#shareDialog'));updateShareDialog();$('#shareDialog').showModal();
 }
 function updateShareDialog(){
- clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value,list=selectedForShare(scope),count=list.length;
+ clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value;$('#shareSeasonFields').hidden=scope!=='season';const list=selectedForShare(scope),count=list.length;
  const rated=list.filter(a=>readReview(a.review)).length;
  const withNotes=list.filter(a=>readNote(a)?.text).length;
- $('#shareCount').textContent=(scope==='season'?`${curYear}年 ${seasonLabels[curSeason]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（感想登録 ${withNotes}作品）`:''}`;
+ $('#shareCount').textContent=(scope==='season'?`${$('#shareYear').value}年 ${seasonLabels[$('#shareSeason').value]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（感想登録 ${withNotes}作品）`:''}`;
  const chars=list.reduce((n,a)=>n+(($('#shareComment').checked?readNote(a)?.text:'')||'').length,0);
  const risk=$('#shareRisk');const localMode=!SHARE_SHORT_ENABLED||location.protocol==='file:';
  const risky=localMode?(count>60||chars>1800):(count>1000||chars>120000);
@@ -3147,11 +3159,13 @@ async function generateShare(){
    const review=reviewForShare(a.review,options,readNote(a)?.text);if(review)row.push(review);
    return row;
   });
-  const signature=short?JSON.stringify([scope,curYear,curSeason,options,items]):'';
+  const shareYear=scope==='season'?Number($('#shareYear').value):curYear;
+  const shareSeason=scope==='season'?$('#shareSeason').value:curSeason;
+  const signature=short?JSON.stringify([scope,shareYear,shareSeason,options,items]):'';
   let href=new URL(window.location.href);
   if(short&&lastShortSignature===signature&&lastShortLink){href=new URL(lastShortLink);}
   else{
-   const data={v:SHARE_VERSION,scope,created:Date.now(),year:curYear,season:curSeason,options,items};
+   const data={v:SHARE_VERSION,scope,created:Date.now(),year:shareYear,season:shareSeason,options,items};
    const encoded=await compressShare(utf8Bytes(JSON.stringify(data)));
    const packed=encoded.mode+'.'+bytesToBase64url(encoded.bytes);
    if(short){
@@ -3189,6 +3203,8 @@ $('#shareBtnSidebar').addEventListener('click',showShareDialog);
 $('#shareBtnMain').addEventListener('click',showShareDialog);
 $('#mobileShare').addEventListener('click',showShareDialog);
 $('#shareScope').addEventListener('change',updateShareDialog);
+$('#shareYear').addEventListener('change',updateShareDialog);
+$('#shareSeason').addEventListener('change',updateShareDialog);
  ['shareOverall','shareDetails','shareComment'].forEach(id=>$('#'+id).addEventListener('change',updateShareDialog));
 $('#generateShare').addEventListener('click',generateShare);
 $('#closeShare').addEventListener('click',()=>$('#shareDialog').close());
@@ -3340,6 +3356,16 @@ $('#addForm').addEventListener('submit',e=>{
 function download(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 function exportData(){const dump={app:'ANI:LOG',version:4,exportedAt:new Date().toISOString(),weeklyOptions,items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
 $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEventListener('click',()=>$('#backupDialog').showModal());$('#mobileDownloadBtn').addEventListener('click',()=>{exportData();$('#backupDialog').close()});$('#mobileImportBtn').addEventListener('click',()=>{$('#backupDialog').close();$('#importFile').click()});$('#mobileCloseBackup').addEventListener('click',()=>$('#backupDialog').close());
+// Backdrop taps: allow only non-editing dialogs. Never close from a click inside the dialog.
+function clickedDialogBackdrop(e,dialog){
+ if(e.target!==dialog)return false;
+ const r=dialog.getBoundingClientRect();
+ return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
+}
+$('#backupDialog').addEventListener('click',e=>{if(clickedDialogBackdrop(e,e.currentTarget))e.currentTarget.close()});
+$('#shareDialog').addEventListener('click',e=>{
+ if(clickedDialogBackdrop(e,e.currentTarget)&&!shareLinkBuilt&&!$('#generateShare').disabled)e.currentTarget.close();
+});
 $('#importBtn').addEventListener('click',()=>$('#importFile').click());
 let importCandidate=null,importCandidateWeeklyOptions=null;
 function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))throw Error('形式が違います');const result=Object.create(null);
@@ -3621,15 +3647,14 @@ function detailVideos(full,videos){
 function detailEpisodes(data){const list=data?.data||[];if(!Array.isArray(list)||!list.length)return '';const body=list.map((ep,i)=>{const num=Number.isInteger(ep.mal_id)?ep.mal_id:i+1;const title=ep.title_japanese||ep.title||`第${num}話`;const alt=ep.title_japanese&&ep.title&&ep.title!==ep.title_japanese?ep.title:'';return `<div class="detail-episode"><span class="detail-episode-num">第${safeText(num)}話</span><div><div class="detail-episode-title">${safeText(title)}</div>${alt?`<div class="detail-episode-sub">${safeText(alt)}</div>`:''}${ep.aired?`<div class="detail-episode-sub">${safeText(String(ep.aired).slice(0,10))}</div>`:''}</div>${ep.synopsis?`<details><summary>この話のあらすじ（ネタバレ注意）</summary>${safeText(ep.synopsis)}</details>`:''}</div>`}).join('');return body}
 function detailRelations(full){const relations=Array.isArray(full.relations)?full.relations:[];const entries=[];for(const group of relations){for(const e of group.entry||[]){if(String(e.type).toLowerCase()!=='anime'||!Number.isInteger(e.mal_id))continue;const im=safeImage(e.images?.jpg?.image_url||e.images?.jpg?.large_image_url||'');entries.push({...e,relationship:group.relation,image:im})}}return entries.length?detailHeading('関連作品',`<div class="detail-related-grid">${entries.slice(0,24).map(e=>`<button type="button" class="detail-related-item" data-related-id="jikan:${e.mal_id}" data-related-title="${safeText(e.name)}">${e.image?`<img loading="lazy" src="${safeText(e.image)}" alt="" referrerpolicy="no-referrer">`:''}<span class="detail-related-label">${safeText(e.relationship||'関連作品')}</span><span class="detail-related-name">${safeText(e.name)}</span></button>`).join('')}</div>`):''}
 function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
-const JP_STREAM_SITES=[{name:'ABEMA',domain:'abema.tv'},{name:'dアニメストア',domain:'animestore.docomo.ne.jp'},{name:'DMM TV',domain:'tv.dmm.com'},{name:'U-NEXT',domain:'video.unext.jp'},{name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video'},{name:'Netflix',domain:'netflix.com/jp'},{name:'FOD',domain:'fod.fujitv.co.jp'},{name:'Hulu',domain:'hulu.jp'}];
+const JP_STREAM_SITES=[...STREAM_SERVICES].sort((a,b)=>a.searchOrder-b.searchOrder);
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
- return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
+ return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}で検索</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
- const allowedNames=new Map([['amazonprimevideo','Amazon Prime Video'],['primevideo','Amazon Prime Video'],['netflix','Netflix'],['fod','FOD'],['fodpremium','FOD'],['hulu','Hulu'],['unext','U-NEXT'],['disneyplus','Disney Plus'],['disney+','Disney Plus'],['ディズニープラス','Disney Plus']]);
- const links=(full?.streaming||[]).map(p=>{const key=String(p?.name||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_]/g,'');const name=allowedNames.get(key);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
+ const links=(full?.streaming||[]).map(p=>{const name=streamCanonicalName(p?.name);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
  const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true});
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
