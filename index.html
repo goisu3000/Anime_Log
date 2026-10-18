@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
-<title>ANI:LOG v2.4.20 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.21 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -963,7 +963,7 @@ select:not([data-status-id]){
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.20 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.21 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1937,6 +1937,14 @@ function streamRowMarkup(a){
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
 }
 let streamEditingId=null,streamEditOriginal=null;
+// Dialog dismissal rule: capture the visible form state when opened.
+// Backdrop taps are safe only while no unsaved service/URL changes exist.
+let streamDialogInitialValues=null;
+function streamDialogHasPendingChanges(){
+ if(!streamDialogInitialValues)return false;
+ return $('#streamService').value!==streamDialogInitialValues.service
+  || $('#streamExactUrl').value.trim()!==streamDialogInitialValues.url;
+}
 // Cache streaming links by anime ID for this tab. Never fetch links for every My List card.
 const streamLinkRequests=new Map();
 let streamLookupSerial=0,streamUserEditedUrl=false;
@@ -2035,6 +2043,7 @@ function openStreamDialog(id){
  const legacy=!!pref?.service&&!STREAM_SERVICES.some(s=>s.name===pref.service);
  $('#streamService').value=legacy?'':pref?.service||'';
  $('#streamExactUrl').value=legacy?'':pref?.url||'';
+ streamDialogInitialValues={service:$('#streamService').value,url:$('#streamExactUrl').value.trim()};
  streamUserEditedUrl=!legacy&&!!pref?.url;
  streamLookupNotice(legacy?'以前のLeminoリンクは保存されています。変更する場合は視聴サイトを選び直すか、未設定で保存してください。':'');
  $('#streamExactUrl').disabled=!$('#streamService').value;
@@ -2042,7 +2051,7 @@ function openStreamDialog(id){
  if(pref?.service&&!pref?.url)void streamAutoFillUrl();
 }
 function closeStreamDialog(){if($('#streamDialog').open)$('#streamDialog').close()}
-$('#streamDialog').addEventListener('close',()=>{++streamLookupSerial;streamEditingId=null;streamEditOriginal=null;streamUserEditedUrl=false});
+$('#streamDialog').addEventListener('close',()=>{++streamLookupSerial;streamEditingId=null;streamEditOriginal=null;streamUserEditedUrl=false;streamDialogInitialValues=null});
 $('#streamCancel').addEventListener('click',closeStreamDialog);
 document.addEventListener('click',e=>{const b=e.target.closest('[data-stream-edit]');if(b)openStreamDialog(b.dataset.streamEdit)});
 $('#streamExactUrl').addEventListener('input',()=>{streamUserEditedUrl=true});
@@ -3372,13 +3381,27 @@ $('#addForm').addEventListener('submit',e=>{
 function download(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 function exportData(){const dump={app:'ANI:LOG',version:4,exportedAt:new Date().toISOString(),weeklyOptions,items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
 $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEventListener('click',()=>$('#backupDialog').showModal());$('#mobileDownloadBtn').addEventListener('click',()=>{exportData();$('#backupDialog').close()});$('#mobileImportBtn').addEventListener('click',()=>{$('#backupDialog').close();$('#importFile').click()});$('#mobileCloseBackup').addEventListener('click',()=>$('#backupDialog').close());
-// Backdrop taps: allow only non-editing dialogs. Never close from a click inside the dialog.
+// Dialog interaction rule: only backdrop taps can dismiss an eligible dialog.
+// Backup: always; share: only before a URL is generated; watch-site editor: only with no unsaved changes.
+// Memo/rating/import/weekly settings and other editors retain explicit dismissal only.
 function clickedDialogBackdrop(e,dialog){
  if(e.target!==dialog)return false;
  const r=dialog.getBoundingClientRect();
  return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
 }
 $('#backupDialog').addEventListener('click',e=>{if(clickedDialogBackdrop(e,e.currentTarget))e.currentTarget.close()});
+$('#streamDialog').addEventListener('click',e=>{
+ if(!clickedDialogBackdrop(e,e.currentTarget))return;
+ if(recordWrites>0){
+  toast('保存処理中です。完了するまでお待ちください。');
+  return;
+ }
+ if(streamDialogHasPendingChanges()){
+  toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。');
+  return;
+ }
+ closeStreamDialog();
+});
 $('#shareDialog').addEventListener('click',e=>{
  if(clickedDialogBackdrop(e,e.currentTarget)&&!shareLinkBuilt&&!$('#generateShare').disabled)e.currentTarget.close();
 });
