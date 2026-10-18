@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
-<title>ANI:LOG v2.4.18 | アニメ視聴管理</title>
+<title>ANI:LOG v2.4.20 | アニメ視聴管理</title>
 <style>
 /* ANI:LOG | Unified Design System & Refactored Stylesheet
    Colors: #111417 (bg), #15191c (sidebar), #1a2228 (surface-1), #202a32 (surface-2), #c4e995 (accent)
@@ -915,6 +915,21 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .detail-journal-grid:not(.detail-journal-shared){grid-template-columns:minmax(0,1fr)}
   .detail-journal-review:has(.detail-rating-layout){grid-column:auto;grid-row:auto}
 }
+
+/* Native dropdown design rule:
+   Icon: 16px shared chevron, right inset: --sp-4 (16px), text clearance: --sp-2 (8px).
+   Arrow uses the current --muted palette color (#c2d0da).
+   Exclude transparent status select overlays; they already have custom SVG chevrons.
+   Preserve each control's existing dimensions, colors, native options and selection behavior. */
+:root{--dropdown-chevron-size:16px;--dropdown-chevron-inset:var(--sp-4)}
+select:not([data-status-id]){
+  -webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2d0da' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right var(--dropdown-chevron-inset) center;
+  background-size:var(--dropdown-chevron-size) var(--dropdown-chevron-size);
+  padding-right:calc(var(--dropdown-chevron-inset) + var(--dropdown-chevron-size) + var(--sp-2));
+}
 </style>
 </head>
 <body>
@@ -948,7 +963,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG v2.4.18 · 記録はブラウザ内に保存</div>
+    <div class="side-foot">ANI:LOG v2.4.20 · 記録はブラウザ内に保存</div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1866,19 +1881,20 @@ function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}
 
 // A saved title can have one private, explicitly selected viewing service.
 // Never guess whether a title is licensed in Japan and never auto-change watch status.
-// Single source of truth for Japanese viewing-service choices, API name matching,
-// authorized URL hosts and search links. Existing Japanese search order retained.
+// Single source of truth for Japanese viewing-service choices, display priority,
+// API name matching, authorized URL hosts and search links. Array order is UI order.
 const STREAM_SERVICES=[
- {name:'Netflix',domain:'netflix.com',searchDomain:'netflix.com/jp',hosts:['netflix.com'],aliases:['netflix'],searchOrder:6},
- {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','primevideo'],searchOrder:5},
- {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp'],aliases:['dアニメストア','danimestore'],searchOrder:1},
- {name:'DMM TV',domain:'tv.dmm.com',hosts:['tv.dmm.com','dmm.com'],aliases:['dmmtv'],searchOrder:2},
- {name:'U-NEXT',domain:'video.unext.jp',hosts:['video.unext.jp','unext.jp'],aliases:['unext'],searchOrder:3},
- {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv'],aliases:['abema'],searchOrder:0},
- {name:'Hulu',domain:'hulu.jp',hosts:['hulu.jp'],aliases:['hulu'],searchOrder:7},
- {name:'Disney Plus',domain:'disneyplus.com',hosts:['disneyplus.com'],aliases:['disneyplus','disney+','disneyプラス','ディズニープラス'],searchOrder:8},
- {name:'FOD',domain:'fod.fujitv.co.jp',hosts:['fod.fujitv.co.jp'],aliases:['fod','fodpremium'],searchOrder:6.5}
+ {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','primevideo']},
+ {name:'Netflix',domain:'netflix.com',searchDomain:'netflix.com/jp',hosts:['netflix.com'],aliases:['netflix']},
+ {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp'],aliases:['dアニメストア','danimestore']},
+ {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv'],aliases:['abema']},
+ {name:'U-NEXT',domain:'video.unext.jp',hosts:['video.unext.jp','unext.jp'],aliases:['unext']},
+ {name:'Hulu',domain:'hulu.jp',hosts:['hulu.jp'],aliases:['hulu']},
+ {name:'DMM TV',domain:'tv.dmm.com',hosts:['tv.dmm.com','dmm.com'],aliases:['dmmtv']},
+ {name:'FOD',domain:'fod.fujitv.co.jp',hosts:['fod.fujitv.co.jp'],aliases:['fod','fodpremium']},
+ {name:'Disney Plus',domain:'disneyplus.com',hosts:['disneyplus.com'],aliases:['disneyplus','disney+','disneyプラス','ディズニープラス']}
 ];
+const STREAM_SERVICE_PRIORITY=new Map(STREAM_SERVICES.map((service,index)=>[service.name,index]));
 // Legacy-only validation keeps existing Lemino records/backups usable; no new selection.
 const LEGACY_STREAM_SERVICE={name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']};
 function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||(name==='Lemino'?LEGACY_STREAM_SERVICE:null)}
@@ -3647,7 +3663,7 @@ function detailVideos(full,videos){
 function detailEpisodes(data){const list=data?.data||[];if(!Array.isArray(list)||!list.length)return '';const body=list.map((ep,i)=>{const num=Number.isInteger(ep.mal_id)?ep.mal_id:i+1;const title=ep.title_japanese||ep.title||`第${num}話`;const alt=ep.title_japanese&&ep.title&&ep.title!==ep.title_japanese?ep.title:'';return `<div class="detail-episode"><span class="detail-episode-num">第${safeText(num)}話</span><div><div class="detail-episode-title">${safeText(title)}</div>${alt?`<div class="detail-episode-sub">${safeText(alt)}</div>`:''}${ep.aired?`<div class="detail-episode-sub">${safeText(String(ep.aired).slice(0,10))}</div>`:''}</div>${ep.synopsis?`<details><summary>この話のあらすじ（ネタバレ注意）</summary>${safeText(ep.synopsis)}</details>`:''}</div>`}).join('');return body}
 function detailRelations(full){const relations=Array.isArray(full.relations)?full.relations:[];const entries=[];for(const group of relations){for(const e of group.entry||[]){if(String(e.type).toLowerCase()!=='anime'||!Number.isInteger(e.mal_id))continue;const im=safeImage(e.images?.jpg?.image_url||e.images?.jpg?.large_image_url||'');entries.push({...e,relationship:group.relation,image:im})}}return entries.length?detailHeading('関連作品',`<div class="detail-related-grid">${entries.slice(0,24).map(e=>`<button type="button" class="detail-related-item" data-related-id="jikan:${e.mal_id}" data-related-title="${safeText(e.name)}">${e.image?`<img loading="lazy" src="${safeText(e.image)}" alt="" referrerpolicy="no-referrer">`:''}<span class="detail-related-label">${safeText(e.relationship||'関連作品')}</span><span class="detail-related-name">${safeText(e.name)}</span></button>`).join('')}</div>`):''}
 function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
-const JP_STREAM_SITES=[...STREAM_SERVICES].sort((a,b)=>a.searchOrder-b.searchOrder);
+const JP_STREAM_SITES=STREAM_SERVICES;
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
@@ -3655,7 +3671,7 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
 }
 function detailStreamingLinks(full,title){
  const links=(full?.streaming||[]).map(p=>{const name=streamCanonicalName(p?.name);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
- const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true});
+ const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true}).sort((a,b)=>STREAM_SERVICE_PRIORITY.get(a.name)-STREAM_SERVICE_PRIORITY.get(b.name));
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
