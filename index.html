@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.41">
+<meta name="ani-log-version" content="2.4.42">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -450,6 +450,30 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-series-current{display:block;padding:5px 0;color:var(--ink);font-weight:var(--fw-bold);overflow-wrap:anywhere}
 .detail-series-entry .detail-series-state{display:inline-flex;align-items:center;gap:4px;white-space:nowrap;color:var(--ink);font-weight:var(--fw-semi)}
 .detail-series-state .ui-icon{width:13px;height:13px;color:var(--accent);flex:0 0 13px}
+
+
+/* v2.4.42: temporary, opt-in classification diagnostics. Does not affect normal
+   discovery/classification, saved data, network requests or default expanded UI. */
+.detail-series-diagnostic{border-top:1px solid var(--border);margin-top:12px;padding-top:8px}
+.detail-series-diagnostic>summary{cursor:pointer;color:var(--subtle);font-size:var(--fs-xs);font-weight:var(--fw-semi);min-height:30px;display:flex;align-items:center}
+.detail-series-diagnostic>summary:hover{color:var(--accent)}
+.detail-series-diagnostic>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.detail-series-diag-body{display:grid;gap:10px;margin-top:8px}
+.detail-series-diag-intro,.detail-series-diag-meta,.detail-series-diag-reason,.detail-series-diag-edge{font-size:var(--fs-xs);line-height:1.65;color:var(--muted);overflow-wrap:anywhere}
+.detail-series-diag-intro{margin:0}
+.detail-series-diag-meta{margin:0;color:var(--subtle)}
+.detail-series-diag-list{display:grid;gap:6px}
+.detail-series-diag-item{border:1px solid var(--border);border-radius:6px;padding:5px 8px;min-width:0}
+.detail-series-diag-item>summary{cursor:pointer;display:flex;align-items:baseline;justify-content:space-between;gap:8px;min-height:29px;font-size:var(--fs-xs)}
+.detail-series-diag-item>summary span:first-child{min-width:0;flex:1;overflow-wrap:anywhere}
+.detail-series-diag-item>summary span:last-child{flex-shrink:0;color:var(--subtle);white-space:nowrap}
+.detail-series-diag-item>summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.detail-series-diag-reason{margin:6px 0}
+.detail-series-diag-edges{list-style:none;margin:4px 0 6px;padding:0;display:grid;gap:5px}
+.detail-series-diag-edge{border-left:2px solid var(--border-ctrl);padding-left:8px}
+.detail-series-diag-copy{justify-self:start;min-height:36px;padding:7px 12px;border:1px solid var(--border-ctrl);border-radius:6px;background:var(--surface);font-size:var(--fs-xs);color:var(--ink)}
+.detail-series-diag-copy:hover{border-color:var(--accent-border);color:var(--accent)}
+.detail-series-diag-fallback{display:none;box-sizing:border-box;width:100%;min-height:115px;resize:vertical;background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:6px;color:var(--ink);font-size:12px;line-height:1.5}
 
 /* Detail View (streaming links and Japanese provider search) */
 .view-detail .stats,.view-detail #libraryView,.view-detail #shareView,.view-detail .site-slogan{display:none!important}
@@ -3780,9 +3804,15 @@ function refreshSeriesSection(id,generation){
  const before=panel.querySelector(':scope > .detail-series');
  const after=seriesWatchSummary(id,full);
  if(before&&before.outerHTML===after)return;
- const expanded=before?.querySelector('details')?.open||false;
+ const expanded=before?.querySelector('.detail-series-details')?.open||false;
+ const diagExpanded=before?.querySelector('.detail-series-diagnostic')?.open||false;
  if(before)before.remove();
- if(after){panel.insertAdjacentHTML('beforeend',after);const details=panel.querySelector(':scope > .detail-series details');if(details)details.open=expanded}
+ if(after){
+  panel.insertAdjacentHTML('beforeend',after);
+  const details=panel.querySelector(':scope > .detail-series .detail-series-details');if(details)details.open=expanded;
+  const diagnostic=panel.querySelector(':scope > .detail-series .detail-series-diagnostic');
+  if(diagnostic&&diagExpanded){diagnostic.open=true;renderSeriesDiagnostic(id)}
+ }
 }
 function exploreSeriesInBackground(id,full){
  const generation=seriesExploreGeneration;
@@ -4003,6 +4033,123 @@ function collectCachedSeries(id,full){
  }
  return {groups,unknown:unknownIds.size,discovered:result.length,complete:false};
 }
+
+/* Diagnostic-only view of the EXISTING classification, not a second classifier.
+   Data never leaves the browser unless the user explicitly copies the report.
+   Uses already loaded /relations records; no requests, storage or status mutation. */
+function seriesDiagnosticSnapshot(id,full){
+ const series=collectCachedSeries(id,full);
+ if(!series)return null;
+ const rows=series.groups.flatMap(g=>g.rows.map(r=>({...r,section:g.section,group:g.name})));
+ const ids=new Set(rows.map(r=>r.id)),known=knownSeriesRelations(id,full);
+ const seenEdges=new Set(),edges=[],allPrimaryEdges=[];
+ for(const [source,record] of known){
+  for(const group of record.relations||[]){
+   const kind=seriesRelationKind(group?.relation);
+   if(!kind)continue;
+   for(const entry of group.entry||[]){
+    if(String(entry?.type||'').toLowerCase()!=='anime'||!Number.isSafeInteger(entry?.mal_id)||entry.mal_id<=0)continue;
+    if(['cm','pv','music'].includes(String(entry.media_type||'').trim().toLowerCase()))continue;
+    const target='jikan:'+entry.mal_id;
+    if(source===target)continue;
+    if(kind==='primary')allPrimaryEdges.push({source,target});
+    if(!ids.has(source)&&!ids.has(target))continue;
+    const relation=String(group.relation||''),media=String(entry.media_type||'');
+    const signature=[source,target,relation,media].join('|');
+    if(seenEdges.has(signature))continue;
+    seenEdges.add(signature);
+    edges.push({source,target,relation,kind,media_type:media});
+   }
+  }
+ }
+ edges.sort((a,b)=>a.source.localeCompare(b.source)||a.target.localeCompare(b.target)||a.relation.localeCompare(b.relation));
+ // Derive a trace through sequel/prequel links only; it is evidence of graph
+ // connectivity, NOT a proof of an official season or publication order.
+ const adjacent=new Map();
+ for(const e of allPrimaryEdges){
+  for(const [a,b] of [[e.source,e.target],[e.target,e.source]]){
+   if(!adjacent.has(a))adjacent.set(a,new Set());
+   adjacent.get(a).add(b);
+  }
+ }
+ const parents=new Map([[id,null]]),queue=[id];
+ for(let at=0;at<queue.length&&at<200;at++){
+  for(const next of adjacent.get(queue[at])||[]){
+   if(!parents.has(next)&&parents.size<200){parents.set(next,queue[at]);queue.push(next)}
+  }
+ }
+ const roleJa={main:'本編系列の候補',side:'外伝・スピンオフ',summary:'総集編',version:'別バージョン・別設定',uncertain:'その他・判定保留'};
+ const reasonOf=row=>{
+  if(row.role==='main')return '続編・前日譚の連結内。外伝・総集編との直接的な競合が見つからないため本編候補。';
+  if(row.role==='side')return '既存の関連情報から外伝・スピンオフ候補として扱われた。';
+  if(row.role==='summary')return '既存の関連情報から総集編候補として扱われた。';
+  if(row.role==='version')return '既存の関連情報から別バージョン・別設定候補として扱われた。';
+  return '続編系列と派生関係の競合、関係の方向、または複数の関係種別のため断定を保留。';
+ };
+ const display=Object.fromEntries(rows.map(row=>[row.id,row.name]));
+ const items=rows.map(row=>{
+  const trace=[];let cursor=row.id,guard=0;
+  while(parents.has(cursor)&&cursor!==null&&guard++<200){trace.unshift(cursor);cursor=parents.get(cursor)}
+  const connected=parents.has(row.id);
+  return {
+   id:row.id,title:row.name,media_type:row.type,section:row.section,
+   classification:roleJa[row.role]||row.role,code:row.role,group:row.group,
+   reason:reasonOf(row),
+   sequel_prequel_trace:connected?trace:[],
+   source_relations:edges.filter(e=>e.source===row.id||e.target===row.id)
+  };
+ });
+ const duplicates=new Map();for(const row of rows){const k=String(row.name).trim();if(k)duplicates.set(k,(duplicates.get(k)||0)+1)}
+ const duplicateNames=[...duplicates].filter(x=>x[1]>1).map(x=>({title:x[0],count:x[1]}));
+ return {
+  version:'2.4.42 diagnostic trial',source_id:id,
+  scope:'取得済みの関連作品のみ。公式シリーズ全体とは限らない',
+  data_source:'現在の作品詳細、既存の詳細キャッシュ、14日間の関連情報キャッシュ',
+  cached_source_nodes:known.size,relevant_source_nodes:new Set(edges.map(e=>e.source)).size,relation_edges:edges.length,classified_works:items.length,
+  unclassified_media_count:series.unknown,
+  extra_relation_requests_since_page_load:seriesExtraRequests,
+  duplicate_japanese_titles:duplicateNames,
+  items,
+  caveat:'source_relations は取得済みAPIに存在する参照を示し、全てが判定に寄与したとは限らない。Sequel/Prequelの経路は本編認定ではない。視聴記録は含めない。'
+ };
+}
+function renderSeriesDiagnostic(id){
+ if(mode==='share'||detailActiveItem?.id!==id)return;
+ const root=$('#detailContent .detail-series-diagnostic');
+ if(!root||!root.open)return;
+ const output=root.querySelector('[data-series-diagnostic-output]');
+ const full=detailCache.get(id)?.full,diagnostic=full?seriesDiagnosticSnapshot(id,full):null;
+ if(!output)return;
+ if(!diagnostic){output.textContent='分類可能なシリーズ情報がありません。';return}
+ const list=diagnostic.items.map(item=>{
+  const evidence=item.source_relations.length?item.source_relations.map(e=>
+   `<li class="detail-series-diag-edge">${safeText(e.source)} → ${safeText(e.target)}<div>${safeText(e.relation)} (${safeText(e.kind)}) / ${safeText(e.media_type||'形式不明')}</div></li>`
+  ).join(''):'<li class="detail-series-diag-edge">該当する参照を取得済みデータ内で確認できません</li>';
+  const path=item.sequel_prequel_trace.length?`<p class="detail-series-diag-reason">続編系列の接続: ${safeText(item.sequel_prequel_trace.join(' → '))}</p>`:'';
+  return `<details class="detail-series-diag-item"><summary><span>${safeText(item.title)} <span class="detail-series-diag-meta">(${safeText(item.id)})</span></span><span>${safeText(item.classification)}</span></summary><p class="detail-series-diag-reason">${safeText(item.reason)}</p>${path}<ul class="detail-series-diag-edges">${evidence}</ul></details>`;
+ }).join('');
+ output.innerHTML=`<p class="detail-series-diag-meta">分類${diagnostic.classified_works}作品 / 関係情報の参照元${diagnostic.relevant_source_nodes}作品分 / 関係${diagnostic.relation_edges}件 / 形式不明${diagnostic.unclassified_media_count}件</p><p class="detail-series-diag-intro">作品名を展開すると関連情報の原文と参照方向を確認できます。元データの全関係を示しますが、必ずしも全てが判定に使用されたわけではありません。</p><div class="detail-series-diag-list">${list}</div>`;
+}
+async function copySeriesDiagnostic(id){
+ if(detailActiveItem?.id!==id)return;
+ const full=detailCache.get(id)?.full;
+ const report=full?seriesDiagnosticSnapshot(id,full):null;
+ if(!report)return;
+ const value=JSON.stringify(report,null,2),root=$('#detailContent .detail-series-diagnostic');
+ try{
+  await navigator.clipboard.writeText(value);
+  toast('分類診断をコピーしました');
+ }catch{
+  const area=root?.querySelector('[data-series-diagnostic-fallback]');
+  if(!area)return;
+  area.style.display='block';area.value=value;area.focus();area.select();
+  try{
+   if(document.execCommand('copy')){area.style.display='none';toast('分類診断をコピーしました');return}
+  }catch{}
+  toast('コピーできないため、下の文字列を選択してコピーしてください');
+ }
+}
+
 function seriesWatchSummary(id,full){
  if(mode==='share')return '';
  const series=collectCachedSeries(id,full);
@@ -4035,7 +4182,7 @@ function seriesWatchSummary(id,full){
  }).join('');
  const note='取得できた作品内での集計です。本編系列は続編・前日譚による候補で、公式区分の確定ではありません。映画版・TV版などの別版はそれぞれ1作品として数えます。100%でもシリーズ全体の完走を意味しません。';
  const unknown=series.unknown?`<br>作品形式を確認できない${series.unknown}作品は集計対象外です。`:'';
- return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況<span class="detail-series-scope">取得できた作品内</span></h2>${sections}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${details}</div></details><p class="detail-series-note">${safeText(note)}${unknown}</p></section>`;
+ return `<section class="detail-series" aria-label="シリーズの視聴状況"><h2 class="detail-series-heading">シリーズの視聴状況<span class="detail-series-scope">取得できた作品内</span></h2>${sections}<details class="detail-series-details"><summary>シリーズの内訳 ${uiIcon('chevron-down')}</summary><div class="detail-series-entries">${details}</div></details><p class="detail-series-note">${safeText(note)}${unknown}</p><details class="detail-series-diagnostic"><summary>分類診断（試験用）</summary><div class="detail-series-diag-body"><p class="detail-series-diag-intro">診断用の表示です。追加API通信・新たな保存は行いません。結果をコピーして調査に使えます。</p><div data-series-diagnostic-output></div><button type="button" class="detail-series-diag-copy" data-copy-series-diagnostic>診断結果をコピー</button><textarea readonly class="detail-series-diag-fallback" data-series-diagnostic-fallback aria-label="分類診断結果（手動コピー用）"></textarea></div></details></section>`;
 }
 function detailHeader(a,full=null){
  const d=full||{},record=saved[a.id]||null;
@@ -4225,12 +4372,14 @@ function renderDetailParts(token){
  // An unrelated detail-field refresh must not silently collapse the user's series breakdown.
  // Carry the open state only for the SAME work, never across detail navigation.
  const seriesWasOpen=lastRenderedSeriesId===detailActiveItem.id&&!!$('#detailContent .detail-series-details')?.open;
+ const diagWasOpen=lastRenderedSeriesId===detailActiveItem.id&&!!$('#detailContent .detail-series-diagnostic')?.open;
  const entry=detailCache.get(detailActiveItem.id)||{},full=entry.full||null;
  const section=full?detailTabBar(entry,full)+detailTabPanel(entry,full):'';
  const tabsScroll=$('#detailContent .detail-tabs')?.scrollLeft||0;
  $('#detailContent').innerHTML=detailHeader(detailActiveItem,full)+section+(entry.loading?detailLoadingHtml():'')+(!/^jikan:\d+$/.test(detailActiveItem.id)?'<p class="detail-info-note">手動で追加した作品のため、自動取得できる作品IDがありません。作品検索から登録し直すと詳細情報を取得できます。</p>':'')+(entry.fullError?`<div class="state error"><div class="state-icon">${uiIcon('offline')}</div><h3>詳細情報を取得できませんでした</h3><p>${safeText(entry.fullError)}。現在保存されている作品情報だけを表示しています。</p><button type="button" data-detail-retry="true">再読み込み</button></div>`:'');
  lastRenderedSeriesId=detailActiveItem.id;
  if(seriesWasOpen){const details=$('#detailContent .detail-series-details');if(details)details.open=true}
+ if(diagWasOpen){const diagnostic=$('#detailContent .detail-series-diagnostic');if(diagnostic){diagnostic.open=true;renderSeriesDiagnostic(detailActiveItem.id)}}
  const newTabs=$('#detailContent .detail-tabs');if(newTabs)newTabs.scrollLeft=tabsScroll;
 }
 function detailEpisodesWrapper(entry){
@@ -4364,6 +4513,7 @@ $('#detailContent').addEventListener('change',e=>{if(e.target.id==='detailStatus
 $('#detailContent').addEventListener('toggle',e=>{
  const el=e.target;
  if(el.matches?.('.detail-series-details')&&el.open&&detailActiveItem)requestSeriesJapaneseTitles(detailActiveItem.id);
+ if(el.matches?.('.detail-series-diagnostic')&&el.open&&detailActiveItem)renderSeriesDiagnostic(detailActiveItem.id);
 },true);
 $('#detailContent').addEventListener('keydown',e=>{
  const tab=e.target.closest('[data-detail-tab]');
@@ -4398,6 +4548,7 @@ $('#detailContent').addEventListener('click',e=>{
   link.replaceWith(iframe);
   return;
  }
+ const seriesDiagCopy=e.target.closest('[data-copy-series-diagnostic]');if(seriesDiagCopy&&detailActiveItem){void copySeriesDiagnostic(detailActiveItem.id);return}
  const rel=e.target.closest('[data-related-id]');if(rel){const id=rel.dataset.relatedId;const title=rel.dataset.relatedTitle||'関連作品';openDetail(detailSource(id)||{id,title,english:'',image:'',type:'アニメ',year:null,season:null,episodes:null,score:null},true);return}
  if(e.target.closest('[data-translate-synopsis]')&&detailActiveItem)translateLocalSynopsis(detailActiveItem.id,detailNonce);
  if(e.target.closest('[data-more-episodes]'))detailMoreEpisodes();
