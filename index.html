@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.47">
+<meta name="ani-log-version" content="2.4.48">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -1039,6 +1039,39 @@ select:not([data-status-id]){
   background-size:var(--dropdown-chevron-size) var(--dropdown-chevron-size);
   padding-right:calc(var(--dropdown-chevron-inset) + var(--dropdown-chevron-size) + var(--sp-2));
 }
+
+/* v2.4.48 | One visual vocabulary for native-backed dropdowns.
+   Keep the real <select> and its values/change handlers; only the on-screen menu is custom. */
+.anilog-select-menu{
+  position:fixed;z-index:10000;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;
+  scrollbar-width:thin;scrollbar-color:var(--border-ctrl) transparent;
+  padding:5px;background:var(--surface2);border:1px solid var(--border-ctrl);
+  border-radius:var(--radius-sm);box-shadow:0 16px 42px rgba(0,0,0,.52);
+  color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-semi);
+}
+.anilog-select-option{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  width:100%;min-height:44px;padding:10px 11px;text-align:left;
+  border:1px solid transparent;border-radius:6px;background:transparent;
+  color:var(--ink);font:inherit;line-height:1.45;cursor:pointer;
+}
+.anilog-select-option:hover,.anilog-select-option.is-active{
+  background:var(--surface-hover);color:var(--accent);
+}
+.anilog-select-option[aria-selected="true"]{
+  background:var(--accent-soft);color:var(--accent);
+}
+.anilog-select-option[aria-selected="true"].is-active,
+.anilog-select-option[aria-selected="true"]:hover{background:var(--accent-hover)}
+.anilog-select-option:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.anilog-select-option-mark{color:var(--accent);font-size:15px;line-height:1;flex-shrink:0}
+.anilog-select-option:not([aria-selected="true"]) .anilog-select-option-mark{visibility:hidden}
+.anilog-select-option[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
+.anilog-select-open:not([data-status-id]){border-color:var(--accent)!important}
+@media(hover:hover){
+  select:not([data-status-id]):not(:disabled):hover{border-color:var(--accent-border)}
+}
+@media(prefers-reduced-motion:reduce){.anilog-select-option{transition:none}}
 </style>
 </head>
 <body>
@@ -4606,6 +4639,162 @@ if(topBtn){
 }
 
 
+})();
+</script>
+
+<script>
+/* ANI:LOG v2.4.48: native-backed select popup, with shared visual language.
+   Event delegation also handles the dynamically re-rendered select elements.
+   No original select options, values, or application change handlers are replaced. */
+(() => {
+ 'use strict';
+ let menu=null, owner=null, options=[], active=-1, lastPointerSelect=null, lastPointerAt=0;
+ let searchBuffer='', searchAt=0;
+ const esc=s=>String(s??'');
+ const eligible=s=>s instanceof HTMLSelectElement && !s.disabled && s.options.length>0 && !s.multiple && s.size<=1;
+ const visible=s=>s.isConnected && s.getClientRects().length && s.getBoundingClientRect().width>0;
+ function dismiss(restoreFocus=false){
+  if(!menu)return;
+  const current=owner;
+  menu.remove();menu=null;owner=null;options=[];active=-1;searchBuffer='';
+  if(current?.isConnected){
+   current.classList.remove('anilog-select-open');
+   current.removeAttribute('aria-controls');current.removeAttribute('aria-expanded');current.removeAttribute('aria-activedescendant');
+   if(restoreFocus)current.focus({preventScroll:true});
+  }
+ }
+ function enabled(i){return options[i] && !options[i].disabled && !options[i].hidden}
+ function nearestEnabled(start,delta){
+  for(let i=start;i>=0 && i<options.length;i+=delta){if(enabled(i))return i}
+  return -1;
+ }
+ function setActive(i,scroll=true){
+  if(!menu||!enabled(i))return;
+  active=i;
+  for(const [idx,btn] of [...menu.children].entries())btn.classList.toggle('is-active',idx===i);
+  owner.setAttribute('aria-activedescendant',menu.children[i].id);
+  if(scroll)menu.children[i].scrollIntoView({block:'nearest'});
+ }
+ function place(){
+  if(!menu || !owner?.isConnected || !visible(owner)){dismiss();return}
+  const r=owner.getBoundingClientRect(),dlg=owner.closest('dialog[open]');
+  const d=dlg?.getBoundingClientRect();
+  const leftLimit=d?Math.max(8,d.left+8):8;
+  const rightLimit=d?Math.min(innerWidth-8,d.right-8):innerWidth-8;
+  const topLimit=d?Math.max(8,d.top+8):8;
+  const bottomLimit=d?Math.min(innerHeight-8,d.bottom-8):innerHeight-8;
+  if(r.bottom<topLimit||r.top>bottomLimit){dismiss();return}
+  const width=Math.max(90,Math.min(Math.max(r.width,180),rightLimit-leftLimit));
+  const left=Math.min(Math.max(r.left,leftLimit),rightLimit-width);
+  const below=bottomLimit-r.bottom-5,above=r.top-topLimit-5;
+  const useAbove=below<Math.min(220,options.length*46+10) && above>below;
+  const space=Math.max(48,useAbove?above:below);
+  const maxHeight=Math.min(320,space);
+  menu.style.width=width+'px';menu.style.left=left+'px';menu.style.maxHeight=maxHeight+'px';
+  menu.style.top=useAbove?Math.max(topLimit,r.top-5-Math.min(menu.scrollHeight,maxHeight))+'px':Math.min(r.bottom+5,bottomLimit-48)+'px';
+ }
+ function open(s){
+  if(!eligible(s)||!visible(s))return;
+  if(menu && owner===s){dismiss(true);return}
+  dismiss();
+  owner=s;options=[...s.options];
+  const popup=document.createElement('div');
+  popup.className='anilog-select-menu';popup.setAttribute('role','listbox');
+  popup.id='anilog-select-popup';
+  popup.setAttribute('aria-label',s.getAttribute('aria-label') || s.labels?.[0]?.textContent?.trim() || '項目を選択');
+  options.forEach((opt,i)=>{
+   const btn=document.createElement('button');btn.type='button';btn.className='anilog-select-option';
+   btn.id='anilog-select-option-'+i;btn.setAttribute('role','option');
+   btn.setAttribute('aria-selected',String(opt.selected));
+   if(opt.disabled||opt.hidden){btn.setAttribute('aria-disabled','true');btn.disabled=true;}
+   const name=document.createElement('span');name.textContent=esc(opt.label||opt.textContent);
+   const check=document.createElement('span');check.className='anilog-select-option-mark';check.textContent='✓';check.setAttribute('aria-hidden','true');
+   btn.append(name,check);
+   btn.addEventListener('pointerdown',e=>{if(e.cancelable)e.preventDefault()});
+   btn.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();choose(i)});
+   popup.appendChild(btn);
+  });
+  menu=popup;
+  (s.closest('dialog[open]')||document.body).appendChild(popup);
+  s.classList.add('anilog-select-open');s.setAttribute('aria-expanded','true');s.setAttribute('aria-controls',popup.id);
+  s.focus({preventScroll:true});
+  const selected=options.findIndex(o=>o.selected&&!o.disabled&&!o.hidden);
+  setActive(selected>=0?selected:nearestEnabled(0,1),false);
+  place();
+  if(active>=0)menu.children[active].scrollIntoView({block:'nearest'});
+ }
+ function choose(i){
+  if(!owner||!enabled(i))return;
+  const s=owner,val=options[i].value;
+  const changed=s.value!==val;
+  dismiss(true);
+  if(!s.isConnected)return;
+  if(changed){
+   s.value=val;
+   s.dispatchEvent(new Event('input',{bubbles:true}));
+   s.dispatchEvent(new Event('change',{bubbles:true}));
+  }
+ }
+ // Cancel pointer's native menu and surface the same custom menu on every select.
+ document.addEventListener('pointerdown',e=>{
+  if(menu && !e.target.closest('.anilog-select-menu') && e.target!==owner)dismiss();
+  const s=e.target.closest?.('select');
+  if(!s||!eligible(s)||!visible(s))return;
+  if(e.button!==0)return;
+  e.preventDefault();
+  lastPointerSelect=s;lastPointerAt=performance.now();
+  open(s);
+ },true);
+ // Label activation or accessibility-generated click without pointerdown.
+ document.addEventListener('click',e=>{
+  const s=e.target.closest?.('select');
+  if(!s||!eligible(s))return;
+  e.preventDefault();
+  if(lastPointerSelect===s && performance.now()-lastPointerAt<900){
+   lastPointerSelect=null;return;
+  }
+  open(s);
+ },true);
+ document.addEventListener('keydown',e=>{
+  const s=e.target instanceof HTMLSelectElement?e.target:null;
+  if(!s||!eligible(s))return;
+  const isOpen=!!menu&&owner===s;
+  if(e.key==='Escape'){
+   if(isOpen){e.preventDefault();e.stopPropagation();dismiss(true)}return;
+  }
+  if(e.key==='Tab'){
+   if(isOpen)dismiss();return;
+  }
+  if(['ArrowUp','ArrowDown','Home','End','PageUp','PageDown'].includes(e.key)){
+   e.preventDefault();
+   if(!isOpen){open(s);return}
+   const step=e.key==='ArrowUp'?-1:1;
+   let target;
+   if(e.key==='Home')target=nearestEnabled(0,1);
+   else if(e.key==='End')target=nearestEnabled(options.length-1,-1);
+   else if(e.key.startsWith('Page'))target=nearestEnabled(Math.max(0,Math.min(options.length-1,active+(e.key==='PageDown'?7:-7))),step);
+   else target=nearestEnabled(active+step,step);
+   if(target>=0)setActive(target);
+   return;
+  }
+  if(e.key==='Enter'||e.key===' '){
+   e.preventDefault();
+   if(!isOpen){open(s)}else if(active>=0){choose(active)}
+   return;
+  }
+  if(e.key.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){
+   e.preventDefault();if(!isOpen)open(s);
+   const now=performance.now();searchBuffer=(now-searchAt>650?'':searchBuffer)+e.key.toLocaleLowerCase();searchAt=now;
+   const found=options.findIndex(o=>!o.disabled&&!o.hidden && (o.label||o.textContent).trim().toLocaleLowerCase().startsWith(searchBuffer));
+   if(found>=0)setActive(found);
+  }
+ },true);
+ // Never leave a detached menu on another view, modal, or scroll position.
+ document.addEventListener('focusin',e=>{if(menu&&e.target!==owner && !menu.contains(e.target))dismiss()},true);
+ document.addEventListener('scroll',e=>{if(menu&&!menu.contains(e.target))requestAnimationFrame(()=>{if(menu)place()})},true);
+ window.addEventListener('resize',()=>{if(menu)place()},{passive:true});
+ window.addEventListener('popstate',()=>dismiss());
+ document.addEventListener('close',e=>{if(owner&&e.target===owner.closest('dialog'))dismiss()},true);
 })();
 </script>
 </body>
