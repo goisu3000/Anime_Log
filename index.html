@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.54">
+<meta name="ani-log-version" content="2.4.56">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -2534,8 +2534,27 @@ function weeklyEditFormState(){
 function weeklyEditHasPendingChanges(){
  return weeklyEditInitialState!==null && weeklyEditFormState()!==weeklyEditInitialState;
 }
+/* A blocked dismissal is temporary feedback, not a persistent warning panel.
+   Keep weekly dialog behavior scoped so other dialogs retain their own notices. */
+let weeklyEditNoticeTimer=null;
+const WEEKLY_UNSAVED_NOTICE='未保存の変更があります。保存するか「キャンセル」で閉じてください。';
+function clearWeeklyEditNotice(){
+ clearTimeout(weeklyEditNoticeTimer);weeklyEditNoticeTimer=null;
+ clearDialogNotice($('#weeklyEditDialog'));
+}
+function warnWeeklyUnsaved(){
+ const dialog=$('#weeklyEditDialog');
+ toast(WEEKLY_UNSAVED_NOTICE);
+ clearTimeout(weeklyEditNoticeTimer);
+ weeklyEditNoticeTimer=setTimeout(()=>{
+  const notice=dialog.querySelector('.dialog-notice');
+  if(notice?.textContent===WEEKLY_UNSAVED_NOTICE)clearDialogNotice(dialog);
+  weeklyEditNoticeTimer=null;
+ },4100);
+}
 function openWeeklyEdit(id){
  const a=saved[id];if(!a)return;
+ clearWeeklyEditNotice();
  weeklyEditId=id;$('#weeklyEditName').textContent=a.title;
  const automatic=weeklyAutomatic(a);$('#weeklyApiInfo').textContent=automatic?`自動取得：${WEEKLY_DAY_NAMES[automatic.day]}曜日${automatic.time?' '+automatic.time:''}（テレビ放送予定）`:'自動取得した放送曜日はありません。手動で設定できます。';
  const record=cleanWeeklySchedule(a.weeklySchedule),modeValue=record?.mode==='manual'?'manual':'auto';
@@ -2548,9 +2567,13 @@ function openWeeklyEdit(id){
  $('[name="weeklyEditMode"]:checked')?.focus({preventScroll:true});
 }
 initializeWeeklyTimePicker();
-$('#weeklyEditDialog').addEventListener('close',()=>{weeklyEditId=null;weeklyEditInitialState=null});
+$('#weeklyEditDialog').addEventListener('close',()=>{
+ clearWeeklyEditNotice();weeklyEditId=null;weeklyEditInitialState=null;
+});
+$('#weeklyEditForm').addEventListener('input',clearWeeklyEditNotice);
+$('#weeklyEditForm').addEventListener('change',clearWeeklyEditNotice);
 $('#weeklyEditDialog').addEventListener('cancel',e=>{
- if(weeklyEditHasPendingChanges()||recordWrites>0){e.preventDefault();toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。')}
+ if(weeklyEditHasPendingChanges()||recordWrites>0){e.preventDefault();warnWeeklyUnsaved()}
 });
 function storeWeeklyEdit(){return queueRecordWrite(async()=>{
  const id=weeklyEditId,a=saved[id];if(!a)return false;
@@ -2826,7 +2849,7 @@ async function fetchPage(reset=true,force=false){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all'){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all',preserveScroll=false){const scrollY=preserveScroll?window.scrollY:null;exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(preserveScroll)window.scrollTo({top:scrollY,behavior:'instant'});else if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;periodBeforeAutoAll=null;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){showSeason();}
 
@@ -3447,8 +3470,8 @@ $('#backFromShare').addEventListener('click',()=>showSaved());
 window.addEventListener('hashchange',()=>{if(aniHistoryRestoring)return;if(location.hash.startsWith(SHARE_PREFIX)){if(mode==='share'&&history.state?.__aniLogRouteV1&&history.state.view==='share')return;if(aniHistoryReady)aniHistoryDepth++;readShareFromHash()}else if(mode==='share'){exitSharedView();showSaved()}});
 $('#homeBrand').addEventListener('click',goHome);
 $$('[data-view]').forEach(b=>b.addEventListener('click',()=>b.dataset.view==='saved'?showSaved():showSeason()));
-$$('[data-status-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statusFilter)));
-$$('[data-stat-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statFilter)));
+$$('[data-status-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statusFilter,mode==='saved'&&!document.body.classList.contains('view-detail'))));
+$$('[data-stat-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statFilter,true)));
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-rate-id]');if(b)openRating(b.dataset.rateId)});
 $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
 $('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
@@ -3627,7 +3650,7 @@ for(const dialog of document.querySelectorAll('dialog')){
    }
    if(dialog.id==='weeklyEditDialog'){
     if(recordWrites>0){toast('保存処理中です。完了するまでお待ちください。');return}
-    if(weeklyEditHasPendingChanges()){toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。');return}
+    if(weeklyEditHasPendingChanges()){warnWeeklyUnsaved();return}
     dialog.close();return;
    }
   }
