@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.53">
+<meta name="ani-log-version" content="2.4.54">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -864,11 +864,31 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-tag{font-size:11px;border-radius:5px;border:1px solid var(--border-ctrl);color:var(--muted);padding:2px 6px;white-space:nowrap}.weekly-tag.manual{color:var(--accent);border-color:var(--accent-border);background:var(--accent-soft)}
 .weekly-empty{align-self:center;font-size:var(--fs-xs);color:var(--muted);padding:12px 2px}.weekly-edit{flex:0 0 auto;width:34px;height:34px}.weekly-edit .ui-icon{width:15px;height:15px}
 .weekly-mobile-annual{display:none}
-.weekly-dialog{width:min(470px,calc(100% - 30px));max-height:90vh;overflow:auto}.weekly-dialog h3{margin:0 0 9px;font-size:var(--fs-xl)}
-.weekly-dialog-intro{color:var(--muted);font-size:var(--fs-sm);line-height:1.65}.weekly-dialog .weekly-radio{display:flex;align-items:center;gap:8px;margin:12px 0;color:var(--ink);font-size:var(--fs-sm)}
-.weekly-dialog input[type="radio"]{accent-color:var(--accent)}.weekly-dialog select,.weekly-dialog input[type="time"]{display:block;width:100%;height:42px;background:var(--surface2);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:6px;padding:8px;font-size:var(--fs-md);margin:8px 0}
-.weekly-dialog .weekly-fieldset[hidden]{display:none}.weekly-dialog menu{display:flex;gap:8px;justify-content:flex-end;padding:10px 0 0;margin:10px 0 0}.weekly-dialog menu button{padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-ctrl);background:var(--surface2);font-weight:var(--fw-semi)}
+/* Weekly settings: compact mode cards and native-backed ANI:LOG select menus.
+   Time rule: an optional 24-hour HH:MM value, selected as hour (00-23) + minute
+   (00-59), minute defaults to 00; no native OS time spinner. */
+.weekly-dialog{width:min(470px,calc(100% - 30px));max-height:90vh;overflow:auto}
+.weekly-dialog h3{margin:0 0 9px;font-size:var(--fs-xl)}
+.weekly-dialog-intro{color:var(--muted);font-size:var(--fs-sm);line-height:1.6;margin:0 0 8px}
+.weekly-dialog #weeklyApiInfo{margin-bottom:14px}
+.weekly-mode-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0 0 14px}
+.weekly-dialog .weekly-radio{display:flex;align-items:center;gap:9px;min-width:0;min-height:46px;padding:10px 11px;margin:0;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-sm);line-height:1.45;cursor:pointer}
+.weekly-dialog .weekly-radio:has(input:checked){border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
+.weekly-dialog .weekly-radio:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.weekly-dialog .weekly-radio input[type="radio"]{appearance:auto;flex:0 0 17px;width:17px;height:17px;min-width:17px;margin:0;padding:0;border:0;accent-color:var(--accent);background:transparent}
+.weekly-dialog .weekly-radio span{min-width:0}
+.weekly-dialog .weekly-fieldset[hidden]{display:none}
+.weekly-dialog .weekly-fieldset>label{margin:0 0 6px}
+.weekly-dialog .weekly-fieldset>select{display:block;width:100%;height:44px;margin:0 0 14px;background:var(--surface2);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);padding:0 12px;font-size:var(--fs-md)}
+.weekly-time-controls{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:10px;margin:0 0 8px}
+.weekly-time-controls select{width:100%;height:44px;margin:0;padding:0 12px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-md);font-variant-numeric:tabular-nums}
+.weekly-time-controls select:disabled{opacity:.45;cursor:not-allowed}
+.weekly-time-separator{font-size:var(--fs-lg);font-weight:var(--fw-bold);color:var(--muted)}
+.weekly-time-help{color:var(--subtle);font-size:var(--fs-xs);line-height:1.55;margin:0}
+.weekly-dialog menu{display:flex;gap:8px;justify-content:flex-end;padding:10px 0 0;margin:10px 0 0}
+.weekly-dialog menu button{padding:10px 14px;border-radius:var(--radius-sm);border:1px solid var(--border-ctrl);background:var(--surface2);font-weight:var(--fw-semi)}
 .weekly-dialog menu button[type="submit"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+@media(max-width:520px){.weekly-mode-options{grid-template-columns:minmax(0,1fr)}}
 .weekly-toggle:hover,.weekly-settings-btn:hover,.weekly-edit:hover{border-color:var(--accent-border);color:var(--accent)}
 .weekly-toggle:focus-visible,.weekly-settings-btn:focus-visible,.weekly-edit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 @media(max-width:740px){.weekly-calendar{padding:14px;margin-bottom:16px}.weekly-head{align-items:flex-start;flex-wrap:wrap;gap:8px}.weekly-heading h3{font-size:var(--fs-lg)}.weekly-head-actions{width:100%;justify-content:space-between}.weekly-today-label{font-size:14px;gap:6px}.weekly-today-label strong{font-size:22px}.weekly-summary{margin-top:10px}.weekly-day{padding:8px 4px}.weekly-row{grid-template-columns:51px minmax(0,1fr)}.weekly-day strong{font-size:var(--fs-md)}.weekly-day-items{padding:2px 8px}.weekly-item{gap:8px;flex-wrap:wrap}.weekly-item-meta{font-size:11px}.weekly-poster{width:29px;height:40px;flex-basis:29px}.weekly-mobile-annual{display:inline-flex;align-items:center;gap:5px;border:0;background:transparent;color:var(--accent);padding:9px 0;margin:0 0 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}}
@@ -1226,7 +1246,7 @@ select:not([data-status-id]){
 <button type="button" class="back-to-top" id="backToTop" aria-label="ページの上部へ戻る" title="上へ戻る"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-up"/></svg></button>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<dialog id="weeklyEditDialog" class="weekly-dialog" aria-labelledby="weeklyEditTitle"><form id="weeklyEditForm"><div class="weekly-eyebrow">WEEKLY VIEWING</div><h3 id="weeklyEditTitle">視聴曜日を設定</h3><p id="weeklyEditName" class="weekly-dialog-intro"></p><p id="weeklyApiInfo" class="weekly-dialog-intro"></p><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="auto" checked>放送曜日を自動で使用</label><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="manual">自分で曜日を設定</label><div id="weeklyManualFields" class="weekly-fieldset" hidden><label for="weeklyEditDay">視聴曜日</label><select id="weeklyEditDay"><option value="0">月曜日</option><option value="1">火曜日</option><option value="2">水曜日</option><option value="3">木曜日</option><option value="4">金曜日</option><option value="5">土曜日</option><option value="6">日曜日</option></select><label for="weeklyEditTime">視聴時刻（任意）</label><input type="time" id="weeklyEditTime"></div><menu><button type="button" id="weeklyEditCancel">キャンセル</button><button type="submit">保存する</button></menu></form></dialog>
+<dialog id="weeklyEditDialog" class="weekly-dialog" aria-labelledby="weeklyEditTitle"><form id="weeklyEditForm"><div class="weekly-eyebrow">WEEKLY VIEWING</div><h3 id="weeklyEditTitle">視聴曜日を設定</h3><p id="weeklyEditName" class="weekly-dialog-intro"></p><p id="weeklyApiInfo" class="weekly-dialog-intro"></p><div class="weekly-mode-options" role="group" aria-label="視聴曜日の設定方法"><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="auto" checked><span>放送曜日を自動で使用</span></label><label class="weekly-radio"><input type="radio" name="weeklyEditMode" value="manual"><span>自分で曜日を設定</span></label></div><div id="weeklyManualFields" class="weekly-fieldset" hidden><label for="weeklyEditDay">視聴曜日</label><select id="weeklyEditDay"><option value="0">月曜日</option><option value="1">火曜日</option><option value="2">水曜日</option><option value="3">木曜日</option><option value="4">金曜日</option><option value="5">土曜日</option><option value="6">日曜日</option></select><label for="weeklyEditHour">視聴時刻（任意）</label><div class="weekly-time-controls" role="group" aria-label="視聴時刻（24時間表記）"><select id="weeklyEditHour" aria-label="時"></select><span class="weekly-time-separator" aria-hidden="true">:</span><select id="weeklyEditMinute" aria-label="分" disabled></select></div><input type="hidden" id="weeklyEditTime"><p class="weekly-time-help">指定しない場合は時刻なし。分は1分単位で設定できます。</p></div><menu><button type="button" id="weeklyEditCancel">キャンセル</button><button type="submit">保存する</button></menu></form></dialog>
 <dialog id="streamDialog" aria-labelledby="streamDialogTitle"><form id="streamForm">
   <div class="review-dialog-eyebrow">MY LIST · WATCH LINK</div>
   <h3 id="streamDialogTitle">視聴サイトを設定</h3>
@@ -2311,7 +2331,7 @@ function cleanWeeklyOptions(x){
  return {open:x.open===true,statuses:statuses.length?statuses:['watching']};
 }
 function loadWeeklyOptions(){try{return cleanWeeklyOptions(JSON.parse(localStorage.getItem(WEEKLY_OPTIONS_KEY)||'null'))||{open:false,statuses:['watching']}}catch{return {open:false,statuses:['watching']}}}
-let weeklyOptions=loadWeeklyOptions(),weeklySettingsOpen=false,weeklyEditId=null,weeklyFetching=null,weeklyRetryAfter=0;
+let weeklyOptions=loadWeeklyOptions(),weeklySettingsOpen=false,weeklyEditId=null,weeklyEditInitialState=null,weeklyFetching=null,weeklyRetryAfter=0;
 function loadWeeklyCache(){try{const c=JSON.parse(localStorage.getItem(WEEKLY_CACHE_KEY)||'null');return c&&typeof c==='object'&&Number.isFinite(c.at)&&c.at<=Date.now()&&c.data&&typeof c.data==='object'&&!Array.isArray(c.data)?c:null}catch{return null}}
 let weeklyApiCache=loadWeeklyCache();
 // AniList is a supplementary source for verified episode numbers only.
@@ -2483,6 +2503,37 @@ async function ensureWeeklySchedules(){
   finally{weeklyFetching=null;renderWeeklyCalendar();ensureWeeklyEpisodes()}
  })();return weeklyFetching;
 }
+/* Shared time-picker contract: keep the original HH:MM value for storage and
+   validation; the two visible native-backed <select>s only replace OS chrome. */
+function initializeWeeklyTimePicker(){
+ const hour=$('#weeklyEditHour'),minute=$('#weeklyEditMinute');
+ hour.innerHTML='<option value="">時刻なし</option>'+Array.from({length:24},(_,n)=>`<option value="${String(n).padStart(2,'0')}">${String(n).padStart(2,'0')} 時</option>`).join('');
+ minute.innerHTML=Array.from({length:60},(_,n)=>`<option value="${String(n).padStart(2,'0')}">${String(n).padStart(2,'0')} 分</option>`).join('');
+ hour.addEventListener('change',()=>{
+  if(hour.value && !minute.value)minute.value='00';
+  syncWeeklyTimePicker();
+ });
+ minute.addEventListener('change',syncWeeklyTimePicker);
+}
+function syncWeeklyTimePicker(){
+ const hour=$('#weeklyEditHour'),minute=$('#weeklyEditMinute');
+ minute.disabled=!hour.value;
+ if(!hour.value)minute.value='00';
+ $('#weeklyEditTime').value=hour.value?`${hour.value}:${minute.value||'00'}`:'';
+}
+function setWeeklyTimePicker(time){
+ const parts=/^([01]\d|2[0-3]):([0-5]\d)$/.exec(time||'');
+ $('#weeklyEditHour').value=parts?parts[1]:'';
+ $('#weeklyEditMinute').value=parts?parts[2]:'00';
+ syncWeeklyTimePicker();
+}
+function weeklyEditFormState(){
+ const mode=$('[name="weeklyEditMode"]:checked')?.value||'auto';
+ return mode==='manual'?JSON.stringify(['manual',$('#weeklyEditDay').value,$('#weeklyEditTime').value]):'auto';
+}
+function weeklyEditHasPendingChanges(){
+ return weeklyEditInitialState!==null && weeklyEditFormState()!==weeklyEditInitialState;
+}
 function openWeeklyEdit(id){
  const a=saved[id];if(!a)return;
  weeklyEditId=id;$('#weeklyEditName').textContent=a.title;
@@ -2490,10 +2541,17 @@ function openWeeklyEdit(id){
  const record=cleanWeeklySchedule(a.weeklySchedule),modeValue=record?.mode==='manual'?'manual':'auto';
  $$('[name="weeklyEditMode"]').forEach(r=>{r.checked=r.value===modeValue});
  $('#weeklyEditDay').value=String(record?.mode==='manual'?record.day:automatic?.day??0);
- $('#weeklyEditTime').value=record?.mode==='manual'?record.time||'':'';
+ setWeeklyTimePicker(record?.mode==='manual'?record.time||'':'');
  $('#weeklyManualFields').hidden=modeValue!=='manual';
+ weeklyEditInitialState=weeklyEditFormState();
  $('#weeklyEditDialog').showModal();
+ $('[name="weeklyEditMode"]:checked')?.focus({preventScroll:true});
 }
+initializeWeeklyTimePicker();
+$('#weeklyEditDialog').addEventListener('close',()=>{weeklyEditId=null;weeklyEditInitialState=null});
+$('#weeklyEditDialog').addEventListener('cancel',e=>{
+ if(weeklyEditHasPendingChanges()||recordWrites>0){e.preventDefault();toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。')}
+});
 function storeWeeklyEdit(){return queueRecordWrite(async()=>{
  const id=weeklyEditId,a=saved[id];if(!a)return false;
  const modeValue=$('[name="weeklyEditMode"]:checked')?.value,day=Number($('#weeklyEditDay').value),time=$('#weeklyEditTime').value;
@@ -3534,30 +3592,47 @@ $('#addForm').addEventListener('submit',e=>{
 function download(filename,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
 function exportData(){const dump={app:'ANI:LOG',version:4,exportedAt:new Date().toISOString(),weeklyOptions,items:Object.values(saved).filter(a=>a&&validStatuses.has(a.status))};download(`anime-log-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(dump,null,2),'application/json;charset=utf-8');try{localStorage.setItem(BACKUP_AT_KEY,String(Date.now()))}catch{}updateBackupDate();toast('バックアップを書き出しました')}
 $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEventListener('click',()=>$('#backupDialog').showModal());$('#mobileDownloadBtn').addEventListener('click',()=>{exportData();$('#backupDialog').close()});$('#mobileImportBtn').addEventListener('click',()=>{$('#backupDialog').close();$('#importFile').click()});$('#mobileCloseBackup').addEventListener('click',()=>$('#backupDialog').close());
-// Dialog interaction rule: only backdrop taps can dismiss an eligible dialog.
-// Backup: always; share: only before a URL is generated; watch-site editor: only with no unsaved changes.
-// Memo/rating/import/weekly settings and other editors retain explicit dismissal only.
+/* Dialog backdrop policy (single source of truth for future dialogs):
+   - always: informational/backup (no uncommitted editable data)
+   - if-clean: editors may close only if no meaningful edits are pending
+   - share-before-generated: only before URL creation and while generation is idle
+   - never: recording, rating, notes, import and other sensitive editors
+   IMPORTANT: clicking inside a dialog must never invoke backdrop dismissal.
+   Adding a dialog requires an explicit entry below, not a default permissive rule. */
+const ANI_DIALOG_BACKDROP_POLICY=Object.freeze({
+ backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
+ weeklyEditDialog:'if-clean',addDialog:'never',importModeDialog:'never',
+ noteDialog:'never',ratingDialog:'never'
+});
 function clickedDialogBackdrop(e,dialog){
  if(e.target!==dialog)return false;
  const r=dialog.getBoundingClientRect();
  return e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom;
 }
-$('#backupDialog').addEventListener('click',e=>{if(clickedDialogBackdrop(e,e.currentTarget))e.currentTarget.close()});
-$('#streamDialog').addEventListener('click',e=>{
- if(!clickedDialogBackdrop(e,e.currentTarget))return;
- if(recordWrites>0){
-  toast('保存処理中です。完了するまでお待ちください。');
-  return;
- }
- if(streamDialogHasPendingChanges()){
-  toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。');
-  return;
- }
- closeStreamDialog();
-});
-$('#shareDialog').addEventListener('click',e=>{
- if(clickedDialogBackdrop(e,e.currentTarget)&&!shareLinkBuilt&&!$('#generateShare').disabled)e.currentTarget.close();
-});
+for(const dialog of document.querySelectorAll('dialog')){
+ const policy=ANI_DIALOG_BACKDROP_POLICY[dialog.id];
+ if(!policy){console.warn('ANI:LOG dialog backdrop policy missing:',dialog.id);continue}
+ if(policy==='never')continue;
+ dialog.addEventListener('click',e=>{
+  if(!clickedDialogBackdrop(e,dialog))return;
+  if(policy==='always'){dialog.close();return}
+  if(policy==='share-before-generated'){
+   if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
+  }
+  if(policy==='if-clean'){
+   if(dialog.id==='streamDialog'){
+    if(recordWrites>0){toast('保存処理中です。完了するまでお待ちください。');return}
+    if(streamDialogHasPendingChanges()){toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。');return}
+    closeStreamDialog();return;
+   }
+   if(dialog.id==='weeklyEditDialog'){
+    if(recordWrites>0){toast('保存処理中です。完了するまでお待ちください。');return}
+    if(weeklyEditHasPendingChanges()){toast('未保存の変更があります。保存するか「キャンセル」で閉じてください。');return}
+    dialog.close();return;
+   }
+  }
+ });
+}
 $('#importBtn').addEventListener('click',()=>$('#importFile').click());
 let importCandidate=null,importCandidateWeeklyOptions=null;
 function cleanImport(data){if(data?.app!=='ANI:LOG'||!Array.isArray(data.items))throw Error('形式が違います');const result=Object.create(null);
