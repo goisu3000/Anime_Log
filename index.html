@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.42">
+<meta name="ani-log-version" content="2.4.43">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -3845,12 +3845,13 @@ function exploreSeriesInBackground(id,full){
    No names, manual per-series dictionaries, persistence, or additional requests are used. */
 const AUTO_SERIES_ROLE_LABELS={
  main:'本編系列の候補',side:'外伝・スピンオフ',summary:'総集編',
- version:'別バージョン・別設定',uncertain:'その他・判定保留'
+ version:'別バージョン',setting:'別設定',uncertain:'その他・判定保留'
 };
-const AUTO_SERIES_RELATED_ORDER=['side','summary','version','uncertain'];
+const AUTO_SERIES_RELATED_ORDER=['side','summary','version','setting','uncertain'];
 function seriesSupplementalRole(relation,reverse=false){
  const r=String(relation||'').toLowerCase().replace(/[\s_-]+/g,' ').trim();
- if(r==='alternative version'||r==='alternative setting')return 'version';
+ if(r==='alternative version')return 'version';
+ if(r==='alternative setting')return 'setting';
  // The reverse of Parent story / Full story describes the derivative source.
  // Unlike a reversed Side story link, the roles are unambiguous here.
  if(reverse){
@@ -4012,9 +4013,10 @@ function collectCachedSeries(id,full){
   if(!type){unknownIds.add(key);continue}
   const roles=extraEvidence.get(key);
   // A work on a sequel/prequel chain can ALSO have an alternate TV/movie edition.
-  // "Alternative version/setting" is evidence of another edition, not evidence
-  // that the chain member ceases to be part of the main-line CANDIDATES.
-  // Keep genuinely competing side-story/summary evidence conservative.
+  // Alternative Version and Alternative Setting can be distinguished as roles
+  // for works outside the sequel/prequel chain. Neither link proves which
+  // endpoint of an ALSO-linked sequel/prequel pair should be demoted.
+  // Preserve established main-line logic; only Side Story/Summary conflict.
   const coreConflict=roles&&[...roles].some(r=>r==='side'||r==='summary');
   const role=core.has(key)?(coreConflict?'uncertain':'main')
     :(!roles||roles.size!==1?'uncertain':roles.values().next().value);
@@ -4078,13 +4080,14 @@ function seriesDiagnosticSnapshot(id,full){
    if(!parents.has(next)&&parents.size<200){parents.set(next,queue[at]);queue.push(next)}
   }
  }
- const roleJa={main:'本編系列の候補',side:'外伝・スピンオフ',summary:'総集編',version:'別バージョン・別設定',uncertain:'その他・判定保留'};
+ const roleJa={main:'本編系列の候補',side:'外伝・スピンオフ',summary:'総集編',version:'別バージョン',setting:'別設定',uncertain:'その他・判定保留'};
  const reasonOf=row=>{
   if(row.role==='main')return '続編・前日譚の連結内。外伝・総集編との直接的な競合が見つからないため本編候補。';
   if(row.role==='side')return '既存の関連情報から外伝・スピンオフ候補として扱われた。';
   if(row.role==='summary')return '既存の関連情報から総集編候補として扱われた。';
-  if(row.role==='version')return '既存の関連情報から別バージョン・別設定候補として扱われた。';
-  return '続編系列と派生関係の競合、関係の方向、または複数の関係種別のため断定を保留。';
+  if(row.role==='version')return '既存のAlternative Version関係から別バージョン候補として扱われた。';
+  if(row.role==='setting')return '既存のAlternative Setting関係から別設定候補として扱われた。';
+  return '続編系列と外伝・総集編の競合、関係の方向、または複数の関係種別のため断定を保留。';
  };
  const display=Object.fromEntries(rows.map(row=>[row.id,row.name]));
  const items=rows.map(row=>{
@@ -4102,7 +4105,7 @@ function seriesDiagnosticSnapshot(id,full){
  const duplicates=new Map();for(const row of rows){const k=String(row.name).trim();if(k)duplicates.set(k,(duplicates.get(k)||0)+1)}
  const duplicateNames=[...duplicates].filter(x=>x[1]>1).map(x=>({title:x[0],count:x[1]}));
  return {
-  version:'2.4.42 diagnostic trial',source_id:id,
+  version:'2.4.43 diagnostic trial',source_id:id,
   scope:'取得済みの関連作品のみ。公式シリーズ全体とは限らない',
   data_source:'現在の作品詳細、既存の詳細キャッシュ、14日間の関連情報キャッシュ',
   cached_source_nodes:known.size,relevant_source_nodes:new Set(edges.map(e=>e.source)).size,relation_edges:edges.length,classified_works:items.length,
