@@ -7,7 +7,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.49">
+<meta name="ani-log-version" content="2.4.50">
 <title>ANI:LOG | アニメ視聴管理</title>
 <script>
 /* Keep browser title and sidebar version synchronized from one source.
@@ -1064,6 +1064,7 @@ select:not([data-status-id]){
 .anilog-select-option[aria-selected="true"].is-active,
 .anilog-select-option[aria-selected="true"]:hover{background:var(--accent-hover)}
 .anilog-select-option:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.anilog-select-option>span:first-child{min-width:0;overflow-wrap:anywhere}
 .anilog-select-option-mark{color:var(--accent);font-size:15px;line-height:1;flex-shrink:0}
 .anilog-select-option:not([aria-selected="true"]) .anilog-select-option-mark{visibility:hidden}
 .anilog-select-option[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
@@ -4648,7 +4649,7 @@ if(topBtn){
    No original select options, values, or application change handlers are replaced. */
 (() => {
  'use strict';
- let menu=null, owner=null, options=[], active=-1, lastPointerSelect=null, lastPointerAt=0;
+ let menu=null, owner=null, options=[], active=-1, preferredWidth=0, lastPointerSelect=null, lastPointerAt=0;
  let searchBuffer='', searchAt=0;
  const esc=s=>String(s??'');
  const eligible=s=>s instanceof HTMLSelectElement && !s.disabled && s.options.length>0 && !s.multiple && s.size<=1;
@@ -4656,7 +4657,7 @@ if(topBtn){
  function dismiss(restoreFocus=false){
   if(!menu)return;
   const current=owner;
-  menu.remove();menu=null;owner=null;options=[];active=-1;searchBuffer='';
+  menu.remove();menu=null;owner=null;options=[];active=-1;preferredWidth=0;searchBuffer='';
   if(current?.isConnected){
    current.classList.remove('anilog-select-open');
    current.removeAttribute('aria-controls');current.removeAttribute('aria-expanded');current.removeAttribute('aria-activedescendant');
@@ -4675,6 +4676,26 @@ if(topBtn){
   owner.setAttribute('aria-activedescendant',menu.children[i].id);
   if(scroll)menu.children[i].scrollIntoView({block:'nearest'});
  }
+ // Match the closed select width unless visible option text genuinely needs more room.
+ // Measure the longest unwrapped label plus the real menu/row padding and checkmark.
+ function intrinsicWidth(){
+  const row=menu?.firstElementChild;if(!row)return 0;
+  const m=getComputedStyle(menu),r=getComputedStyle(row);
+  const px=v=>parseFloat(v)||0;
+  const labels=[...menu.querySelectorAll('.anilog-select-option>span:first-child')];
+  // Measure the actual option labels, using their existing font and letter spacing.
+  // Temporarily prevent wrapping/shrinking only during synchronous measurement.
+  for(const label of labels){label.style.whiteSpace='nowrap';label.style.flexShrink='0'}
+  let longest=0;
+  labels.forEach((label,i)=>{
+   if(!options[i]?.hidden)longest=Math.max(longest,label.getBoundingClientRect().width);
+  });
+  for(const label of labels){label.style.whiteSpace='';label.style.flexShrink=''}
+  const check=row.querySelector('.anilog-select-option-mark');
+  return Math.ceil(longest+(check?.getBoundingClientRect().width||0)+px(r.columnGap)
+   +px(r.paddingLeft)+px(r.paddingRight)+px(r.borderLeftWidth)+px(r.borderRightWidth)
+   +px(m.paddingLeft)+px(m.paddingRight)+px(m.borderLeftWidth)+px(m.borderRightWidth));
+ }
  function place(){
   if(!menu || !owner?.isConnected || !visible(owner)){dismiss();return}
   const r=owner.getBoundingClientRect(),dlg=owner.closest('dialog[open]');
@@ -4684,7 +4705,8 @@ if(topBtn){
   const topLimit=d?Math.max(8,d.top+8):8;
   const bottomLimit=d?Math.min(innerHeight-8,d.bottom-8):innerHeight-8;
   if(r.bottom<topLimit||r.top>bottomLimit){dismiss();return}
-  const width=Math.max(90,Math.min(Math.max(r.width,180),rightLimit-leftLimit));
+  // Avoid excessively wide menus; very long labels wrap when needed.
+  const width=Math.min(Math.max(r.width,Math.min(preferredWidth,420)),rightLimit-leftLimit);
   const left=Math.min(Math.max(r.left,leftLimit),rightLimit-width);
   const below=bottomLimit-r.bottom-5,above=r.top-topLimit-5;
   const useAbove=below<Math.min(220,options.length*46+10) && above>below;
@@ -4716,6 +4738,7 @@ if(topBtn){
   });
   menu=popup;
   (s.closest('dialog[open]')||document.body).appendChild(popup);
+  preferredWidth=intrinsicWidth();
   s.classList.add('anilog-select-open');s.setAttribute('aria-expanded','true');s.setAttribute('aria-controls',popup.id);
   s.focus({preventScroll:true});
   const selected=options.findIndex(o=>o.selected&&!o.disabled&&!o.hidden);
