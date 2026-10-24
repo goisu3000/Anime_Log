@@ -673,6 +673,32 @@ dialog label{display:block;font-size:var(--fs-sm);color:var(--muted);font-weight
 dialog input:not([type="checkbox"]),dialog select{width:100%;height:42px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface-input);color:var(--ink);padding:0 12px;font-size:var(--fs-sm);margin-bottom:16px}
 dialog menu{display:flex;justify-content:flex-end;gap:8px;padding:0;margin:10px 0 0}
 dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);padding:10px 16px;font-size:var(--fs-sm);font-weight:var(--fw-bold)}
+/* Mobile backup dialog only: balanced primary actions and separate dismissal. */
+#backupDialog .backup-dialog-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  width:min(100%,340px);
+  gap:12px;
+  margin:18px auto 0;
+  padding:0;
+}
+#backupDialog .backup-dialog-actions button{
+  min-width:0;
+  width:100%;
+  min-height:46px;
+  text-align:center;
+  white-space:nowrap;
+}
+#backupDialog .backup-dialog-close{
+  justify-content:center;
+  margin:16px auto 0;
+  padding:0;
+}
+#backupDialog .backup-dialog-close button{
+  min-width:104px;
+  min-height:44px;
+}
+
 .secondary,.review-cancel{background:transparent;color:var(--ink);border:1px solid var(--border-ctrl)}
 .primary,.review-save{background:var(--accent);color:var(--accent-ink);border:1px solid var(--accent)}
 .share-season-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3);margin:0 0 var(--sp-3)}
@@ -1315,7 +1341,7 @@ select:not([data-status-id]){
 </div>
 <nav class="mobile-bottom" aria-label="モバイルメニュー"><button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg><span class="nav-label">作品を探す</span></button><button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg><span class="nav-label">マイリスト</span></button><button type="button" id="mobileRanking" data-rank-open="now"><span class="mobile-ranking-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span><span class="nav-label">ランキング</span></button><button id="mobileShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"/></svg><span class="nav-label">共有する</span></button><button id="mobileExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><span class="nav-label backup-label">バックアップ</span></button></nav>
 <dialog id="addDialog"><form method="dialog" id="addForm"><h3>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
-<dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu><button type="button" class="secondary" id="mobileImportBtn">読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-up"/></svg></button><button type="button" class="primary" id="mobileDownloadBtn">書き出す <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></menu><menu><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
+<dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu class="backup-dialog-actions"><button type="button" class="primary" id="mobileDownloadBtn">書き出す</button><button type="button" class="secondary" id="mobileImportBtn">読み込む</button></menu><menu class="backup-dialog-close"><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
 <dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有します。短縮URL方式では共有データのコピーをCloudflareに365日間保存します。リンクを知っている人は誰でも閲覧できます。</p>
   <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">年・シーズンを指定して見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
   <div class="share-season-fields" id="shareSeasonFields" hidden><label for="shareYear">年<select id="shareYear"></select></label><label for="shareSeason">シーズン<select id="shareSeason"><option value="winter">冬</option><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option></select></label></div>
