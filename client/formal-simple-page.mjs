@@ -8,6 +8,95 @@ import {requestRegistrationChallenge} from './registration-challenge.mjs';
 import {prepareV411StagingPanel} from './v411-https-staging-page-entry.mjs';
 import {createV408StagingSealedDeviceCredentials,V408_CREDENTIAL_DB} from './v408-https-staging-sealed-credentials.mjs';
 import {createAutomaticSync} from './automatic-sync.mjs';
+import {checkLineage} from '../shared/sync-lineage.mjs';
+import {appToSnapshot} from './app-bridge.mjs';
+import {parsePairingUrl} from './pairing-client.mjs';
+import {canonical} from './formal-storage.mjs';
+
+// ANI:LOG connection safety controls. No remote requests and no mutation of
+// encrypted records, WAL, sync lineage, sealed credentials or checkpoints.
+
+export const SYNC_PAUSE_KEY='anilog-sync-manual-pause-v1';
+const PAUSED='paused-v1';
+const fail=code=>{throw Error('SYNC_CONNECTION_GUARD:'+code)};
+
+export function createSyncPauseGuard({local}={}){
+ if(!local?.getItem||!local?.setItem||!local?.removeItem)fail('DURABLE_STORAGE_REQUIRED');
+ const read=()=>{
+  let value;try{value=local.getItem(SYNC_PAUSE_KEY)}catch{fail('PAUSE_STATE_UNREADABLE')}
+  // Treat unexpected/corrupt values as paused, never silently resume network.
+  return value===null?'active':value===PAUSED?'paused':'invalid';
+ };
+ return Object.freeze({
+  read,
+  get paused(){return read()!=='active'},
+  assertAllowed(){if(read()!=='active')fail('MANUALLY_PAUSED')},
+  pause(){
+   // If storage write/readback fails, fail closed to the caller. Never claim
+   // that an in-flight request already completed or was cancelled.
+   try{local.setItem(SYNC_PAUSE_KEY,PAUSED)}catch{fail('PAUSE_NOT_DURABLE')}
+   if(read()!=='paused')fail('PAUSE_READBACK_FAILED');return 'paused';
+  },
+  resume({verified=false}={}){
+   // Only explicit user interaction following local checkpoint/lineage review.
+   if(verified!==true||read()==='invalid')fail('EXPLICIT_VERIFIED_RESUME_REQUIRED');
+   if(read()==='active')return 'active';
+   try{local.removeItem(SYNC_PAUSE_KEY)}catch{fail('RESUME_NOT_DURABLE')}
+   if(read()!=='active')fail('RESUME_READBACK_FAILED');return 'active';
+  }
+ });
+}
+
+export function inspectConnectionSwitch({storage,vault,apiOrigin}={}){
+ // Inspect ONLY the unlocked durable local app and last authenticated local
+ // checkpoint. This is not a live remote check, merge, disconnect, or rebind.
+ if(!storage?.ready||!vault?.readSyncCheckpoint||!vault?.readRevision)fail('ENCRYPTED_VAULT_REQUIRED');
+ const state=storage.read(),lineage=checkLineage(state.weeklyOptions?.__syncLineage);
+ if(lineage.api!==apiOrigin)fail('ORIGIN_MISMATCH_KEEP_ORIGINAL');
+ const cp=vault.readSyncCheckpoint();
+ if(!cp||!Number.isSafeInteger(cp.serverRevision)||cp.serverRevision<1)fail('CONFIRMED_CHECKPOINT_REQUIRED');
+ if(canonical(cp.snapshot?.settings?.syncLineage)!==canonical(lineage))fail('CHECKPOINT_SCOPE_MISMATCH');
+ const localSnapshot=appToSnapshot(state);
+ const localDiffers=canonical(localSnapshot)!==canonical(cp.snapshot);
+ return Object.freeze({
+  state:'READ_ONLY_DIAGNOSIS',
+  serverRevision:cp.serverRevision,
+  localRevision:vault.readRevision(),
+  localDiffersFromCheckpoint:localDiffers,
+  switchPermitted:false,
+  // Even equal snapshots cannot prove the remote has not advanced.
+  remoteState:'NOT_CHECKED',
+  recordCount:Object.keys(state.records).length,
+  // No boxId, raw records, remote URL with secrets, or credential in result.
+ });
+}
+
+
+// Read-only destination fingerprint. This is a comparison label, NOT a credential,
+// proof of a healthy peer, or an authorization token. Never display raw box IDs.
+export async function syncDestinationCode(lineage,{cryptoProvider=globalThis.crypto}={}){
+ const scope=checkLineage(lineage);
+ if(!cryptoProvider?.subtle)throw Error('CONNECTION_CODE_CRYPTO_UNAVAILABLE');
+ const raw=new TextEncoder().encode('ANI_LOG_CONNECTION_CODE_V1\0'+scope.api+'\0'+scope.boxId);
+ const digest=new Uint8Array(await cryptoProvider.subtle.digest('SHA-256',raw));
+ const label=Array.from(digest.subarray(0,6),b=>b.toString(16).padStart(2,'0')).join('').toUpperCase();
+ return label.slice(0,6)+'-'+label.slice(6);
+}
+
+// For an already connected device, compare a scanned QR's destination with
+// the current durable lineage WITHOUT claiming, replacing or saving a secret.
+// This does not authenticate the QR, approve a member, or rebind the device.
+export async function compareScannedQrDestination({qrUrl,siteOrigin,apiOrigin,lineage,cryptoProvider=globalThis.crypto}={}){
+ const current=checkLineage(lineage);
+ if(current.api!==apiOrigin)throw Error('QR_COMPARISON_API_MISMATCH');
+ const target=parsePairingUrl(qrUrl,{allowedOrigin:siteOrigin});
+ try{
+  const qrLineage={...current,boxId:target.boxId};
+  const currentID=await syncDestinationCode(current,{cryptoProvider});
+  const scannedID=await syncDestinationCode(qrLineage,{cryptoProvider});
+  return Object.freeze({sameDestination:current.boxId===target.boxId,currentID,scannedID});
+ }finally{target.invitationSecret.fill(0);target.masterKey.fill(0)}
+}
 
 // The existing encrypted invitation envelope also owns the candidate identity.
 // Bind every read/CAS to the exact selected invitation, including across tabs.
@@ -88,6 +177,15 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }
  el('begin').addEventListener('click',()=>action(beginOrResume));
  const mode=local.getItem(LOCAL_MODE);
+ const ignoredExistingQR=Boolean(receiving&&mode==='sync-enabled');
+ const pauseGuard=createSyncPauseGuard({local});
+ // An already linked device cannot accept a second QR in this release.
+ // Show the limitation; do not overwrite credentials, vault or sync lineage.
+ if(ignoredExistingQR){
+  const notice=el('pairing-notice');
+  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期設定済みのため、新しいQRは適用していません。この画面では自動同期も開始していません。従来の同期を続けるにはページを再読み込みしてください。記録は保持されています。';}
+  attention(true);
+ }
  if(!mode){
   // This page is mounted before the first opt-in. A failure may occur after
   // the durable cutover fence is written, while the current JS mount still
@@ -124,6 +222,74 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }
  ui.hydrate(restored.app);
  status.textContent='端末内の記録を復元しました。';
+ async function showDestination(){
+  const output=el('connection-info');
+  if(!output||local.getItem(LOCAL_MODE)!=='sync-enabled')return;
+  try{
+   const lineage=storage.read().weeklyOptions?.__syncLineage;
+   if(!lineage)throw Error('SYNC_DESTINATION_NOT_FOUND');
+   const code=await syncDestinationCode(lineage);
+   output.textContent='同期先ID：'+code+'（QR承認用の6桁番号とは別です。相手端末の同期先IDと比較してください。同じIDでも同期成功を保証しません）';
+   output.hidden=false;
+  }catch{output.textContent='同期先IDを表示できません。接続状態の確認が必要です。記録は変更していません。';output.hidden=false;}
+ }
+ await showDestination();
+ if(ignoredExistingQR){
+  const notice=el('pairing-notice');
+  try{
+   const x=await compareScannedQrDestination({qrUrl:captured.href,siteOrigin:location.origin,apiOrigin:api.origin,
+    lineage:storage.read().weeklyOptions.__syncLineage});
+   notice.textContent=x.sameDestination?
+    '読み取ったQRとこの端末は同じ同期先ID（'+x.currentID+'）です。新しい端末の承認は行っていません。この端末の元の同期を続けるには再読み込みしてください。':
+    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。現在の視聴記録・資格情報を保持し、接続先は変更していません。';
+  }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
+ }
+ // This setting is device-local, persists across reloads, and never changes
+ // the encrypted WAL, server box or saved credentials. It is not disconnect.
+ const connectionActions=el('connection-actions');
+ const pauseButton=el('pause-sync'),resumeButton=el('resume-sync'),switchCheck=el('switch-check'),switchResult=el('switch-result');
+ function showPauseState(){
+  if(local.getItem(LOCAL_MODE)!=='sync-enabled')return;
+  connectionActions.hidden=false;
+  const paused=pauseGuard.paused;
+  pauseButton.hidden=paused;resumeButton.hidden=!paused;switchCheck.hidden=false;
+  if(paused){attention(true);status.textContent='この端末の自動同期は一時停止中です。編集は暗号化して端末に保存します。同期先・認証情報・未送信変更は保持しています。';}
+ }
+ showPauseState();
+ pauseButton.addEventListener('click',()=>action(async()=>{
+  if(local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('CONNECTED_DEVICE_REQUIRED');
+  pauseGuard.pause();automatic?.stop();automatic=null;
+  showPauseState();
+  switchResult.hidden=false;
+  switchResult.textContent='新しい同期通信を停止しました。開始済みの通信は完了する場合があります。他の古いタブも閉じてください。記録と未送信変更は保持しています。';
+ }));
+ resumeButton.addEventListener('click',()=>action(async()=>{
+  if(local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('CONNECTED_DEVICE_REQUIRED');
+  // Never resume another lineage, an empty checkpoint or a corrupt pause flag.
+  inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
+  pauseGuard.resume({verified:true});
+  try{await running.resumeAutomatic({passphrase:await keys.read()})}
+  catch(e){pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();throw e}
+  showPauseState();
+  switchResult.hidden=false;
+  switchResult.textContent='保存済みの同じ同期先へ再接続しました。新しい通信結果は同期状態の表示で確認してください。';
+ }));
+ switchCheck.addEventListener('click',()=>action(async()=>{
+  // Never initiate a QR claim or change the server box in this operation.
+  const x=inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
+  switchResult.hidden=false;
+  switchResult.textContent='端末内の最終確認済み同期との差分：'+(x.localDiffersFromCheckpoint?'あり（未送信変更の可能性）':'なし（遠隔の最新状態は未確認）')+
+   '。別の同期先へ切り替える処理は実行していません。端末内の記録・接続情報はすべて保持しています。';
+ }));
+ // When another tab pauses this origin, stop scheduling new requests here too.
+ // Already in-flight operations and older, unguarded application tabs cannot
+ // be cancelled this way: explicitly close all older tabs before transfer.
+ window.addEventListener?.('storage',event=>{
+  if(event.key!==SYNC_PAUSE_KEY)return;
+  if(pauseGuard.paused){automatic?.stop();automatic=null;showPauseState()}
+  else {attention(true);status.textContent='別のタブで同期が再開されました。このタブも再読み込みして接続状態を確認してください。';
+   resumeButton.hidden=true;pauseButton.hidden=false;}
+ });
  const panelRoot=document.getElementById('formal-sync-controls');
  // Reuse the existing QR panel, hide developer-only bootstrap/unlock controls.
  for(const n of panelRoot.children)if(n.id!=='v407-pairing')n.hidden=true;
@@ -142,14 +308,17 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   panelUI.querySelector('[data-v407="check"]').textContent='接続を完了';
  }else{for(const id of ['receiver-code','check','receive','repair'])hide(id)}
  function schedule(_session,fresh){
-  automatic?.stop();automatic=createAutomaticSync({syncOnce:async()=>{const s=await fresh();return s.syncOnce()},onState:s=>{
-   const labels={syncing:'同期中',synced:'同期済み',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
+  automatic?.stop();automatic=null;
+  if(pauseGuard.paused){showPauseState();return;}
+  automatic=createAutomaticSync({syncOnce:async()=>{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return s.syncOnce()},onState:s=>{
+   if(pauseGuard.paused)return;
+   const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
     unavailable:'同期できませんでした。記録は端末に保存済みです。接続を再試行できます。',
     conflict:'競合を確認してください。両方の記録を保持しています。'};
    status.textContent=labels[s.phase]??'端末に保存済み';
    // A closed settings panel must not hide unresolved sync errors. Keep the
    // notice until a later *confirmed* success instead of blinking on edits.
-   if(s.phase==='synced')attention(false);
+   if(s.phase==='synced'&&!(receiving&&mode==='sync-enabled'))attention(false);
    else if(s.phase==='conflict'||s.phase==='unavailable'||['blocked','too-large','unconfirmed'].includes(s.status))attention(true);
    el('conflicts').hidden=s.phase!=='conflict';
    el('conflicts').textContent=s.phase==='conflict'?(s.conflicts??[]).map(c=>c.path+'\nこの端末: '+JSON.stringify(c.local)+'\n同期先: '+JSON.stringify(c.remote)).join('\n'):'';
@@ -185,7 +354,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     await register({fromPairing:true});
     return {phase:'FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED',serverRevision:vault.readSyncCheckpoint().serverRevision,records:Object.keys(storage.read().records).length};
    }finally{masterKey.fill(0)}
-  },beforeSync:()=>{const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+  },beforeSync:()=>{pauseGuard.assertAllowed();const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
  async function register({fromPairing=false}={}){
   const password=await keys.read();if(!password)throw Error('SETUP_KEY_REQUIRED');
   const existing=await intents.read(password);
@@ -195,6 +364,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    storage,vault,intentStore:intents,passphrase:password,independentVault:factory,sealedCredentials:running.sealedCredentials,ui,uiBridge:running.bridge,locks,browserFetch,
    getChallenge:({binding})=>requestRegistrationChallenge({apiOrigin:api.origin,binding,container:el('challenge'),document,events:window})});
   await setup.confirmEnabled({apiOrigin:api.origin,boxId:result.boxId,credentialsVerified:true});
+  await showDestination();
+  showPauseState();
   // Reload follows a durable ON marker; startup uses the same password-free
   // restore path as every later visit. No credentials are inserted into inputs.
   if(!receiver)location.reload();
@@ -213,7 +384,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   throw Error('UNKNOWN_SETUP_STATE_KEEP_ORIGINAL');
  }));
  if(mode==='sync-enabled'){
-  await running.resumeAutomatic({passphrase:await keys.read()});
+  if(ignoredExistingQR){attention(true);status.textContent='新しいQRは適用していません。このタブでの自動同期は開始していません。通常の同期を再開するにはページを再読み込みしてください。';}
+  else if(!pauseGuard.paused){pauseGuard.assertAllowed();await running.resumeAutomatic({passphrase:await keys.read()});}
+  else showPauseState();
  }else if(!receiver||await intents.read(restored.passphrase))await action(register);
  else status.textContent=invitation?'この端末の記録を保持しています。招待を受け取り、6桁照合後に統合します。':'記録を保持しています。設定元の端末で新しい招待QRを作成し、もう一度読み取ってください。';
  return {phase:'FORMAL_OPT_IN_MOUNTED',storage,vault,setup};
