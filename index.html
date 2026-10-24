@@ -1028,11 +1028,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .stats{gap:16px;margin:0 -18px 16px;padding:0 18px;scrollbar-width:none}.stats::-webkit-scrollbar{display:none}
   .library-toolbar{align-items:flex-start;flex-wrap:wrap}
   .controls{flex-wrap:wrap;gap:8px;width:100%}
-  /* In My List, keep sort and filters together below the full-width search. */
-  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:8px}
+  /* In My List on mobile, mirror the discovery toolbar rhythm:
+     row 1 = search + the existing add button, row 2 = order + the unchanged filter control. */
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:8px;align-items:center}
   body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls{display:contents}
-  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox-shell{grid-column:1/-1;grid-row:1;min-width:0;width:100%}
-  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #savedOrder{grid-column:1;grid-row:2;width:100%;min-width:0;max-width:100%}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox-shell{grid-column:1;grid-row:1;min-width:0;width:100%;flex-basis:auto}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar #addCustomBtn{
+    grid-column:2;grid-row:1;min-height:44px;height:44px;
+    padding:0 10px;gap:5px;font-size:var(--fs-xs);
+  }
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #savedOrder,
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #savedOrder + .anilog-mobile-select-trigger{grid-column:1;grid-row:2;width:100%;min-width:0;max-width:100%}
   body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #filterDisclosure{grid-column:2;grid-row:2}
   body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #filterDisclosure>summary{white-space:nowrap}
   .shared-entries{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -8764,7 +8770,8 @@ if(topBtn){
   if(!button||!header||!controls)return;
   const mobile=matchMedia('(max-width:740px)');
   const arrange=()=>{
-    const destination=mobile.matches&&!document.body.classList.contains('saved-mode')?controls:header;
+    const inListContext=!document.body.classList.contains('view-detail')&&!document.body.classList.contains('view-ranking');
+    const destination=mobile.matches&&inListContext?controls:header;
     if(button.parentElement!==destination)destination.appendChild(button);
   };
   arrange();
