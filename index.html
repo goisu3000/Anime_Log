@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.65">
+<meta name="ani-log-version" content="2.4.66">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1628,7 +1628,7 @@ select:not([data-status-id]){
   </main>
 </div>
 <nav class="mobile-bottom" aria-label="モバイルメニュー"><button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg><span class="nav-label">作品を探す</span></button><button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg><span class="nav-label">マイリスト</span></button><button type="button" id="mobileRanking" data-rank-open="now"><span class="mobile-ranking-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span><span class="nav-label">ランキング</span></button><button id="mobileShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"/></svg><span class="nav-label">共有する</span></button><button id="mobileExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><span class="nav-label backup-label">バックアップ</span></button></nav>
-<dialog id="addDialog"><form method="dialog" id="addForm"><h3>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
+<dialog id="addDialog"><form method="dialog" id="addForm"><h3 tabindex="-1" autofocus>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
 <dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu class="backup-dialog-actions"><button type="button" class="primary" id="mobileDownloadBtn">書き出す</button><button type="button" class="secondary" id="mobileImportBtn">読み込む</button></menu><menu class="backup-dialog-close"><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
 <dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有します。短縮URL方式では共有データのコピーをCloudflareに365日間保存します。リンクを知っている人は誰でも閲覧できます。</p>
   <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">年・シーズンを指定して見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
@@ -4078,14 +4078,15 @@ $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEvent
 
 /* Dialog backdrop policy (single source of truth for future dialogs):
    - always: informational/backup (no uncommitted editable data)
+   - add-when-idle: manual add may dismiss unless an add is being committed
    - if-clean: editors may close only if no meaningful edits are pending
    - share-before-generated: only before URL creation and while generation is idle
    - never: recording, rating, notes, import and other sensitive editors
    IMPORTANT: clicking inside a dialog must never invoke backdrop dismissal.
    Adding a dialog requires an explicit entry below, not a default permissive rule. */
 const ANI_DIALOG_BACKDROP_POLICY=Object.freeze({
- backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
- weeklyEditDialog:'if-clean',addDialog:'never',importModeDialog:'never',
+ 'anilog-sync-dialog':'always',backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
+ weeklyEditDialog:'if-clean',addDialog:'add-when-idle',importModeDialog:'never',
  noteDialog:'never',ratingDialog:'never'
 });
 function clickedDialogBackdrop(e,dialog){
@@ -4100,6 +4101,7 @@ for(const dialog of document.querySelectorAll('dialog')){
  dialog.addEventListener('click',e=>{
   if(!clickedDialogBackdrop(e,dialog))return;
   if(policy==='always'){dialog.close();return}
+  if(policy==='add-when-idle'){if(!addingCustom)dialog.close();return}
   if(policy==='share-before-generated'){
    if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
   }
@@ -7581,14 +7583,15 @@ function exportData(){const dump={app:'ANI:LOG',version:4,exportedAt:new Date().
 $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEventListener('click',()=>$('#backupDialog').showModal());$('#mobileDownloadBtn').addEventListener('click',()=>{exportData();$('#backupDialog').close()});$('#mobileImportBtn').addEventListener('click',()=>{$('#backupDialog').close();$('#importFile').click()});$('#mobileCloseBackup').addEventListener('click',()=>$('#backupDialog').close());
 /* Dialog backdrop policy (single source of truth for future dialogs):
    - always: informational/backup (no uncommitted editable data)
+   - add-when-idle: manual add may dismiss unless an add is being committed
    - if-clean: editors may close only if no meaningful edits are pending
    - share-before-generated: only before URL creation and while generation is idle
    - never: recording, rating, notes, import and other sensitive editors
    IMPORTANT: clicking inside a dialog must never invoke backdrop dismissal.
    Adding a dialog requires an explicit entry below, not a default permissive rule. */
 const ANI_DIALOG_BACKDROP_POLICY=Object.freeze({
- backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
- weeklyEditDialog:'if-clean',addDialog:'never',importModeDialog:'never',
+ 'anilog-sync-dialog':'always',backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
+ weeklyEditDialog:'if-clean',addDialog:'add-when-idle',importModeDialog:'never',
  noteDialog:'never',ratingDialog:'never'
 });
 function clickedDialogBackdrop(e,dialog){
@@ -7603,6 +7606,7 @@ for(const dialog of document.querySelectorAll('dialog')){
  dialog.addEventListener('click',e=>{
   if(!clickedDialogBackdrop(e,dialog))return;
   if(policy==='always'){dialog.close();return}
+  if(policy==='add-when-idle'){if(!addingCustom)dialog.close();return}
   if(policy==='share-before-generated'){
    if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
   }
