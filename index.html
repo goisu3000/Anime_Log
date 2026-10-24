@@ -1266,6 +1266,41 @@ select:not([data-status-id]){
     grid-column:3;grid-row:3;justify-self:end;
   }
 }
+
+/* Mobile dialog action convention (2026-10-24): left = confirm, right = cancel.
+   Existing buttons and JS handlers are preserved; desktop is unchanged.
+   Separate destructive rating removal from the ordinary action row. */
+@media(max-width:740px){
+  /* Keep the previously approved equal-width backup action row.
+     Place its independent dismissal at the far right of the same group. */
+  #backupDialog .backup-dialog-close{
+    width:min(100%,340px);
+    justify-content:flex-end;
+  }
+  /* Only the existing rating removal button gets a separate line.
+     When no prior rating exists, preserve the compact two-button row. */
+  #ratingDialog .review-dialog-actions:has(#ratingClear:not([hidden])){
+    display:grid;
+    grid-template-columns:minmax(0,1fr) max-content max-content;
+    column-gap:8px;
+    row-gap:6px;
+    justify-content:stretch;
+  }
+  #ratingDialog .review-dialog-actions:has(#ratingClear:not([hidden])) #ratingClear{
+    grid-column:1/-1;
+    grid-row:1;
+    justify-self:start;
+    margin:0 0 6px;
+  }
+  #ratingDialog .review-dialog-actions:has(#ratingClear:not([hidden])) #ratingSave{
+    grid-column:2;
+    grid-row:2;
+  }
+  #ratingDialog .review-dialog-actions:has(#ratingClear:not([hidden])) #ratingCancel{
+    grid-column:3;
+    grid-row:2;
+  }
+}
 </style>
 </head>
 <body>
@@ -8777,6 +8812,40 @@ if(topBtn){
   arrange();
   mobile.addEventListener('change',arrange);
   new MutationObserver(arrange).observe(document.body,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<script>
+/* ANI:LOG mobile dialogs: order the *existing* buttons in DOM order,
+   keeping the visible order and accessible focus order aligned.
+   Restore original order on desktop without replacing nodes or handlers. */
+(() => {
+  'use strict';
+  const mobile=window.matchMedia('(max-width:740px)');
+  const pairs=[
+    ['#addDialog menu','button[type="submit"]','#cancelDialog'],
+    ['#weeklyEditDialog menu','button[type="submit"]','#weeklyEditCancel'],
+    ['#streamDialog menu','#streamSave','#streamCancel'],
+    ['#noteDialog .review-dialog-actions','button[type="submit"]','#noteCancel'],
+    ['#ratingDialog .review-dialog-actions','#ratingSave','#ratingCancel']
+  ];
+  const arrange=()=>{
+    for(const [selector,saveSelector,cancelSelector] of pairs){
+      const group=document.querySelector(selector);
+      if(!group)continue;
+      const save=group.querySelector(saveSelector);
+      const cancel=group.querySelector(cancelSelector);
+      if(!save||!cancel)continue;
+      // Mobile: save → cancel. Desktop: original cancel → save.
+      const first=mobile.matches?save:cancel;
+      const second=mobile.matches?cancel:save;
+      if(first.compareDocumentPosition(second)&Node.DOCUMENT_POSITION_PRECEDING){
+        group.insertBefore(first,second);
+      }
+    }
+  };
+  arrange();
+  mobile.addEventListener('change',arrange);
 })();
 </script>
 <script type="module" src="/client/formal-page-entry.mjs"></script>
