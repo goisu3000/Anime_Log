@@ -1214,6 +1214,52 @@ select:not([data-status-id]){
   .record-select-Direct>.anilog-mobile-status-trigger,
   .pattern-a-status-menu>.anilog-mobile-status-trigger{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;opacity:0;z-index:2}
 }
+
+/* ANI:LOG v2.4.61: mobile discovery controls, visual layout only.
+   Explore: search + existing add button / year + season + existing filters.
+   My List, desktop, and the filter summary's size/style are unchanged. */
+@media(max-width:740px){
+  body:not(.saved-mode) #libraryView .library-toolbar{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content;
+    gap:8px;
+    align-items:center;
+  }
+  body:not(.saved-mode) #libraryView .library-toolbar>.controls{display:contents}
+  body:not(.saved-mode) #libraryView .searchbox-shell{
+    grid-column:1/3;grid-row:1;min-width:0;width:100%;flex-basis:auto;
+  }
+  body:not(.saved-mode) #libraryView .library-toolbar #addCustomBtn{
+    grid-column:3;grid-row:1;min-height:44px;height:44px;
+    padding:0 10px;gap:5px;font-size:var(--fs-xs);
+  }
+  body:not(.saved-mode) #libraryView #yearSelect,
+  body:not(.saved-mode) #libraryView #yearSelect + .anilog-mobile-select-trigger{
+    grid-column:1;grid-row:2;width:100%;min-width:0;
+  }
+  body:not(.saved-mode) #libraryView #seasonSelect,
+  body:not(.saved-mode) #libraryView #seasonSelect + .anilog-mobile-select-trigger{
+    grid-column:2;grid-row:2;width:100%;min-width:0;
+  }
+  body:not(.saved-mode) #libraryView #filterDisclosure{
+    grid-column:3;grid-row:2;justify-self:start;
+  }
+}
+/* Very narrow phones cannot hold two readable season selectors and the
+   unchanged filter label in one row; keep full-size controls instead of clipping. */
+@media(max-width:359px){
+  body:not(.saved-mode) #libraryView #yearSelect,
+  body:not(.saved-mode) #libraryView #yearSelect + .anilog-mobile-select-trigger{
+    grid-column:1;grid-row:2;
+  }
+  body:not(.saved-mode) #libraryView #seasonSelect,
+  body:not(.saved-mode) #libraryView #seasonSelect + .anilog-mobile-select-trigger{
+    grid-column:2/4;grid-row:2;
+  }
+  body:not(.saved-mode) #libraryView #filterDisclosure{
+    grid-column:3;grid-row:3;justify-self:end;
+  }
+}
 </style>
 </head>
 <body>
@@ -8703,6 +8749,27 @@ if(topBtn){
  document.addEventListener('click',()=>scheduleScan(),true);
  scheduleScan();
 
+})();
+</script>
+
+<script>
+/* Move the SAME "manual add" button between its original header and the
+   mobile Explore search row. The original click handler remains attached.
+   Moving it back in My List keeps that view's current layout untouched. */
+(() => {
+  'use strict';
+  const button=document.getElementById('addCustomBtn');
+  const header=document.querySelector('#libraryView .heading-actions');
+  const controls=document.querySelector('#libraryView .library-toolbar .controls');
+  if(!button||!header||!controls)return;
+  const mobile=matchMedia('(max-width:740px)');
+  const arrange=()=>{
+    const destination=mobile.matches&&!document.body.classList.contains('saved-mode')?controls:header;
+    if(button.parentElement!==destination)destination.appendChild(button);
+  };
+  arrange();
+  mobile.addEventListener('change',arrange);
+  new MutationObserver(arrange).observe(document.body,{attributes:true,attributeFilter:['class']});
 })();
 </script>
 <script type="module" src="/client/formal-page-entry.mjs"></script>
