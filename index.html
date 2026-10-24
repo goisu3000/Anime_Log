@@ -1132,6 +1132,15 @@ select:not([data-status-id]){
 <body>
 <details id="formal-simple-sync" style="padding:12px"><summary>端末間同期</summary>
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
+<p data-simple="connection-info" hidden></p>
+<p data-simple="pairing-notice" hidden></p>
+<div data-simple="connection-actions" hidden>
+ <button type="button" data-simple="pause-sync" hidden>この端末の自動同期を一時停止</button>
+ <button type="button" data-simple="resume-sync" hidden>同じ同期先で自動同期を再開</button>
+ <button type="button" data-simple="switch-check" hidden>接続変更前の安全確認</button>
+ <p data-simple="switch-result" role="status" hidden></p>
+ <p style="font-size:.85em">別の同期先への切り替えは現在未対応です。既存の暗号化記録や接続情報は消去しないでください。</p>
+</div>
 <div data-simple="setup"><p>希望する場合だけ設定してください。記録のコピーを保存し、旧版のほかのタブ・端末での編集を終了します。</p>
 <button type="button" data-simple="backup">移行前のバックアップを保存</button>
 <label><input type="checkbox" data-simple="confirmed">バックアップを保存し、旧版のほかのタブ・端末を閉じた</label>
