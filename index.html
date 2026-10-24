@@ -519,6 +519,11 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-studio>strong{font-size:var(--fs-md);font-weight:var(--fw-semi)}
 .detail-streaming-card{margin-top:16px;padding:16px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm)}
 .detail-streaming-card .detail-section-title{font-size:var(--fs-lg);margin:0 0 12px}
+/* Official/external links are adjacent to streaming links in the detail summary.
+   Keep them as a separate, unboxed section; apply equally on PC and mobile. */
+.detail-head-info>.detail-block{margin-top:22px}
+.detail-head-info>.detail-block .detail-section-title{font-size:var(--fs-lg);margin-bottom:12px}
+
 .detail-jp-search{margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
 .detail-jp-search-label{display:block;color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi);margin-bottom:8px}
 .detail-journal{margin-top:20px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
@@ -4541,7 +4546,7 @@ function detailHeader(a,full=null){
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
  const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
- const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}</div>${seriesWatchSummary(a.id,d)}</section>`;
+ const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
 
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
@@ -4699,7 +4704,7 @@ function detailTabError(entry,field){return detailFieldState(entry,field)==='err
 function detailTabPanel(entry,full){
  let html='';
  if(detailActiveTab==='overview'){
-  html=detailVideos(full,entry.videos)+'<div id="detailSynopsisSlot">'+detailSynopsis(full,entry)+'</div>'+detailGeneral(full)+detailLinks(full);
+  html=detailVideos(full,entry.videos)+'<div id="detailSynopsisSlot">'+detailSynopsis(full,entry)+'</div>'+detailGeneral(full);
   if(detailFieldState(entry,'videos')==='loading'&&!getTrailerList(full,entry.videos).length)html=detailTabLoading('PV・予告映像を確認しています…')+html;
 
  }else if(detailActiveTab==='episodes'){
@@ -8059,7 +8064,7 @@ function detailHeader(a,full=null){
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
  const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
- const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}</div>${seriesWatchSummary(a.id,d)}</section>`;
+ const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-eyebrow">作品情報</div><div class="detail-heading-badges">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><strong>${safeText(studios.join(' / '))}</strong></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
 
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
@@ -8217,7 +8222,7 @@ function detailTabError(entry,field){return detailFieldState(entry,field)==='err
 function detailTabPanel(entry,full){
  let html='';
  if(detailActiveTab==='overview'){
-  html=detailVideos(full,entry.videos)+'<div id="detailSynopsisSlot">'+detailSynopsis(full,entry)+'</div>'+detailGeneral(full)+detailLinks(full);
+  html=detailVideos(full,entry.videos)+'<div id="detailSynopsisSlot">'+detailSynopsis(full,entry)+'</div>'+detailGeneral(full);
   if(detailFieldState(entry,'videos')==='loading'&&!getTrailerList(full,entry.videos).length)html=detailTabLoading('PV・予告映像を確認しています…')+html;
 
  }else if(detailActiveTab==='episodes'){
