@@ -8427,7 +8427,10 @@ if(topBtn){
  let menu=null, owner=null, options=[], active=-1, preferredWidth=0, lastPointerSelect=null, lastPointerAt=0;
  let searchBuffer='', searchAt=0;
  const esc=s=>String(s??'');
- const eligible=s=>s instanceof HTMLSelectElement && !s.disabled && s.options.length>0 && !s.multiple && s.size<=1;
+ // On mobile/touch layouts, use only the OS/browser's native <select> picker.
+ // Do not intercept pointerdown/click/keydown there: CSS-only hiding would block native selection.
+ const useNativePicker=()=>matchMedia('(max-width: 740px)').matches || matchMedia('(pointer: coarse)').matches;
+ const eligible=s=>!useNativePicker() && s instanceof HTMLSelectElement && !s.disabled && s.options.length>0 && !s.multiple && s.size<=1;
  const visible=s=>s.isConnected && s.getClientRects().length && s.getBoundingClientRect().width>0;
  function dismiss(restoreFocus=false){
   if(!menu)return;
@@ -8592,7 +8595,7 @@ if(topBtn){
  // Never leave a detached menu on another view, modal, or scroll position.
  document.addEventListener('focusin',e=>{if(menu&&e.target!==owner && !menu.contains(e.target))dismiss()},true);
  document.addEventListener('scroll',e=>{if(menu&&!menu.contains(e.target))requestAnimationFrame(()=>{if(menu)place()})},true);
- window.addEventListener('resize',()=>{if(menu)place()},{passive:true});
+ window.addEventListener('resize',()=>{if(menu){if(useNativePicker())dismiss();else place()}},{passive:true});
  window.addEventListener('popstate',()=>dismiss());
  document.addEventListener('close',e=>{if(owner&&e.target===owner.closest('dialog'))dismiss()},true);
 })();
