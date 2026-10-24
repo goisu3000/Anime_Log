@@ -71,18 +71,67 @@ async function derive(cryptoProvider,pass,salt){const raw=await cryptoProvider.s
 // Reuse the existing PBKDF2/AES-GCM implementation for a separate, origin-bound
 // pre-network registration receipt. Never included in portable record backups.
 const INTENT_PURPOSE='ANI:LOG/formal-registration-intent-v1';
+// The initial paired-device intent can hold three distinct, *already validated*
+// snapshots (local baseline, remote before, and merged result). Each snapshot
+// may be as large as MAX_SYNC_BYTES (3 MB). The previous 300 KB plain-JSON
+// ceiling incorrectly prevented normal QR enrollment with substantial records.
+// Keep the legacy v1 envelope unchanged for small intents / pending older QR
+// flows. Large intents use an authenticated, bounded gzip v2 envelope.
+const INTENT_V1_LIMIT=300_000;
+const INTENT_JSON_LIMIT=10_000_000; // Three 3 MB snapshots + bounded metadata.
+const INTENT_GZIP_LIMIT=1_000_000; // More than three max-size wire snapshots.
+const INTENT_V2_CIPHER_CHARS=Math.ceil((INTENT_GZIP_LIMIT+16)/3)*4;
+const INTENT_V2_AAD=INTENT_PURPOSE+':gzip-v2';
+async function compressRegistrationIntent(raw){
+ if(typeof CompressionStream!=='function')fail('REGISTRATION_COMPRESSION_UNAVAILABLE');
+ const bytes=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('gzip'))).arrayBuffer());
+ if(bytes.length>INTENT_GZIP_LIMIT){bytes.fill(0);fail('REGISTRATION_INTENT_TOO_LARGE')}
+ return bytes;
+}
+async function expandRegistrationIntent(bytes){
+ if(typeof DecompressionStream!=='function')fail('REGISTRATION_DECOMPRESSION_UNAVAILABLE');
+ const chunks=[];let size=0,reader;
+ try{
+  reader=new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip')).getReader();
+  while(true){const {value,done}=await reader.read();if(done)break;
+   size+=value.length;if(size>INTENT_JSON_LIMIT)fail('REGISTRATION_INTENT_TOO_LARGE');
+   chunks.push(value);
+  }
+  const result=new Uint8Array(size);let position=0;
+  for(const chunk of chunks){result.set(chunk,position);position+=chunk.length;chunk.fill(0)}
+  return result;
+ }catch(error){
+  if(String(error?.message).includes('REGISTRATION_INTENT_TOO_LARGE'))throw error;
+  fail('REGISTRATION_INTENT_COMPRESSION_INVALID');
+ }finally{if(reader)await reader.cancel().catch(()=>{});for(const chunk of chunks)chunk.fill(0)}
+}
 export async function sealRegistrationData(data,passphrase,origin,cryptoProvider=globalThis.crypto){
  checkPassphrase(passphrase);const salt=cryptoProvider.getRandomValues(new Uint8Array(16)),iv=cryptoProvider.getRandomValues(new Uint8Array(12));
- const raw=e.encode(JSON.stringify(data));if(raw.length>300000)fail('REGISTRATION_INTENT_TOO_LARGE');
- const k=await derive(cryptoProvider,passphrase,salt);let ciphertext;
- try{ciphertext=await cryptoProvider.subtle.encrypt({name:'AES-GCM',iv,additionalData:e.encode(INTENT_PURPOSE+':'+origin)},k,raw)}finally{raw.fill(0)}
- return {v:1,purpose:INTENT_PURPOSE,salt:base64(salt),iv:base64(iv),ciphertext:base64(new Uint8Array(ciphertext))};
+ const raw=e.encode(JSON.stringify(data));
+ if(raw.length>INTENT_JSON_LIMIT){raw.fill(0);fail('REGISTRATION_INTENT_TOO_LARGE')}
+ const large=raw.length>INTENT_V1_LIMIT;
+ let encoded=raw;
+ try{
+  if(large)encoded=await compressRegistrationIntent(raw);
+  const k=await derive(cryptoProvider,passphrase,salt);
+  const purpose=large?INTENT_V2_AAD:INTENT_PURPOSE;
+  const ciphertext=await cryptoProvider.subtle.encrypt({name:'AES-GCM',iv,additionalData:e.encode(purpose+':'+origin)},k,encoded);
+  return {v:large?2:1,purpose:INTENT_PURPOSE,salt:base64(salt),iv:base64(iv),ciphertext:base64(new Uint8Array(ciphertext))};
+ }finally{encoded.fill(0);raw.fill(0)}
 }
 export async function unsealRegistrationData(env,passphrase,origin,cryptoProvider=globalThis.crypto){
- checkPassphrase(passphrase);if(!keys(env,['v','purpose','salt','iv','ciphertext'])||env.v!==1||env.purpose!==INTENT_PURPOSE)fail('BAD_REGISTRATION_ENVELOPE');
- const k=await derive(cryptoProvider,passphrase,from64(env.salt,16));let raw;
- try{raw=await cryptoProvider.subtle.decrypt({name:'AES-GCM',iv:from64(env.iv,12),additionalData:e.encode(INTENT_PURPOSE+':'+origin)},k,from64(env.ciphertext,undefined,401000));
-  return JSON.parse(d.decode(raw))}finally{if(raw)new Uint8Array(raw).fill(0)}
+ checkPassphrase(passphrase);
+ if(!keys(env,['v','purpose','salt','iv','ciphertext'])||![1,2].includes(env.v)||env.purpose!==INTENT_PURPOSE)fail('BAD_REGISTRATION_ENVELOPE');
+ const k=await derive(cryptoProvider,passphrase,from64(env.salt,16));
+ const purpose=env.v===2?INTENT_V2_AAD:INTENT_PURPOSE;
+ const maxChars=env.v===2?INTENT_V2_CIPHER_CHARS:401000;
+ let encrypted,raw;
+ try{
+  encrypted=new Uint8Array(await cryptoProvider.subtle.decrypt({name:'AES-GCM',iv:from64(env.iv,12),additionalData:e.encode(purpose+':'+origin)},k,from64(env.ciphertext,undefined,maxChars)));
+  raw=env.v===2?await expandRegistrationIntent(encrypted):encrypted;
+  if(raw.length>INTENT_JSON_LIMIT)fail('REGISTRATION_INTENT_TOO_LARGE');
+  return JSON.parse(d.decode(raw));
+ }finally{if(raw)raw.fill(0);if(encrypted)encrypted.fill(0)}
 }
 export function createV408StagingSealedDeviceCredentials({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,locks=globalThis.navigator?.locks}={}){
  if(!idb?.open||!cryptoProvider?.subtle||!cryptoProvider?.getRandomValues||!locks?.request)fail('BROWSER_CRYPTO_IDB_LOCK_REQUIRED');
