@@ -205,7 +205,9 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .review-list-actions button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .list-caption{display:flex;justify-content:space-between;align-items:center;margin:0 0 16px;min-height:20px;color:var(--muted);font-size:var(--fs-sm)}
 .result-info{color:var(--muted);font-size:var(--fs-sm);white-space:nowrap}
-body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{display:none!important}
+/* My List: count is supporting information below the controls, not between inputs. */
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{display:flex!important;margin-top:-6px}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint{display:none!important}
 .offline-note{border:1px solid var(--accent-border);background:var(--surface);color:var(--ink);padding:16px 16px;border-radius:var(--radius);margin:0 0 16px;font-size:var(--fs-sm);line-height:1.7}
 
 /* Discovery Grid & Cards (shared layout rules) */
@@ -638,7 +640,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .shared-info .muted,.shared-info-summary{font-size:var(--fs-sm);color:var(--muted);margin:4px 0 0}
 .shared-entries{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
 .shared-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
-.shared-card .poster-wrap{height:160px;aspect-ratio:auto}
+/* Shared cards: poster and its badges share a true portrait frame (no sideways letterboxing). */
+.shared-card .poster-wrap{height:auto;aspect-ratio:2/3}
 .type-pill,.status-pill{position:absolute;top:10px;z-index:1;font-size:var(--fs-xs);padding:4px 8px;border-radius:6px;font-weight:var(--fw-bold)}
 .type-pill{left:10px;background:rgba(17,20,23,.85);border:1px solid var(--border);color:var(--ink)}
 .status-pill{right:10px;background:var(--accent);color:var(--accent-ink)}
@@ -999,6 +1002,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .stats{gap:16px;margin:0 -18px 16px;padding:0 18px;scrollbar-width:none}.stats::-webkit-scrollbar{display:none}
   .library-toolbar{align-items:flex-start;flex-wrap:wrap}
   .controls{flex-wrap:wrap;gap:8px;width:100%}
+  /* In My List, keep sort and filters together below the full-width search. */
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .library-toolbar{display:grid;grid-template-columns:minmax(0,1fr) max-content;gap:8px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .controls{display:contents}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .searchbox-shell{grid-column:1/-1;grid-row:1;min-width:0;width:100%}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #savedOrder{grid-column:1;grid-row:2;width:100%;min-width:0;max-width:100%}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #filterDisclosure{grid-column:2;grid-row:2}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #filterDisclosure>summary{white-space:nowrap}
+  .shared-entries{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .shared-card .type-pill,.shared-card .status-pill{top:7px;padding:3px 6px;font-size:11px}
+  .shared-card .type-pill{left:7px}
+  .shared-card .status-pill{right:7px}
   .searchbox-shell{flex-basis:100%}
   .searchbox input{font-size:16px}
   .control-select,.saved-order-select{flex:1;min-width:120px}
@@ -2726,7 +2740,7 @@ function render(){
  $('#listOrderHint').hidden=mode!=='saved';
  $('#savedOrder').classList.toggle('hidden',mode!=='saved');
  const ctrlRow=$('#libraryView .controls'),capRow=$('#libraryView .list-caption');
- if(mode==='saved'){if($('#resultInfo').parentElement!==ctrlRow)ctrlRow.append($('#resultInfo'),$('#savedOrder'))}else{if($('#resultInfo').parentElement!==capRow)capRow.prepend($('#resultInfo'))}
+ if(mode==='saved'){if($('#savedOrder').parentElement!==ctrlRow)ctrlRow.append($('#savedOrder'))}else{if($('#savedOrder').parentElement!==capRow)capRow.append($('#savedOrder'))}
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
  $('#filterDisclosure').classList.toggle('has-filters',activeFilters.length>0);
@@ -6235,7 +6249,7 @@ function render(){
  $('#listOrderHint').hidden=mode!=='saved';
  $('#savedOrder').classList.toggle('hidden',mode!=='saved');
  const ctrlRow=$('#libraryView .controls'),capRow=$('#libraryView .list-caption');
- if(mode==='saved'){if($('#resultInfo').parentElement!==ctrlRow)ctrlRow.append($('#resultInfo'),$('#savedOrder'))}else{if($('#resultInfo').parentElement!==capRow)capRow.prepend($('#resultInfo'))}
+ if(mode==='saved'){if($('#savedOrder').parentElement!==ctrlRow)ctrlRow.append($('#savedOrder'))}else{if($('#savedOrder').parentElement!==capRow)capRow.append($('#savedOrder'))}
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
  $('#filterDisclosure').classList.toggle('has-filters',activeFilters.length>0);
