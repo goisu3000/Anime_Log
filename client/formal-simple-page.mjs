@@ -20,6 +20,23 @@ import {canonical} from './formal-storage.mjs';
 export const CONNECTION_PROFILE_KEY='anilog-sync-connection-profile-v1';
 const VALID=/^(?:legacy|p[1-9][0-9]?)$/;
 const profileFail=x=>{throw Error('CONNECTION_PROFILE_STOP:'+x)};
+// Only an ACTIVE connection may retry its existing session. A scanned QR on an
+// already-linked device is NOT permission to silently switch destinations.
+// Disconnected / staged switches follow their separate, guarded QR workflow.
+export function classifyExistingSyncRetry({mode,profilePhase,scannedQrIgnored=false}={}){
+ if(mode!=='sync-enabled')return 'NOT_APPLICABLE';
+ if(profilePhase!=='connected')return 'PROFILE_SWITCH_IN_PROGRESS';
+ if(scannedQrIgnored)return 'QR_REQUIRES_EXPLICIT_SWITCH';
+ return 'EXISTING_CONNECTION_ONLY';
+}
+// A staged phone without a registration intent is still in the QR claim
+// phase, not the formal registration phase. Re-mounting recovers the encrypted
+// claim journal and never blindly repeats an uncertain network POST.
+export function classifyStagedSyncRetry({staging=false,targetEnabled=false,pendingIntent=false,hasSavedInvitation=false}={}){
+ if(!staging)return 'NOT_STAGED';
+ if(targetEnabled||pendingIntent)return 'RESUME_REGISTRATION';
+ return hasSavedInvitation?'RELOAD_SAVED_QR':'MISSING_SAVED_QR';
+}
 function readRaw(local){let raw;try{raw=local.getItem(CONNECTION_PROFILE_KEY)}catch{profileFail('POINTER_UNREADABLE')}
  if(raw===null)return {v:1,active:'legacy',phase:'connected',nextId:1};
  let x;try{x=JSON.parse(raw)}catch{profileFail('POINTER_CORRUPT')}
@@ -216,6 +233,13 @@ export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,s
 
 // The existing encrypted invitation envelope also owns the candidate identity.
 // Bind every read/CAS to the exact selected invitation, including across tabs.
+// Explicit fresh QR replaces only the selected invitation. Keep the prior
+// sealed candidate as recovery evidence; never reuse it for the new invitation.
+export function preserveReceiverInvitation(previous,next){
+ const history=previous.previousClaims??[];
+ if(!Array.isArray(history))throw Error('INVITATION_HISTORY_INVALID_KEEP_RECORDS');
+ return {...next,previousClaims:previous.claimAttempt?[...history,{href:previous.href,hash:previous.hash,claimAttempt:previous.claimAttempt}]:[...history]};
+}
 export function createEncryptedReceiverClaimStore({invitations,invitation,getPassphrase}){
  return {
   async read(){
@@ -308,7 +332,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
   const notice=el('pairing-notice');
-  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期設定済みのため、新しいQRは適用していません。この画面では自動同期も開始していません。従来の同期を続けるにはページを再読み込みしてください。記録は保持されています。';}
+  if(notice){notice.hidden=false;notice.textContent='この端末にはすでに同期設定があるため、新しいQRはまだ適用していません。同期先を切り替える場合は、この画面の「この端末の同期連携を解除（記録を残す）」を押し、続けてバックアップ・確認・安全な接続を行ってください。単に「接続を再試行」しても新しいQRには接続されません。記録は保持されています。';}
   attention(true);
  }
  if(!mode){
@@ -370,7 +394,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     lineage:storage.read().weeklyOptions.__syncLineage});
    notice.textContent=x.sameDestination?
     '読み取ったQRとこの端末は同じ同期先ID（'+x.currentID+'）です。新しい端末の承認は行っていません。この端末の元の同期を続けるには再読み込みしてください。':
-    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。現在の視聴記録・資格情報を保持し、接続先は変更していません。';
+    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「この端末の同期連携を解除（記録を残す）」を押し、続けてこの画面のバックアップ・安全な接続へ進んでください。古い記録・資格情報は保持しています。';
   }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
  }
  // The old profile's WAL/credentials remain independent from every new profile.
@@ -560,7 +584,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  if(receiver&&mode==='encrypted-local'&&!pendingIntent&&receiving&&!staging){
   if(!invitation)await invitations.create(captured,restored.passphrase);
   else if(invitation.href!==captured.href||invitation.hash!==captured.hash)
-   await invitations.replace(invitation,captured,restored.passphrase);
+   await invitations.replace(invitation,preserveReceiverInvitation(invitation,captured),restored.passphrase);
   invitation=captured;
  }
  if(mode!=='encrypted-local'||pendingIntent)invitation=null;
@@ -609,15 +633,41 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return result;
  }
  el('retry').addEventListener('click',()=>action(async()=>{
-  if(automatic){automatic.resumeAfterConflict();return}
   const currentMode=local.getItem(LOCAL_MODE);
-  if(staging){await register();return;}
+  // A staged switch has its own durable registration/confirmation. Do not
+  // mistake the old origin-wide sync-enabled marker for the stage's state.
+  if(staging){
+   const password=await keys.read();if(!password)throw Error('SETUP_KEY_REQUIRED');
+   const pending=await intents.read(password);
+   const targetEnabled=setupLocal.getItem(LOCAL_MODE)==='sync-enabled';
+   const savedQr=!targetEnabled&&!pending?await invitations.read(password):null;
+   const next=classifyStagedSyncRetry({staging:true,targetEnabled,pendingIntent:!!pending,hasSavedInvitation:!!savedQr});
+   if(next==='RELOAD_SAVED_QR'){location.reload();return;}
+   if(next==='MISSING_SAVED_QR')throw Error('STAGED_QR_MISSING_KEEP_ORIGINAL');
+   await register();return;
+  }
+  const retryKind=classifyExistingSyncRetry({mode:currentMode,profilePhase:profiles.read().phase,scannedQrIgnored:ignoredExistingQR});
+  if(retryKind!=='NOT_APPLICABLE'&&retryKind!=='EXISTING_CONNECTION_ONLY'){
+   automatic?.stop();automatic=null;el('retry').hidden=true;attention(true);showConnectionActions();
+   status.textContent=retryKind==='QR_REQUIRES_EXPLICIT_SWITCH'
+    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「この端末の同期連携を解除（記録を残す）」を押し、バックアップを保存してから安全に接続してください。既存の記録は保持されています。'
+    :'この端末は接続解除または再接続準備中です。通常の「接続を再試行」では古い同期先へ通信しません。画面に表示されたバックアップ・QR接続手順を進めてください。記録は保持されています。';
+   return;
+  }
+  if(automatic){automatic.resumeAfterConflict();return}
   if(currentMode==='sync-enabled'){
-   // Restarting a connected device is not another first registration.
+   // Restart only the established, unchanged connection.
    await running.resumeAutomatic({passphrase:await keys.read()});return;
   }
   if(currentMode==='preparing'||currentMode===null){await beginOrResume();return}
-  if(currentMode==='encrypted-local'){await register();return}
+  if(currentMode==='encrypted-local'){
+   const password=await keys.read();
+   if(receiver&&!await intents.read(password)){
+    if(await invitations.read(password)){location.reload();return;}
+    status.textContent='記録を保持しています。元の端末で新しい招待QRを発行して読み取ってください。';return;
+   }
+   await register();return;
+  }
   throw Error('UNKNOWN_SETUP_STATE_KEEP_ORIGINAL');
  }));
  if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')await action(()=>finishStagedCutover(restored.passphrase));
@@ -631,6 +681,10 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  return {phase:'FORMAL_OPT_IN_MOUNTED',storage,vault,setup};
 }
 if(typeof document!=='undefined')void mountFormalSimpleSync().catch(()=>{
- const status=document.querySelector('[data-simple="status"]');if(status)status.textContent='保存データを保持したまま設定を停止しました。初期化・消去はしないでください。';
+ const panel=document.getElementById?.('formal-sync-controls');
+ // Prevent uninitialized developer placeholder controls from looking like a
+ // meaningful network error or a working QR retry. No data is modified.
+ if(panel)panel.hidden=true;
+ const status=document.querySelector('[data-simple="status"]');if(status)status.textContent='端末間同期の画面を初期化できませんでした。記録と以前の接続情報は保持しています。初期化・消去はしないでください。新しいQRを使う場合は安全な再接続手順から開始してください。';
  const summary=document.querySelector('#formal-simple-sync summary');if(summary)summary.textContent='端末間同期（要確認）';
 });

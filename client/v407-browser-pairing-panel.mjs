@@ -46,7 +46,18 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
      ?'6桁の番号が一致しません。新しい端末に表示された番号を確認して入力し直してください。'
      :'リンクをコピーできませんでした。QRコードを読み取るか、もう一度お試しください。');
    }else{
-    stopped=true;clearQr();show('安全のため、この接続操作を停止しました。保存データは消さず、画面の状態を記録してください。\n'+reason.replace(/https?:\/\/\S+/g,'[URL省略]'));
+    stopped=true;clearQr();
+    const claimReasons={EXPIRED:'招待の有効期限が切れています。',DENIED:'この招待は承認されていません。',UNAVAILABLE:'招待は期限切れ・使用済み、または利用できない状態です。',
+     UNAUTHORIZED:'招待を認証できませんでした。',INVALID_QR:'招待QRを確認できませんでした。',SCOPE:'保存された招待と接続情報が一致しません。',
+     STORAGE:'招待の接続情報を安全に保存・復元できませんでした。ブラウザの保存領域は消さないでください。',
+     ACK_UNCONFIRMED:'接続申請は届いた可能性がありますが、6桁番号の受信を確認できません。別の資格で再申請していません。',
+     NETWORK:'通信結果を確認できませんでした。保存済みの同じ接続情報を保持しています。',
+     ACCESS_DENIED:'接続が拒否されました。',RATE_LIMITED:'接続が混み合っています。時間を置いてください。',SERVER:'接続先の応答を確認できませんでした。',STATE:'招待の状態を確認できませんでした。',INVALID_RESPONSE:'招待の応答を確認できませんでした。'};
+    const kind=reason.startsWith('V406_PAIRING_STOP:CLAIM_FAILED:')?reason.slice('V406_PAIRING_STOP:CLAIM_FAILED:'.length):null;
+    if(automaticMode&&Object.hasOwn(claimReasons,kind)){
+     newCode.textContent='';
+     show(claimReasons[kind]+' 端末内の記録・以前の接続情報は保持しています。通信が戻ったら同じタブを再読み込みして再開できます。期限切れ・使用済みや番号を復元できない場合は、元の端末で新しいQRを発行してください。再接続準備中は「再接続を中止して元の端末内記録へ戻る」で戻り、バックアップを保全して新しいQRを読み取ってください。\n'+reason);
+    }else show('安全のため、この接続操作を停止しました。保存データは消さず、画面の状態を記録してください。\n'+reason.replace(/https?:\/\/\S+/g,'[URL省略]'));
    }
   }finally{busy=false;pass.value='';render()}
  }

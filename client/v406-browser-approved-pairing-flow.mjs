@@ -55,10 +55,11 @@ export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageO
   async claimFromLocation({location,history}={}){
    guard();if(claimed||pending)fail('ALREADY_CLAIMED');
    if(!location?.href||!history?.replaceState)fail('BROWSER_LOCATION_REQUIRED');
-   let pairing;
-   try{pairing=parsePairingUrl(location.href,{allowedOrigin:siteOrigin})}
-   finally{clearPairingFragment({location,history})}
+   let pairing,step='INVALID_QR';
    try{
+    try{pairing=parsePairingUrl(location.href,{allowedOrigin:siteOrigin})}
+    finally{clearPairingFragment({location,history})}
+    step='NETWORK';
     let claim,sealedAttempt;
     if(!claimStore){
      claim=await claimInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,pairing});
@@ -67,7 +68,7 @@ export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageO
      // Reuse the encrypted invitation envelope. A reload must not generate a
      // second candidate for an already claimed invitation.
      if(typeof claimStore.read!=='function'||typeof claimStore.write!=='function')fail('CLAIM_STORE_REQUIRED');
-     let attempt=await claimStore.read();const fresh=!attempt;
+     step='STORAGE';let attempt=await claimStore.read();const fresh=!attempt;
      if(fresh){
       attempt={version:1,apiOrigin,siteOrigin,boxId:pairing.boxId,invitationId:pairing.invitationId,
        credentials:createDeviceSecrets(),confirmationCode:null};
@@ -78,36 +79,55 @@ export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageO
         !ID.test(attempt.credentials?.deviceId)||!/^[-\w]{43}$/.test(attempt.credentials?.deviceToken??'')||
         !/^[-\w]{43}$/.test(attempt.credentials?.claimSecret??'')||
         !(attempt.confirmationCode===null||/^\d{6}$/.test(attempt.confirmationCode)))fail('CLAIM_SCOPE_INVALID');
+     step='SCOPE';
      const status=()=>checkNewDeviceStatus({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
       invitationId:pairing.invitationId,claimSecret:attempt.credentials.claimSecret});
-     let remote;
+     step='NETWORK';let remote;
      if(!fresh){try{remote=await status()}catch(error){if(error?.status!==401)throw error}}
      if(!remote){
       let ack;
       try{
        ack=await claimInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,pairing,credentials:attempt.credentials});
       }catch(error){
+       if(Number.isInteger(error?.status)&&error.status>=400&&error.status<500&&error.status!==409)throw error;
        // Never rotate credentials after an ambiguous POST. Status cannot
        // reconstruct lost six digits, so a pending claim without its ACK stops.
-       remote=await status();
+       try{remote=await status()}catch(statusError){
+        // A definite POST rejection must not be hidden by its status 401.
+        // Ambiguous transport failures preserve the original sealed identity.
+        if(error?.status===409&&statusError?.status===401)throw error;
+        throw statusError;
+       }
       }
       if(ack){
        if(ack.state!=='pending'||!/^\d{6}$/.test(ack.confirmationCode))fail('CLAIM_NOT_PENDING');
        const next={...attempt,confirmationCode:ack.confirmationCode};
-       await claimStore.write(attempt,next);attempt=next;
+       step='STORAGE';await claimStore.write(attempt,next);attempt=next;
        remote={state:'pending'};
       }
      }
-     if(!['pending','approved'].includes(remote.state)||
-        (remote.state==='pending'&&!/^\d{6}$/.test(attempt.confirmationCode??'')))fail('CLAIM_NOT_RESUMABLE');
-     if(JSON.stringify(await claimStore.read())!==JSON.stringify(attempt))fail('CLAIM_CHANGED');
+     step='STATE';
+     if(remote.state==='expired')fail('CLAIM_EXPIRED');
+     if(remote.state==='denied')fail('CLAIM_DENIED');
+     if(remote.state==='pending'&&!/^\d{6}$/.test(attempt.confirmationCode??''))fail('CLAIM_ACK_UNCONFIRMED');
+     if(!['pending','approved'].includes(remote.state))fail('CLAIM_NOT_RESUMABLE');
+     step='STORAGE';if(JSON.stringify(await claimStore.read())!==JSON.stringify(attempt))fail('CLAIM_CHANGED');
      sealedAttempt=attempt;
      claim={state:remote.state,confirmationCode:attempt.confirmationCode,credentials:attempt.credentials};
     }
     pending={invitationId:pairing.invitationId,boxId:pairing.boxId,masterKey:pairing.masterKey,
       credentials:claim.credentials,claimAttempt:sealedAttempt};claimed=true;
     return {state:claim.state,confirmationCode:claim.state==='pending'?claim.confirmationCode:null,requiresOwnerApproval:claim.state!=='approved'};
-   }catch{stop('CLAIM_FAILED')}
+   }catch(error){
+    // Only fixed classifications leave this boundary. Never expose response
+    // bodies, fragments, credentials, storage values or arbitrary exceptions.
+    const known={'V406_PAIRING_STOP:CLAIM_EXPIRED':'EXPIRED','V406_PAIRING_STOP:CLAIM_DENIED':'DENIED',
+     'V406_PAIRING_STOP:CLAIM_ACK_UNCONFIRMED':'ACK_UNCONFIRMED','V406_PAIRING_STOP:CLAIM_SCOPE_INVALID':'SCOPE',
+     'V406_PAIRING_STOP:CLAIM_STORE_REQUIRED':'STORAGE','V406_PAIRING_STOP:CLAIM_NOT_PENDING':'INVALID_RESPONSE'};
+    const http={400:'INVALID_QR',401:'UNAUTHORIZED',403:'ACCESS_DENIED',404:'UNAVAILABLE',409:'UNAVAILABLE',410:'EXPIRED',429:'RATE_LIMITED'};
+    const reason=known[error?.message]??(Number.isInteger(error?.status)?(http[error.status]??'SERVER'):step);
+    stop('CLAIM_FAILED:'+reason);
+   }
   },
   async inspectReceiver(){
    guard();if(!pending)fail('NO_PENDING_CLAIM');
