@@ -21,7 +21,9 @@ export function createFormalProductionANIPrimary(options={}){
  return createProfiledPrimary(true,options,true);
 }
 function createProfiledPrimary(formal,options,production=false){
-const databaseName=production?'anilog-FORMAL-PRODUCTION-ENCRYPTED-PRIMARY':formal?'anilog-FORMAL-DEVELOPMENT-ENCRYPTED-PRIMARY':V408_DB;
+const profileId=options.profileId??'legacy';
+if(production&&!/^(?:legacy|p[1-9][0-9]?)$/.test(profileId))throw Error('FORMAL_PROFILE_INVALID');
+const databaseName=production?'anilog-FORMAL-PRODUCTION-ENCRYPTED-PRIMARY'+(profileId==='legacy'?'':'-'+profileId):formal?'anilog-FORMAL-DEVELOPMENT-ENCRYPTED-PRIMARY':V408_DB;
 const maxRevision=formal?10000:256;
 const VERSION=production?'formal-production-encrypted-wal-v1':formal?'formal-development-encrypted-wal-v1':'v408-synthetic-general-encrypted-wal-v1';
 const PURPOSE=production?'ANI:LOG/formal-production/encrypted-WAL':formal?'ANI:LOG/formal-development/encrypted-WAL':'ANI:LOG/v408/general-shaped-synthetic-encrypted-WAL';
