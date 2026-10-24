@@ -143,7 +143,7 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .sidebar-bottom .outline-btn{padding:8px 5px;min-width:0;flex:1;font-size:var(--fs-xs)}
 .sidebar-bottom .outline-btn .ui-icon{width:13px;height:13px}
 .backup-date,.side-foot{font-size:var(--fs-xs);color:var(--subtle);line-height:1.5}
-.backup-date{margin-top:8px}.side-foot{text-align:center}
+.backup-date{margin-top:8px;white-space:nowrap}.side-foot{text-align:center}
 
 /* Main Content & Header */
 .main{min-width:0;max-width:1450px;width:100%;margin:0 auto;padding:36px clamp(24px,4vw,64px) 72px}
@@ -1206,8 +1206,8 @@ select:not([data-status-id]){
       <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
-    <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">バックアップ：未作成</div></div>
-    <div class="side-foot">ANI:LOG <span id="anilog-version-label"></span> · 記録はブラウザ内に保存</div>
+    <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">最終書き出し：未作成</div></div>
+    <div class="side-foot"><div>ANI:LOG <span id="anilog-version-label"></span></div><div>記録はブラウザ内に保存</div></div>
   </aside>
   <main class="main">
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
@@ -1538,7 +1538,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshSto
 document.addEventListener('focusout',()=>{if(pendingStorageRefresh)setTimeout(refreshStoredRecords,0)});
 
 function updateBackupDate(){const el=$('#backupDate');if(!el)return;
- try{const last=Number(localStorage.getItem(BACKUP_AT_KEY)||0);el.textContent=last?'最終バックアップ：'+new Date(last).toLocaleDateString('ja-JP'):'バックアップ：まだ作成していません';}catch{el.textContent='バックアップ：保存状態を確認できません';}}
+ try{const last=Number(localStorage.getItem(BACKUP_AT_KEY)||0);el.textContent=last?'最終書き出し：'+new Date(last).toLocaleDateString('ja-JP'):'最終書き出し：未作成';}catch{el.textContent='最終書き出し：確認不可';}}
 function remindBackup(){try{
  if(!Object.values(saved).some(a=>a&&validStatuses.has(a.status)))return;
  const now=Date.now(),last=Number(localStorage.getItem(BACKUP_AT_KEY)||0),notified=Number(localStorage.getItem(BACKUP_TOAST_KEY)||0);
@@ -5050,7 +5050,7 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshSto
 document.addEventListener('focusout',()=>{if(pendingStorageRefresh)setTimeout(refreshStoredRecords,0)});
 
 function updateBackupDate(){const el=$('#backupDate');if(!el)return;
- try{const last=Number(localStorage.getItem(BACKUP_AT_KEY)||0);el.textContent=last?'最終バックアップ：'+new Date(last).toLocaleDateString('ja-JP'):'バックアップ：まだ作成していません';}catch{el.textContent='バックアップ：保存状態を確認できません';}}
+ try{const last=Number(localStorage.getItem(BACKUP_AT_KEY)||0);el.textContent=last?'最終書き出し：'+new Date(last).toLocaleDateString('ja-JP'):'最終書き出し：未作成';}catch{el.textContent='最終書き出し：確認不可';}}
 function remindBackup(){try{
  if(!Object.values(saved).some(a=>a&&validStatuses.has(a.status)))return;
  const now=Date.now(),last=Number(localStorage.getItem(BACKUP_AT_KEY)||0),notified=Number(localStorage.getItem(BACKUP_TOAST_KEY)||0);
