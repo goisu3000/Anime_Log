@@ -44,7 +44,7 @@ export function createFormalSetup({local,locks,storage,vault,independentVault,de
    return {passphrase:pass,app:storage.read(),syncEnabled:local.getItem(LOCAL_MODE)==='sync-enabled'};
   },
   async confirmEnabled({apiOrigin,boxId,credentialsVerified=false}={}){
-   if(credentialsVerified!==true||local.getItem(LOCAL_MODE)!=='encrypted-local')throw Error('SETUP_VERIFICATION_REQUIRED');
+   if(credentialsVerified!==true||!['encrypted-local','sync-enabled'].includes(local.getItem(LOCAL_MODE)))throw Error('SETUP_VERIFICATION_REQUIRED');
    storage.assertSyncHistory({api:apiOrigin,boxId});
    const checkpoint=vault.readSyncCheckpoint();
    // Edits made after the verified first union are a durable pending queue,
@@ -52,7 +52,8 @@ export function createFormalSetup({local,locks,storage,vault,independentVault,de
    if(!checkpoint||checkpoint.serverRevision<1||canonical(checkpoint.snapshot.settings.syncLineage)!==canonical(storage.read().weeklyOptions.__syncLineage))throw Error('SETUP_FIRST_SYNC_NOT_VERIFIED');
    const check=independentVault();await check.unlock(await password());
    if(canonical(check.readCurrent())!==canonical(storage.read())||canonical(check.readSyncCheckpoint())!==canonical(checkpoint))throw Error('SETUP_FINAL_READBACK_DIFFERS');
-   write(LOCAL_MODE,'sync-enabled');return {phase:'SYNC_ENABLED_VERIFIED'};
+   if(local.getItem(LOCAL_MODE)!=='sync-enabled')write(LOCAL_MODE,'sync-enabled');
+   return {phase:'SYNC_ENABLED_VERIFIED'};
   }
  });
 }

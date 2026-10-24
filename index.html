@@ -1219,6 +1219,24 @@ select:not([data-status-id]){
 <body>
 <details id="formal-simple-sync" style="padding:12px"><summary>端末間同期</summary>
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
+<p data-simple="connection-info" hidden></p>
+<p data-simple="pairing-notice" hidden></p>
+<div data-simple="connection-actions" hidden>
+ <button type="button" data-simple="pause-sync" hidden>この端末の自動同期を一時停止</button>
+ <button type="button" data-simple="resume-sync" hidden>同じ同期先で自動同期を再開</button>
+ <button type="button" data-simple="switch-check" hidden>接続変更前の安全確認</button>
+ <button type="button" data-simple="unlink-sync" hidden>この端末の同期連携を解除（記録を残す）</button>
+ <button type="button" data-simple="relink-sync" hidden>元の同期先への連携を再開</button>
+ <div data-simple="relink-qr-actions" hidden>
+  <p>QRの接続先へ変更する前に、この端末の最新の視聴記録を別ファイルに保存してください。現在の接続と旧データは復旧用に保持され、切り替えが成功するまで変更されません。</p>
+  <button type="button" data-simple="relink-backup">切り替え前の記録をバックアップ</button>
+  <label><input type="checkbox" data-simple="relink-confirm">バックアップを実際に保存し、他のANI:LOGのタブをすべて閉じた。元の記録が新しい同期先に統合・送信される場合があることを理解した</label>
+  <button type="button" data-simple="relink-start" disabled>このQRの同期先へ安全に接続</button>
+ </div>
+ <button type="button" data-simple="relink-cancel" hidden>再接続を中止して元の端末内記録へ戻る</button>
+ <p data-simple="switch-result" role="status" hidden></p>
+ <p style="font-size:.85em">解除はこの端末からの通信を停止する操作で、クラウド側の認証失効やデータ削除ではありません。端末内の記録・暗号化された復旧情報を保持します。別の同期先へ接続する場合はQRと独立バックアップを使用してください。</p>
+</div>
 <div data-simple="setup"><p>希望する場合だけ設定してください。記録のコピーを保存し、旧版のほかのタブ・端末での編集を終了します。</p>
 <button type="button" data-simple="backup">移行前のバックアップを保存</button>
 <label><input type="checkbox" data-simple="confirmed">バックアップを保存し、旧版のほかのタブ・端末を閉じた</label>
@@ -8673,7 +8691,7 @@ if(topBtn){
   }
  },true);
  // Never leave a detached menu on another view, modal, or scroll position.
- document.addEventListener('focusin',e=>{if(menu&&e.target!==owner && !menu.contains(e.target))dismiss()},true);
+ document.addEventListener('focusin',e=>{if(menu&&e.target!==owner && e.target!==visual(owner) && !menu.contains(e.target))dismiss()},true);
  document.addEventListener('scroll',e=>{if(menu&&!menu.contains(e.target))requestAnimationFrame(()=>{if(menu)place()})},true);
  window.addEventListener('resize',()=>{if(menu)place();scheduleScan()},{passive:true});
  window.addEventListener('popstate',()=>dismiss());

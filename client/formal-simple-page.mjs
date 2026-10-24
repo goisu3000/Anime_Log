@@ -8,10 +8,104 @@ import {requestRegistrationChallenge} from './registration-challenge.mjs';
 import {prepareV411StagingPanel} from './v411-https-staging-page-entry.mjs';
 import {createV408StagingSealedDeviceCredentials,V408_CREDENTIAL_DB} from './v408-https-staging-sealed-credentials.mjs';
 import {createAutomaticSync} from './automatic-sync.mjs';
+import {createV405BrowserWorkerFetch} from './v405-browser-worker-fetch.mjs';
 import {checkLineage} from '../shared/sync-lineage.mjs';
 import {appToSnapshot} from './app-bridge.mjs';
 import {parsePairingUrl} from './pairing-client.mjs';
 import {canonical} from './formal-storage.mjs';
+/* Per-device local connection profiles. The old encrypted original/credential
+ * stores are NEVER deleted. A new box is joined in a separate encrypted WAL;
+ * the active pointer changes only after an independently verified pairing.
+ * This module stores no records, QR secrets, box IDs, tokens, or keys. */
+export const CONNECTION_PROFILE_KEY='anilog-sync-connection-profile-v1';
+const VALID=/^(?:legacy|p[1-9][0-9]?)$/;
+const profileFail=x=>{throw Error('CONNECTION_PROFILE_STOP:'+x)};
+function readRaw(local){let raw;try{raw=local.getItem(CONNECTION_PROFILE_KEY)}catch{profileFail('POINTER_UNREADABLE')}
+ if(raw===null)return {v:1,active:'legacy',phase:'connected',nextId:1};
+ let x;try{x=JSON.parse(raw)}catch{profileFail('POINTER_CORRUPT')}
+ if(!x||x.v!==1||!Number.isSafeInteger(x.nextId)||x.nextId<1||x.nextId>100||!VALID.test(x.active)||!['connected','disconnected','preparing','ready'].includes(x.phase)||
+  (['preparing','ready'].includes(x.phase)&&(!VALID.test(x.staging)||x.staging===x.active||!Number.isSafeInteger(x.sourceRevision)||x.sourceRevision<0))||
+  (x.phase==='disconnected'&&x.staging!==undefined)||
+  (x.phase==='connected'&&x.staging!==undefined))profileFail('POINTER_CORRUPT');
+ return x;
+}
+export function createConnectionProfiles({local}={}){
+ if(!local?.getItem||!local?.setItem)profileFail('DURABLE_STORAGE_REQUIRED');
+ const read=()=>structuredClone(readRaw(local));
+ const write=(expected,next)=>{
+  if(JSON.stringify(readRaw(local))!==JSON.stringify(expected))profileFail('CONCURRENT_POINTER_CHANGE');
+  const s=JSON.stringify(next);
+  try{local.setItem(CONNECTION_PROFILE_KEY,s)}catch{profileFail('POINTER_WRITE_FAILED')}
+  if(local.getItem(CONNECTION_PROFILE_KEY)!==s)profileFail('POINTER_READBACK_FAILED');return read();
+ };
+ return Object.freeze({read,
+  disconnect(){const x=read();if(x.phase!=='connected')profileFail('NOT_CONNECTED');return write(x,{v:1,active:x.active,phase:'disconnected',nextId:x.nextId})},
+  reconnectSame(){const x=read();if(x.phase!=='disconnected')profileFail('NOT_DISCONNECTED');return write(x,{v:1,active:x.active,phase:'connected',nextId:x.nextId})},
+  begin({sourceRevision,oldTabsClosed=false,backupSaved=false}={}){
+   const x=read();if(x.phase!=='disconnected'||oldTabsClosed!==true||backupSaved!==true)profileFail('BACKUP_AND_DISCONNECT_REQUIRED');
+   if(!Number.isSafeInteger(sourceRevision)||sourceRevision<0)profileFail('SOURCE_REVISION_REQUIRED');
+   const n=x.nextId;if(n>99)profileFail('PROFILE_LIMIT_REACHED');
+   return write(x,{v:1,active:x.active,phase:'preparing',staging:'p'+n,sourceRevision,nextId:n+1});
+  },
+  prepared(){const x=read();if(x.phase!=='preparing')profileFail('NOT_PREPARING');return write(x,{...x,phase:'ready'})},
+  cancel(){const x=read();if(!['preparing','ready'].includes(x.phase))profileFail('NOT_PENDING');return write(x,{v:1,active:x.active,phase:'disconnected',nextId:x.nextId})},
+  complete({sourceRevision,targetReady=false}={}){
+   const x=read();if(x.phase!=='ready'||sourceRevision!==x.sourceRevision||targetReady!==true)profileFail('VERIFIED_CUTOVER_REQUIRED');
+   return write(x,{v:1,active:x.staging,phase:'connected',nextId:x.nextId});
+  }
+ });
+}
+// An uncommitted target gets a dedicated durable mode marker, not the origin's
+// legacy receipt/LOCAL_MODE. A verified marker survives a crash between the
+// remote ACK and the atomic active-profile pointer update.
+export function createStagedSetupLocal({local,profileId}={}){
+ if(!local?.getItem||!local?.setItem||!local?.removeItem||!/^p[1-9][0-9]?$/.test(profileId))profileFail('STAGING_MODE_STORAGE_REQUIRED');
+ const key=LOCAL_MODE+'-'+profileId;
+ const read=()=>{const value=local.getItem(key);if(value!==null&&value!=='sync-enabled')profileFail('STAGING_MODE_CORRUPT');return value??'encrypted-local'};
+ return Object.freeze({
+  getItem(k){return k===LOCAL_MODE?read():local.getItem(k)},
+  setItem(k,v){if(k!==LOCAL_MODE){local.setItem(k,v);return}
+   if(v!=='sync-enabled')profileFail('STAGING_MODE_DENIED');
+   if(read()==='sync-enabled')return;
+   try{local.setItem(key,v)}catch{profileFail('STAGING_MODE_WRITE_FAILED')}
+   if(local.getItem(key)!==v)profileFail('STAGING_MODE_READBACK_FAILED');
+  },
+  removeItem(k){if(k===LOCAL_MODE)profileFail('STAGING_MODE_DENIED');local.removeItem(k)}
+ });
+}
+// Final pointer commit (or restart after an already verified remote ACK).
+// This helper performs NO registration and NO PUT: only local authenticated
+// readbacks followed by a single guarded pointer CAS.
+export async function completeVerifiedStagedProfile({setup,setupLocal,profiles,selectedProfile,sourceProfile,
+ sourceRevision,storage,vault,sealedCredentials,oldVault,passphrase,apiOrigin,siteOrigin,fetcher,exclusive}={}){
+ if(!selectedProfile||selectedProfile===sourceProfile||setupLocal?.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('STAGED_SETUP_NOT_DURABLE');
+ const trusted=vault.readSyncCheckpoint();
+ if(!trusted||trusted.serverRevision<1)throw Error('NEW_PROFILE_CHECKPOINT_REQUIRED');
+ const lineage=trusted.snapshot?.settings?.syncLineage;
+ await setup.confirmEnabled({apiOrigin,boxId:lineage?.boxId,credentialsVerified:true});
+ if((await sealedCredentials.inspect()).phase!=='PRESENT_LOCKED')throw Error('NEW_PROFILE_CREDENTIALS_REQUIRED');
+ // Decrypt scope-bound credentials against the unlocked target WAL; no network.
+ await sealedCredentials.resume({vault,passphrase,fetcher,expectedApiRoot:apiOrigin,expectedOrigin:siteOrigin,expectedBoxId:lineage.boxId});
+ return exclusive(async()=>{
+  const before=profiles.read();
+  if(before.phase!=='ready'||before.staging!==selectedProfile||before.active!==sourceProfile||before.sourceRevision!==sourceRevision)
+   throw Error('PROFILE_CHANGED_BEFORE_COMMIT');
+  await oldVault.unlock(passphrase);
+  if(oldVault.readRevision()!==before.sourceRevision||!oldVault.readSyncCheckpoint())throw Error('OLD_PROFILE_CHANGED_KEEP_BOTH');
+  if(canonical(vault.readSyncCheckpoint()?.snapshot?.settings?.syncLineage)!==canonical(storage.read().weeklyOptions.__syncLineage))throw Error('NEW_PROFILE_CHECKPOINT_REQUIRED');
+  return profiles.complete({sourceRevision:before.sourceRevision,targetReady:true});
+ });
+}
+export function profileSuffix(id){if(!VALID.test(id))profileFail('INVALID_ID');return id==='legacy'?'':'-'+id}
+export function getSelectedProfile(x){return x.phase==='ready'?x.staging:x.active}
+export function assertConnectionActive(x){if(x.phase!=='connected')profileFail('CONNECTION_NOT_ACTIVE')}
+export function prepareIndependentLocalCopy(source){
+ if(!source||typeof source!=='object'||!source.records||!source.tombstones||!source.weeklyOptions?.__syncLineage)profileFail('CONNECTED_SOURCE_REQUIRED');
+ const next=structuredClone(source);
+ for(const k of ['__syncLineage','__registrationPending','__pairingMergeApplied'])delete next.weeklyOptions[k];
+ return next;
+}
+
 
 // ANI:LOG connection safety controls. No remote requests and no mutation of
 // encrypted records, WAL, sync lineage, sealed credentials or checkpoints.
@@ -20,10 +114,10 @@ export const SYNC_PAUSE_KEY='anilog-sync-manual-pause-v1';
 const PAUSED='paused-v1';
 const fail=code=>{throw Error('SYNC_CONNECTION_GUARD:'+code)};
 
-export function createSyncPauseGuard({local}={}){
+export function createSyncPauseGuard({local,key=SYNC_PAUSE_KEY}={}){
  if(!local?.getItem||!local?.setItem||!local?.removeItem)fail('DURABLE_STORAGE_REQUIRED');
  const read=()=>{
-  let value;try{value=local.getItem(SYNC_PAUSE_KEY)}catch{fail('PAUSE_STATE_UNREADABLE')}
+  let value;try{value=local.getItem(key)}catch{fail('PAUSE_STATE_UNREADABLE')}
   // Treat unexpected/corrupt values as paused, never silently resume network.
   return value===null?'active':value===PAUSED?'paused':'invalid';
  };
@@ -34,14 +128,14 @@ export function createSyncPauseGuard({local}={}){
   pause(){
    // If storage write/readback fails, fail closed to the caller. Never claim
    // that an in-flight request already completed or was cancelled.
-   try{local.setItem(SYNC_PAUSE_KEY,PAUSED)}catch{fail('PAUSE_NOT_DURABLE')}
+   try{local.setItem(key,PAUSED)}catch{fail('PAUSE_NOT_DURABLE')}
    if(read()!=='paused')fail('PAUSE_READBACK_FAILED');return 'paused';
   },
   resume({verified=false}={}){
    // Only explicit user interaction following local checkpoint/lineage review.
    if(verified!==true||read()==='invalid')fail('EXPLICIT_VERIFIED_RESUME_REQUIRED');
    if(read()==='active')return 'active';
-   try{local.removeItem(SYNC_PAUSE_KEY)}catch{fail('RESUME_NOT_DURABLE')}
+   try{local.removeItem(key)}catch{fail('RESUME_NOT_DURABLE')}
    if(read()!=='active')fail('RESUME_READBACK_FAILED');return 'active';
   }
  });
@@ -98,6 +192,28 @@ export async function compareScannedQrDestination({qrUrl,siteOrigin,apiOrigin,li
  }finally{target.invitationSecret.fill(0);target.masterKey.fill(0)}
 }
 
+// The formal storage implementation is Object.freeze()d. Proxying that
+// frozen object and substituting save methods violates the JS Proxy invariant
+// for its non-configurable, non-writable properties. Keep it untouched and
+// expose only the methods the legacy ANI UI actually uses through an
+// independent, frozen forwarding facade. Its ready getter remains live.
+export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false}={}){
+ const beforeWrite=()=>{
+  const now=profiles.read();
+  if(staging||now.active!==selectedProfile||!['connected','disconnected'].includes(now.phase))
+   throw Error('PROFILE_CHANGE_UI_EDIT_BLOCKED');
+ };
+ return Object.freeze({
+  get ready(){return storage.ready},
+  read:(...args)=>storage.read(...args),
+  refresh:(...args)=>storage.refresh(...args),
+  exportBackup:(...args)=>storage.exportBackup(...args),
+  saveRecords:(...args)=>{beforeWrite();return storage.saveRecords(...args)},
+  saveWeekly:(...args)=>{beforeWrite();return storage.saveWeekly(...args)},
+  restoreBackup:(...args)=>{beforeWrite();return storage.restoreBackup(...args)}
+ });
+}
+
 // The existing encrypted invitation envelope also owns the candidate identity.
 // Bind every read/CAS to the exact selected invitation, including across tabs.
 export function createEncryptedReceiverClaimStore({invitations,invitation,getPassphrase}){
@@ -136,13 +252,22 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }else status.textContent='同期OFF：この端末に自動保存します。同期接続は現在無効です。';
   return;
  }
- const factory=()=>createFormalProductionANIPrimary({idb,locks}),vault=factory();
+ const profiles=createConnectionProfiles({local}),profileState=profiles.read();
+ const profileExclusive=fn=>locks.request('anilog-formal-connection-profile-cutover',{mode:'exclusive'},fn);
+ const staging=profileState.phase==='ready',selectedProfile=getSelectedProfile(profileState);
+ const factory=()=>createFormalProductionANIPrimary({idb,locks,profileId:selectedProfile}),vault=factory();
  let automatic=null,running=null,busy=false,downloaded=null;
  const storage=createFormalStorage({vault,independentVault:factory,onCommitted:()=>automatic?.changed()});
- const scopedIDB={open:(name,...args)=>idb.open(name===V408_CREDENTIAL_DB?'anilog-FORMAL-PRODUCTION-SEALED-CREDENTIALS':'formal-production:'+name,...args)};
- const scopedLocks={request:(name,...args)=>locks.request('formal-production:'+name,...args)};
+ const suffix=profileSuffix(selectedProfile);
+ const keyDB='anilog-FORMAL-AUTOMATIC-DEVICE-KEY';
+ const scopedIDB={open:(name,...args)=>idb.open(name===V408_CREDENTIAL_DB?'anilog-FORMAL-PRODUCTION-SEALED-CREDENTIALS'+suffix:
+  name===keyDB?'formal-production:'+name:'formal-production:'+name+suffix,...args)};
+ const scopedLocks={request:(name,...args)=>locks.request('formal-production:'+name+(name===keyDB?'':suffix),...args)};
  const keys=createAutomaticDeviceKey({idb:scopedIDB,locks:scopedLocks,origin:location.origin});
- const setup=createFormalSetup({local,locks,storage,vault,independentVault:factory,deviceKeys:keys,origin:location.origin});
+ // Stage uses the existing encrypted-mode receipt, without modifying the
+ // origin-wide legacy cutover marker until a verified profile-pointer commit.
+ const setupLocal=staging?createStagedSetupLocal({local,profileId:selectedProfile}):local;
+ const setup=createFormalSetup({local:setupLocal,locks,storage,vault,independentVault:factory,deviceKeys:keys,origin:location.origin});
  const intents=createRegistrationIntentStore({idb:scopedIDB,locks:scopedLocks,origin:location.origin});
  const invitations=createRegistrationIntentStore({idb:{open:(name,...args)=>scopedIDB.open('receiver:'+name,...args)},locks:scopedLocks,origin:location.origin});
  const captured=window.__v407TakePairingURL?.();
@@ -176,9 +301,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   location.reload();
  }
  el('begin').addEventListener('click',()=>action(beginOrResume));
- const mode=local.getItem(LOCAL_MODE);
+ const mode=staging?'encrypted-local':local.getItem(LOCAL_MODE);
  const ignoredExistingQR=Boolean(receiving&&mode==='sync-enabled');
- const pauseGuard=createSyncPauseGuard({local});
+ const pauseGuard=createSyncPauseGuard({local,key:SYNC_PAUSE_KEY+profileSuffix(selectedProfile)});
  // An already linked device cannot accept a second QR in this release.
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
@@ -198,7 +323,11 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return {phase:'LEGACY_OFF',storage,vault,setup};
  }
  el('setup').hidden=true;
- Object.defineProperty(window,'__formalStorage',{value:storage});
+ // Old browser tabs must not keep editing an obsolete profile. A pending
+ // switch freezes UI writes; its internal authenticated registration may still
+ // commit exclusively to the staging vault, never to the original WAL.
+ const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging});
+ Object.defineProperty(window,'__formalStorage',{value:uiStorage});
  Object.defineProperty(window,'__formalDecodeBackup',{value:decodeFormalBackup});
  const ui=window.__formalUI;if(!ui)throw Error('FORMAL_ENCRYPTED_UI_REQUIRED');
  let restored;
@@ -224,7 +353,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  status.textContent='端末内の記録を復元しました。';
  async function showDestination(){
   const output=el('connection-info');
-  if(!output||local.getItem(LOCAL_MODE)!=='sync-enabled')return;
+  if(!output||staging||local.getItem(LOCAL_MODE)!=='sync-enabled')return;
   try{
    const lineage=storage.read().weeklyOptions?.__syncLineage;
    if(!lineage)throw Error('SYNC_DESTINATION_NOT_FOUND');
@@ -244,27 +373,110 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。現在の視聴記録・資格情報を保持し、接続先は変更していません。';
   }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
  }
- // This setting is device-local, persists across reloads, and never changes
- // the encrypted WAL, server box or saved credentials. It is not disconnect.
+ // The old profile's WAL/credentials remain independent from every new profile.
+ // Device unlink never deletes or revokes cloud data or secrets.
  const connectionActions=el('connection-actions');
  const pauseButton=el('pause-sync'),resumeButton=el('resume-sync'),switchCheck=el('switch-check'),switchResult=el('switch-result');
+ const unlink=el('unlink-sync'),relink=el('relink-sync'),relinkActions=el('relink-qr-actions');
+ const backupButton=el('relink-backup'),confirmReconnection=el('relink-confirm'),startReconnection=el('relink-start'),cancelReconnection=el('relink-cancel');
+ let newBackupDownloaded=false,backupRevision=null;
+ const oldConnectionKey=SYNC_PAUSE_KEY+profileSuffix(profileState.active);
+ const oldPause=createSyncPauseGuard({local,key:oldConnectionKey});
+ function showConnectionActions(){
+  const state=profiles.read();connectionActions.hidden=false;
+  if(state.phase==='disconnected'||state.phase==='preparing'){
+   const existingPanel=document.getElementById('formal-sync-controls');if(existingPanel)existingPanel.hidden=true;
+  }
+  unlink.hidden=state.phase!=='connected'||staging;
+  relink.hidden=state.phase!=='disconnected';
+  relinkActions.hidden=state.phase!=='disconnected'||!receiving;
+  cancelReconnection.hidden=!['preparing','ready'].includes(state.phase);
+  if(state.phase==='disconnected'){
+   pauseButton.hidden=true;resumeButton.hidden=true;
+   attention(true);status.textContent='この端末の同期連携を解除しました。暗号化した記録は端末内に保存されます。サーバー上の端末認証と復旧情報は削除していません。';
+  }else if(['preparing','ready'].includes(state.phase)){
+   pauseButton.hidden=true;resumeButton.hidden=true;unlink.hidden=true;relink.hidden=true;
+   attention(true);status.textContent=state.phase==='ready'?'新しい接続先へ接続準備中です。6桁コードを元の端末で承認し、この端末で「接続を完了」を押してください。':'再接続の準備が完了していません。元の暗号化記録は保持されています。中止して復元できます。';
+  }
+ }
+ unlink.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
+  if(staging||profiles.read().phase!=='connected')throw Error('UNLINK_NOT_AVAILABLE');
+  oldPause.pause();automatic?.stop();automatic=null;
+  profiles.disconnect();showPauseState();showConnectionActions();
+  switchResult.hidden=false;switchResult.textContent='接続を解除しました。通信は停止していますが、クラウド側の端末失効は実行していません。記録・未送信変更と復旧用認証情報は保持しています。';
+ })));
+ relink.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
+  if(staging||profiles.read().phase!=='disconnected')throw Error('RECONNECT_NOT_AVAILABLE');
+  inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
+  oldPause.resume({verified:true});
+  try{profiles.reconnectSame()}
+  catch(e){oldPause.pause();throw e}
+  // Restore session and owner/member role from their own encrypted vault on a
+  // fresh page. If offline, startup keeps local data and retries normally.
+  location.reload();
+ })));
+ backupButton.addEventListener('click',()=>{
+  newBackupDownloaded=false;backupRevision=null;confirmReconnection.checked=false;startReconnection.disabled=true;
+  try{
+   const raw=storage.exportBackup();const url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
+   const a=document.createElement('a');a.href=url;a.download='anime-log-before-reconnect.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+   backupRevision=vault.readRevision();newBackupDownloaded=true;
+  }catch(e){message(e)}
+ });
+ confirmReconnection.addEventListener('change',()=>{startReconnection.disabled=!(newBackupDownloaded&&confirmReconnection.checked)});
+ startReconnection.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
+  if(!receiving||!captured?.href||!newBackupDownloaded||!confirmReconnection.checked||profiles.read().phase!=='disconnected'||!oldPause.paused)throw Error('CONFIRMED_BACKUP_AND_QR_REQUIRED');
+  const source=storage.read(),lineage=source.weeklyOptions.__syncLineage;
+  const comparison=await compareScannedQrDestination({qrUrl:captured.href,siteOrigin:location.origin,apiOrigin:api.origin,lineage});
+  if(comparison.sameDestination)throw Error('SAME_DESTINATION_USE_RECONNECT');
+  inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
+  await storage.refresh();const original=storage.read(),sourceRevision=vault.readRevision();
+  if(sourceRevision!==backupRevision)throw Error('BACKUP_STALE_DOWNLOAD_NEW_COPY');
+  // Keep the full current WAL/checkpoint in the original database. A separate
+  // encrypted genesis is an independent, durable copy, not an in-place rebind.
+  const password=await keys.read();if(!password)throw Error('SOURCE_KEY_REQUIRED');
+  const progress=profiles.begin({sourceRevision,oldTabsClosed:true,backupSaved:true});
+  const stageFactory=()=>createFormalProductionANIPrimary({idb,locks,profileId:progress.staging});
+  const stageVault=stageFactory();const stageStorage=createFormalStorage({vault:stageVault,independentVault:stageFactory});
+  const copy=prepareIndependentLocalCopy(original);
+  await stageStorage.initializeFrozen(JSON.stringify(copy),password);
+  // Independent decrypt/readback before staging a QR secret into encrypted IDB.
+  const readback=stageFactory();await readback.unlock(password);
+  if(canonical(readback.readCurrent())!==canonical(copy)||readback.readRevision()!==0)throw Error('STAGE_INDEPENDENT_READBACK_FAILED');
+  const sfx=profileSuffix(progress.staging);
+  const stageIDB={open:(name,...args)=>idb.open('formal-production:receiver:'+name+sfx,...args)};
+  const stageLocks={request:(name,...args)=>locks.request('formal-production:'+name+sfx,...args)};
+  const stageInvitations=createRegistrationIntentStore({idb:stageIDB,locks:stageLocks,origin:location.origin});
+  // The invitation is encrypted, never put in localStorage, logs or a URL after scan.
+  await stageInvitations.create(captured,password);
+  if(vault.readRevision()!==sourceRevision)throw Error('ORIGINAL_CHANGED_DURING_PREPARATION');
+  profiles.prepared();location.reload();
+ })));
+ cancelReconnection.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
+  if(!['preparing','ready'].includes(profiles.read().phase))throw Error('NO_PENDING_SWITCH');
+  // An accepted server PUT may be in flight after a durable paired intent.
+  // Do not silently discard that recovery journal or strand accepted changes.
+  if(staging&&(vault.readSyncCheckpoint()||await intents.read(await keys.read())))throw Error('PENDING_REMOTE_ACK_KEEP_STAGE_CONTACT_SUPPORT');
+  profiles.cancel();location.reload();
+ })));
  function showPauseState(){
   if(local.getItem(LOCAL_MODE)!=='sync-enabled')return;
   connectionActions.hidden=false;
   const paused=pauseGuard.paused;
   pauseButton.hidden=paused;resumeButton.hidden=!paused;switchCheck.hidden=false;
-  if(paused){attention(true);status.textContent='この端末の自動同期は一時停止中です。編集は暗号化して端末に保存します。同期先・認証情報・未送信変更は保持しています。';}
+  showConnectionActions();
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent='この端末の自動同期は一時停止中です。編集は暗号化して端末に保存します。同期先・認証情報・未送信変更は保持しています。';}
  }
  showPauseState();
  pauseButton.addEventListener('click',()=>action(async()=>{
-  if(local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('CONNECTED_DEVICE_REQUIRED');
+  if(local.getItem(LOCAL_MODE)!=='sync-enabled'||profiles.read().phase!=='connected')throw Error('CONNECTED_DEVICE_REQUIRED');
   pauseGuard.pause();automatic?.stop();automatic=null;
   showPauseState();
   switchResult.hidden=false;
   switchResult.textContent='新しい同期通信を停止しました。開始済みの通信は完了する場合があります。他の古いタブも閉じてください。記録と未送信変更は保持しています。';
  }));
  resumeButton.addEventListener('click',()=>action(async()=>{
-  if(local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('CONNECTED_DEVICE_REQUIRED');
+  if(local.getItem(LOCAL_MODE)!=='sync-enabled'||profiles.read().phase!=='connected')throw Error('CONNECTED_DEVICE_REQUIRED');
   // Never resume another lineage, an empty checkpoint or a corrupt pause flag.
   inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
   pauseGuard.resume({verified:true});
@@ -285,7 +497,11 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Already in-flight operations and older, unguarded application tabs cannot
  // be cancelled this way: explicitly close all older tabs before transfer.
  window.addEventListener?.('storage',event=>{
-  if(event.key!==SYNC_PAUSE_KEY)return;
+  if(event.key===CONNECTION_PROFILE_KEY){
+   // Other tabs must not continue scheduling against an obsolete profile.
+   automatic?.stop();automatic=null;attention(true);status.textContent='別のタブで接続設定が変更されました。記録は保持しています。このタブは閉じ、最新の画面を開いてください。';return;
+  }
+  if(event.key!==SYNC_PAUSE_KEY+profileSuffix(selectedProfile))return;
   if(pauseGuard.paused){automatic?.stop();automatic=null;showPauseState()}
   else {attention(true);status.textContent='別のタブで同期が再開されました。このタブも再読み込みして接続状態を確認してください。';
    resumeButton.hidden=true;pauseButton.hidden=false;}
@@ -293,14 +509,15 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const panelRoot=document.getElementById('formal-sync-controls');
  // Reuse the existing QR panel, hide developer-only bootstrap/unlock controls.
  for(const n of panelRoot.children)if(n.id!=='v407-pairing')n.hidden=true;
- const panelUI=panelRoot.querySelector('#v407-pairing');root.append(panelRoot);panelRoot.hidden=false;
+ const panelUI=panelRoot.querySelector('#v407-pairing');root.append(panelRoot);
+ panelRoot.hidden=profileState.phase==='disconnected'||profileState.phase==='preparing';
  for(const selector of ['[data-v408="box-id"]','[data-v408="unlock-owner"]','[data-v409="first-owner"]','[data-v407="repair"]','[data-v407="sync"]'])panelUI.querySelector(selector).hidden=true;
  panelUI.querySelector('[data-v407="invite"]').textContent='別の端末を追加（QR）';
  // A QR scan plus a confirmed local cutover is sufficient to submit the
  // receiver claim. The owner still approves the exact six digits explicitly.
  // Keep only the actions relevant to this device; staging diagnostics remain
  // untouched and this does not alter any security checks.
- const receiver=setup.readReceipt().role==='receiver';
+ const receiver=staging||selectedProfile!=='legacy'||setup.readReceipt().role==='receiver';
  const hide=selector=>{const node=panelUI.querySelector('[data-v407="'+selector+'"]');if(node)node.hidden=true};
  hide('refresh');hide('claim');hide('sync');
  if(receiver){
@@ -309,7 +526,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }else{for(const id of ['receiver-code','check','receive','repair'])hide(id)}
  function schedule(_session,fresh){
   automatic?.stop();automatic=null;
-  if(pauseGuard.paused){showPauseState();return;}
+  if(pauseGuard.paused||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile){showPauseState();return;}
   automatic=createAutomaticSync({syncOnce:async()=>{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return s.syncOnce()},onState:s=>{
    if(pauseGuard.paused)return;
    const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
@@ -336,7 +553,11 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // registration intent. The latter must be resumed rather than overwritten.
  const pendingIntent=receiver?await intents.read(restored.passphrase):null;
  let invitation=receiver?await invitations.read(restored.passphrase):null;
- if(receiver&&mode==='encrypted-local'&&!pendingIntent&&receiving){
+ if(staging){
+  if(!invitation&&!pendingIntent)throw Error('STAGED_QR_MISSING_KEEP_ORIGINAL');
+  if(receiving&&invitation&&(invitation.href!==captured.href||invitation.hash!==captured.hash))throw Error('STAGED_QR_REPLACEMENT_DENIED');
+ }
+ if(receiver&&mode==='encrypted-local'&&!pendingIntent&&receiving&&!staging){
   if(!invitation)await invitations.create(captured,restored.passphrase);
   else if(invitation.href!==captured.href||invitation.hash!==captured.hash)
    await invitations.replace(invitation,captured,restored.passphrase);
@@ -354,16 +575,31 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     await register({fromPairing:true});
     return {phase:'FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED',serverRevision:vault.readSyncCheckpoint().serverRevision,records:Object.keys(storage.read().records).length};
    }finally{masterKey.fill(0)}
-  },beforeSync:()=>{pauseGuard.assertAllowed();const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+  },beforeSync:()=>{pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+ async function finishStagedCutover(password){
+  const oldVault=createFormalProductionANIPrimary({idb,locks,profileId:profileState.active});
+  const fetcher=createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch});
+  await completeVerifiedStagedProfile({setup,setupLocal,profiles,selectedProfile,sourceProfile:profileState.active,
+   sourceRevision:profileState.sourceRevision,storage,vault,sealedCredentials:running.sealedCredentials,oldVault,
+   passphrase:password,apiOrigin:api.origin,siteOrigin:location.origin,fetcher,exclusive:profileExclusive});
+  location.reload();
+ }
  async function register({fromPairing=false}={}){
   const password=await keys.read();if(!password)throw Error('SETUP_KEY_REQUIRED');
+  if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')return finishStagedCutover(password);
   const existing=await intents.read(password);
   if(!existing){if(receiver)throw Error('RECEIVER_APPROVAL_REQUIRED');
    await prepareFormalRegistration({registrationMode:'self-service',apiOrigin:api.origin,siteOrigin:location.origin,storage,vault,intentStore:intents,passphrase:password,independentVault:factory});}
+  if(staging){
+   const oldBefore=createFormalProductionANIPrimary({idb,locks,profileId:profileState.active});
+   await oldBefore.unlock(password);
+   if(oldBefore.readRevision()!==profileState.sourceRevision||profiles.read().phase!=='ready')throw Error('SOURCE_CHANGED_STOP_BEFORE_REMOTE_WRITE');
+  }
   const result=await completeFormalRegistration({networkApproved:true,apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,
    storage,vault,intentStore:intents,passphrase:password,independentVault:factory,sealedCredentials:running.sealedCredentials,ui,uiBridge:running.bridge,locks,browserFetch,
    getChallenge:({binding})=>requestRegistrationChallenge({apiOrigin:api.origin,binding,container:el('challenge'),document,events:window})});
   await setup.confirmEnabled({apiOrigin:api.origin,boxId:result.boxId,credentialsVerified:true});
+  if(staging){await finishStagedCutover(password);return result;}
   await showDestination();
   showPauseState();
   // Reload follows a durable ON marker; startup uses the same password-free
@@ -375,6 +611,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  el('retry').addEventListener('click',()=>action(async()=>{
   if(automatic){automatic.resumeAfterConflict();return}
   const currentMode=local.getItem(LOCAL_MODE);
+  if(staging){await register();return;}
   if(currentMode==='sync-enabled'){
    // Restarting a connected device is not another first registration.
    await running.resumeAutomatic({passphrase:await keys.read()});return;
@@ -383,8 +620,10 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(currentMode==='encrypted-local'){await register();return}
   throw Error('UNKNOWN_SETUP_STATE_KEEP_ORIGINAL');
  }));
- if(mode==='sync-enabled'){
-  if(ignoredExistingQR){attention(true);status.textContent='新しいQRは適用していません。このタブでの自動同期は開始していません。通常の同期を再開するにはページを再読み込みしてください。';}
+ if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')await action(()=>finishStagedCutover(restored.passphrase));
+ else if(mode==='sync-enabled'){
+  if(['disconnected','preparing'].includes(profiles.read().phase)){showConnectionActions();}
+  else if(ignoredExistingQR){attention(true);status.textContent='新しいQRは適用していません。このタブでの自動同期は開始していません。通常の同期を再開するにはページを再読み込みしてください。';}
   else if(!pauseGuard.paused){pauseGuard.assertAllowed();await running.resumeAutomatic({passphrase:await keys.read()});}
   else showPauseState();
  }else if(!receiver||await intents.read(restored.passphrase))await action(register);
