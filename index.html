@@ -1325,10 +1325,10 @@ select:not([data-status-id]){
 }
 
 /* ANI:LOG 2026-10-24 | Detail-only compact format/season metadata.
-   Both desktop and mobile: no redundant eyebrow or enclosing chips.
-   Data values remain untouched; the separator exists only if both items render. */
+   Both desktop and mobile: no redundant eyebrow, enclosing chips or separator.
+   Data values remain untouched; spacing is handled by flex gap. */
 .detail-profile .detail-heading-badges{
-  display:flex;flex-wrap:wrap;align-items:baseline;column-gap:0;row-gap:3px;
+  display:flex;flex-wrap:wrap;align-items:baseline;column-gap:10px;row-gap:3px;
   margin:0 0 9px;min-width:0;
 }
 .detail-profile .detail-heading-badges .detail-chip{
@@ -1337,10 +1337,6 @@ select:not([data-status-id]){
   font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.5;
 }
 .detail-profile .detail-heading-badges .detail-chip.accent{color:var(--accent)}
-.detail-profile .detail-heading-badges .detail-chip+.detail-chip::before{
-  content:"•";display:inline-block;color:var(--muted);
-  font-weight:var(--fw-normal);margin:0 10px;
-}
 .detail-profile .detail-head-info>h1{margin-top:0}
 </style>
 </head>
