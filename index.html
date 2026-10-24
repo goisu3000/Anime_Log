@@ -9,6 +9,9 @@
     captured={href:location.href,hash:location.hash,pathname:location.pathname,search:location.search};
     history.replaceState(history.state,'',location.pathname+location.search);
   }
+  // UI-only flag: show the existing sync panel when arriving via a QR link.
+  // Never store the QR URL or its secret in this flag.
+  window.__anilogSyncQrEntry = captured !== null;
   Object.defineProperty(window,'__v407TakePairingURL',{value:()=>{const result=captured;captured=null;return result},configurable:false,writable:false});
 })();
 </script>
@@ -18,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.64">
+<meta name="ani-log-version" content="2.4.65">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1338,35 +1341,142 @@ select:not([data-status-id]){
 }
 .detail-profile .detail-heading-badges .detail-chip.accent{color:var(--accent)}
 .detail-profile .detail-head-info>h1{margin-top:0}
+
+/* ANI:LOG sync settings shell: presentation only. Engine, ids, state and actions are unchanged. */
+.anilog-sync-sidebar{margin-top:8px}
+.anilog-sync-sidebar .anilog-sync-entry{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);text-align:left;font-size:var(--fs-md);font-weight:var(--fw-semi)}
+.anilog-sync-sidebar .anilog-sync-entry .ui-icon{width:18px;height:18px;color:var(--accent)}
+.anilog-sync-entry-text{flex:1;min-width:0;display:grid;gap:3px}
+.anilog-sync-entry-text small{color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-normal)}
+.anilog-sync-entry .anilog-sync-chevron{color:var(--muted);width:16px;height:16px}
+.anilog-sync-mobile-entry{display:none}
+.anilog-sync-dialog{width:min(620px,calc(100% - 32px));max-width:620px;max-height:calc(100dvh - 48px);padding:0;overflow:auto;background:var(--bg-side);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius);box-shadow:0 24px 80px rgba(0,0,0,.7);scrollbar-width:thin}
+.anilog-sync-dialog::backdrop{background:rgba(5,7,10,.82);backdrop-filter:blur(4px)}
+.anilog-sync-dialog-head{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;gap:12px;justify-content:space-between;padding:24px 24px 18px;border-bottom:1px solid var(--border);background:var(--bg-side)}
+.anilog-sync-dialog-head h2{margin:0 0 6px;font-size:var(--fs-2xl);line-height:1.35}
+.anilog-sync-dialog-head p{margin:0;color:var(--muted);font-size:var(--fs-sm);line-height:1.65}
+.anilog-sync-dialog-close{flex:0 0 auto;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);min-width:44px;height:40px;padding:0 12px;font-size:var(--fs-sm);font-weight:var(--fw-semi)}
+.anilog-sync-dialog #formal-simple-sync{display:block;padding:20px 24px 24px}
+.anilog-sync-dialog #formal-simple-sync>summary{display:none}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"]{margin:0 0 16px;padding:12px 14px;border:1px solid var(--accent-border);border-radius:var(--radius-sm);background:var(--accent-soft);color:var(--ink);font-size:var(--fs-sm);line-height:1.65}
+.anilog-sync-dialog #formal-simple-sync p{line-height:1.7;font-size:var(--fs-sm)}
+.anilog-sync-dialog #formal-simple-sync button:not([hidden]){display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:4px 6px 6px 0;padding:9px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.5;white-space:normal;text-align:center}
+.anilog-sync-dialog #formal-simple-sync button:disabled{opacity:.45;cursor:not-allowed}
+.anilog-sync-dialog #formal-simple-sync button[data-simple="begin"],
+.anilog-sync-dialog #formal-simple-sync button[data-simple="relink-start"],
+.anilog-sync-dialog #formal-simple-sync button[data-v407="invite"],
+.anilog-sync-dialog #formal-simple-sync button[data-v407="approve"],
+.anilog-sync-dialog #formal-simple-sync button[data-v407="check"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"],
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]{display:grid;gap:10px}
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button,
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button{justify-self:start}
+.anilog-sync-dialog #formal-simple-sync label{display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;color:var(--muted);font-weight:var(--fw-normal);font-size:var(--fs-sm);line-height:1.75}
+.anilog-sync-dialog #formal-simple-sync input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;margin:4px 0 0;flex-shrink:0}
+.anilog-sync-dialog #formal-simple-sync input[data-v407="code"]{height:42px;width:min(100%,300px);margin:8px 8px 8px 0;font-size:var(--fs-lg);font-weight:var(--fw-bold);letter-spacing:.16em;text-align:center}
+.anilog-sync-dialog #v407-pairing{margin-top:12px;padding-top:14px;border-top:1px solid var(--border)}
+.anilog-sync-dialog #v407-pairing [data-v407="qr"]{margin:14px 0;text-align:center}
+.anilog-sync-dialog #v407-pairing [data-v407="qr"] img{display:inline-block;max-width:100%;height:auto;background:white;border-radius:var(--radius-sm);padding:8px}
+.anilog-sync-dialog #formal-simple-sync [data-v407="status"]{white-space:pre-wrap;overflow-wrap:anywhere}
+.anilog-sync-dialog #formal-simple-sync [data-simple="conflicts"]{max-height:250px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:var(--fs-xs)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]{overflow-wrap:anywhere}
+@media(hover:hover){
+  .anilog-sync-sidebar .anilog-sync-entry:hover,.anilog-sync-dialog-close:hover{border-color:var(--accent);color:var(--accent);background:var(--surface-hover)}
+  .anilog-sync-dialog #formal-simple-sync button:not(:disabled):hover{border-color:var(--accent);filter:brightness(1.08)}
+}
+@media(max-width:740px){
+  body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual):not(.view-sharing) .anilog-sync-mobile-entry{display:flex;justify-content:flex-end;margin:-6px 0 14px}
+  .anilog-sync-mobile-entry button{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:8px 12px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi)}
+  .anilog-sync-mobile-entry button .ui-icon{width:16px;height:16px;color:var(--accent)}
+  .anilog-sync-dialog{width:calc(100% - 24px);max-height:calc(100dvh - 24px)}
+  .anilog-sync-dialog-head{padding:16px}
+  .anilog-sync-dialog #formal-simple-sync{padding:16px}
+  .anilog-sync-dialog #formal-simple-sync button:not([hidden]){min-height:44px}
+}
+
+/* v3 presentation adjustments: native details only, never change sync state. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-lead{padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);margin:0 0 14px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-lead strong{color:var(--ink)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced{border:1px solid var(--border);border-radius:var(--radius-sm);padding:0;background:var(--surface);margin:8px 0 12px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary{list-style:none;cursor:pointer;padding:12px 14px;min-height:44px;display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--muted)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary::-webkit-details-marker,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary::-webkit-details-marker{display:none}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary::after,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary::after{content:'+';color:var(--accent);font-size:var(--fs-xl);font-weight:var(--fw-normal)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help[open]>summary::after,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced[open]>summary::after{content:'−'}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help>p,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>p{margin:0;padding:10px 14px;color:var(--muted);font-size:var(--fs-xs);line-height:1.8}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-help>p:last-child{padding-bottom:16px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:8px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:flex-start;gap:5px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions [data-simple="unlink-sync"]{border-color:var(--border-ctrl);color:var(--danger)}
+/* Advanced controls are not needed when engine has no advanced action to show. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))){display:none}
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="begin"],
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="resume-sync"],
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="relink-sync"],
+.anilog-sync-dialog #formal-simple-sync button[data-simple="relink-start"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="backup"],
+.anilog-sync-dialog #formal-simple-sync button[data-simple="relink-backup"]{background:var(--surface2);border-color:var(--border-ctrl)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>label,
+.anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>label{margin:8px 0 10px;padding:10px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="pairing-notice"]:not([hidden]){padding:12px 14px;background:var(--surface);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]:not([hidden]){font-size:var(--fs-xs);color:var(--subtle)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="switch-result"]:not([hidden]){padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+@media(hover:hover){
+ .anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary:hover,
+ .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary:hover{background:var(--surface-hover);color:var(--accent)}
+}
 </style>
 </head>
 <body>
-<details id="formal-simple-sync" style="padding:12px"><summary>端末間同期</summary>
+<dialog id="anilog-sync-dialog" class="anilog-sync-dialog" aria-labelledby="anilogSyncDialogTitle">
+  <div class="anilog-sync-dialog-head">
+    <div><h2 id="anilogSyncDialogTitle">端末間同期</h2><p>PCとスマホで同じ視聴記録を使えます。</p></div>
+    <button type="button" class="anilog-sync-dialog-close" id="anilogSyncDialogClose" aria-label="同期設定を閉じる">閉じる</button>
+  </div>
+<details id="formal-simple-sync" open><summary>端末間同期</summary>
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
 <p data-simple="connection-info" hidden></p>
 <p data-simple="pairing-notice" hidden></p>
 <div data-simple="connection-actions" hidden>
- <button type="button" data-simple="pause-sync" hidden>この端末の自動同期を一時停止</button>
- <button type="button" data-simple="resume-sync" hidden>同じ同期先で自動同期を再開</button>
- <button type="button" data-simple="switch-check" hidden>接続変更前の安全確認</button>
- <button type="button" data-simple="unlink-sync" hidden>この端末の同期連携を解除（記録を残す）</button>
- <button type="button" data-simple="relink-sync" hidden>元の同期先への連携を再開</button>
+ <button type="button" data-simple="resume-sync" hidden>同期を再開する</button>
+ <button type="button" data-simple="relink-sync" hidden>元の同期先に戻す</button>
  <div data-simple="relink-qr-actions" hidden>
-  <p>QRの接続先へ変更する前に、この端末の最新の視聴記録を別ファイルに保存してください。現在の接続と旧データは復旧用に保持され、切り替えが成功するまで変更されません。<strong>初回の記録統合は自動判定します。</strong> 同じ作品の進捗は原則として大きい話数を、視聴状況・評価・メモ・各種設定は項目ごとの信頼できる更新日時を優先します。判断不能な同日時・日時欠落時は招待QRを発行した同期先の値を採用します。削除記録は尊重し、採用されなかった元の値は統合前の独立バックアップで保全してください。途中の通信・認証・保存に問題がある場合は記録を保持して停止します。</p>
-  <button type="button" data-simple="relink-backup">切り替え前の記録をバックアップ</button>
-  <label><input type="checkbox" data-simple="relink-confirm">バックアップを実際に保存し、他のANI:LOGのタブをすべて閉じた。話数・評価・メモなどは上記の自動統合ルールで採用値が決まり、採用しなかった元の値は独立バックアップから復元する必要があることを理解した</label>
-  <button type="button" data-simple="relink-start" disabled>このQRの同期先へ安全に接続</button>
+  <p class="anilog-sync-lead">接続先を変更する前に、記録をバックアップしてください。現在の接続と記録は、切り替えが成功するまで保持されます。</p>
+  <button type="button" data-simple="relink-backup">バックアップを保存する</button>
+  <label><input type="checkbox" data-simple="relink-confirm">バックアップを保存し、ほかのANI:LOGのタブを閉じました。統合で採用されなかった内容はバックアップから復元する必要があることを確認しました。</label>
+  <details class="anilog-sync-help"><summary>詳しい統合ルールと注意事項</summary>
+   <p>初回の記録統合は項目別ルールで自動判定します。同じ作品の視聴話数は原則として大きい値を、視聴状況・評価・メモ・設定は信頼できる項目別の更新日時が新しい方を採用します。同日時や時刻不明ならQR発行側を優先します。削除履歴は尊重します。</p>
+   <p>採用されなかった元のメモ・評価などは、独立バックアップから復元してください。通信・認証・保存に問題があれば記録を保持して安全停止します。</p>
+  </details>
+  <button type="button" data-simple="relink-start" disabled>この端末を接続する</button>
  </div>
- <button type="button" data-simple="relink-cancel" hidden>再接続を中止して元の端末内記録へ戻る</button>
+ <button type="button" data-simple="relink-cancel" hidden>再接続を中止する</button>
  <p data-simple="switch-result" role="status" hidden></p>
- <p style="font-size:.85em">解除はこの端末からの通信を停止する操作で、クラウド側の認証失効やデータ削除ではありません。端末内の記録・暗号化された復旧情報を保持します。別の同期先へ接続する場合はQRと独立バックアップを使用してください。</p>
+ <details class="anilog-sync-advanced"><summary>詳細設定・復旧</summary>
+  <div class="anilog-sync-advanced-actions">
+   <button type="button" data-simple="pause-sync" hidden>同期を一時停止する</button>
+   <button type="button" data-simple="switch-check" hidden>切り替え前の安全確認</button>
+   <button type="button" data-simple="unlink-sync" hidden>この端末の同期を解除する（記録は残す）</button>
+  </div>
+  <p class="anilog-sync-note">解除はこの端末からの同期通信を止めるだけで、クラウドの認証やデータを削除するものではありません。端末内の視聴記録と復旧情報は保持します。</p>
+ </details>
 </div>
-<div data-simple="setup"><p>希望する場合だけ設定してください。記録のコピーを保存し、旧版のほかのタブ・端末での編集を終了します。既存の別端末のQRへ参加する場合、最初の独立した記録は項目別ルールで自動統合します。視聴話数は原則最大値、評価・メモ等は信頼できる更新日時を優先し、同日時・時刻不明はQR発行側を採用します。統合前の記録は必ず独立バックアップとして保全してください。</p>
-<button type="button" data-simple="backup">移行前のバックアップを保存</button>
-<label><input type="checkbox" data-simple="confirmed">バックアップを保存し、旧版のほかのタブ・端末を閉じた</label>
-<button type="button" data-simple="begin" disabled>同期を始める</button></div>
-<button type="button" data-simple="retry" hidden>接続を再試行</button><div data-simple="challenge"></div><pre data-simple="conflicts" hidden></pre>
+<div data-simple="setup">
+<p class="anilog-sync-lead"><strong>記録をバックアップしてください。</strong> 今ある視聴記録を残したまま、ほかの端末と同期できるようにします。</p>
+<button type="button" data-simple="backup">バックアップを保存する</button>
+<label><input type="checkbox" data-simple="confirmed">バックアップを保存し、ほかのANI:LOGのタブを閉じました。</label>
+<details class="anilog-sync-help"><summary>詳しい統合ルールと注意事項</summary>
+<p>初回の接続では、片方にしかない作品を追加し、同じ作品の視聴話数は原則として大きい方を採用します。評価・メモなどは信頼できる項目別の更新日時を優先し、同日時・不明な場合はQR発行側を優先します。削除履歴は尊重します。</p>
+<p>採用されなかった古いメモや評価は、独立して保存したバックアップから復元する必要があります。接続前にほかのANI:LOGのタブ・端末での編集を終えてください。</p>
 </details>
+<button type="button" data-simple="begin" disabled>端末間同期を始める</button></div>
+<button type="button" data-simple="retry" hidden>接続を再試行する</button><div data-simple="challenge"></div><pre data-simple="conflicts" hidden></pre>
+</details>
+</dialog>
 <section id="formal-sync-controls" hidden aria-label="同期の開発用保存" style="padding:16px;border:1px solid currentColor">
 <strong>正式本体・開発用コピー／同期OFF</strong>
 <p data-formal="status" role="status">暗号化保存の準備中。実ユーザーデータを使用しないでください。</p>
@@ -1384,7 +1494,7 @@ select:not([data-status-id]){
 <div id="v407-pairing">
 <input data-v408="box-id" placeholder="接続ID（省略可）"><button type="button" data-v408="unlock-owner" disabled>承認済み端末を解錠</button><button type="button" data-v409="first-owner" disabled>所有者初回設定</button>
 <button type="button" data-v407="invite" disabled>招待QRを作成</button><button type="button" data-v407="refresh" disabled>6桁コードを確認</button><input data-v407="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" aria-label="新端末の6桁コード" placeholder="新端末の6桁コード">
-<button type="button" data-v407="approve" disabled>照合して承認</button><button type="button" data-v407="copy" disabled>招待リンクをコピー</button><div data-v407="qr"></div>
+<button type="button" data-v407="approve" disabled>番号を確認して承認</button><button type="button" data-v407="copy" disabled>リンクをコピー</button><div data-v407="qr"></div>
 <button type="button" data-v407="claim" disabled>招待を受け取る</button><span data-v407="receiver-code"></span><button type="button" data-v407="check" disabled>承認を確認</button><button type="button" data-v407="receive" disabled>初回受信</button><button type="button" data-v407="repair" disabled>認証のみ再登録</button><button type="button" data-v407="sync" disabled>同期する</button><p data-v407="status">接続処理を確認しています。</p>
 </div></section>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
@@ -1416,6 +1526,7 @@ select:not([data-status-id]){
       <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
     </nav></div>
     <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
+    <div class="anilog-sync-sidebar"><button type="button" id="anilogSyncSidebarOpen" class="anilog-sync-entry" aria-haspopup="dialog" aria-controls="anilog-sync-dialog"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="2" y="4" width="15" height="12" rx="2"/><path d="M8 20h3M9 16v4"/><rect x="17" y="9" width="5" height="11" rx="1.3"/></svg><span class="anilog-sync-entry-text">端末間同期<small id="anilogSyncSidebarStatus">接続状態を確認</small></span><svg class="ui-icon anilog-sync-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-chevron-right"/></svg></button></div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">最終書き出し：未作成</div></div>
     <div class="side-foot"><div>ANI:LOG <span id="anilog-version-label"></span></div><div>記録はブラウザ内に保存</div></div>
   </aside>
@@ -1423,6 +1534,7 @@ select:not([data-status-id]){
     <header class="topbar"><div class="crumb">MY SPACE &nbsp; / &nbsp; <b id="breadcrumb">アニメを探す</b></div><div class="top-right"><span class="dot"></span> ログイン不要・無料</div></header>
 
     <section id="libraryView"><div class="section-header"><div><div class="collection-eyebrow" id="collectionEyebrow">DISCOVER ANIME</div><h2 id="sectionTitle">アニメを探す</h2><p id="sectionDescription" hidden></p></div><div class="heading-actions"><button type="button" class="share-action" id="shareBtnMain"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 共有する</button><button type="button" class="add-btn" id="addCustomBtn"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-plus"/></svg> 手動で追加</button></div></div>
+    <div class="anilog-sync-mobile-entry"><button type="button" id="anilogSyncMobileOpen" aria-haspopup="dialog" aria-controls="anilog-sync-dialog"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="2" y="4" width="15" height="12" rx="2"/><path d="M8 20h3M9 16v4"/><rect x="17" y="9" width="5" height="11" rx="1.3"/></svg>端末間同期 <span id="anilogSyncMobileStatus"></span></button></div>
     <section class="weekly-calendar" id="weeklyCalendar" aria-labelledby="weeklyTitle" hidden>
       <header class="weekly-head"><div class="weekly-heading"><span class="weekly-eyebrow">WEEKLY VIEWING</span><h3 id="weeklyTitle">週間視聴カレンダー</h3><p class="weekly-description">自動取得した放送曜日をもとに、自分の視聴予定を管理。</p></div><div class="weekly-head-actions"><span class="weekly-today-label" id="weeklyTodayCount">今日の予定：確認中</span><div class="weekly-summary" id="weeklySummary"></div><button type="button" class="weekly-toggle" id="weeklyToggle" aria-expanded="false" aria-controls="weeklyContent" aria-label="週間視聴カレンダーを開く"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></button></div></header>
       <div class="weekly-content" id="weeklyContent" hidden><div class="weekly-toolbar"><span class="weekly-toolbar-note" id="weeklySourceNote">放送曜日は参考情報です。配信サービスの更新曜日とは異なる場合があります。</span><button type="button" id="weeklySettingsBtn" class="weekly-settings-btn" aria-expanded="false" aria-controls="weeklySettingsPanel">表示対象を設定</button></div><div class="weekly-settings-panel" id="weeklySettingsPanel" hidden><span>表示対象：</span><label><input type="checkbox" data-weekly-status="watching" checked>見てる</label><label><input type="checkbox" data-weekly-status="planned">見たい</label><label><input type="checkbox" data-weekly-status="paused">一時中断</label></div><div id="weeklyRows" class="weekly-rows"></div></div>
@@ -8883,6 +8995,49 @@ if(topBtn){
   };
   arrange();
   mobile.addEventListener('change',arrange);
+})();
+</script>
+<script>
+/* ANI:LOG sync dialog, UI-only. Do not call sync actions or alter credentials. */
+(() => {
+ 'use strict';
+ const dialog=document.getElementById('anilog-sync-dialog');
+ const root=document.getElementById('formal-simple-sync');
+ const status=root?.querySelector('[data-simple="status"]');
+ const summary=root?.querySelector('summary');
+ const pc=document.getElementById('anilogSyncSidebarOpen');
+ const mobile=document.getElementById('anilogSyncMobileOpen');
+ const close=document.getElementById('anilogSyncDialogClose');
+ if(!dialog||!root||!pc||!close)return;
+ let opener=null;
+ function show(source){
+   if(dialog.open)return;
+   opener=source??null;
+   // Existing <details> and ALL of its event listeners remain unchanged.
+   root.open=true;
+   dialog.showModal();
+ }
+ const openFrom=event=>show(event.currentTarget);
+ pc.addEventListener('click',openFrom);
+ mobile?.addEventListener('click',openFrom);
+ close.addEventListener('click',()=>dialog.close());
+ dialog.addEventListener('close',()=>{if(opener?.isConnected&&opener?.offsetParent!==null)opener.focus();opener=null});
+ function syncLabel(){
+   const text=status?.textContent??'';
+   const needs=summary?.textContent?.includes('要確認')||/失敗|できません|停止しました|確認してください|競合/.test(text);
+   const label=needs?'要確認':/一時停止/.test(text)?'一時停止中':/同期済み/.test(text)?'同期済み':/同期OFF/.test(text)?'同期OFF':'接続状態を確認';
+   const pcLabel=document.getElementById('anilogSyncSidebarStatus');
+   const mobileLabel=document.getElementById('anilogSyncMobileStatus');
+   if(pcLabel)pcLabel.textContent=label;
+   if(mobileLabel)mobileLabel.textContent=label==='要確認'?'・要確認':'';
+ }
+ const observer=new MutationObserver(syncLabel);
+ if(status)observer.observe(status,{subtree:true,childList:true,characterData:true});
+ if(summary)observer.observe(summary,{subtree:true,childList:true,characterData:true});
+ syncLabel();
+ // URL hash has already been stripped for secrecy; a boolean set by the
+ // original bootstrap is sufficient to open the UI without reading secrets.
+ if(window.__anilogSyncQrEntry===true)show(null);
 })();
 </script>
 <script type="module" src="/client/formal-page-entry.mjs"></script>

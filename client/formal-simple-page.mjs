@@ -332,7 +332,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
   const notice=el('pairing-notice');
-  if(notice){notice.hidden=false;notice.textContent='この端末にはすでに同期設定があるため、新しいQRはまだ適用していません。同期先を切り替える場合は、この画面の「この端末の同期連携を解除（記録を残す）」を押し、続けてバックアップ・確認・安全な接続を行ってください。単に「接続を再試行」しても新しいQRには接続されません。記録は保持されています。';}
+  if(notice){notice.hidden=false;notice.textContent='この端末にはすでに同期設定があるため、新しいQRはまだ適用していません。同期先を切り替える場合は、この画面の「この端末の同期を解除する（記録は残す）」を押し、続けてバックアップ・確認・安全な接続を行ってください。単に「接続を再試行」しても新しいQRには接続されません。記録は保持されています。';}
   attention(true);
  }
  if(!mode){
@@ -394,7 +394,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     lineage:storage.read().weeklyOptions.__syncLineage});
    notice.textContent=x.sameDestination?
     '読み取ったQRとこの端末は同じ同期先ID（'+x.currentID+'）です。新しい端末の承認は行っていません。この端末の元の同期を続けるには再読み込みしてください。':
-    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「この端末の同期連携を解除（記録を残す）」を押し、続けてこの画面のバックアップ・安全な接続へ進んでください。古い記録・資格情報は保持しています。';
+    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「この端末の同期を解除する（記録は残す）」を押し、続けてこの画面のバックアップ・安全な接続へ進んでください。古い記録・資格情報は保持しています。';
   }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
  }
  // The old profile's WAL/credentials remain independent from every new profile.
@@ -536,7 +536,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const panelUI=panelRoot.querySelector('#v407-pairing');root.append(panelRoot);
  panelRoot.hidden=profileState.phase==='disconnected'||profileState.phase==='preparing';
  for(const selector of ['[data-v408="box-id"]','[data-v408="unlock-owner"]','[data-v409="first-owner"]','[data-v407="repair"]','[data-v407="sync"]'])panelUI.querySelector(selector).hidden=true;
- panelUI.querySelector('[data-v407="invite"]').textContent='別の端末を追加（QR）';
+ panelUI.querySelector('[data-v407="invite"]').textContent='ほかの端末と同期する';
  // A QR scan plus a confirmed local cutover is sufficient to submit the
  // receiver claim. The owner still approves the exact six digits explicitly.
  // Keep only the actions relevant to this device; staging diagnostics remain
@@ -564,7 +564,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    el('conflicts').hidden=s.phase!=='conflict';
    el('conflicts').textContent=s.phase==='conflict'?(s.conflicts??[]).map(c=>c.path+'\nこの端末: '+JSON.stringify(c.local)+'\n同期先: '+JSON.stringify(c.remote)).join('\n'):'';
    el('retry').hidden=!['conflict','offline','pending','unavailable'].includes(s.phase);
-   el('retry').textContent=s.phase==='conflict'?'内容を確認して再同期':'接続を再試行';
+   el('retry').textContent=s.phase==='conflict'?'内容を確認して再同期':'接続を再試行する';
    if(s.phase==='synced')void running?.confirmAutomaticRole();
   }});automatic.start();
   // A registered receiver has no further pairing actions. Avoid leaving a
@@ -650,7 +650,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(retryKind!=='NOT_APPLICABLE'&&retryKind!=='EXISTING_CONNECTION_ONLY'){
    automatic?.stop();automatic=null;el('retry').hidden=true;attention(true);showConnectionActions();
    status.textContent=retryKind==='QR_REQUIRES_EXPLICIT_SWITCH'
-    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「この端末の同期連携を解除（記録を残す）」を押し、バックアップを保存してから安全に接続してください。既存の記録は保持されています。'
+    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「この端末の同期を解除する（記録は残す）」を押し、バックアップを保存してから安全に接続してください。既存の記録は保持されています。'
     :'この端末は接続解除または再接続準備中です。通常の「接続を再試行」では古い同期先へ通信しません。画面に表示されたバックアップ・QR接続手順を進めてください。記録は保持されています。';
    return;
   }
