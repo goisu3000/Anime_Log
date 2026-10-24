@@ -18,7 +18,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.61">
+<meta name="ani-log-version" content="2.4.62">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1352,16 +1352,16 @@ select:not([data-status-id]){
  <button type="button" data-simple="unlink-sync" hidden>この端末の同期連携を解除（記録を残す）</button>
  <button type="button" data-simple="relink-sync" hidden>元の同期先への連携を再開</button>
  <div data-simple="relink-qr-actions" hidden>
-  <p>QRの接続先へ変更する前に、この端末の最新の視聴記録を別ファイルに保存してください。現在の接続と旧データは復旧用に保持され、切り替えが成功するまで変更されません。</p>
+  <p>QRの接続先へ変更する前に、この端末の最新の視聴記録を別ファイルに保存してください。現在の接続と旧データは復旧用に保持され、切り替えが成功するまで変更されません。<strong>初回の記録統合は自動判定します。</strong> 同じ作品の進捗は原則として大きい話数を、視聴状況・評価・メモ・各種設定は項目ごとの信頼できる更新日時を優先します。判断不能な同日時・日時欠落時は招待QRを発行した同期先の値を採用します。削除記録は尊重し、採用されなかった元の値は統合前の独立バックアップで保全してください。途中の通信・認証・保存に問題がある場合は記録を保持して停止します。</p>
   <button type="button" data-simple="relink-backup">切り替え前の記録をバックアップ</button>
-  <label><input type="checkbox" data-simple="relink-confirm">バックアップを実際に保存し、他のANI:LOGのタブをすべて閉じた。元の記録が新しい同期先に統合・送信される場合があることを理解した</label>
+  <label><input type="checkbox" data-simple="relink-confirm">バックアップを実際に保存し、他のANI:LOGのタブをすべて閉じた。話数・評価・メモなどは上記の自動統合ルールで採用値が決まり、採用しなかった元の値は独立バックアップから復元する必要があることを理解した</label>
   <button type="button" data-simple="relink-start" disabled>このQRの同期先へ安全に接続</button>
  </div>
  <button type="button" data-simple="relink-cancel" hidden>再接続を中止して元の端末内記録へ戻る</button>
  <p data-simple="switch-result" role="status" hidden></p>
  <p style="font-size:.85em">解除はこの端末からの通信を停止する操作で、クラウド側の認証失効やデータ削除ではありません。端末内の記録・暗号化された復旧情報を保持します。別の同期先へ接続する場合はQRと独立バックアップを使用してください。</p>
 </div>
-<div data-simple="setup"><p>希望する場合だけ設定してください。記録のコピーを保存し、旧版のほかのタブ・端末での編集を終了します。</p>
+<div data-simple="setup"><p>希望する場合だけ設定してください。記録のコピーを保存し、旧版のほかのタブ・端末での編集を終了します。既存の別端末のQRへ参加する場合、最初の独立した記録は項目別ルールで自動統合します。視聴話数は原則最大値、評価・メモ等は信頼できる更新日時を優先し、同日時・時刻不明はQR発行側を採用します。統合前の記録は必ず独立バックアップとして保全してください。</p>
 <button type="button" data-simple="backup">移行前のバックアップを保存</button>
 <label><input type="checkbox" data-simple="confirmed">バックアップを保存し、旧版のほかのタブ・端末を閉じた</label>
 <button type="button" data-simple="begin" disabled>同期を始める</button></div>
