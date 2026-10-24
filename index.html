@@ -1180,6 +1180,40 @@ select:not([data-status-id]){
   select:not([data-status-id]):not(:disabled):hover{border-color:var(--accent-border)}
 }
 @media(prefers-reduced-motion:reduce){.anilog-select-option{transition:none}}
+
+/* Mobile-only: replace interactive native select surface with one custom tappable
+   control. Never tap the native select on iOS: Safari otherwise shows its OS picker.
+   Original select and its change handlers/values stay in the DOM. */
+@media(max-width:740px), (pointer:coarse){
+  select.anilog-mobile-select-proxied{display:none!important;pointer-events:none!important}
+  .anilog-mobile-select-trigger{
+    box-sizing:border-box;display:inline-flex;align-items:center;min-width:0;
+    height:42px;padding:0 34px 0 12px;
+    font-family:inherit;font-size:var(--fs-sm);font-weight:var(--fw-semi);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;
+    border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);
+    color:var(--ink);background-color:var(--surface-input);
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c2d0da' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;background-position:right 10px center;background-size:16px;
+    cursor:pointer;
+  }
+  .anilog-mobile-select-trigger:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  .anilog-mobile-select-trigger.anilog-select-open{border-color:var(--accent)}
+  .anilog-mobile-select-trigger:disabled{opacity:.45;cursor:default}
+  .anilog-mobile-select-trigger.hidden{display:none!important}
+  .control-select + .anilog-mobile-select-trigger{background-color:var(--surface);border-color:var(--border);height:44px;flex:1;min-width:120px}
+  #savedOrder + .anilog-mobile-select-trigger{background-color:var(--surface);border-color:var(--border);height:44px;flex:1;min-width:120px}
+  body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #savedOrder + .anilog-mobile-select-trigger{grid-column:1;grid-row:2;width:100%;min-width:0;max-width:100%}
+  .search-sort select + .anilog-mobile-select-trigger{background-color:var(--surface);height:36px}
+  .annual-year-control select + .anilog-mobile-select-trigger{background-color:var(--surface2);min-width:140px;height:44px;font-size:var(--fs-md);font-weight:var(--fw-bold)}
+  .rank-controls select + .anilog-mobile-select-trigger{background-color:var(--surface);min-width:140px;height:42px}
+  dialog select + .anilog-mobile-select-trigger{width:100%;height:42px;margin-bottom:16px}
+  .share-season-fields select + .anilog-mobile-select-trigger{margin-bottom:0}
+  .weekly-dialog .weekly-fieldset>select + .anilog-mobile-select-trigger{display:flex;width:100%;height:44px;margin:0 0 14px;background-color:var(--surface2);font-size:var(--fs-md)}
+  .weekly-time-controls select + .anilog-mobile-select-trigger{width:100%;height:44px;margin:0;background-color:var(--surface2);font-size:var(--fs-md)}
+  .record-select-Direct>.anilog-mobile-status-trigger,
+  .pattern-a-status-menu>.anilog-mobile-status-trigger{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;opacity:0;z-index:2}
+}
 </style>
 </head>
 <body>
@@ -8427,19 +8461,64 @@ if(topBtn){
  let menu=null, owner=null, options=[], active=-1, preferredWidth=0, lastPointerSelect=null, lastPointerAt=0;
  let searchBuffer='', searchAt=0;
  const esc=s=>String(s??'');
- // On mobile/touch layouts, use only the OS/browser's native <select> picker.
- // Do not intercept pointerdown/click/keydown there: CSS-only hiding would block native selection.
- const useNativePicker=()=>matchMedia('(max-width: 740px)').matches || matchMedia('(pointer: coarse)').matches;
- const eligible=s=>!useNativePicker() && s instanceof HTMLSelectElement && !s.disabled && s.options.length>0 && !s.multiple && s.size<=1;
+ // On mobile, visible proxy buttons intercept touch. The real select is never tapped,
+ // so iOS cannot open its native picker; values/change events remain on the original select.
+ const useMobileProxy=()=>matchMedia('(max-width: 740px), (pointer: coarse)').matches;
+ const eligible=s=>s instanceof HTMLSelectElement && !s.disabled && s.options.length>0 && !s.multiple && s.size<=1;
+ const visual=s=>useMobileProxy()?s?._anilogMobileButton||s:s;
+ const mobileButtons=new Map();
+ let scanScheduled=false;
+ function syncProxyLabel(s,b){
+  const label=s.selectedOptions[0]?.label||s.selectedOptions[0]?.textContent||'選択';
+  const status=s.hasAttribute('data-status-id');
+  if(!status && b.textContent!==label)b.textContent=label;
+  b.disabled=s.disabled;
+  b.classList.toggle('hidden',s.classList.contains('hidden')||s.hidden);
+  b.setAttribute('aria-label',s.getAttribute('aria-label')||s.labels?.[0]?.textContent?.trim()||label);
+ }
+ function makeProxy(s){
+  const b=document.createElement('button');b.type='button';
+  b.className='anilog-mobile-select-trigger';
+  b.setAttribute('aria-haspopup','listbox');b.setAttribute('aria-expanded','false');
+  if(s.id)b.dataset.selectFor=s.id;
+  if(s.hasAttribute('data-status-id'))b.classList.add('anilog-mobile-status-trigger');
+  s._anilogMobileButton=b;b._anilogSelect=s;mobileButtons.set(s,b);
+  s.classList.add('anilog-mobile-select-proxied');
+  s.setAttribute('aria-hidden','true');s.tabIndex=-1;
+  syncProxyLabel(s,b);s.after(b);
+  b.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();syncProxyLabel(s,b);open(s)});
+  return b;
+ }
+ function syncMobileProxies(){
+  scanScheduled=false;
+  if(!useMobileProxy()){
+   for(const [s,b] of mobileButtons){b.remove();s.classList.remove('anilog-mobile-select-proxied');s.removeAttribute('aria-hidden');s.removeAttribute('tabindex');delete s._anilogMobileButton;}
+   mobileButtons.clear();dismiss();return;
+  }
+  for(const s of document.querySelectorAll('select')){
+   // Only ordinary one-choice selects. Multiple/size>1 keep their native semantics.
+   if(s.multiple||s.size>1)continue;
+   let b=mobileButtons.get(s);
+   if(!b)b=makeProxy(s);
+   else if(b.previousElementSibling!==s)s.after(b); // e.g. #savedOrder moved by the app.
+   syncProxyLabel(s,b);
+  }
+  for(const [s,b] of mobileButtons){
+   if(!s.isConnected){if(owner===s)dismiss();b.remove();mobileButtons.delete(s)}
+  }
+ }
+ function scheduleScan(){if(!scanScheduled){scanScheduled=true;requestAnimationFrame(syncMobileProxies)}}
  const visible=s=>s.isConnected && s.getClientRects().length && s.getBoundingClientRect().width>0;
  function dismiss(restoreFocus=false){
   if(!menu)return;
   const current=owner;
   menu.remove();menu=null;owner=null;options=[];active=-1;preferredWidth=0;searchBuffer='';
   if(current?.isConnected){
+   const button=current._anilogMobileButton;
+   if(button){button.classList.remove('anilog-select-open');button.setAttribute('aria-expanded','false');button.removeAttribute('aria-controls');button.removeAttribute('aria-activedescendant')}
    current.classList.remove('anilog-select-open');
    current.removeAttribute('aria-controls');current.removeAttribute('aria-expanded');current.removeAttribute('aria-activedescendant');
-   if(restoreFocus)current.focus({preventScroll:true});
+   if(restoreFocus)(button?.isConnected?button:current).focus({preventScroll:true});
   }
  }
  function enabled(i){return options[i] && !options[i].disabled && !options[i].hidden}
@@ -8451,7 +8530,7 @@ if(topBtn){
   if(!menu||!enabled(i))return;
   active=i;
   for(const [idx,btn] of [...menu.children].entries())btn.classList.toggle('is-active',idx===i);
-  owner.setAttribute('aria-activedescendant',menu.children[i].id);
+  visual(owner).setAttribute('aria-activedescendant',menu.children[i].id);
   if(scroll)menu.children[i].scrollIntoView({block:'nearest'});
  }
  // Match the closed select width unless visible option text genuinely needs more room.
@@ -8475,8 +8554,8 @@ if(topBtn){
    +px(m.paddingLeft)+px(m.paddingRight)+px(m.borderLeftWidth)+px(m.borderRightWidth));
  }
  function place(){
-  if(!menu || !owner?.isConnected || !visible(owner)){dismiss();return}
-  const r=owner.getBoundingClientRect(),dlg=owner.closest('dialog[open]');
+  if(!menu || !owner?.isConnected || !visible(visual(owner))){dismiss();return}
+  const r=visual(owner).getBoundingClientRect(),dlg=owner.closest('dialog[open]');
   const d=dlg?.getBoundingClientRect();
   const leftLimit=d?Math.max(8,d.left+8):8;
   const rightLimit=d?Math.min(innerWidth-8,d.right-8):innerWidth-8;
@@ -8494,7 +8573,7 @@ if(topBtn){
   menu.style.top=useAbove?Math.max(topLimit,r.top-5-Math.min(menu.scrollHeight,maxHeight))+'px':Math.min(r.bottom+5,bottomLimit-48)+'px';
  }
  function open(s){
-  if(!eligible(s)||!visible(s))return;
+  if(!eligible(s)||!visible(visual(s)))return;
   if(menu && owner===s){dismiss(true);return}
   dismiss();
   owner=s;options=[...s.options];
@@ -8519,8 +8598,8 @@ if(topBtn){
   // The long year list gains a scrollbar on some OSes; reserve about one extra glyph
   // so decade labels such as "2000年代" remain on one line without changing other menus.
   preferredWidth=intrinsicWidth()+(s.id==='yearSelect'?20:0);
-  s.classList.add('anilog-select-open');s.setAttribute('aria-expanded','true');s.setAttribute('aria-controls',popup.id);
-  s.focus({preventScroll:true});
+  const control=visual(s);control.classList.add('anilog-select-open');control.setAttribute('aria-expanded','true');control.setAttribute('aria-controls',popup.id);
+  control.focus({preventScroll:true});
   const selected=options.findIndex(o=>o.selected&&!o.disabled&&!o.hidden);
   setActive(selected>=0?selected:nearestEnabled(0,1),false);
   place();
@@ -8534,15 +8613,16 @@ if(topBtn){
   if(!s.isConnected)return;
   if(changed){
    s.value=val;
+   if(s._anilogMobileButton)syncProxyLabel(s,s._anilogMobileButton);
    s.dispatchEvent(new Event('input',{bubbles:true}));
    s.dispatchEvent(new Event('change',{bubbles:true}));
   }
  }
  // Cancel pointer's native menu and surface the same custom menu on every select.
  document.addEventListener('pointerdown',e=>{
-  if(menu && !e.target.closest('.anilog-select-menu') && e.target!==owner)dismiss();
+  if(menu && !e.target.closest('.anilog-select-menu') && e.target!==owner && e.target!==visual(owner))dismiss();
   const s=e.target.closest?.('select');
-  if(!s||!eligible(s)||!visible(s))return;
+  if(useMobileProxy()||!s||!eligible(s)||!visible(s))return;
   if(e.button!==0)return;
   e.preventDefault();
   lastPointerSelect=s;lastPointerAt=performance.now();
@@ -8551,7 +8631,7 @@ if(topBtn){
  // Label activation or accessibility-generated click without pointerdown.
  document.addEventListener('click',e=>{
   const s=e.target.closest?.('select');
-  if(!s||!eligible(s))return;
+  if(useMobileProxy()||!s||!eligible(s))return;
   e.preventDefault();
   if(lastPointerSelect===s && performance.now()-lastPointerAt<900){
    lastPointerSelect=null;return;
@@ -8559,7 +8639,7 @@ if(topBtn){
   open(s);
  },true);
  document.addEventListener('keydown',e=>{
-  const s=e.target instanceof HTMLSelectElement?e.target:null;
+  const s=e.target instanceof HTMLSelectElement?e.target:e.target?._anilogSelect||null;
   if(!s||!eligible(s))return;
   const isOpen=!!menu&&owner===s;
   if(e.key==='Escape'){
@@ -8595,9 +8675,16 @@ if(topBtn){
  // Never leave a detached menu on another view, modal, or scroll position.
  document.addEventListener('focusin',e=>{if(menu&&e.target!==owner && !menu.contains(e.target))dismiss()},true);
  document.addEventListener('scroll',e=>{if(menu&&!menu.contains(e.target))requestAnimationFrame(()=>{if(menu)place()})},true);
- window.addEventListener('resize',()=>{if(menu){if(useNativePicker())dismiss();else place()}},{passive:true});
+ window.addEventListener('resize',()=>{if(menu)place();scheduleScan()},{passive:true});
  window.addEventListener('popstate',()=>dismiss());
  document.addEventListener('close',e=>{if(owner&&e.target===owner.closest('dialog'))dismiss()},true);
+ // Dynamic cards, year options, disabled/hidden controls and moving #savedOrder.
+ const observer=new MutationObserver(scheduleScan);
+ observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','disabled','class']});
+ document.addEventListener('change',e=>{const s=e.target;if(s instanceof HTMLSelectElement && s._anilogMobileButton)syncProxyLabel(s,s._anilogMobileButton)},true);
+ document.addEventListener('click',()=>scheduleScan(),true);
+ scheduleScan();
+
 })();
 </script>
 <script type="module" src="/client/formal-page-entry.mjs"></script>
