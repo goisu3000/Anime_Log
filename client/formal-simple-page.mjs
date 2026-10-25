@@ -536,7 +536,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const panelUI=panelRoot.querySelector('#v407-pairing');root.append(panelRoot);
  panelRoot.hidden=profileState.phase==='disconnected'||profileState.phase==='preparing';
  for(const selector of ['[data-v408="box-id"]','[data-v408="unlock-owner"]','[data-v409="first-owner"]','[data-v407="repair"]','[data-v407="sync"]'])panelUI.querySelector(selector).hidden=true;
- panelUI.querySelector('[data-v407="invite"]').textContent='ほかの端末と同期する';
+ panelUI.querySelector('[data-v407="invite"]').textContent='新しい端末を追加する';
  // A QR scan plus a confirmed local cutover is sufficient to submit the
  // receiver claim. The owner still approves the exact six digits explicitly.
  // Keep only the actions relevant to this device; staging diagnostics remain
