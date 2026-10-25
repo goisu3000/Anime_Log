@@ -555,7 +555,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    if(pauseGuard.paused)return;
    const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
     unavailable:'同期できませんでした。記録は端末に保存済みです。接続を再試行できます。',
-    conflict:'同期を一時停止しました。2台の端末で同じ項目が別々に変更されたため、自動でまとめられません。記録は上書きしていません。両端末のデータを消さずに、下の詳細を確認してください。'};
+    conflict:'同期を一時停止しました。2台の端末で同じ項目が別々に変更されたため、自動でまとめられません。記録は上書きしていません。両端末のデータを消さずに、そのまま保持してください。'};
    status.textContent=labels[s.phase]??'端末に保存済み';
    // A closed settings panel must not hide unresolved sync errors. Keep the
    // notice until a later *confirmed* success instead of blinking on edits.

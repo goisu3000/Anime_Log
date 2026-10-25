@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.78">
+<meta name="ani-log-version" content="2.4.79">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1428,6 +1428,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing [data-v407="qr"]{margin:14px 0;text-align:center}
 .anilog-sync-dialog #v407-pairing [data-v407="qr"] img{display:inline-block;max-width:100%;height:auto;background:white;border-radius:var(--radius-sm);padding:8px}
 .anilog-sync-dialog #formal-simple-sync [data-v407="status"]{white-space:pre-wrap;overflow-wrap:anywhere}
+.anilog-sync-dialog #formal-simple-sync [data-simple="conflict-details"]{display:none!important}
 .anilog-sync-dialog #formal-simple-sync [data-simple="conflicts"]{max-height:250px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:var(--fs-xs)}
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]{overflow-wrap:anywhere}
 @media(hover:hover){
