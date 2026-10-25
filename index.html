@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.69">
+<meta name="ani-log-version" content="2.4.70">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -528,6 +528,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 /* Related works: studio profile, reusing existing ANI:LOG typography and surfaces.
    No changes to the existing detail view, save actions, or sync UI. */
 .view-studio #detailView{display:none!important}
+
+/* STEP3: read-only person credits, sharing existing related-works cards. */
+.detail-person-link{display:block;width:100%;padding:0;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:var(--fw-bold);text-align:left;cursor:pointer;line-height:1.5}
+.detail-person-link:hover{color:var(--accent)}
+.detail-person-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+.related-person-roles{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-6px 0 18px}
+.related-person-roles[hidden]{display:none!important}
+.related-person-role{border:1px solid var(--border-ctrl);background:var(--surface);color:var(--muted);border-radius:var(--radius-sm);font-size:var(--fs-sm);padding:9px 12px;min-height:38px;font-weight:var(--fw-semi);cursor:pointer}
+.related-person-role[aria-pressed="true"]{border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
+.related-person-role:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.related-studio-role{display:block;color:var(--accent);font-size:var(--fs-xs);line-height:1.5;margin-top:7px}
 .related-studio-header{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:26px;margin-bottom:22px}
 .related-studio-header h1{font-size:clamp(24px,2.7vw,32px);font-weight:var(--fw-bold);margin:4px 0 10px;overflow-wrap:anywhere}
 .related-studio-header p{font-size:var(--fs-sm);color:var(--muted);margin:0;line-height:1.7}
@@ -957,6 +968,10 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .weekly-item-meta{display:flex;gap:10px;align-items:center;justify-content:flex-start;flex-wrap:wrap;min-width:0;color:var(--muted);font-size:var(--fs-xs)}
 .weekly-item-station{max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .weekly-item-episode{font-weight:var(--fw-semi);color:var(--ink);white-space:nowrap}
+/* Weekly row only: compact, wrapping streaming link. Collapsed today-preview is unchanged. */
+.weekly-item-meta .weekly-stream-link{color:var(--accent);font-size:inherit;font-weight:var(--fw-semi);text-decoration:none;overflow-wrap:anywhere;min-width:0}
+@media(hover:hover){.weekly-item-meta .weekly-stream-link:hover{text-decoration:underline;text-underline-offset:3px}}
+.weekly-item-meta .weekly-stream-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 .weekly-tag{font-size:11px;border-radius:5px;border:1px solid var(--border-ctrl);color:var(--muted);padding:2px 6px;white-space:nowrap}.weekly-tag.manual{color:var(--accent);border-color:var(--accent-border);background:var(--accent-soft)}
 .weekly-empty{align-self:center;font-size:var(--fs-xs);color:var(--muted);padding:12px 2px}.weekly-edit{flex:0 0 auto;width:34px;height:34px}.weekly-edit .ui-icon{width:15px;height:15px}
 .weekly-mobile-annual{display:none}
@@ -1652,6 +1667,7 @@ select:not([data-status-id]){
       <div class="detail-navigation"><button type="button" class="detail-back" id="studioBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-back"/></svg> 作品詳細に戻る</button><span id="studioBreadcrumb">制作会社</span></div>
       <header class="related-studio-header"><span class="eyebrow" id="studioEyebrow">ANIMATION STUDIO</span><h1 id="studioTitle"></h1><p id="studioDescription">この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。</p></header>
       <div class="related-studio-toolbar"><h2>関連作品</h2><label for="studioOrder">並び替え <select id="studioOrder"><option value="start_date">新しい順</option><option value="score">MAL評価順</option></select></label></div>
+      <div id="studioRoles" class="related-person-roles" aria-label="担当役職で絞り込む" hidden></div>
       <div id="studioStatus" class="detail-tab-status" role="status" aria-live="polite"></div>
       <button id="studioRetry" type="button" class="outline-btn hidden">再読み込み</button>
       <div id="studioCards" class="related-studio-grid"></div>
@@ -2928,7 +2944,13 @@ function weeklyEntryMarkup(a,info,preview=false,scope=null){
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
  const episode=weeklyEpisodeFor(a,info,scope);
- return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span></div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
+ const pref=cleanStreamPreference(saved[a.id]?.streamPreference);
+ const service=pref?.service?streamService(pref.service):null;
+ // Reuse the same validated service preference and search URL as the My List card.
+ const streamLink=service
+  ?`<a class="weekly-stream-link" href="${safeText(pref.url||jpStreamSearchUrl(service.domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(service.name)}で${pref.url?'見る':'探す'}</a>`
+  :'';
+ return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span>${streamLink}</div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
 }
 function renderWeeklyCalendar(){
  const el=$('#weeklyCalendar');if(!el)return;
@@ -4847,10 +4869,75 @@ function detailStreamingLinks(full,title){
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
-function detailPeople(characters,staff){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
- if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(jap.person?.name||'')}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
+/* Japanese person-name enhancement: view-only, best-effort, one AniList request per anime.
+   Never infer kanji from romanization or join providers by their unrelated person IDs. */
+let detailJapaneseNameRetryAfter=0;
+function personRomanKey(raw){
+ const source=String(raw||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z\s]/g,' ').trim();
+ const tokens=source.split(/\s+/).filter(Boolean);
+ // Order-insensitive for MAL "Surname, Given" vs AniList "Given Surname".
+ return tokens.length>=2?tokens.sort().join(''):'';
+}
+function nativePersonName(raw){
+ const text=typeof raw==='string'?raw.trim():'';
+ return text.length>0&&text.length<=100&&/[\u3041-\u30ff\u3400-\u9fff]/u.test(text)?text:'';
+}
+function personEmbeddedNative(person){
+ if(!person||typeof person!=='object')return '';
+ for(const value of [person.name_japanese,person.name_kanji,person.name_native,person.name?.native]){
+  const native=nativePersonName(value);if(native)return native;
+ }
+ return '';
+}
+function makeJapaneseNameLookup(media){
+ const possible=new Map(),ambiguous=new Set();
+ const addStaff=(person)=>{
+  const native=nativePersonName(person?.name?.native);if(!native)return;
+  const candidates=[person.name.full,person.name.first&&person.name.last?person.name.first+' '+person.name.last:'',...(Array.isArray(person.name.alternative)?person.name.alternative:[])];
+  for(const alias of candidates){const key=personRomanKey(alias);if(!key||ambiguous.has(key))continue;
+   if(possible.has(key)&&possible.get(key)!==native){possible.delete(key);ambiguous.add(key)}
+   else possible.set(key,native);
+  }
+ };
+ for(const edge of media?.characters?.edges||[]){for(const actor of edge?.voiceActors||[])addStaff(actor)}
+ for(const edge of media?.staff?.edges||[])addStaff(edge?.node);
+ return possible;
+}
+function personDisplayName(person,lookup){
+ const name=typeof person?.name==='string'?person.name:'';
+ const fromTenrai=personEmbeddedNative(person);
+ if(fromTenrai)return fromTenrai;
+ return lookup?.get(personRomanKey(name))||name;
+}
+async function ensureDetailJapaneseNames(id){
+ const entry=detailCache.get(id);
+ if(!entry?.full||!/^jikan:\d+$/.test(id)||entry.nativeNamesStatus)return;
+ if(Date.now()<detailJapaneseNameRetryAfter)return;
+ if(!Array.isArray(entry.characters?.data)&&!Array.isArray(entry.staff?.data))return;
+ // No extra request for works with no eligible people in the displayed portion.
+ const cast=(entry.characters?.data||[]).slice(0,24).some(x=>(x?.voice_actors||[]).some(v=>v.language==='Japanese'&&v.person?.name&&!personEmbeddedNative(v.person)));
+ const staff=(entry.staff?.data||[]).slice(0,30).some(x=>x.person?.name&&!personEmbeddedNative(x.person));
+ if(!cast&&!staff){entry.nativeNamesStatus='done';return}
+ entry.nativeNamesStatus='loading';
+ try{
+  const malId=Number(id.slice(6));if(!Number.isSafeInteger(malId)||malId<=0)return;
+  const query='query ($idMal:Int) { Media(idMal:$idMal,type:ANIME) { characters(page:1,perPage:25) { edges { node { id } voiceActors(language:JAPANESE) { id name { full native alternative first last } } } } staff(page:1,perPage:25) { edges { node { name { full native alternative first last } } } } } }';
+  const response=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query,variables:{idMal:malId}})});
+  if(!response.ok){if(response.status===429){const n=Number(response.headers?.get('Retry-After'));detailJapaneseNameRetryAfter=Date.now()+Math.min(3600000,Math.max(60000,(Number.isFinite(n)&&n>0?n:60)*1000))}throw Error('AniList '+response.status)}
+  const data=await response.json();if(data?.errors?.length||!data?.data?.Media)throw Error('AniList schema');
+  entry.nativeNameMap=makeJapaneseNameLookup(data.data.Media);
+ }catch{
+  // Do not hide Tenrai credits or affect the detail screen on failed enrichment.
+  if(!detailJapaneseNameRetryAfter||Date.now()>=detailJapaneseNameRetryAfter)detailJapaneseNameRetryAfter=Date.now()+300000;
+ }finally{
+  entry.nativeNamesStatus='done';
+  if(detailActiveItem?.id===id&&detailActiveTab==='people')renderDetailParts(detailNonce);
+ }
+}
+function detailPeople(characters,staff,nativeNames){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
+ if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(personDisplayName(jap.person,nativeNames))}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
  const staffList=Array.isArray(staff?.data)?staff.data:[];
- if(staffList.length){result+=detailHeading('スタッフ',`<div class="detail-people">${staffList.slice(0,30).map(x=>`<div class="detail-person"><b>${safeText(x.person?.name||'スタッフ')}</b><small>${safeText((x.positions||[]).map(roleJa).join(' / '))}</small></div>`).join('')}</div>`)}return result}
+ if(staffList.length){result+=detailHeading('スタッフ',`<div class="detail-people">${staffList.slice(0,30).map(x=>{const name=x.person?.name||'スタッフ';const displayName=personDisplayName(x.person,nativeNames)||name;const positions=Array.isArray(x.positions)?x.positions:[];const id=x.person?.mal_id;const canLink=Number.isSafeInteger(id)&&id>0;const role=positions.join(' / ').slice(0,300);return `<div class="detail-person"><b>${canLink?`<button type="button" class="detail-person-link" data-person-id="${id}" data-person-name="${safeText(name)}" data-person-role="${safeText(role)}">${safeText(displayName)}</button>`:safeText(displayName)}</b><small>${safeText(positions.map(roleJa).join(' / '))}</small></div>`}).join('')}</div>`)}return result}
 function detailLoadingHtml(){return '<div class="detail-loading" id="detailPending">作品情報を自動取得しています…</div>'}
 function detailRelatedAvailable(full){
  return Array.isArray(full?.relations)&&full.relations.some(group=>(group.entry||[]).some(e=>String(e.type).toLowerCase()==='anime'&&Number.isInteger(e.mal_id)));
@@ -4879,7 +4966,7 @@ function detailTabPanel(entry,full){
  }else if(detailActiveTab==='episodes'){
   html=detailEpisodesWrapper(entry)||detailTabError(entry,'episodes')||detailTabLoading('エピソードを読み込んでいます…');
  }else if(detailActiveTab==='people'){
-  html=detailPeople(entry.characters,entry.staff);
+  html=detailPeople(entry.characters,entry.staff,entry.nativeNameMap);
   if(detailFieldState(entry,'characters')==='loading'||detailFieldState(entry,'staff')==='loading')html+=detailTabLoading('キャスト・スタッフを取得しています…');
   if(!html)html=detailTabError(entry,'characters')+detailTabError(entry,'staff')||detailTabLoading('キャスト・スタッフを読み込んでいます…');
  }else if(detailActiveTab==='related')html=detailRelations(full);
@@ -4935,6 +5022,7 @@ async function ensureDetailTab(tab,id){
  if(tab==='people'){
   await ensureDetailField(id,'characters');
   if(detailActiveItem?.id===id)await ensureDetailField(id,'staff');
+  if(detailActiveItem?.id===id)void ensureDetailJapaneseNames(id);
  }
 }
 function selectDetailTab(tab,focus=false){
@@ -4974,8 +5062,66 @@ let studioProfile=null,studioSerial=0,studioPage=0,studioHasNext=false,studioLoa
 let studioItems=[],studioItemRefs=new Map();
 const studioMemoryCache=new Map();
 const validStudioId=id=>Number.isSafeInteger(Number(id))&&Number(id)>0&&Number(id)<=100000000;
-const validRelatedKind=kind=>['studio','genre','theme'].includes(kind);
-const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'}};
+const validRelatedKind=kind=>['studio','genre','theme','person'].includes(kind);
+const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'},person:{crumb:'スタッフ',eyebrow:'STAFF PROFILE',description:'担当作品と役職を表示しています。作品データはAPIの登録範囲に限られ、公開年や評価が取得できない場合もあります。'}};
+
+// Role names come from Tenrai's person anime credits, not from a guessed biography.
+function personRoleTokens(value){
+ const list=Array.isArray(value)?value:[value];
+ return list.flatMap(v=>String(v||'').split(/\s*[,／/]\s*/)).map(v=>v.trim()).filter(Boolean).slice(0,30);
+}
+function personRoleGroup(role){
+ const text=String(role||'').toLowerCase().trim();
+ if(/series composition|series structure/.test(text))return 'series';
+ if(/script|screenplay|scenario/.test(text))return 'script';
+ if(/original creator|original work|original story/.test(text))return 'original';
+ return 'other';
+}
+function personRoleMatch(roles,filter){
+ if(filter==='all')return true;
+ if(filter==='writing')return roles.some(r=>['script','series'].includes(personRoleGroup(r)));
+ return roles.some(r=>personRoleGroup(r)===filter);
+}
+function personInitialRole(roles){
+ const groups=personRoleTokens(roles).map(personRoleGroup);
+ if(groups.some(x=>x==='script'||x==='series'))return 'writing';
+ if(groups.includes('original'))return 'original';
+ return 'all';
+}
+function personNormalizeCredits(rows){
+ const map=new Map();
+ for(const entry of rows){
+  const anime=entry?.anime;
+  if(!anime||!Number.isSafeInteger(anime.mal_id)||anime.mal_id<=0)continue;
+  const roles=personRoleTokens(entry.positions||entry.position||'');
+  if(!roles.length)continue;
+  const key=anime.mal_id;
+  if(!map.has(key))map.set(key,{...anime,__staffRoles:[]});
+  const result=map.get(key);
+  for(const role of roles){if(!result.__staffRoles.includes(role))result.__staffRoles.push(role)}
+ }
+ return Array.from(map.values());
+}
+function personSortCredits(items,order){
+ return items.slice().sort((a,b)=>{
+  if(order==='score')return (Number.isFinite(b.score)?b.score:-1)-(Number.isFinite(a.score)?a.score:-1);
+  const aDate=String(a.aired?.from||a.year||'').slice(0,10),bDate=String(b.aired?.from||b.year||'').slice(0,10);
+  return bDate.localeCompare(aDate);
+ });
+}
+function personRenderFilters(){
+ const root=$('#studioRoles');root.replaceChildren();
+ if(studioProfile?.kind!=='person'){root.hidden=true;return}
+ root.hidden=false;
+ const options=[['all','すべて'],['writing','脚本・シリーズ構成'],['script','脚本'],['series','シリーズ構成'],['original','原作']];
+ const used=new Set(studioItems.flatMap(item=>item.__staffRoles||[]).map(personRoleGroup));
+ for(const [key,label] of options){
+  if(key!=='all'&&key!=='writing'&&!used.has(key))continue;
+  if(key==='writing'&&!used.has('script')&&!used.has('series'))continue;
+  const btn=document.createElement('button');btn.type='button';btn.className='related-person-role';btn.dataset.roleFilter=key;btn.textContent=label;btn.setAttribute('aria-pressed',String(studioProfile.role===key));root.append(btn);
+ }
+}
+
 function studioCloseUi(){
  ++studioSerial;studioProfile=null;studioLoading=false;
  document.body.classList.remove('view-studio');$('#studioView').classList.add('hidden');
@@ -4983,15 +5129,20 @@ function studioCloseUi(){
 }
 function studioDraw(){
  if(!studioProfile)return;
- $('#studioTitle').textContent=studioProfile.kind==='studio'?analysisDisplayName('studios',studioProfile.name):genreJa(studioProfile.name);
+ $('#studioTitle').textContent=studioProfile.kind==='studio'?analysisDisplayName('studios',studioProfile.name):studioProfile.kind==='person'?studioProfile.name:genreJa(studioProfile.name);
  const label=relatedLabels[studioProfile.kind];
  $('#studioBreadcrumb').textContent=label.crumb;
  $('#studioEyebrow').textContent=label.eyebrow;
  $('#studioDescription').textContent=label.description;
  $('#studioOrder').value=studioProfile.order;
+ $('#studioView .related-studio-toolbar h2').textContent=studioProfile.kind==='person'?'担当作品':'関連作品';
+ $('#studioOrder').querySelector('[value="score"]').disabled=studioProfile.kind==='person'&&!studioLoading&&!studioItems.some(x=>Number.isFinite(x.score));
+ personRenderFilters();
+ const visibleItems=studioProfile.kind==='person'?personSortCredits(studioItems.filter(item=>personRoleMatch(item.__staffRoles||[],studioProfile.role)),studioProfile.order):studioItems;
  $('#studioStatus').textContent=studioLoading?'作品を読み込んでいます…':studioProfile.error?studioProfile.error:!studioItems.length?'該当する作品が見つかりませんでした。':'';
  const cards=$('#studioCards');cards.replaceChildren();studioItemRefs=new Map();
- for(const obj of studioItems){
+ const displayed=studioProfile.kind==='person'?visibleItems.slice(0,studioProfile.visibleLimit||24):visibleItems;
+ for(const obj of displayed){
   if(!Number.isSafeInteger(obj?.mal_id)||obj.mal_id<=0)continue;
   const work=model(obj),key=work.id;studioItemRefs.set(key,work);
   const card=document.createElement('button');card.type='button';card.className='related-studio-card';card.dataset.studioWork=key;
@@ -4999,10 +5150,10 @@ function studioDraw(){
   const src=safeImage(work.image);if(src){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';poster.append(img)}else{poster.textContent='NO IMAGE'}
   const title=document.createElement('span');title.className='related-studio-title';title.textContent=work.title;
   const meta=document.createElement('span');meta.className='related-studio-meta';meta.textContent=[work.year?work.year+'年':'',typeJa(work.type||''),typeof work.score==='number'?'MAL '+work.score.toFixed(2):'',saved[key]?.status?statusLabels[saved[key].status]:''].filter(Boolean).join(' ・ ');
-  card.append(poster,title,meta);cards.append(card);
+  card.append(poster,title,meta);if(studioProfile.kind==='person'){const role=document.createElement('span');role.className='related-studio-role';role.textContent=(obj.__staffRoles||[]).map(roleJa).join(' / ');card.append(role)}cards.append(card);
  }
  $('#studioRetry').classList.toggle('hidden',!studioProfile.error);
- $('#studioMore').classList.toggle('hidden',!studioHasNext||studioLoading||!!studioProfile.error);
+ $('#studioMore').classList.toggle('hidden',studioProfile.kind==='person'?displayed.length>=visibleItems.length:!studioHasNext||studioLoading||!!studioProfile.error);
  $('#studioMore').disabled=studioLoading;
 }
 async function studioLoadPage(next=false){
@@ -5011,16 +5162,17 @@ async function studioLoadPage(next=false){
  const targetPage=next?studioPage+1:1;
  studioLoading=true;studioProfile.error='';studioDraw();
  try{
-  // Both genre and theme MAL IDs use Tenrai's `genres` anime filter.
+  // People return a staff-credit list (position + anime), not an /anime search page.
   const common={page:String(targetPage),limit:'24',order_by:order,sort:'desc'};
   const params=kind==='studio'?new URLSearchParams({producers:String(id),...common}):new URLSearchParams({genres:String(id),...common});
-  const response=await detailFetch('/anime?'+params.toString());
+  const response=await detailFetch(kind==='person'?'/people/'+id+'/anime':'/anime?'+params.toString());
   if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.kind!==kind||studioProfile.order!==order)return;
   if(!Array.isArray(response?.data))throw Error('INVALID_STUDIO_RESPONSE');
   const unique=new Set(studioItems.map(e=>e?.mal_id));
-  const added=response.data.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
-  studioItems=next?[...studioItems,...added]:added;
-  studioPage=targetPage;studioHasNext=response?.pagination?.has_next_page===true;
+  const normalized=kind==='person'?personNormalizeCredits(response.data):response.data;
+  const added=normalized.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
+  studioItems=kind==='person'?added:(next?[...studioItems,...added]:added);
+  studioPage=targetPage;studioHasNext=kind!=='person'&&response?.pagination?.has_next_page===true;
   studioMemoryCache.set(kind+':'+id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
   while(studioMemoryCache.size>12)studioMemoryCache.delete(studioMemoryCache.keys().next().value);
  }catch(err){
@@ -5030,10 +5182,11 @@ async function studioLoadPage(next=false){
 }
 function openStudioProfile(id,name){studioShow(id,name,{kind:'studio'})}
 function openCategoryProfile(id,name,kind){studioShow(id,name,{kind})}
+function openPersonProfile(id,name,role){studioShow(id,name,{kind:'person',role:personInitialRole(role)})}
 function studioShow(id,name,options={}){
  const kind=validRelatedKind(options.kind)?options.kind:'studio';
  if(!validStudioId(id))return;
- studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,order:'start_date',error:''};
+ studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,role:kind==='person'?(['all','writing','script','series','original'].includes(options.role)?options.role:'all'):'all',visibleLimit:kind==='person'?Math.min(1500,Math.max(24,Number(options.visibleLimit)||24)):24,order:'start_date',error:''};
  document.body.classList.add('view-detail','view-studio');$('#detailView').classList.add('hidden');$('#studioView').classList.remove('hidden');
  $('#breadcrumb').textContent=relatedLabels[studioProfile.kind].crumb;
  studioItems=[];studioPage=0;studioHasNext=false;
@@ -5048,12 +5201,22 @@ $('#studioBack').addEventListener('click',()=>{
 });
 $('#studioOrder').addEventListener('change',e=>{
  if(!studioProfile||!['start_date','score'].includes(e.target.value))return;
+ // Person credits are returned as one list, so changing local sort never consumes another API request.
+ if(studioProfile.kind==='person'){studioProfile.order=e.target.value;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();return}
  studioProfile.order=e.target.value;studioPage=0;studioItems=[];studioHasNext=false;studioProfile.error='';++studioSerial;studioLoading=false;
  const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext;studioDraw()}else void studioLoadPage();
 });
 $('#studioRetry').addEventListener('click',()=>{if(studioProfile&&!studioLoading)void studioLoadPage(studioPage>0)});
+$('#studioRoles').addEventListener('click',e=>{
+ const button=e.target.closest('[data-role-filter]');
+ if(!button||studioProfile?.kind!=='person')return;
+ const role=button.dataset.roleFilter;
+ if(!['all','writing','script','series','original'].includes(role))return;
+ studioProfile.role=role;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();
+});
 $('#studioMore').addEventListener('click',()=>{
+ if(studioProfile?.kind==='person'){studioProfile.visibleLimit+=24;studioDraw();aniHistorySave();return}
  if(!studioHasNext){if(studioProfile?.error)void studioLoadPage(studioPage>0);return}void studioLoadPage(true);
 });
 $('#studioCards').addEventListener('click',e=>{
@@ -5156,6 +5319,7 @@ $('#detailContent').addEventListener('click',e=>{
   link.replaceWith(iframe);
   return;
  }
+ const person=e.target.closest('[data-person-id]');if(person){openPersonProfile(person.dataset.personId,person.textContent?.trim()||person.dataset.personName,person.dataset.personRole);return}
  const studio=e.target.closest('[data-studio-id]');if(studio){openStudioProfile(studio.dataset.studioId,studio.dataset.studioName);return}
  const category=e.target.closest('[data-category-id]');if(category){openCategoryProfile(category.dataset.categoryId,category.dataset.categoryName,category.dataset.categoryKind);return}
  const rel=e.target.closest('[data-related-id]');if(rel){const id=rel.dataset.relatedId;const title=rel.dataset.relatedTitle||'関連作品';openDetail(detailSource(id)||{id,title,english:'',image:'',type:'アニメ',year:null,season:null,episodes:null,score:null},true);return}
@@ -5179,7 +5343,7 @@ function aniHistoryDetailRef(item){
 function aniHistorySnapshot(){
  return {
   [ANI_ROUTE]:1,depth:aniHistoryDepth,view:mode,
-  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name,kind:studioProfile.kind}:null,
+  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name,kind:studioProfile.kind,role:studioProfile.role,visibleLimit:studioProfile.visibleLimit}:null,
   detail:document.body.classList.contains('view-detail')?aniHistoryDetailRef(detailActiveItem):null,
   detailSteps:document.body.classList.contains('view-detail')?detailHistorySteps:0,
   scrollY:window.scrollY,
@@ -5221,6 +5385,7 @@ showAnnual=aniHistoryWrap(showAnnual);
 openDetail=aniHistoryWrap(openDetail);
 openStudioProfile=aniHistoryWrap(openStudioProfile);
 openCategoryProfile=aniHistoryWrap(openCategoryProfile);
+openPersonProfile=aniHistoryWrap(openPersonProfile);
 runSeasonSearch=aniHistoryWrap(runSeasonSearch);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
@@ -5236,7 +5401,7 @@ async function aniHistoryRestore(state){
  try{
   if(state.studio&&validStudioId(state.studio.id)){
    if(state.detail&&!detailActiveItem)detailActiveItem=detailSource(state.detail.id)||state.detail;
-   studioShow(state.studio.id,state.studio.name,{kind:state.studio.kind});
+   studioShow(state.studio.id,state.studio.name,{kind:state.studio.kind,role:state.studio.role,visibleLimit:state.studio.visibleLimit});
    return;
   }
   if(document.body.classList.contains('view-studio')){studioCloseUi();$('#detailView').classList.remove('hidden')}
@@ -6543,7 +6708,13 @@ function weeklyEntryMarkup(a,info,preview=false,scope=null){
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
  const episode=weeklyEpisodeFor(a,info,scope);
- return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span></div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
+ const pref=cleanStreamPreference(saved[a.id]?.streamPreference);
+ const service=pref?.service?streamService(pref.service):null;
+ // Reuse the same validated service preference and search URL as the My List card.
+ const streamLink=service
+  ?`<a class="weekly-stream-link" href="${safeText(pref.url||jpStreamSearchUrl(service.domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(service.name)}で${pref.url?'見る':'探す'}</a>`
+  :'';
+ return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span>${streamLink}</div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
 }
 function renderWeeklyCalendar(){
  const el=$('#weeklyCalendar');if(!el)return;
@@ -8471,10 +8642,75 @@ function detailStreamingLinks(full,title){
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
-function detailPeople(characters,staff){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
- if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(jap.person?.name||'')}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
+/* Japanese person-name enhancement: view-only, best-effort, one AniList request per anime.
+   Never infer kanji from romanization or join providers by their unrelated person IDs. */
+let detailJapaneseNameRetryAfter=0;
+function personRomanKey(raw){
+ const source=String(raw||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z\s]/g,' ').trim();
+ const tokens=source.split(/\s+/).filter(Boolean);
+ // Order-insensitive for MAL "Surname, Given" vs AniList "Given Surname".
+ return tokens.length>=2?tokens.sort().join(''):'';
+}
+function nativePersonName(raw){
+ const text=typeof raw==='string'?raw.trim():'';
+ return text.length>0&&text.length<=100&&/[\u3041-\u30ff\u3400-\u9fff]/u.test(text)?text:'';
+}
+function personEmbeddedNative(person){
+ if(!person||typeof person!=='object')return '';
+ for(const value of [person.name_japanese,person.name_kanji,person.name_native,person.name?.native]){
+  const native=nativePersonName(value);if(native)return native;
+ }
+ return '';
+}
+function makeJapaneseNameLookup(media){
+ const possible=new Map(),ambiguous=new Set();
+ const addStaff=(person)=>{
+  const native=nativePersonName(person?.name?.native);if(!native)return;
+  const candidates=[person.name.full,person.name.first&&person.name.last?person.name.first+' '+person.name.last:'',...(Array.isArray(person.name.alternative)?person.name.alternative:[])];
+  for(const alias of candidates){const key=personRomanKey(alias);if(!key||ambiguous.has(key))continue;
+   if(possible.has(key)&&possible.get(key)!==native){possible.delete(key);ambiguous.add(key)}
+   else possible.set(key,native);
+  }
+ };
+ for(const edge of media?.characters?.edges||[]){for(const actor of edge?.voiceActors||[])addStaff(actor)}
+ for(const edge of media?.staff?.edges||[])addStaff(edge?.node);
+ return possible;
+}
+function personDisplayName(person,lookup){
+ const name=typeof person?.name==='string'?person.name:'';
+ const fromTenrai=personEmbeddedNative(person);
+ if(fromTenrai)return fromTenrai;
+ return lookup?.get(personRomanKey(name))||name;
+}
+async function ensureDetailJapaneseNames(id){
+ const entry=detailCache.get(id);
+ if(!entry?.full||!/^jikan:\d+$/.test(id)||entry.nativeNamesStatus)return;
+ if(Date.now()<detailJapaneseNameRetryAfter)return;
+ if(!Array.isArray(entry.characters?.data)&&!Array.isArray(entry.staff?.data))return;
+ // No extra request for works with no eligible people in the displayed portion.
+ const cast=(entry.characters?.data||[]).slice(0,24).some(x=>(x?.voice_actors||[]).some(v=>v.language==='Japanese'&&v.person?.name&&!personEmbeddedNative(v.person)));
+ const staff=(entry.staff?.data||[]).slice(0,30).some(x=>x.person?.name&&!personEmbeddedNative(x.person));
+ if(!cast&&!staff){entry.nativeNamesStatus='done';return}
+ entry.nativeNamesStatus='loading';
+ try{
+  const malId=Number(id.slice(6));if(!Number.isSafeInteger(malId)||malId<=0)return;
+  const query='query ($idMal:Int) { Media(idMal:$idMal,type:ANIME) { characters(page:1,perPage:25) { edges { node { id } voiceActors(language:JAPANESE) { id name { full native alternative first last } } } } staff(page:1,perPage:25) { edges { node { name { full native alternative first last } } } } } }';
+  const response=await fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query,variables:{idMal:malId}})});
+  if(!response.ok){if(response.status===429){const n=Number(response.headers?.get('Retry-After'));detailJapaneseNameRetryAfter=Date.now()+Math.min(3600000,Math.max(60000,(Number.isFinite(n)&&n>0?n:60)*1000))}throw Error('AniList '+response.status)}
+  const data=await response.json();if(data?.errors?.length||!data?.data?.Media)throw Error('AniList schema');
+  entry.nativeNameMap=makeJapaneseNameLookup(data.data.Media);
+ }catch{
+  // Do not hide Tenrai credits or affect the detail screen on failed enrichment.
+  if(!detailJapaneseNameRetryAfter||Date.now()>=detailJapaneseNameRetryAfter)detailJapaneseNameRetryAfter=Date.now()+300000;
+ }finally{
+  entry.nativeNamesStatus='done';
+  if(detailActiveItem?.id===id&&detailActiveTab==='people')renderDetailParts(detailNonce);
+ }
+}
+function detailPeople(characters,staff,nativeNames){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
+ if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(personDisplayName(jap.person,nativeNames))}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
  const staffList=Array.isArray(staff?.data)?staff.data:[];
- if(staffList.length){result+=detailHeading('スタッフ',`<div class="detail-people">${staffList.slice(0,30).map(x=>`<div class="detail-person"><b>${safeText(x.person?.name||'スタッフ')}</b><small>${safeText((x.positions||[]).map(roleJa).join(' / '))}</small></div>`).join('')}</div>`)}return result}
+ if(staffList.length){result+=detailHeading('スタッフ',`<div class="detail-people">${staffList.slice(0,30).map(x=>{const name=x.person?.name||'スタッフ';const displayName=personDisplayName(x.person,nativeNames)||name;const positions=Array.isArray(x.positions)?x.positions:[];const id=x.person?.mal_id;const canLink=Number.isSafeInteger(id)&&id>0;const role=positions.join(' / ').slice(0,300);return `<div class="detail-person"><b>${canLink?`<button type="button" class="detail-person-link" data-person-id="${id}" data-person-name="${safeText(name)}" data-person-role="${safeText(role)}">${safeText(displayName)}</button>`:safeText(displayName)}</b><small>${safeText(positions.map(roleJa).join(' / '))}</small></div>`}).join('')}</div>`)}return result}
 function detailLoadingHtml(){return '<div class="detail-loading" id="detailPending">作品情報を自動取得しています…</div>'}
 function detailRelatedAvailable(full){
  return Array.isArray(full?.relations)&&full.relations.some(group=>(group.entry||[]).some(e=>String(e.type).toLowerCase()==='anime'&&Number.isInteger(e.mal_id)));
@@ -8503,7 +8739,7 @@ function detailTabPanel(entry,full){
  }else if(detailActiveTab==='episodes'){
   html=detailEpisodesWrapper(entry)||detailTabError(entry,'episodes')||detailTabLoading('エピソードを読み込んでいます…');
  }else if(detailActiveTab==='people'){
-  html=detailPeople(entry.characters,entry.staff);
+  html=detailPeople(entry.characters,entry.staff,entry.nativeNameMap);
   if(detailFieldState(entry,'characters')==='loading'||detailFieldState(entry,'staff')==='loading')html+=detailTabLoading('キャスト・スタッフを取得しています…');
   if(!html)html=detailTabError(entry,'characters')+detailTabError(entry,'staff')||detailTabLoading('キャスト・スタッフを読み込んでいます…');
  }else if(detailActiveTab==='related')html=detailRelations(full);
@@ -8559,6 +8795,7 @@ async function ensureDetailTab(tab,id){
  if(tab==='people'){
   await ensureDetailField(id,'characters');
   if(detailActiveItem?.id===id)await ensureDetailField(id,'staff');
+  if(detailActiveItem?.id===id)void ensureDetailJapaneseNames(id);
  }
 }
 function selectDetailTab(tab,focus=false){
@@ -8598,8 +8835,66 @@ let studioProfile=null,studioSerial=0,studioPage=0,studioHasNext=false,studioLoa
 let studioItems=[],studioItemRefs=new Map();
 const studioMemoryCache=new Map();
 const validStudioId=id=>Number.isSafeInteger(Number(id))&&Number(id)>0&&Number(id)<=100000000;
-const validRelatedKind=kind=>['studio','genre','theme'].includes(kind);
-const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'}};
+const validRelatedKind=kind=>['studio','genre','theme','person'].includes(kind);
+const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'},person:{crumb:'スタッフ',eyebrow:'STAFF PROFILE',description:'担当作品と役職を表示しています。作品データはAPIの登録範囲に限られ、公開年や評価が取得できない場合もあります。'}};
+
+// Role names come from Tenrai's person anime credits, not from a guessed biography.
+function personRoleTokens(value){
+ const list=Array.isArray(value)?value:[value];
+ return list.flatMap(v=>String(v||'').split(/\s*[,／/]\s*/)).map(v=>v.trim()).filter(Boolean).slice(0,30);
+}
+function personRoleGroup(role){
+ const text=String(role||'').toLowerCase().trim();
+ if(/series composition|series structure/.test(text))return 'series';
+ if(/script|screenplay|scenario/.test(text))return 'script';
+ if(/original creator|original work|original story/.test(text))return 'original';
+ return 'other';
+}
+function personRoleMatch(roles,filter){
+ if(filter==='all')return true;
+ if(filter==='writing')return roles.some(r=>['script','series'].includes(personRoleGroup(r)));
+ return roles.some(r=>personRoleGroup(r)===filter);
+}
+function personInitialRole(roles){
+ const groups=personRoleTokens(roles).map(personRoleGroup);
+ if(groups.some(x=>x==='script'||x==='series'))return 'writing';
+ if(groups.includes('original'))return 'original';
+ return 'all';
+}
+function personNormalizeCredits(rows){
+ const map=new Map();
+ for(const entry of rows){
+  const anime=entry?.anime;
+  if(!anime||!Number.isSafeInteger(anime.mal_id)||anime.mal_id<=0)continue;
+  const roles=personRoleTokens(entry.positions||entry.position||'');
+  if(!roles.length)continue;
+  const key=anime.mal_id;
+  if(!map.has(key))map.set(key,{...anime,__staffRoles:[]});
+  const result=map.get(key);
+  for(const role of roles){if(!result.__staffRoles.includes(role))result.__staffRoles.push(role)}
+ }
+ return Array.from(map.values());
+}
+function personSortCredits(items,order){
+ return items.slice().sort((a,b)=>{
+  if(order==='score')return (Number.isFinite(b.score)?b.score:-1)-(Number.isFinite(a.score)?a.score:-1);
+  const aDate=String(a.aired?.from||a.year||'').slice(0,10),bDate=String(b.aired?.from||b.year||'').slice(0,10);
+  return bDate.localeCompare(aDate);
+ });
+}
+function personRenderFilters(){
+ const root=$('#studioRoles');root.replaceChildren();
+ if(studioProfile?.kind!=='person'){root.hidden=true;return}
+ root.hidden=false;
+ const options=[['all','すべて'],['writing','脚本・シリーズ構成'],['script','脚本'],['series','シリーズ構成'],['original','原作']];
+ const used=new Set(studioItems.flatMap(item=>item.__staffRoles||[]).map(personRoleGroup));
+ for(const [key,label] of options){
+  if(key!=='all'&&key!=='writing'&&!used.has(key))continue;
+  if(key==='writing'&&!used.has('script')&&!used.has('series'))continue;
+  const btn=document.createElement('button');btn.type='button';btn.className='related-person-role';btn.dataset.roleFilter=key;btn.textContent=label;btn.setAttribute('aria-pressed',String(studioProfile.role===key));root.append(btn);
+ }
+}
+
 function studioCloseUi(){
  ++studioSerial;studioProfile=null;studioLoading=false;
  document.body.classList.remove('view-studio');$('#studioView').classList.add('hidden');
@@ -8607,15 +8902,20 @@ function studioCloseUi(){
 }
 function studioDraw(){
  if(!studioProfile)return;
- $('#studioTitle').textContent=studioProfile.kind==='studio'?analysisDisplayName('studios',studioProfile.name):genreJa(studioProfile.name);
+ $('#studioTitle').textContent=studioProfile.kind==='studio'?analysisDisplayName('studios',studioProfile.name):studioProfile.kind==='person'?studioProfile.name:genreJa(studioProfile.name);
  const label=relatedLabels[studioProfile.kind];
  $('#studioBreadcrumb').textContent=label.crumb;
  $('#studioEyebrow').textContent=label.eyebrow;
  $('#studioDescription').textContent=label.description;
  $('#studioOrder').value=studioProfile.order;
+ $('#studioView .related-studio-toolbar h2').textContent=studioProfile.kind==='person'?'担当作品':'関連作品';
+ $('#studioOrder').querySelector('[value="score"]').disabled=studioProfile.kind==='person'&&!studioLoading&&!studioItems.some(x=>Number.isFinite(x.score));
+ personRenderFilters();
+ const visibleItems=studioProfile.kind==='person'?personSortCredits(studioItems.filter(item=>personRoleMatch(item.__staffRoles||[],studioProfile.role)),studioProfile.order):studioItems;
  $('#studioStatus').textContent=studioLoading?'作品を読み込んでいます…':studioProfile.error?studioProfile.error:!studioItems.length?'該当する作品が見つかりませんでした。':'';
  const cards=$('#studioCards');cards.replaceChildren();studioItemRefs=new Map();
- for(const obj of studioItems){
+ const displayed=studioProfile.kind==='person'?visibleItems.slice(0,studioProfile.visibleLimit||24):visibleItems;
+ for(const obj of displayed){
   if(!Number.isSafeInteger(obj?.mal_id)||obj.mal_id<=0)continue;
   const work=model(obj),key=work.id;studioItemRefs.set(key,work);
   const card=document.createElement('button');card.type='button';card.className='related-studio-card';card.dataset.studioWork=key;
@@ -8623,10 +8923,10 @@ function studioDraw(){
   const src=safeImage(work.image);if(src){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';poster.append(img)}else{poster.textContent='NO IMAGE'}
   const title=document.createElement('span');title.className='related-studio-title';title.textContent=work.title;
   const meta=document.createElement('span');meta.className='related-studio-meta';meta.textContent=[work.year?work.year+'年':'',typeJa(work.type||''),typeof work.score==='number'?'MAL '+work.score.toFixed(2):'',saved[key]?.status?statusLabels[saved[key].status]:''].filter(Boolean).join(' ・ ');
-  card.append(poster,title,meta);cards.append(card);
+  card.append(poster,title,meta);if(studioProfile.kind==='person'){const role=document.createElement('span');role.className='related-studio-role';role.textContent=(obj.__staffRoles||[]).map(roleJa).join(' / ');card.append(role)}cards.append(card);
  }
  $('#studioRetry').classList.toggle('hidden',!studioProfile.error);
- $('#studioMore').classList.toggle('hidden',!studioHasNext||studioLoading||!!studioProfile.error);
+ $('#studioMore').classList.toggle('hidden',studioProfile.kind==='person'?displayed.length>=visibleItems.length:!studioHasNext||studioLoading||!!studioProfile.error);
  $('#studioMore').disabled=studioLoading;
 }
 async function studioLoadPage(next=false){
@@ -8635,16 +8935,17 @@ async function studioLoadPage(next=false){
  const targetPage=next?studioPage+1:1;
  studioLoading=true;studioProfile.error='';studioDraw();
  try{
-  // Both genre and theme MAL IDs use Tenrai's `genres` anime filter.
+  // People return a staff-credit list (position + anime), not an /anime search page.
   const common={page:String(targetPage),limit:'24',order_by:order,sort:'desc'};
   const params=kind==='studio'?new URLSearchParams({producers:String(id),...common}):new URLSearchParams({genres:String(id),...common});
-  const response=await detailFetch('/anime?'+params.toString());
+  const response=await detailFetch(kind==='person'?'/people/'+id+'/anime':'/anime?'+params.toString());
   if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.kind!==kind||studioProfile.order!==order)return;
   if(!Array.isArray(response?.data))throw Error('INVALID_STUDIO_RESPONSE');
   const unique=new Set(studioItems.map(e=>e?.mal_id));
-  const added=response.data.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
-  studioItems=next?[...studioItems,...added]:added;
-  studioPage=targetPage;studioHasNext=response?.pagination?.has_next_page===true;
+  const normalized=kind==='person'?personNormalizeCredits(response.data):response.data;
+  const added=normalized.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
+  studioItems=kind==='person'?added:(next?[...studioItems,...added]:added);
+  studioPage=targetPage;studioHasNext=kind!=='person'&&response?.pagination?.has_next_page===true;
   studioMemoryCache.set(kind+':'+id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
   while(studioMemoryCache.size>12)studioMemoryCache.delete(studioMemoryCache.keys().next().value);
  }catch(err){
@@ -8654,10 +8955,11 @@ async function studioLoadPage(next=false){
 }
 function openStudioProfile(id,name){studioShow(id,name,{kind:'studio'})}
 function openCategoryProfile(id,name,kind){studioShow(id,name,{kind})}
+function openPersonProfile(id,name,role){studioShow(id,name,{kind:'person',role:personInitialRole(role)})}
 function studioShow(id,name,options={}){
  const kind=validRelatedKind(options.kind)?options.kind:'studio';
  if(!validStudioId(id))return;
- studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,order:'start_date',error:''};
+ studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,role:kind==='person'?(['all','writing','script','series','original'].includes(options.role)?options.role:'all'):'all',visibleLimit:kind==='person'?Math.min(1500,Math.max(24,Number(options.visibleLimit)||24)):24,order:'start_date',error:''};
  document.body.classList.add('view-detail','view-studio');$('#detailView').classList.add('hidden');$('#studioView').classList.remove('hidden');
  $('#breadcrumb').textContent=relatedLabels[studioProfile.kind].crumb;
  studioItems=[];studioPage=0;studioHasNext=false;
@@ -8672,12 +8974,22 @@ $('#studioBack').addEventListener('click',()=>{
 });
 $('#studioOrder').addEventListener('change',e=>{
  if(!studioProfile||!['start_date','score'].includes(e.target.value))return;
+ // Person credits are returned as one list, so changing local sort never consumes another API request.
+ if(studioProfile.kind==='person'){studioProfile.order=e.target.value;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();return}
  studioProfile.order=e.target.value;studioPage=0;studioItems=[];studioHasNext=false;studioProfile.error='';++studioSerial;studioLoading=false;
  const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext;studioDraw()}else void studioLoadPage();
 });
 $('#studioRetry').addEventListener('click',()=>{if(studioProfile&&!studioLoading)void studioLoadPage(studioPage>0)});
+$('#studioRoles').addEventListener('click',e=>{
+ const button=e.target.closest('[data-role-filter]');
+ if(!button||studioProfile?.kind!=='person')return;
+ const role=button.dataset.roleFilter;
+ if(!['all','writing','script','series','original'].includes(role))return;
+ studioProfile.role=role;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();
+});
 $('#studioMore').addEventListener('click',()=>{
+ if(studioProfile?.kind==='person'){studioProfile.visibleLimit+=24;studioDraw();aniHistorySave();return}
  if(!studioHasNext){if(studioProfile?.error)void studioLoadPage(studioPage>0);return}void studioLoadPage(true);
 });
 $('#studioCards').addEventListener('click',e=>{
@@ -8780,6 +9092,7 @@ $('#detailContent').addEventListener('click',e=>{
   link.replaceWith(iframe);
   return;
  }
+ const person=e.target.closest('[data-person-id]');if(person){openPersonProfile(person.dataset.personId,person.textContent?.trim()||person.dataset.personName,person.dataset.personRole);return}
  const studio=e.target.closest('[data-studio-id]');if(studio){openStudioProfile(studio.dataset.studioId,studio.dataset.studioName);return}
  const category=e.target.closest('[data-category-id]');if(category){openCategoryProfile(category.dataset.categoryId,category.dataset.categoryName,category.dataset.categoryKind);return}
  const rel=e.target.closest('[data-related-id]');if(rel){const id=rel.dataset.relatedId;const title=rel.dataset.relatedTitle||'関連作品';openDetail(detailSource(id)||{id,title,english:'',image:'',type:'アニメ',year:null,season:null,episodes:null,score:null},true);return}
@@ -8803,7 +9116,7 @@ function aniHistoryDetailRef(item){
 function aniHistorySnapshot(){
  return {
   [ANI_ROUTE]:1,depth:aniHistoryDepth,view:mode,
-  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name,kind:studioProfile.kind}:null,
+  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name,kind:studioProfile.kind,role:studioProfile.role,visibleLimit:studioProfile.visibleLimit}:null,
   detail:document.body.classList.contains('view-detail')?aniHistoryDetailRef(detailActiveItem):null,
   detailSteps:document.body.classList.contains('view-detail')?detailHistorySteps:0,
   scrollY:window.scrollY,
@@ -8845,6 +9158,7 @@ showAnnual=aniHistoryWrap(showAnnual);
 openDetail=aniHistoryWrap(openDetail);
 openStudioProfile=aniHistoryWrap(openStudioProfile);
 openCategoryProfile=aniHistoryWrap(openCategoryProfile);
+openPersonProfile=aniHistoryWrap(openPersonProfile);
 runSeasonSearch=aniHistoryWrap(runSeasonSearch);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
@@ -8860,7 +9174,7 @@ async function aniHistoryRestore(state){
  try{
   if(state.studio&&validStudioId(state.studio.id)){
    if(state.detail&&!detailActiveItem)detailActiveItem=detailSource(state.detail.id)||state.detail;
-   studioShow(state.studio.id,state.studio.name,{kind:state.studio.kind});
+   studioShow(state.studio.id,state.studio.name,{kind:state.studio.kind,role:state.studio.role,visibleLimit:state.studio.visibleLimit});
    return;
   }
   if(document.body.classList.contains('view-studio')){studioCloseUi();$('#detailView').classList.remove('hidden')}
@@ -8998,8 +9312,12 @@ if(topBtn){
  function syncMobileProxies(){
   scanScheduled=false;
   if(!useMobileProxy()){
+   // On desktop every click schedules this scan. Dismissing unconditionally
+   // would close the popup immediately after opening it. Only dismiss when
+   // actually changing back from mobile proxies.
+   const hadMobileProxies=mobileButtons.size>0;
    for(const [s,b] of mobileButtons){b.remove();s.classList.remove('anilog-mobile-select-proxied');s.removeAttribute('aria-hidden');s.removeAttribute('tabindex');delete s._anilogMobileButton;}
-   mobileButtons.clear();dismiss();return;
+   mobileButtons.clear();if(hadMobileProxies)dismiss();return;
   }
   for(const s of document.querySelectorAll('select')){
    // Only ordinary one-choice selects. Multiple/size>1 keep their native semantics.
