@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.82">
+<meta name="ani-log-version" content="2.4.83">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -688,6 +688,38 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .shared-info .muted,.shared-info-summary{font-size:var(--fs-sm);color:var(--muted);margin:4px 0 0}
 .shared-entries{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
 .shared-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+
+/* Shared snapshot: desktop controls occupy existing toolbar whitespace. */
+.shared-info-main{min-width:0;flex:1 1 auto}
+.shared-config{position:relative;flex:0 0 auto;margin-left:auto}
+.shared-controls{display:flex;align-items:center;gap:10px}
+.shared-control-label[hidden]{display:none!important}
+.shared-control-label{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi)}
+.shared-control-label select{height:34px;min-width:0;padding:0 34px 0 10px;background-color:var(--surface);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);font-size:var(--fs-xs);font-weight:var(--fw-semi);cursor:pointer}
+#sharedStatusFilter{width:118px}
+#sharedSortOrder{width:150px}
+.shared-config-toggle{display:none}
+.shared-info > #backFromShare{flex:0 0 auto;white-space:nowrap;min-height:34px}
+@media(max-width:1080px){
+  .shared-info{flex-wrap:nowrap;align-items:flex-start;gap:8px}
+  .shared-info-main{flex:1 1 auto;min-width:0}
+  .shared-config{margin-top:0}
+  .shared-config-toggle{display:inline-flex;min-height:34px;white-space:nowrap}
+  .shared-controls{display:none;position:absolute;z-index:30;right:0;top:calc(100% + 6px);width:min(280px,calc(100vw - 40px));padding:12px;background:var(--surface2);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);box-shadow:0 12px 32px rgba(0,0,0,.48);flex-direction:column;align-items:stretch;gap:12px}
+  .shared-config.is-open .shared-controls{display:flex}
+  .shared-control-label{display:flex;justify-content:space-between;gap:8px}
+  .shared-control-label select,.shared-control-label select + .anilog-mobile-select-trigger{width:155px;min-width:0;height:42px;flex:0 0 155px}
+  .shared-info > #backFromShare{min-height:34px}
+}
+@media(max-width:420px){.shared-info{flex-wrap:wrap}.shared-info-main{flex:1 0 100%}.shared-config{margin-left:auto}.shared-config-toggle{min-height:34px}}
+
+/* Keep metadata at its original width; controls occupy only heading-row whitespace. */
+@media(min-width:1081px){
+ .shared-info{display:grid;grid-template-columns:minmax(0,1fr) max-content max-content;column-gap:10px}
+ .shared-info-main{grid-column:1/3;grid-row:1}
+ .shared-config{grid-column:2;grid-row:1;align-self:start}
+ .shared-info>#backFromShare{grid-column:3;grid-row:1;align-self:center}
+}
 /* Shared cards: poster and its badges share a true portrait frame (no sideways letterboxing). */
 .shared-card .poster-wrap{height:auto;aspect-ratio:2/3}
 .type-pill,.status-pill{position:absolute;top:10px;z-index:1;font-size:var(--fs-xs);padding:4px 8px;border-radius:6px;font-weight:var(--fw-bold)}
@@ -1861,7 +1893,7 @@ select:not([data-status-id]){
     </section>
     <section id="shareView" class="hidden" aria-label="共有された視聴リスト">
       <div class="share-lead"><div class="eyebrow">SHARED ANIME LIST</div><h1 id="sharedTitle">視聴リスト</h1><p>このリストは共有時点のスナップショットです。閲覧しても、あなた自身の視聴記録は変更されません。</p><span class="share-tag" id="sharedTag">閲覧専用</span></div>
-      <div class="shared-info"><div><h2>共有された作品</h2><div class="muted" id="sharedCreated"></div><p class="shared-info-summary" id="sharedInfoSummary"></p></div><button type="button" class="outline-btn" id="backFromShare">自分のリストへ</button></div>
+      <div class="shared-info"><div class="shared-info-main"><h2>共有された作品</h2><div class="muted" id="sharedCreated"></div><p class="shared-info-summary" id="sharedInfoSummary"></p></div><div class="shared-config hidden" id="sharedConfig"><button type="button" class="outline-btn shared-config-toggle" id="sharedConfigToggle" aria-expanded="false" aria-controls="sharedControls">表示設定</button><div class="shared-controls" id="sharedControls"><label class="shared-control-label" id="sharedStatusLabel" for="sharedStatusFilter">視聴状況 <select id="sharedStatusFilter" aria-label="共有作品の視聴状況で絞り込む"><option value="all">すべて</option></select></label><label class="shared-control-label" id="sharedSortLabel" for="sharedSortOrder">並び替え <select id="sharedSortOrder" aria-label="共有作品を並び替える"><option value="original">元の並び順</option></select></label></div></div><button type="button" class="outline-btn" id="backFromShare">自分のリストへ</button></div>
       <div class="shared-entries" id="sharedItems" aria-live="polite"></div>
       <p class="disclaimer">これは作成時点の記録です。最新のリストは、共有した人から新しいURLを受け取ってください。</p>
     </section>
@@ -4109,13 +4141,56 @@ function sharedCard(a){
  const img=a.image?`<img loading="lazy" referrerpolicy="no-referrer" src="${safeText(a.image)}" alt="" onerror="this.style.display='none';this.nextElementSibling.hidden=false"><div class="placeholder" hidden>A<span style="color:var(--accent)">:</span>L</div>`:'<div class="placeholder">A<span style="color:var(--accent)">:</span>L</div>';
  return `<article class="anime-card shared-card"><div class="poster-wrap"><button type="button" class="poster-button detail-trigger" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の作品詳細を開く">${img}</button><span class="type-pill">${safeText(typeJa(knownType))}</span><span class="status-pill ${a.status}">${statusLabels[a.status]}</span></div><div class="card-body"><div class="card-title"><button type="button" class="title-button detail-trigger" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="card-meta"><span>${safeText(a.year?a.year+'年':'作品情報')}</span></div>${publicReviewMarkup(a,true)}<div class="readonly-line">${uiIcon('check')} 閲覧専用の共有リスト</div></div></article>`;
 }
+
+/* Read-only shared list controls; never mutate the share snapshot or saved records. */
+let sharedFilter='all',sharedSort='original',sharedControlIdentity='';
+const SHARED_STATUS_ORDER=['watching','planned','watched','paused','dropped'];
+function sharedConfigClose(){
+ const config=$('#sharedConfig'),toggle=$('#sharedConfigToggle');
+ config.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');
+}
+function sharedRenderItems(){
+ if(!sharedSnapshot)return;
+ const original=sharedSnapshot.items||[];
+ const rows=sharedFilter==='all'?original.slice():original.filter(a=>a.status===sharedFilter);
+ if(sharedSort==='rating'&&sharedSnapshot.options?.overall===true)rows.sort((a,b)=>(Number(b.review?.overall)||0)-(Number(a.review?.overall)||0));
+ else if(sharedSort==='new'||sharedSort==='old')rows.sort((a,b)=>{
+  const aYear=Number.isInteger(a.year)&&a.year>0?a.year:null;
+  const bYear=Number.isInteger(b.year)&&b.year>0?b.year:null;
+  if(aYear===null)return bYear===null?0:1;
+  if(bYear===null)return -1;
+  return sharedSort==='new'?bYear-aYear:aYear-bYear;
+ });
+ else if(sharedSort==='name')rows.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ja',{numeric:true}));
+ $('#sharedItems').innerHTML=rows.length?rows.map(sharedCard).join(''):original.length?emptyCard('該当する作品がありません','視聴状況を切り替えてください。','book'):emptyCard('この共有リストに作品はありません','共有した時点では対象作品が登録されていませんでした。','book');
+}
+function sharedPrepareControls(snapshot){
+ const list=snapshot.items||[];
+ const identity=location.hash||`${snapshot.created}:${snapshot.scope}:${list.length}:${list[0]?.id||''}:${list[list.length-1]?.id||''}`;
+ if(sharedControlIdentity!==identity){sharedControlIdentity=identity;sharedFilter='all';sharedSort='original'}
+ const statuses=SHARED_STATUS_ORDER.filter(status=>list.some(item=>item.status===status));
+ const hasStatusChoices=statuses.length>1;
+ const rated=snapshot.options?.overall===true&&list.some(item=>Number.isInteger(item.review?.overall)&&item.review.overall>=1&&item.review.overall<=5);
+ const years=new Set(list.filter(item=>Number.isInteger(item.year)&&item.year>0).map(item=>item.year));
+ const sortOptions=[['original','元の並び順'],...(rated?[['rating','評価の高い順']]:[]),...(years.size>1?[['new','新しい作品順'],['old','古い作品順']]:[]),...(list.length>1?[['name','作品名順']]:[])];
+ if(!statuses.includes(sharedFilter))sharedFilter='all';
+ if(!sortOptions.some(([key])=>key===sharedSort))sharedSort='original';
+ const statusSelect=$('#sharedStatusFilter'),sortSelect=$('#sharedSortOrder');
+ statusSelect.innerHTML=[['all','すべて'],...statuses.map(key=>[key,statusLabels[key]])].map(([key,name])=>`<option value="${key}">${safeText(name)}</option>`).join('');
+ sortSelect.innerHTML=sortOptions.map(([key,name])=>`<option value="${key}">${safeText(name)}</option>`).join('');
+ statusSelect.value=sharedFilter;sortSelect.value=sharedSort;
+ $('#sharedStatusLabel').hidden=!hasStatusChoices;
+ $('#sharedSortLabel').hidden=sortOptions.length<=1;
+ $('#sharedConfig').classList.toggle('hidden',!hasStatusChoices&&sortOptions.length<=1);
+ sharedConfigClose();
+}
 function showShared(snapshot){
  exitRanking();closeDetail(false);activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');sharedSnapshot=snapshot;mode='share';document.body.classList.add('view-sharing');$('#shareView').classList.remove('hidden');$('#breadcrumb').textContent='共有リスト';
  $('#sharedTitle').textContent=shareHeading(snapshot);$('#sharedTag').textContent=`${snapshot.items.length}作品 · 閲覧専用`;
  $('#sharedCreated').textContent=`共有URLの作成日：${new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'}).format(new Date(snapshot.created))}`;
  const types=['作品名・視聴状況',...(snapshot.options?.overall?['総合評価']:[]),...(snapshot.options?.details?['詳細評価']:[]),...(snapshot.options?.comment?['感想']:[])];
  $('#sharedInfoSummary').textContent='公開項目：'+types.join(' / ');
- $('#sharedItems').innerHTML=snapshot.items.length?snapshot.items.map(sharedCard).join(''):emptyCard('この共有リストに作品はありません','共有した時点では対象作品が登録されていませんでした。','book');
+ sharedPrepareControls(snapshot);sharedRenderItems();
  setNav();window.scrollTo({top:0,behavior:'instant'});
  if(aniHistoryReady&&!aniHistoryRestoring)aniHistorySave();
 }
@@ -4244,6 +4319,12 @@ $('#generateShare').addEventListener('click',generateShare);
 $('#closeShare').addEventListener('click',()=>$('#shareDialog').close());
 $('#copyShare').addEventListener('click',copyShare);
 $('#previewShare').addEventListener('click',()=>{if(!shareLinkBuilt)return;$('#shareDialog').close();aniHistorySave();window.location.hash=new URL(shareLinkBuilt).hash});
+
+$('#sharedStatusFilter').addEventListener('change',e=>{sharedFilter=e.target.value;sharedRenderItems();aniHistorySave()});
+$('#sharedSortOrder').addEventListener('change',e=>{sharedSort=e.target.value;sharedRenderItems();aniHistorySave()});
+$('#sharedConfigToggle').addEventListener('click',()=>{const config=$('#sharedConfig');const open=!config.classList.contains('is-open');config.classList.toggle('is-open',open);$('#sharedConfigToggle').setAttribute('aria-expanded',String(open))});
+document.addEventListener('pointerdown',e=>{if(!$('#sharedConfig').contains(e.target))sharedConfigClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sharedConfig').classList.contains('is-open')){sharedConfigClose();$('#sharedConfigToggle').focus()}});
 $('#backFromShare').addEventListener('click',()=>showSaved());
 window.addEventListener('hashchange',()=>{if(aniHistoryRestoring)return;if(location.hash.startsWith(SHARE_PREFIX)){if(mode==='share'&&history.state?.__aniLogRouteV1&&history.state.view==='share')return;if(aniHistoryReady)aniHistoryDepth++;readShareFromHash()}else if(mode==='share'){exitSharedView();showSaved()}});
 $('#homeBrand').addEventListener('click',goHome);
@@ -8083,13 +8164,56 @@ function sharedCard(a){
  const img=a.image?`<img loading="lazy" referrerpolicy="no-referrer" src="${safeText(a.image)}" alt="" onerror="this.style.display='none';this.nextElementSibling.hidden=false"><div class="placeholder" hidden>A<span style="color:var(--accent)">:</span>L</div>`:'<div class="placeholder">A<span style="color:var(--accent)">:</span>L</div>';
  return `<article class="anime-card shared-card"><div class="poster-wrap"><button type="button" class="poster-button detail-trigger" data-detail-id="${safeText(a.id)}" aria-label="${safeText(a.title)}の作品詳細を開く">${img}</button><span class="type-pill">${safeText(typeJa(knownType))}</span><span class="status-pill ${a.status}">${statusLabels[a.status]}</span></div><div class="card-body"><div class="card-title"><button type="button" class="title-button detail-trigger" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button></div><div class="card-meta"><span>${safeText(a.year?a.year+'年':'作品情報')}</span></div>${publicReviewMarkup(a,true)}<div class="readonly-line">${uiIcon('check')} 閲覧専用の共有リスト</div></div></article>`;
 }
+
+/* Read-only shared list controls; never mutate the share snapshot or saved records. */
+let sharedFilter='all',sharedSort='original',sharedControlIdentity='';
+const SHARED_STATUS_ORDER=['watching','planned','watched','paused','dropped'];
+function sharedConfigClose(){
+ const config=$('#sharedConfig'),toggle=$('#sharedConfigToggle');
+ config.classList.remove('is-open');toggle.setAttribute('aria-expanded','false');
+}
+function sharedRenderItems(){
+ if(!sharedSnapshot)return;
+ const original=sharedSnapshot.items||[];
+ const rows=sharedFilter==='all'?original.slice():original.filter(a=>a.status===sharedFilter);
+ if(sharedSort==='rating'&&sharedSnapshot.options?.overall===true)rows.sort((a,b)=>(Number(b.review?.overall)||0)-(Number(a.review?.overall)||0));
+ else if(sharedSort==='new'||sharedSort==='old')rows.sort((a,b)=>{
+  const aYear=Number.isInteger(a.year)&&a.year>0?a.year:null;
+  const bYear=Number.isInteger(b.year)&&b.year>0?b.year:null;
+  if(aYear===null)return bYear===null?0:1;
+  if(bYear===null)return -1;
+  return sharedSort==='new'?bYear-aYear:aYear-bYear;
+ });
+ else if(sharedSort==='name')rows.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ja',{numeric:true}));
+ $('#sharedItems').innerHTML=rows.length?rows.map(sharedCard).join(''):original.length?emptyCard('該当する作品がありません','視聴状況を切り替えてください。','book'):emptyCard('この共有リストに作品はありません','共有した時点では対象作品が登録されていませんでした。','book');
+}
+function sharedPrepareControls(snapshot){
+ const list=snapshot.items||[];
+ const identity=location.hash||`${snapshot.created}:${snapshot.scope}:${list.length}:${list[0]?.id||''}:${list[list.length-1]?.id||''}`;
+ if(sharedControlIdentity!==identity){sharedControlIdentity=identity;sharedFilter='all';sharedSort='original'}
+ const statuses=SHARED_STATUS_ORDER.filter(status=>list.some(item=>item.status===status));
+ const hasStatusChoices=statuses.length>1;
+ const rated=snapshot.options?.overall===true&&list.some(item=>Number.isInteger(item.review?.overall)&&item.review.overall>=1&&item.review.overall<=5);
+ const years=new Set(list.filter(item=>Number.isInteger(item.year)&&item.year>0).map(item=>item.year));
+ const sortOptions=[['original','元の並び順'],...(rated?[['rating','評価の高い順']]:[]),...(years.size>1?[['new','新しい作品順'],['old','古い作品順']]:[]),...(list.length>1?[['name','作品名順']]:[])];
+ if(!statuses.includes(sharedFilter))sharedFilter='all';
+ if(!sortOptions.some(([key])=>key===sharedSort))sharedSort='original';
+ const statusSelect=$('#sharedStatusFilter'),sortSelect=$('#sharedSortOrder');
+ statusSelect.innerHTML=[['all','すべて'],...statuses.map(key=>[key,statusLabels[key]])].map(([key,name])=>`<option value="${key}">${safeText(name)}</option>`).join('');
+ sortSelect.innerHTML=sortOptions.map(([key,name])=>`<option value="${key}">${safeText(name)}</option>`).join('');
+ statusSelect.value=sharedFilter;sortSelect.value=sharedSort;
+ $('#sharedStatusLabel').hidden=!hasStatusChoices;
+ $('#sharedSortLabel').hidden=sortOptions.length<=1;
+ $('#sharedConfig').classList.toggle('hidden',!hasStatusChoices&&sortOptions.length<=1);
+ sharedConfigClose();
+}
 function showShared(snapshot){
  exitRanking();closeDetail(false);activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');sharedSnapshot=snapshot;mode='share';document.body.classList.add('view-sharing');$('#shareView').classList.remove('hidden');$('#breadcrumb').textContent='共有リスト';
  $('#sharedTitle').textContent=shareHeading(snapshot);$('#sharedTag').textContent=`${snapshot.items.length}作品 · 閲覧専用`;
  $('#sharedCreated').textContent=`共有URLの作成日：${new Intl.DateTimeFormat('ja-JP',{year:'numeric',month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Tokyo'}).format(new Date(snapshot.created))}`;
  const types=['作品名・視聴状況',...(snapshot.options?.overall?['総合評価']:[]),...(snapshot.options?.details?['詳細評価']:[]),...(snapshot.options?.comment?['感想']:[])];
  $('#sharedInfoSummary').textContent='公開項目：'+types.join(' / ');
- $('#sharedItems').innerHTML=snapshot.items.length?snapshot.items.map(sharedCard).join(''):emptyCard('この共有リストに作品はありません','共有した時点では対象作品が登録されていませんでした。','book');
+ sharedPrepareControls(snapshot);sharedRenderItems();
  setNav();window.scrollTo({top:0,behavior:'instant'});
  if(aniHistoryReady&&!aniHistoryRestoring)aniHistorySave();
 }
@@ -8218,6 +8342,12 @@ $('#generateShare').addEventListener('click',generateShare);
 $('#closeShare').addEventListener('click',()=>$('#shareDialog').close());
 $('#copyShare').addEventListener('click',copyShare);
 $('#previewShare').addEventListener('click',()=>{if(!shareLinkBuilt)return;$('#shareDialog').close();aniHistorySave();window.location.hash=new URL(shareLinkBuilt).hash});
+
+$('#sharedStatusFilter').addEventListener('change',e=>{sharedFilter=e.target.value;sharedRenderItems();aniHistorySave()});
+$('#sharedSortOrder').addEventListener('change',e=>{sharedSort=e.target.value;sharedRenderItems();aniHistorySave()});
+$('#sharedConfigToggle').addEventListener('click',()=>{const config=$('#sharedConfig');const open=!config.classList.contains('is-open');config.classList.toggle('is-open',open);$('#sharedConfigToggle').setAttribute('aria-expanded',String(open))});
+document.addEventListener('pointerdown',e=>{if(!$('#sharedConfig').contains(e.target))sharedConfigClose()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#sharedConfig').classList.contains('is-open')){sharedConfigClose();$('#sharedConfigToggle').focus()}});
 $('#backFromShare').addEventListener('click',()=>showSaved());
 window.addEventListener('hashchange',()=>{if(aniHistoryRestoring)return;if(location.hash.startsWith(SHARE_PREFIX)){if(mode==='share'&&history.state?.__aniLogRouteV1&&history.state.view==='share')return;if(aniHistoryReady)aniHistoryDepth++;readShareFromHash()}else if(mode==='share'){exitSharedView();showSaved()}});
 $('#homeBrand').addEventListener('click',goHome);
