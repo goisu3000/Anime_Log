@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.68">
+<meta name="ani-log-version" content="2.4.69">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -516,7 +516,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-facts{margin:16px 0}
 .detail-facts span{background:var(--surface-input);border:1px solid var(--border);border-radius:6px;color:var(--ink);font-size:var(--fs-sm);padding:7px 11px}
 .detail-tags{margin:0 0 20px}
-.detail-tags span{font-size:var(--fs-xs);border:1px solid var(--border-ctrl);color:var(--muted);border-radius:99px;padding:4px 10px}
+.detail-tags span,.detail-tags .detail-tag-link{font-size:var(--fs-xs);border:1px solid var(--border-ctrl);color:var(--muted);border-radius:99px;padding:4px 10px;background:transparent;font-weight:var(--fw-normal);line-height:normal}
+.detail-tags .detail-tag-link:hover{color:var(--accent);border-color:var(--accent-border);background:var(--accent-soft)}
+.detail-tags .detail-tag-link:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .detail-studio{border-top:1px solid var(--border);padding-top:16px;display:grid;gap:4px}
 .detail-studio>span{color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi)}
 .detail-studio>strong{font-size:var(--fs-md);font-weight:var(--fw-semi)}
@@ -1110,7 +1112,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .detail-facts{margin:0 0 14px;gap:8px}
   .detail-facts span{font-size:var(--fs-xs);padding:8px 11px;border-radius:10px}
   .detail-tags{margin:0 0 18px;gap:8px}
-  .detail-tags span{padding:5px 11px}
+  .detail-tags span,.detail-tags .detail-tag-link{padding:5px 11px}
   .detail-studio{margin-top:2px;padding-top:14px}
   .detail-streaming-card{margin-top:18px;padding:16px}
   .detail-streaming-card .detail-section-title{font-size:var(--fs-lg);margin-bottom:10px}
@@ -1646,9 +1648,9 @@ select:not([data-status-id]){
       <div id="detailContent" aria-live="polite"></div>
       <p class="detail-credit">作品情報は <a href="https://tenrai.org/" target="_blank" rel="noopener noreferrer">Tenrai API</a> から取得しています。未登録の項目は表示しません。作品概要は日本語版Wikipediaの公開情報を補完に利用することがあります。PVの公開状況や日本国内の配信状況は保証されません。</p>
     </section>
-    <section id="studioView" class="hidden" aria-label="制作会社の関連作品">
+    <section id="studioView" class="hidden" aria-label="関連作品の一覧">
       <div class="detail-navigation"><button type="button" class="detail-back" id="studioBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-back"/></svg> 作品詳細に戻る</button><span id="studioBreadcrumb">制作会社</span></div>
-      <header class="related-studio-header"><span class="eyebrow">ANIMATION STUDIO</span><h1 id="studioTitle"></h1><p>この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。</p></header>
+      <header class="related-studio-header"><span class="eyebrow" id="studioEyebrow">ANIMATION STUDIO</span><h1 id="studioTitle"></h1><p id="studioDescription">この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。</p></header>
       <div class="related-studio-toolbar"><h2>関連作品</h2><label for="studioOrder">並び替え <select id="studioOrder"><option value="start_date">新しい順</option><option value="score">MAL評価順</option></select></label></div>
       <div id="studioStatus" class="detail-tab-status" role="status" aria-live="polite"></div>
       <button id="studioRetry" type="button" class="outline-btn hidden">再読み込み</button>
@@ -4708,12 +4710,12 @@ function detailHeader(a,full=null){
  const title=d.title_japanese||a.title,alt=(d.title&&d.title!==title?d.title:a.english&&a.english!==title?a.english:'');
  const badges=[typeJa(d.type||a.type||'アニメ'),year&&seasonLabels[season]?`${year}年 ${seasonLabels[season]}`:year?`${year}年`:null].filter(Boolean);
  const facts=[(d.episodes||a.episodes)?`${d.episodes||a.episodes}話`:null,d.duration||null,({'Currently Airing':'放送中','Finished Airing':'放送終了','Not yet aired':'放送前'}[d.status]||d.status)||null,Number.isFinite(d.score)&&d.score>0?`MAL ${d.score.toFixed(2)} / 10`:null,d.broadcast?.string||null].filter(Boolean);
- const tags=[...(Array.isArray(d.genres)?d.genres:[]),...(Array.isArray(d.themes)?d.themes:[])].map(x=>genreJa(x?.name)).filter(Boolean);
+ const tags=[...(Array.isArray(d.genres)?d.genres:[]).map(x=>({...x,kind:'genre'})),...(Array.isArray(d.themes)?d.themes:[]).map(x=>({...x,kind:'theme'}))].filter(x=>typeof x?.name==='string'&&x.name.trim());
  const studios=Array.isArray(d.studios)?d.studios.filter(x=>typeof x?.name==='string'&&x.name.trim()).slice(0,12):[];
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
  const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
- const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges" aria-label="作品形式と放送時期">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><div class="detail-studio-links">${studios.map(x=>Number.isSafeInteger(x.mal_id)&&x.mal_id>0?`<button type="button" class="detail-studio-link" data-studio-id="${x.mal_id}" data-studio-name="${safeText(x.name)}">${safeText(analysisDisplayName('studios',x.name))}</button>`:`<span class="detail-studio-text">${safeText(analysisDisplayName('studios',x.name))}</span>`).join('<span aria-hidden="true">/</span>')}</div></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
+ const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges" aria-label="作品形式と放送時期">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>Number.isSafeInteger(t.mal_id)&&t.mal_id>0&&t.mal_id<=100000000?`<button type="button" class="detail-tag-link" data-category-id="${t.mal_id}" data-category-kind="${t.kind}" data-category-name="${safeText(t.name)}" aria-label="${safeText(genreJa(t.name))}の関連作品を見る">${safeText(genreJa(t.name))}</button>`:`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><div class="detail-studio-links">${studios.map(x=>Number.isSafeInteger(x.mal_id)&&x.mal_id>0?`<button type="button" class="detail-studio-link" data-studio-id="${x.mal_id}" data-studio-name="${safeText(x.name)}">${safeText(analysisDisplayName('studios',x.name))}</button>`:`<span class="detail-studio-text">${safeText(analysisDisplayName('studios',x.name))}</span>`).join('<span aria-hidden="true">/</span>')}</div></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
 
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
@@ -4972,6 +4974,8 @@ let studioProfile=null,studioSerial=0,studioPage=0,studioHasNext=false,studioLoa
 let studioItems=[],studioItemRefs=new Map();
 const studioMemoryCache=new Map();
 const validStudioId=id=>Number.isSafeInteger(Number(id))&&Number(id)>0&&Number(id)<=100000000;
+const validRelatedKind=kind=>['studio','genre','theme'].includes(kind);
+const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'}};
 function studioCloseUi(){
  ++studioSerial;studioProfile=null;studioLoading=false;
  document.body.classList.remove('view-studio');$('#studioView').classList.add('hidden');
@@ -4979,8 +4983,11 @@ function studioCloseUi(){
 }
 function studioDraw(){
  if(!studioProfile)return;
- $('#studioTitle').textContent=analysisDisplayName('studios',studioProfile.name);
- $('#studioBreadcrumb').textContent='制作会社';
+ $('#studioTitle').textContent=studioProfile.kind==='studio'?analysisDisplayName('studios',studioProfile.name):genreJa(studioProfile.name);
+ const label=relatedLabels[studioProfile.kind];
+ $('#studioBreadcrumb').textContent=label.crumb;
+ $('#studioEyebrow').textContent=label.eyebrow;
+ $('#studioDescription').textContent=label.description;
  $('#studioOrder').value=studioProfile.order;
  $('#studioStatus').textContent=studioLoading?'作品を読み込んでいます…':studioProfile.error?studioProfile.error:!studioItems.length?'該当する作品が見つかりませんでした。':'';
  const cards=$('#studioCards');cards.replaceChildren();studioItemRefs=new Map();
@@ -5000,34 +5007,37 @@ function studioDraw(){
 }
 async function studioLoadPage(next=false){
  if(!studioProfile||studioLoading)return;
- const serial=studioSerial,id=studioProfile.id,order=studioProfile.order;
+ const serial=studioSerial,id=studioProfile.id,order=studioProfile.order,kind=studioProfile.kind;
  const targetPage=next?studioPage+1:1;
  studioLoading=true;studioProfile.error='';studioDraw();
  try{
-  // API filter is called `producers` even for studio IDs.
-  const params=new URLSearchParams({producers:String(id),page:String(targetPage),limit:'24',order_by:order,sort:'desc'});
+  // Both genre and theme MAL IDs use Tenrai's `genres` anime filter.
+  const common={page:String(targetPage),limit:'24',order_by:order,sort:'desc'};
+  const params=kind==='studio'?new URLSearchParams({producers:String(id),...common}):new URLSearchParams({genres:String(id),...common});
   const response=await detailFetch('/anime?'+params.toString());
-  if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.order!==order)return;
+  if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.kind!==kind||studioProfile.order!==order)return;
   if(!Array.isArray(response?.data))throw Error('INVALID_STUDIO_RESPONSE');
   const unique=new Set(studioItems.map(e=>e?.mal_id));
   const added=response.data.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
   studioItems=next?[...studioItems,...added]:added;
   studioPage=targetPage;studioHasNext=response?.pagination?.has_next_page===true;
-  studioMemoryCache.set(id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
+  studioMemoryCache.set(kind+':'+id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
   while(studioMemoryCache.size>12)studioMemoryCache.delete(studioMemoryCache.keys().next().value);
  }catch(err){
   if(serial!==studioSerial||!studioProfile)return;
   studioProfile.error=err?.message==='リクエスト制限（429）'?'APIの利用制限に達しました。時間を置いてお試しください。':'作品を取得できませんでした。通信環境を確認して再試行してください。';
  }finally{if(serial===studioSerial&&studioProfile){studioLoading=false;studioDraw()}}
 }
-function openStudioProfile(id,name){studioShow(id,name)}
+function openStudioProfile(id,name){studioShow(id,name,{kind:'studio'})}
+function openCategoryProfile(id,name,kind){studioShow(id,name,{kind})}
 function studioShow(id,name,options={}){
+ const kind=validRelatedKind(options.kind)?options.kind:'studio';
  if(!validStudioId(id))return;
- studioCloseUi();studioProfile={id:Number(id),name:String(name||'制作会社').slice(0,140),order:'start_date',error:''};
+ studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,order:'start_date',error:''};
  document.body.classList.add('view-detail','view-studio');$('#detailView').classList.add('hidden');$('#studioView').classList.remove('hidden');
- $('#breadcrumb').textContent='制作会社';
+ $('#breadcrumb').textContent=relatedLabels[studioProfile.kind].crumb;
  studioItems=[];studioPage=0;studioHasNext=false;
- const cached=studioMemoryCache.get(studioProfile.id+':'+studioProfile.order);
+ const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext}
  studioDraw();window.scrollTo({top:0,behavior:'instant'});
  if(!cached)void studioLoadPage();
@@ -5039,7 +5049,7 @@ $('#studioBack').addEventListener('click',()=>{
 $('#studioOrder').addEventListener('change',e=>{
  if(!studioProfile||!['start_date','score'].includes(e.target.value))return;
  studioProfile.order=e.target.value;studioPage=0;studioItems=[];studioHasNext=false;studioProfile.error='';++studioSerial;studioLoading=false;
- const cached=studioMemoryCache.get(studioProfile.id+':'+studioProfile.order);
+ const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext;studioDraw()}else void studioLoadPage();
 });
 $('#studioRetry').addEventListener('click',()=>{if(studioProfile&&!studioLoading)void studioLoadPage(studioPage>0)});
@@ -5147,6 +5157,7 @@ $('#detailContent').addEventListener('click',e=>{
   return;
  }
  const studio=e.target.closest('[data-studio-id]');if(studio){openStudioProfile(studio.dataset.studioId,studio.dataset.studioName);return}
+ const category=e.target.closest('[data-category-id]');if(category){openCategoryProfile(category.dataset.categoryId,category.dataset.categoryName,category.dataset.categoryKind);return}
  const rel=e.target.closest('[data-related-id]');if(rel){const id=rel.dataset.relatedId;const title=rel.dataset.relatedTitle||'関連作品';openDetail(detailSource(id)||{id,title,english:'',image:'',type:'アニメ',year:null,season:null,episodes:null,score:null},true);return}
  if(e.target.closest('[data-translate-synopsis]')&&detailActiveItem)translateLocalSynopsis(detailActiveItem.id,detailNonce);
  if(e.target.closest('[data-more-episodes]'))detailMoreEpisodes();
@@ -5168,7 +5179,7 @@ function aniHistoryDetailRef(item){
 function aniHistorySnapshot(){
  return {
   [ANI_ROUTE]:1,depth:aniHistoryDepth,view:mode,
-  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name}:null,
+  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name,kind:studioProfile.kind}:null,
   detail:document.body.classList.contains('view-detail')?aniHistoryDetailRef(detailActiveItem):null,
   detailSteps:document.body.classList.contains('view-detail')?detailHistorySteps:0,
   scrollY:window.scrollY,
@@ -5178,7 +5189,7 @@ function aniHistorySnapshot(){
   annualYear
  };
 }
-function aniHistoryKey(s){return s.studio?'studio:'+s.studio.id:s.detail?'detail:'+s.view+':'+s.detail.id:s.view==='saved'?'saved:'+s.saved.filter:s.view==='ranking'?'ranking:'+s.rank.tab:s.view==='season'?'season:'+(s.season?.exploreStatus||'all')+':'+(s.season?.query?(s.season.yearValue||'all')+':'+(s.season.seasonValue||'all')+':'+s.season.query:''):s.view;}
+function aniHistoryKey(s){return s.studio?'studio:'+(s.studio.kind||'studio')+':'+s.studio.id:s.detail?'detail:'+s.view+':'+s.detail.id:s.view==='saved'?'saved:'+s.saved.filter:s.view==='ranking'?'ranking:'+s.rank.tab:s.view==='season'?'season:'+(s.season?.exploreStatus||'all')+':'+(s.season?.query?(s.season.yearValue||'all')+':'+(s.season.seasonValue||'all')+':'+s.season.query:''):s.view;}
 function aniHistorySave(){
  if(!aniHistoryReady||aniHistoryRestoring)return;
  try{history.replaceState({...aniHistorySnapshot(),depth:aniHistoryDepth},'',location.href)}catch{/* Browsers may restrict file URL history */}
@@ -5209,6 +5220,7 @@ showRanking=aniHistoryWrap(showRanking);
 showAnnual=aniHistoryWrap(showAnnual);
 openDetail=aniHistoryWrap(openDetail);
 openStudioProfile=aniHistoryWrap(openStudioProfile);
+openCategoryProfile=aniHistoryWrap(openCategoryProfile);
 runSeasonSearch=aniHistoryWrap(runSeasonSearch);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
@@ -5224,7 +5236,7 @@ async function aniHistoryRestore(state){
  try{
   if(state.studio&&validStudioId(state.studio.id)){
    if(state.detail&&!detailActiveItem)detailActiveItem=detailSource(state.detail.id)||state.detail;
-   studioShow(state.studio.id,state.studio.name);
+   studioShow(state.studio.id,state.studio.name,{kind:state.studio.kind});
    return;
   }
   if(document.body.classList.contains('view-studio')){studioCloseUi();$('#detailView').classList.remove('hidden')}
@@ -5299,7 +5311,7 @@ if('scrollRestoration' in history)history.scrollRestoration='manual';
 // Reloading a detail page must keep that detail, not silently reset to Discover.
 const aniInitialHistoryState=history.state?.[ANI_ROUTE]===1&&
  ['season','saved','ranking','annual'].includes(history.state.view)&&
- (!history.state.studio||validStudioId(history.state.studio.id))&&
+ (!history.state.studio||(validStudioId(history.state.studio.id)&&(!history.state.studio.kind||validRelatedKind(history.state.studio.kind))))&&
  (!history.state.detail||(typeof history.state.detail.id==='string'&&history.state.detail.id.length<=150))
  ?history.state:null;
 aniHistoryReady=true;
@@ -8322,12 +8334,12 @@ function detailHeader(a,full=null){
  const title=d.title_japanese||a.title,alt=(d.title&&d.title!==title?d.title:a.english&&a.english!==title?a.english:'');
  const badges=[typeJa(d.type||a.type||'アニメ'),year&&seasonLabels[season]?`${year}年 ${seasonLabels[season]}`:year?`${year}年`:null].filter(Boolean);
  const facts=[(d.episodes||a.episodes)?`${d.episodes||a.episodes}話`:null,d.duration||null,({'Currently Airing':'放送中','Finished Airing':'放送終了','Not yet aired':'放送前'}[d.status]||d.status)||null,Number.isFinite(d.score)&&d.score>0?`MAL ${d.score.toFixed(2)} / 10`:null,d.broadcast?.string||null].filter(Boolean);
- const tags=[...(Array.isArray(d.genres)?d.genres:[]),...(Array.isArray(d.themes)?d.themes:[])].map(x=>genreJa(x?.name)).filter(Boolean);
+ const tags=[...(Array.isArray(d.genres)?d.genres:[]).map(x=>({...x,kind:'genre'})),...(Array.isArray(d.themes)?d.themes:[]).map(x=>({...x,kind:'theme'}))].filter(x=>typeof x?.name==='string'&&x.name.trim());
  const studios=Array.isArray(d.studios)?d.studios.filter(x=>typeof x?.name==='string'&&x.name.trim()).slice(0,12):[];
  const optionHtml=detailStatusOptions.map(([v,l])=>`<option value="${v}" ${status===v?'selected':''}>${l}</option>`).join('');
  const date=mode!=='share'&&status==='watched'?completionDateMarkup(a):'';
  const savedDate=date&&validCompletedOn(record?.completedOn)?formatCompletedOn(record.completedOn):'未登録';
- const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges" aria-label="作品形式と放送時期">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>`<span>${safeText(t)}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><div class="detail-studio-links">${studios.map(x=>Number.isSafeInteger(x.mal_id)&&x.mal_id>0?`<button type="button" class="detail-studio-link" data-studio-id="${x.mal_id}" data-studio-name="${safeText(x.name)}">${safeText(analysisDisplayName('studios',x.name))}</button>`:`<span class="detail-studio-text">${safeText(analysisDisplayName('studios',x.name))}</span>`).join('<span aria-hidden="true">/</span>')}</div></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
+ const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges" aria-label="作品形式と放送時期">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>Number.isSafeInteger(t.mal_id)&&t.mal_id>0&&t.mal_id<=100000000?`<button type="button" class="detail-tag-link" data-category-id="${t.mal_id}" data-category-kind="${t.kind}" data-category-name="${safeText(t.name)}" aria-label="${safeText(genreJa(t.name))}の関連作品を見る">${safeText(genreJa(t.name))}</button>`:`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><div class="detail-studio-links">${studios.map(x=>Number.isSafeInteger(x.mal_id)&&x.mal_id>0?`<button type="button" class="detail-studio-link" data-studio-id="${x.mal_id}" data-studio-name="${safeText(x.name)}">${safeText(analysisDisplayName('studios',x.name))}</button>`:`<span class="detail-studio-text">${safeText(analysisDisplayName('studios',x.name))}</span>`).join('<span aria-hidden="true">/</span>')}</div></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
 
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
  const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
@@ -8586,6 +8598,8 @@ let studioProfile=null,studioSerial=0,studioPage=0,studioHasNext=false,studioLoa
 let studioItems=[],studioItemRefs=new Map();
 const studioMemoryCache=new Map();
 const validStudioId=id=>Number.isSafeInteger(Number(id))&&Number(id)>0&&Number(id)<=100000000;
+const validRelatedKind=kind=>['studio','genre','theme'].includes(kind);
+const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'}};
 function studioCloseUi(){
  ++studioSerial;studioProfile=null;studioLoading=false;
  document.body.classList.remove('view-studio');$('#studioView').classList.add('hidden');
@@ -8593,8 +8607,11 @@ function studioCloseUi(){
 }
 function studioDraw(){
  if(!studioProfile)return;
- $('#studioTitle').textContent=analysisDisplayName('studios',studioProfile.name);
- $('#studioBreadcrumb').textContent='制作会社';
+ $('#studioTitle').textContent=studioProfile.kind==='studio'?analysisDisplayName('studios',studioProfile.name):genreJa(studioProfile.name);
+ const label=relatedLabels[studioProfile.kind];
+ $('#studioBreadcrumb').textContent=label.crumb;
+ $('#studioEyebrow').textContent=label.eyebrow;
+ $('#studioDescription').textContent=label.description;
  $('#studioOrder').value=studioProfile.order;
  $('#studioStatus').textContent=studioLoading?'作品を読み込んでいます…':studioProfile.error?studioProfile.error:!studioItems.length?'該当する作品が見つかりませんでした。':'';
  const cards=$('#studioCards');cards.replaceChildren();studioItemRefs=new Map();
@@ -8614,34 +8631,37 @@ function studioDraw(){
 }
 async function studioLoadPage(next=false){
  if(!studioProfile||studioLoading)return;
- const serial=studioSerial,id=studioProfile.id,order=studioProfile.order;
+ const serial=studioSerial,id=studioProfile.id,order=studioProfile.order,kind=studioProfile.kind;
  const targetPage=next?studioPage+1:1;
  studioLoading=true;studioProfile.error='';studioDraw();
  try{
-  // API filter is called `producers` even for studio IDs.
-  const params=new URLSearchParams({producers:String(id),page:String(targetPage),limit:'24',order_by:order,sort:'desc'});
+  // Both genre and theme MAL IDs use Tenrai's `genres` anime filter.
+  const common={page:String(targetPage),limit:'24',order_by:order,sort:'desc'};
+  const params=kind==='studio'?new URLSearchParams({producers:String(id),...common}):new URLSearchParams({genres:String(id),...common});
   const response=await detailFetch('/anime?'+params.toString());
-  if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.order!==order)return;
+  if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.kind!==kind||studioProfile.order!==order)return;
   if(!Array.isArray(response?.data))throw Error('INVALID_STUDIO_RESPONSE');
   const unique=new Set(studioItems.map(e=>e?.mal_id));
   const added=response.data.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
   studioItems=next?[...studioItems,...added]:added;
   studioPage=targetPage;studioHasNext=response?.pagination?.has_next_page===true;
-  studioMemoryCache.set(id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
+  studioMemoryCache.set(kind+':'+id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
   while(studioMemoryCache.size>12)studioMemoryCache.delete(studioMemoryCache.keys().next().value);
  }catch(err){
   if(serial!==studioSerial||!studioProfile)return;
   studioProfile.error=err?.message==='リクエスト制限（429）'?'APIの利用制限に達しました。時間を置いてお試しください。':'作品を取得できませんでした。通信環境を確認して再試行してください。';
  }finally{if(serial===studioSerial&&studioProfile){studioLoading=false;studioDraw()}}
 }
-function openStudioProfile(id,name){studioShow(id,name)}
+function openStudioProfile(id,name){studioShow(id,name,{kind:'studio'})}
+function openCategoryProfile(id,name,kind){studioShow(id,name,{kind})}
 function studioShow(id,name,options={}){
+ const kind=validRelatedKind(options.kind)?options.kind:'studio';
  if(!validStudioId(id))return;
- studioCloseUi();studioProfile={id:Number(id),name:String(name||'制作会社').slice(0,140),order:'start_date',error:''};
+ studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,order:'start_date',error:''};
  document.body.classList.add('view-detail','view-studio');$('#detailView').classList.add('hidden');$('#studioView').classList.remove('hidden');
- $('#breadcrumb').textContent='制作会社';
+ $('#breadcrumb').textContent=relatedLabels[studioProfile.kind].crumb;
  studioItems=[];studioPage=0;studioHasNext=false;
- const cached=studioMemoryCache.get(studioProfile.id+':'+studioProfile.order);
+ const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext}
  studioDraw();window.scrollTo({top:0,behavior:'instant'});
  if(!cached)void studioLoadPage();
@@ -8653,7 +8673,7 @@ $('#studioBack').addEventListener('click',()=>{
 $('#studioOrder').addEventListener('change',e=>{
  if(!studioProfile||!['start_date','score'].includes(e.target.value))return;
  studioProfile.order=e.target.value;studioPage=0;studioItems=[];studioHasNext=false;studioProfile.error='';++studioSerial;studioLoading=false;
- const cached=studioMemoryCache.get(studioProfile.id+':'+studioProfile.order);
+ const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext;studioDraw()}else void studioLoadPage();
 });
 $('#studioRetry').addEventListener('click',()=>{if(studioProfile&&!studioLoading)void studioLoadPage(studioPage>0)});
@@ -8761,6 +8781,7 @@ $('#detailContent').addEventListener('click',e=>{
   return;
  }
  const studio=e.target.closest('[data-studio-id]');if(studio){openStudioProfile(studio.dataset.studioId,studio.dataset.studioName);return}
+ const category=e.target.closest('[data-category-id]');if(category){openCategoryProfile(category.dataset.categoryId,category.dataset.categoryName,category.dataset.categoryKind);return}
  const rel=e.target.closest('[data-related-id]');if(rel){const id=rel.dataset.relatedId;const title=rel.dataset.relatedTitle||'関連作品';openDetail(detailSource(id)||{id,title,english:'',image:'',type:'アニメ',year:null,season:null,episodes:null,score:null},true);return}
  if(e.target.closest('[data-translate-synopsis]')&&detailActiveItem)translateLocalSynopsis(detailActiveItem.id,detailNonce);
  if(e.target.closest('[data-more-episodes]'))detailMoreEpisodes();
@@ -8782,7 +8803,7 @@ function aniHistoryDetailRef(item){
 function aniHistorySnapshot(){
  return {
   [ANI_ROUTE]:1,depth:aniHistoryDepth,view:mode,
-  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name}:null,
+  studio:document.body.classList.contains('view-studio')&&studioProfile?{id:studioProfile.id,name:studioProfile.name,kind:studioProfile.kind}:null,
   detail:document.body.classList.contains('view-detail')?aniHistoryDetailRef(detailActiveItem):null,
   detailSteps:document.body.classList.contains('view-detail')?detailHistorySteps:0,
   scrollY:window.scrollY,
@@ -8792,7 +8813,7 @@ function aniHistorySnapshot(){
   annualYear
  };
 }
-function aniHistoryKey(s){return s.studio?'studio:'+s.studio.id:s.detail?'detail:'+s.view+':'+s.detail.id:s.view==='saved'?'saved:'+s.saved.filter:s.view==='ranking'?'ranking:'+s.rank.tab:s.view==='season'?'season:'+(s.season?.exploreStatus||'all')+':'+(s.season?.query?(s.season.yearValue||'all')+':'+(s.season.seasonValue||'all')+':'+s.season.query:''):s.view;}
+function aniHistoryKey(s){return s.studio?'studio:'+(s.studio.kind||'studio')+':'+s.studio.id:s.detail?'detail:'+s.view+':'+s.detail.id:s.view==='saved'?'saved:'+s.saved.filter:s.view==='ranking'?'ranking:'+s.rank.tab:s.view==='season'?'season:'+(s.season?.exploreStatus||'all')+':'+(s.season?.query?(s.season.yearValue||'all')+':'+(s.season.seasonValue||'all')+':'+s.season.query:''):s.view;}
 function aniHistorySave(){
  if(!aniHistoryReady||aniHistoryRestoring)return;
  try{history.replaceState({...aniHistorySnapshot(),depth:aniHistoryDepth},'',location.href)}catch{/* Browsers may restrict file URL history */}
@@ -8823,6 +8844,7 @@ showRanking=aniHistoryWrap(showRanking);
 showAnnual=aniHistoryWrap(showAnnual);
 openDetail=aniHistoryWrap(openDetail);
 openStudioProfile=aniHistoryWrap(openStudioProfile);
+openCategoryProfile=aniHistoryWrap(openCategoryProfile);
 runSeasonSearch=aniHistoryWrap(runSeasonSearch);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
@@ -8838,7 +8860,7 @@ async function aniHistoryRestore(state){
  try{
   if(state.studio&&validStudioId(state.studio.id)){
    if(state.detail&&!detailActiveItem)detailActiveItem=detailSource(state.detail.id)||state.detail;
-   studioShow(state.studio.id,state.studio.name);
+   studioShow(state.studio.id,state.studio.name,{kind:state.studio.kind});
    return;
   }
   if(document.body.classList.contains('view-studio')){studioCloseUi();$('#detailView').classList.remove('hidden')}
@@ -8913,7 +8935,7 @@ if('scrollRestoration' in history)history.scrollRestoration='manual';
 // Reloading a detail page must keep that detail, not silently reset to Discover.
 const aniInitialHistoryState=history.state?.[ANI_ROUTE]===1&&
  ['season','saved','ranking','annual'].includes(history.state.view)&&
- (!history.state.studio||validStudioId(history.state.studio.id))&&
+ (!history.state.studio||(validStudioId(history.state.studio.id)&&(!history.state.studio.kind||validRelatedKind(history.state.studio.kind))))&&
  (!history.state.detail||(typeof history.state.detail.id==='string'&&history.state.detail.id.length<=150))
  ?history.state:null;
 aniHistoryReady=true;
