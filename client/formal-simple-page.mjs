@@ -555,16 +555,23 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    if(pauseGuard.paused)return;
    const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
     unavailable:'同期できませんでした。記録は端末に保存済みです。接続を再試行できます。',
-    conflict:'競合を確認してください。両方の記録を保持しています。'};
+    conflict:'同期を一時停止しました。2台の端末で同じ項目が別々に変更されたため、自動でまとめられません。記録は上書きしていません。両端末のデータを消さずに、下の詳細を確認してください。'};
    status.textContent=labels[s.phase]??'端末に保存済み';
    // A closed settings panel must not hide unresolved sync errors. Keep the
    // notice until a later *confirmed* success instead of blinking on edits.
    if(s.phase==='synced'&&!(receiving&&mode==='sync-enabled'))attention(false);
    else if(s.phase==='conflict'||s.phase==='unavailable'||['blocked','too-large','unconfirmed'].includes(s.status))attention(true);
+   // Do not expose raw record paths / JSON by default. Keep all diagnostic
+   // values available behind a user-opened details element; sync is unchanged.
+   const conflictDetails=el('conflict-details');
+   if(conflictDetails){
+    conflictDetails.hidden=s.phase!=='conflict';
+    if(s.phase!=='conflict')conflictDetails.open=false;
+   }
    el('conflicts').hidden=s.phase!=='conflict';
    el('conflicts').textContent=s.phase==='conflict'?(s.conflicts??[]).map(c=>c.path+'\nこの端末: '+JSON.stringify(c.local)+'\n同期先: '+JSON.stringify(c.remote)).join('\n'):'';
    el('retry').hidden=!['conflict','offline','pending','unavailable'].includes(s.phase);
-   el('retry').textContent=s.phase==='conflict'?'内容を確認して再同期':'接続を再試行する';
+   el('retry').textContent=s.phase==='conflict'?'同期をもう一度試す':'接続を再試行する';
    if(s.phase==='synced')void running?.confirmAutomaticRole();
   }});automatic.start();
   // A registered receiver has no further pairing actions. Avoid leaving a

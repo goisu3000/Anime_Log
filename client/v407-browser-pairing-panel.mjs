@@ -168,7 +168,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
    // authorize claiming the short-lived invitation, NOT receiving any data.
    // No background polling; the owner's 6-digit approval remains mandatory.
    if(automaticMode&&autoClaimReceiver&&location?.hash?.startsWith('#anilog-pair='))void action(claimFromQr);},
-  async setRestoredSession(s){if(!s?.syncOnce||busy||stopped)fail('INVALID_RESUME');session=s;ready=true;setPhase('RESTORED_ACTIVE');show(automaticMode?'端末の記録を復元しました。以後は自動で同期します。':'認証情報と同期基準点を復元しました。同期操作は手動です。')},
+  async setRestoredSession(s){if(!s?.syncOnce||busy||stopped)fail('INVALID_RESUME');session=s;ready=true;setPhase('RESTORED_ACTIVE');show(automaticMode?'端末の同期設定を読み込みました。実際の同期結果は上の状態表示をご確認ください。':'認証情報と同期基準点を復元しました。同期操作は手動です。')},
   destroy(){clearQr();owner=null;receiver=null;session=null;serverCode=null;newCode.textContent='';stopped=true;render()}
  });
 }
