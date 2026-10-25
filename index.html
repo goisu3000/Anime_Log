@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.75">
+<meta name="ani-log-version" content="2.4.76">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1501,6 +1501,99 @@ select:not([data-status-id]){
  .weekly-item-meta .weekly-meta-secondary .weekly-stream-link{white-space:normal;overflow-wrap:normal;word-break:normal}
 }
 /* /ANI:LOG weekly row compact */
+
+/* v2.4.74 mobile-only refinement: ranking list + My List MAL display.
+   No desktop layout, record data, persistence, network, or rating logic changed. */
+.pattern-a-mobile-score{display:none}
+@media (max-width:740px){
+  /* Ranking: rank / poster / text. Keep the title full width; split only the
+     third line into registration action (left) and MAL score (right). */
+  .rank-row{
+    display:grid;
+    grid-template-columns:24px 60px minmax(0,1fr) minmax(94px,104px);
+    grid-template-rows:auto auto auto;
+    column-gap:8px;row-gap:5px;
+    align-items:center;min-width:0;padding:12px 0;
+  }
+  .rank-num{grid-column:1;grid-row:1/4;width:auto;min-width:0;flex:none;font-size:var(--fs-xl)}
+  .rank-poster{grid-column:2;grid-row:1/4;width:60px;height:82px;flex:none;align-self:center}
+  .rank-item-main{display:contents}
+  .rank-title{
+    grid-column:3/5;grid-row:1;display:block;
+    min-width:0;max-width:100%;width:100%;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:var(--fs-md);line-height:1.45;
+  }
+  .rank-meta{
+    grid-column:3/5;grid-row:2;min-width:0;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    font-size:var(--fs-xs);line-height:1.4;
+  }
+  .rank-register-control,.rank-actions{
+    grid-column:3;grid-row:3;min-width:0;max-width:100%;align-self:center;
+  }
+  .rank-register-control{
+    width:max-content;height:36px;min-height:36px;
+    padding:0 8px;gap:5px;font-size:12px;
+    white-space:nowrap;
+  }
+  .rank-register-control span{white-space:nowrap}
+  .rank-register-control .ui-icon{width:15px;height:15px;flex:0 0 15px}
+  .rank-actions{flex-wrap:wrap}
+  .rank-metric{grid-column:4;grid-row:3;min-width:0;text-align:right;align-self:center;justify-self:end}
+  .rank-metric strong{font-size:clamp(14px,4.2vw,18px);line-height:1.15;white-space:nowrap}
+  .rank-metric small{font-size:11px;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+  .rank-handle{grid-column:4;grid-row:4;justify-self:end}
+
+  /* My List: reuse existing MAL score, placed beside the status and progress
+     actions. PC keeps its original MAL block next to the title. */
+  .pattern-a-watch-column:has(>.pattern-a-mobile-score){
+    display:grid;
+    grid-template-columns:minmax(0,155px) minmax(0,1fr);
+    grid-template-rows:auto auto auto;
+    gap:8px 10px;align-items:center;justify-items:start;
+  }
+  .pattern-a-watch-column:has(>.pattern-a-mobile-score)>:not(.pattern-a-mobile-score){
+    grid-column:1;max-width:100%;min-width:0;
+  }
+  .pattern-a-watch-column:has(>.pattern-a-mobile-score)>.pattern-a-status-menu,
+  .pattern-a-watch-column:has(>.pattern-a-mobile-score)>.record-primary{width:100%;max-width:155px}
+  .pattern-a-mobile-score{
+    display:block;grid-column:2;grid-row:1/4;
+    align-self:center;justify-self:end;min-width:0;max-width:100%;
+  }
+  .pattern-a-mobile-score .pattern-a-public-score{
+    display:flex;align-items:flex-end;justify-content:center;
+    min-width:0;max-width:100%;padding:0;gap:3px;
+    text-align:right;
+  }
+  .pattern-a-mobile-score .pattern-a-public-score .mal-label{font-size:12px}
+  .pattern-a-mobile-score .pattern-a-public-score .mal-value{font-size:22px}
+  .pattern-a-mobile-score .pattern-a-public-score small{font-size:11px;max-width:100%;white-space:nowrap}
+  .pattern-a-mobile-score .pattern-a-public-score small:first-of-type{font-size:10px}
+}
+/* Very narrow screens: keep the registration button readable and on one line.
+   Prefer an extra MAL row over clipping the button or hiding rating details. */
+@media (max-width:374px){
+  .rank-row{grid-template-columns:22px 52px minmax(0,1fr);column-gap:7px}
+  .rank-num{grid-row:1/5}
+  .rank-poster{grid-row:1/5;width:52px;height:76px}
+  .rank-title,.rank-meta{grid-column:3}
+  .rank-register-control,.rank-actions{grid-column:3;grid-row:3}
+  .rank-metric{
+    grid-column:3;grid-row:4;justify-self:start;
+    display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 7px;
+    text-align:left;
+  }
+  .rank-metric strong{font-size:16px}
+  .rank-metric small{display:inline;font-size:10px}
+  .rank-handle{grid-column:3;grid-row:5}
+  .pattern-a-watch-column:has(>.pattern-a-mobile-score){grid-template-columns:minmax(0,140px) minmax(0,1fr)}
+  .pattern-a-mobile-score .pattern-a-public-score .mal-label{font-size:11px}
+  .pattern-a-mobile-score .pattern-a-public-score .mal-value{font-size:20px}
+  .pattern-a-mobile-score .pattern-a-public-score small{font-size:10px}
+}
+
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -2851,7 +2944,7 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div>${malMetric}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div>${malMetric}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -6828,7 +6921,7 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div>${malMetric}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div>${malMetric}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
