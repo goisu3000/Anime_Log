@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.80">
+<meta name="ani-log-version" content="2.4.81">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1609,6 +1609,47 @@ select:not([data-status-id]){
 @media(min-width:360px) and (max-width:389px){
  #seasonSelect + .anilog-mobile-select-trigger{font-size:11px}
 }
+/* Sync dialog spacing: 24px desktop / 16px mobile inset,
+   16px between sections, 12px between related controls. Presentation only. */
+.anilog-sync-dialog-head{padding:24px}
+.anilog-sync-dialog #formal-simple-sync{display:block;padding:24px}
+.anilog-sync-dialog #formal-simple-sync>p,
+.anilog-sync-dialog #formal-simple-sync>.anilog-sync-help,
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>.anilog-sync-advanced{margin:0}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"]{margin:0}
+.anilog-sync-dialog #formal-simple-sync button:not([hidden]),
+.anilog-sync-dialog #formal-simple-sync input[data-v407="code"]{margin:0}
+.anilog-sync-dialog #formal-simple-sync>button{justify-self:start}
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"],
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]{gap:16px}
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>*,
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>p{margin:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:12px;gap:12px}
+.anilog-sync-dialog #formal-sync-controls{padding:0!important;border:0!important;margin:0}
+.anilog-sync-dialog #v407-pairing{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:12px;margin:0;padding:16px 0 0;border-top:1px solid var(--border)}
+.anilog-sync-dialog #v407-pairing>*{grid-column:1/-1;min-width:0}
+.anilog-sync-dialog #v407-pairing button{justify-self:start}
+.anilog-sync-dialog #v407-pairing [data-v407="invite"]{grid-column:1;grid-row:1}
+.anilog-sync-dialog #v407-pairing [data-v407="code"]{grid-column:2;grid-row:1;width:100%;max-width:300px;align-self:center}
+.anilog-sync-dialog #v407-pairing [data-v407="approve"]{grid-column:1;grid-row:2}
+.anilog-sync-dialog #v407-pairing [data-v407="copy"]{grid-column:2;grid-row:2}
+.anilog-sync-dialog #v407-pairing [data-v407="status"],
+.anilog-sync-dialog #v407-pairing [data-v407="qr"]{margin:0}
+.anilog-sync-dialog #v407-pairing [data-v407="qr"]:empty,
+.anilog-sync-dialog #v407-pairing [data-v407="receiver-code"]:empty,
+.anilog-sync-dialog #formal-simple-sync>[data-simple="challenge"]:empty{display:none}
+@media(max-width:740px){
+ .anilog-sync-dialog-head,.anilog-sync-dialog #formal-simple-sync{padding:16px}
+ .anilog-sync-dialog #v407-pairing{grid-template-columns:minmax(0,1fr)}
+ .anilog-sync-dialog #v407-pairing [data-v407="invite"],
+ .anilog-sync-dialog #v407-pairing [data-v407="code"],
+ .anilog-sync-dialog #v407-pairing [data-v407="approve"],
+ .anilog-sync-dialog #v407-pairing [data-v407="copy"]{grid-column:1;grid-row:auto}
+}
+
+.anilog-sync-dialog #formal-simple-sync>:not(summary):not([hidden]){margin:16px 0 0}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"]{margin:0}
+
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
