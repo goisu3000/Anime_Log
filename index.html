@@ -21,7 +21,7 @@
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.71">
+<meta name="ani-log-version" content="2.4.72">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -532,6 +532,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 /* STEP3: read-only person credits, sharing existing related-works cards. */
 .detail-person-link{display:block;width:100%;padding:0;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:var(--fw-bold);text-align:left;cursor:pointer;line-height:1.5}
 .detail-person-link:hover{color:var(--accent)}
+/* Voice actors preserve the existing compact CV line. */
+.detail-voice-link{display:inline;width:auto;vertical-align:baseline;font-size:inherit}
 .detail-person-link:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
 .related-person-roles{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin:-6px 0 18px}
 .related-person-roles[hidden]{display:none!important}
@@ -1044,7 +1046,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .stream-inline-link,.stream-inline-empty{display:inline-flex;align-items:center;gap:5px;max-width:100%;min-height:28px;width:fit-content;border:1px solid var(--border-ctrl);border-radius:6px;padding:4px 9px;background:var(--surface2);color:var(--ink);font-size:var(--fs-xs);font-weight:var(--fw-semi);line-height:1.35;text-decoration:none;white-space:normal;text-align:left;overflow-wrap:anywhere}
 .stream-inline-link{border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
 .stream-inline-empty{color:var(--muted);background:transparent}
-.stream-inline-empty > span{position:relative;top:2px} /* Optical alignment: label text only; button and icon unchanged. */
+.stream-inline-empty > span{position:relative;top:1px}
+.stream-inline-empty > svg{position:relative;top:1px} /* Optical alignment: label text only; button and icon unchanged. */
 .stream-inline-edit{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:6px;width:28px;height:28px;padding:4px}
 .stream-inline-edit .ui-icon{width:14px;height:14px}
 .stream-inline-link:hover,.stream-inline-empty:hover,.stream-inline-edit:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-hover)}
@@ -1480,7 +1483,16 @@ select:not([data-status-id]){
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary:hover,
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary:hover{background:var(--surface-hover);color:var(--accent)}
 }
+
+/* ANI:LOG weekly row compact 2026-10-25: only weekly calendar rows. */
+.weekly-item-title{display:block;justify-self:stretch;width:100%;min-width:0;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;overflow-wrap:normal}
+.weekly-item-meta .weekly-catchup{flex-basis:auto;order:0;display:inline-flex;align-items:center;white-space:nowrap;gap:0;font-size:inherit;line-height:inherit;color:var(--muted);font-weight:var(--fw-normal)}
+@media(max-width:740px){
+ .weekly-item-title{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;white-space:normal;overflow:hidden;overflow-wrap:anywhere}
+}
+/* /ANI:LOG weekly row compact */
 </style>
+<!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
 <body>
 <dialog id="anilog-sync-dialog" class="anilog-sync-dialog" aria-labelledby="anilogSyncDialogTitle">
@@ -2946,28 +2958,18 @@ function weeklyRelevant(){return Object.values(saved).filter(a=>a&&weeklyOptions
 function weeklyPoster(a){const u=safeImage(a.image);return u?`<img class="weekly-poster" src="${safeText(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
 // ANI:LOG weekly catch-up cue (display only, no new API/storage).
 // AniList's number is the episode scheduled for this week, not necessarily aired yet.
+// Compact, display-only watching progress. No aired/scheduled episode comparisons.
 function weeklyCatchupMarkup(a,info,scope=null){
  if(!a||a.status!=='watching')return '';
- // An absent progress field is not the same as explicitly recording 0 episodes.
  if(a.watchedEpisodes==null||a.watchedEpisodes==='')return '';
  const watched=Number(a.watchedEpisodes);
  if(!Number.isInteger(watched)||watched<0||watched>9999)return '';
- let situation='';
- // Manual weekday assignments do not certify an AniList airing slot.
- const episode=info?.source==='auto'?weeklyEpisodeFor(a,info,scope):null;
- const id=Number(weeklyMalId(a.id)),entry=weeklyEpisodeCache?.data?.[id];
- const cacheFresh=weeklyEpisodeCache&&Number.isFinite(weeklyEpisodeCache.at)
-  &&Date.now()>=weeklyEpisodeCache.at&&Date.now()-weeklyEpisodeCache.at<=WEEKLY_EPISODES_TTL;
- if(cacheFresh&&Number.isInteger(episode)&&episode>=1&&entry&&Number.isInteger(entry.airingAt)){
-  // Compare against the episode already aired, never count an upcoming broadcast.
-  const aired=episode-(entry.airingAt*1000>Date.now()?1:0);
-  if(aired>=1&&aired<=9999){
-   const behind=aired-watched;
-   if(behind===0)situation='<span class="weekly-catchup-ok">✓ 放送に追いついている</span>';
-   else if(behind>0)situation=`<span class="weekly-catchup-pending">あと${behind}話</span>`;
-  }
- }
- return `<span class="weekly-catchup" title="テレビ放送予定を基準にした目安です。配信サービスの公開状況とは異なる場合があります"><span>視聴 ${watched}話</span>${situation}</span>`;
+ return `<span class="weekly-catchup">${watched===0?'未視聴':`${watched}話まで視聴`}</span>`;
+}
+// Weekly calendar list titles only: retain the original for detail and accessibility.
+function weeklyCompactTitle(title){
+ const chars=Array.from(String(title||''));
+ return chars.length>30?chars.slice(0,30).join('')+'…':chars.join('');
 }
 function weeklyEntryMarkup(a,info,preview=false,scope=null){
  if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><button type="button" class="weekly-preview-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}">${safeText(a.title)}</button><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span></span>`;
@@ -2980,7 +2982,7 @@ function weeklyEntryMarkup(a,info,preview=false,scope=null){
  const streamLink=service
   ?`<a class="weekly-stream-link" href="${safeText(pref.url||jpStreamSearchUrl(service.domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(service.name)}で${pref.url?'見る':'探す'}</a>`
   :'';
- return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${weeklyCatchupMarkup(a,info,scope)}${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span>${streamLink}</div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
+ return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}" aria-label="${safeText(a.title)}">${safeText(weeklyCompactTitle(a.title))}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${weeklyCatchupMarkup(a,info,scope)}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span>${streamLink}</div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
 }
 function renderWeeklyCalendar(){
  const el=$('#weeklyCalendar');if(!el)return;
@@ -5019,7 +5021,7 @@ async function ensureDetailJapaneseNames(id){
  }
 }
 function detailPeople(characters,staff,nativeNames){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
- if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(personDisplayName(jap.person,nativeNames))}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
+ if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${Number.isSafeInteger(jap.person?.mal_id)&&jap.person.mal_id>0?`<button type="button" class="detail-person-link detail-voice-link" data-voice-id="${jap.person.mal_id}" data-voice-name="${safeText(jap.person.name||'')}">${safeText(personDisplayName(jap.person,nativeNames))}</button>`:safeText(personDisplayName(jap.person,nativeNames))}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
  const staffList=Array.isArray(staff?.data)?staff.data:[];
  if(staffList.length){result+=detailHeading('スタッフ',`<div class="detail-people">${staffList.slice(0,30).map(x=>{const name=x.person?.name||'スタッフ';const displayName=personDisplayName(x.person,nativeNames)||name;const positions=Array.isArray(x.positions)?x.positions:[];const id=x.person?.mal_id;const canLink=Number.isSafeInteger(id)&&id>0;const role=positions.join(' / ').slice(0,300);return `<div class="detail-person"><b>${canLink?`<button type="button" class="detail-person-link" data-person-id="${id}" data-person-name="${safeText(name)}" data-person-role="${safeText(role)}">${safeText(displayName)}</button>`:safeText(displayName)}</b><small>${safeText(positions.map(roleJa).join(' / '))}</small></div>`}).join('')}</div>`)}return result}
 function detailLoadingHtml(){return '<div class="detail-loading" id="detailPending">作品情報を自動取得しています…</div>'}
@@ -5146,8 +5148,8 @@ let studioProfile=null,studioSerial=0,studioPage=0,studioHasNext=false,studioLoa
 let studioItems=[],studioItemRefs=new Map();
 const studioMemoryCache=new Map();
 const validStudioId=id=>Number.isSafeInteger(Number(id))&&Number(id)>0&&Number(id)<=100000000;
-const validRelatedKind=kind=>['studio','genre','theme','person'].includes(kind);
-const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'},person:{crumb:'スタッフ',eyebrow:'STAFF PROFILE',description:'担当作品と役職を表示しています。作品データはAPIの登録範囲に限られ、公開年や評価が取得できない場合もあります。'}};
+const validRelatedKind=kind=>['studio','genre','theme','person','voice'].includes(kind);
+const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'},person:{crumb:'スタッフ',eyebrow:'STAFF PROFILE',description:'担当作品と役職を表示しています。作品データはAPIの登録範囲に限られ、公開年や評価が取得できない場合もあります。'},voice:{crumb:'声優',eyebrow:'VOICE ACTOR',description:'出演作品と担当キャラクターを表示しています。掲載内容はAPIに登録された出演情報に基づきます。'}};
 
 // Role names come from Tenrai's person anime credits, not from a guessed biography.
 function personRoleTokens(value){
@@ -5186,6 +5188,31 @@ function personNormalizeCredits(rows){
  }
  return Array.from(map.values());
 }
+// A voice actor may portray multiple characters in one anime. Keep one card per
+// MAL anime ID and list its character credits; do not infer missing character names.
+function voiceNormalizeCredits(rows){
+ const map=new Map();
+ for(const entry of rows){
+  const anime=entry?.anime;
+  if(!anime||!Number.isSafeInteger(anime.mal_id)||anime.mal_id<=0)continue;
+  if(!map.has(anime.mal_id))map.set(anime.mal_id,{...anime,__voiceCharacters:[]});
+  const result=map.get(anime.mal_id);
+  const ch=entry?.character;
+  const name=String(ch?.name_kanji||ch?.name||'').trim();
+  if(!name)continue;
+  const id=Number.isSafeInteger(ch?.mal_id)&&ch.mal_id>0?ch.mal_id:null;
+  const role=['Main','Supporting'].includes(entry?.role)?entry.role:'';
+  const exists=result.__voiceCharacters.some(c=>id!==null&&c.id===id||id===null&&c.id===null&&c.name===name);
+  if(!exists)result.__voiceCharacters.push({id,name,role});
+ }
+ return Array.from(map.values());
+}
+function voiceCharacterSummary(characters){
+ const list=Array.isArray(characters)?characters:[];
+ const labels=list.slice(0,3).map(c=>c.name+(c.role==='Main'?'（メイン）':c.role==='Supporting'?'（サブ）':''));
+ if(list.length>3)labels.push('ほか'+(list.length-3)+'役');
+ return labels.join(' / ')||'出演作品';
+}
 function personSortCredits(items,order){
  return items.slice().sort((a,b)=>{
   if(order==='score')return (Number.isFinite(b.score)?b.score:-1)-(Number.isFinite(a.score)?a.score:-1);
@@ -5219,13 +5246,13 @@ function studioDraw(){
  $('#studioEyebrow').textContent=label.eyebrow;
  $('#studioDescription').textContent=label.description;
  $('#studioOrder').value=studioProfile.order;
- $('#studioView .related-studio-toolbar h2').textContent=studioProfile.kind==='person'?'担当作品':'関連作品';
- $('#studioOrder').querySelector('[value="score"]').disabled=studioProfile.kind==='person'&&!studioLoading&&!studioItems.some(x=>Number.isFinite(x.score));
+ $('#studioView .related-studio-toolbar h2').textContent=studioProfile.kind==='person'?'担当作品':studioProfile.kind==='voice'?'出演作品':'関連作品';
+ $('#studioOrder').querySelector('[value="score"]').disabled=['person','voice'].includes(studioProfile.kind)&&!studioLoading&&!studioItems.some(x=>Number.isFinite(x.score));
  personRenderFilters();
- const visibleItems=studioProfile.kind==='person'?personSortCredits(studioItems.filter(item=>personRoleMatch(item.__staffRoles||[],studioProfile.role)),studioProfile.order):studioItems;
+ const visibleItems=studioProfile.kind==='person'?personSortCredits(studioItems.filter(item=>personRoleMatch(item.__staffRoles||[],studioProfile.role)),studioProfile.order):studioProfile.kind==='voice'?personSortCredits(studioItems,studioProfile.order):studioItems;
  $('#studioStatus').textContent=studioLoading?'作品を読み込んでいます…':studioProfile.error?studioProfile.error:!studioItems.length?'該当する作品が見つかりませんでした。':'';
  const cards=$('#studioCards');cards.replaceChildren();studioItemRefs=new Map();
- const displayed=studioProfile.kind==='person'?visibleItems.slice(0,studioProfile.visibleLimit||24):visibleItems;
+ const displayed=['person','voice'].includes(studioProfile.kind)?visibleItems.slice(0,studioProfile.visibleLimit||24):visibleItems;
  for(const obj of displayed){
   if(!Number.isSafeInteger(obj?.mal_id)||obj.mal_id<=0)continue;
   const work=model(obj),key=work.id;studioItemRefs.set(key,work);
@@ -5234,10 +5261,10 @@ function studioDraw(){
   const src=safeImage(work.image);if(src){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';poster.append(img)}else{poster.textContent='NO IMAGE'}
   const title=document.createElement('span');title.className='related-studio-title';title.textContent=work.title;
   const meta=document.createElement('span');meta.className='related-studio-meta';meta.textContent=[work.year?work.year+'年':'',typeJa(work.type||''),typeof work.score==='number'?'MAL '+work.score.toFixed(2):'',saved[key]?.status?statusLabels[saved[key].status]:''].filter(Boolean).join(' ・ ');
-  card.append(poster,title,meta);if(studioProfile.kind==='person'){const role=document.createElement('span');role.className='related-studio-role';role.textContent=(obj.__staffRoles||[]).map(roleJa).join(' / ');card.append(role)}cards.append(card);
+  card.append(poster,title,meta);if(studioProfile.kind==='person'){const role=document.createElement('span');role.className='related-studio-role';role.textContent=(obj.__staffRoles||[]).map(roleJa).join(' / ');card.append(role)}if(studioProfile.kind==='voice'){const character=document.createElement('span');character.className='related-studio-role';character.textContent=voiceCharacterSummary(obj.__voiceCharacters);card.append(character)}cards.append(card);
  }
  $('#studioRetry').classList.toggle('hidden',!studioProfile.error);
- $('#studioMore').classList.toggle('hidden',studioProfile.kind==='person'?displayed.length>=visibleItems.length:!studioHasNext||studioLoading||!!studioProfile.error);
+ $('#studioMore').classList.toggle('hidden',['person','voice'].includes(studioProfile.kind)?displayed.length>=visibleItems.length:!studioHasNext||studioLoading||!!studioProfile.error);
  $('#studioMore').disabled=studioLoading;
 }
 async function studioLoadPage(next=false){
@@ -5246,17 +5273,17 @@ async function studioLoadPage(next=false){
  const targetPage=next?studioPage+1:1;
  studioLoading=true;studioProfile.error='';studioDraw();
  try{
-  // People return a staff-credit list (position + anime), not an /anime search page.
+  // People return staff credits or voice-character credits, not an /anime search page.
   const common={page:String(targetPage),limit:'24',order_by:order,sort:'desc'};
   const params=kind==='studio'?new URLSearchParams({producers:String(id),...common}):new URLSearchParams({genres:String(id),...common});
-  const response=await detailFetch(kind==='person'?'/people/'+id+'/anime':'/anime?'+params.toString());
+  const response=await detailFetch(kind==='person'?'/people/'+id+'/anime':kind==='voice'?'/people/'+id+'/voices':'/anime?'+params.toString());
   if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.kind!==kind||studioProfile.order!==order)return;
   if(!Array.isArray(response?.data))throw Error('INVALID_STUDIO_RESPONSE');
   const unique=new Set(studioItems.map(e=>e?.mal_id));
-  const normalized=kind==='person'?personNormalizeCredits(response.data):response.data;
+  const normalized=kind==='person'?personNormalizeCredits(response.data):kind==='voice'?voiceNormalizeCredits(response.data):response.data;
   const added=normalized.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
-  studioItems=kind==='person'?added:(next?[...studioItems,...added]:added);
-  studioPage=targetPage;studioHasNext=kind!=='person'&&response?.pagination?.has_next_page===true;
+  studioItems=['person','voice'].includes(kind)?added:(next?[...studioItems,...added]:added);
+  studioPage=targetPage;studioHasNext=!['person','voice'].includes(kind)&&response?.pagination?.has_next_page===true;
   studioMemoryCache.set(kind+':'+id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
   while(studioMemoryCache.size>12)studioMemoryCache.delete(studioMemoryCache.keys().next().value);
  }catch(err){
@@ -5267,10 +5294,11 @@ async function studioLoadPage(next=false){
 function openStudioProfile(id,name){studioShow(id,name,{kind:'studio'})}
 function openCategoryProfile(id,name,kind){studioShow(id,name,{kind})}
 function openPersonProfile(id,name,role){studioShow(id,name,{kind:'person',role:personInitialRole(role)})}
+function openVoiceProfile(id,name){studioShow(id,name,{kind:'voice'})}
 function studioShow(id,name,options={}){
  const kind=validRelatedKind(options.kind)?options.kind:'studio';
  if(!validStudioId(id))return;
- studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,role:kind==='person'?(['all','writing','script','series','original'].includes(options.role)?options.role:'all'):'all',visibleLimit:kind==='person'?Math.min(1500,Math.max(24,Number(options.visibleLimit)||24)):24,order:'start_date',error:''};
+ studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,role:kind==='person'?(['all','writing','script','series','original'].includes(options.role)?options.role:'all'):'all',visibleLimit:['person','voice'].includes(kind)?Math.min(1500,Math.max(24,Number(options.visibleLimit)||24)):24,order:'start_date',error:''};
  document.body.classList.add('view-detail','view-studio');$('#detailView').classList.add('hidden');$('#studioView').classList.remove('hidden');
  $('#breadcrumb').textContent=relatedLabels[studioProfile.kind].crumb;
  studioItems=[];studioPage=0;studioHasNext=false;
@@ -5286,7 +5314,7 @@ $('#studioBack').addEventListener('click',()=>{
 $('#studioOrder').addEventListener('change',e=>{
  if(!studioProfile||!['start_date','score'].includes(e.target.value))return;
  // Person credits are returned as one list, so changing local sort never consumes another API request.
- if(studioProfile.kind==='person'){studioProfile.order=e.target.value;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();return}
+ if(['person','voice'].includes(studioProfile.kind)){studioProfile.order=e.target.value;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();return}
  studioProfile.order=e.target.value;studioPage=0;studioItems=[];studioHasNext=false;studioProfile.error='';++studioSerial;studioLoading=false;
  const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext;studioDraw()}else void studioLoadPage();
@@ -5300,7 +5328,7 @@ $('#studioRoles').addEventListener('click',e=>{
  studioProfile.role=role;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();
 });
 $('#studioMore').addEventListener('click',()=>{
- if(studioProfile?.kind==='person'){studioProfile.visibleLimit+=24;studioDraw();aniHistorySave();return}
+ if(['person','voice'].includes(studioProfile?.kind)){studioProfile.visibleLimit+=24;studioDraw();aniHistorySave();return}
  if(!studioHasNext){if(studioProfile?.error)void studioLoadPage(studioPage>0);return}void studioLoadPage(true);
 });
 $('#studioCards').addEventListener('click',e=>{
@@ -5403,6 +5431,7 @@ $('#detailContent').addEventListener('click',e=>{
   link.replaceWith(iframe);
   return;
  }
+ const voice=e.target.closest('[data-voice-id]');if(voice){openVoiceProfile(voice.dataset.voiceId,voice.textContent?.trim()||voice.dataset.voiceName);return}
  const person=e.target.closest('[data-person-id]');if(person){openPersonProfile(person.dataset.personId,person.textContent?.trim()||person.dataset.personName,person.dataset.personRole);return}
  const studio=e.target.closest('[data-studio-id]');if(studio){openStudioProfile(studio.dataset.studioId,studio.dataset.studioName);return}
  const category=e.target.closest('[data-category-id]');if(category){openCategoryProfile(category.dataset.categoryId,category.dataset.categoryName,category.dataset.categoryKind);return}
@@ -5470,6 +5499,7 @@ openDetail=aniHistoryWrap(openDetail);
 openStudioProfile=aniHistoryWrap(openStudioProfile);
 openCategoryProfile=aniHistoryWrap(openCategoryProfile);
 openPersonProfile=aniHistoryWrap(openPersonProfile);
+openVoiceProfile=aniHistoryWrap(openVoiceProfile);
 runSeasonSearch=aniHistoryWrap(runSeasonSearch);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
@@ -6789,28 +6819,18 @@ function weeklyRelevant(){return Object.values(saved).filter(a=>a&&weeklyOptions
 function weeklyPoster(a){const u=safeImage(a.image);return u?`<img class="weekly-poster" src="${safeText(u)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}
 // ANI:LOG weekly catch-up cue (display only, no new API/storage).
 // AniList's number is the episode scheduled for this week, not necessarily aired yet.
+// Compact, display-only watching progress. No aired/scheduled episode comparisons.
 function weeklyCatchupMarkup(a,info,scope=null){
  if(!a||a.status!=='watching')return '';
- // An absent progress field is not the same as explicitly recording 0 episodes.
  if(a.watchedEpisodes==null||a.watchedEpisodes==='')return '';
  const watched=Number(a.watchedEpisodes);
  if(!Number.isInteger(watched)||watched<0||watched>9999)return '';
- let situation='';
- // Manual weekday assignments do not certify an AniList airing slot.
- const episode=info?.source==='auto'?weeklyEpisodeFor(a,info,scope):null;
- const id=Number(weeklyMalId(a.id)),entry=weeklyEpisodeCache?.data?.[id];
- const cacheFresh=weeklyEpisodeCache&&Number.isFinite(weeklyEpisodeCache.at)
-  &&Date.now()>=weeklyEpisodeCache.at&&Date.now()-weeklyEpisodeCache.at<=WEEKLY_EPISODES_TTL;
- if(cacheFresh&&Number.isInteger(episode)&&episode>=1&&entry&&Number.isInteger(entry.airingAt)){
-  // Compare against the episode already aired, never count an upcoming broadcast.
-  const aired=episode-(entry.airingAt*1000>Date.now()?1:0);
-  if(aired>=1&&aired<=9999){
-   const behind=aired-watched;
-   if(behind===0)situation='<span class="weekly-catchup-ok">✓ 放送に追いついている</span>';
-   else if(behind>0)situation=`<span class="weekly-catchup-pending">あと${behind}話</span>`;
-  }
- }
- return `<span class="weekly-catchup" title="テレビ放送予定を基準にした目安です。配信サービスの公開状況とは異なる場合があります"><span>視聴 ${watched}話</span>${situation}</span>`;
+ return `<span class="weekly-catchup">${watched===0?'未視聴':`${watched}話まで視聴`}</span>`;
+}
+// Weekly calendar list titles only: retain the original for detail and accessibility.
+function weeklyCompactTitle(title){
+ const chars=Array.from(String(title||''));
+ return chars.length>30?chars.slice(0,30).join('')+'…':chars.join('');
 }
 function weeklyEntryMarkup(a,info,preview=false,scope=null){
  if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><button type="button" class="weekly-preview-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}">${safeText(a.title)}</button><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span></span>`;
@@ -6823,7 +6843,7 @@ function weeklyEntryMarkup(a,info,preview=false,scope=null){
  const streamLink=service
   ?`<a class="weekly-stream-link" href="${safeText(pref.url||jpStreamSearchUrl(service.domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(service.name)}で${pref.url?'見る':'探す'}</a>`
   :'';
- return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}">${safeText(a.title)}</button><div class="weekly-item-meta">${weeklyCatchupMarkup(a,info,scope)}${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span>${streamLink}</div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
+ return `<div class="weekly-item">${weeklyPoster(a)}<div class="weekly-item-body"><button type="button" class="weekly-item-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}" aria-label="${safeText(a.title)}">${safeText(weeklyCompactTitle(a.title))}</button><div class="weekly-item-meta">${episode?`<span class="weekly-item-episode">第${episode}話</span>`:''}${info.time?`<span>${safeText(info.time)}</span>`:''}${weeklyCatchupMarkup(a,info,scope)}${station?`<span class="weekly-item-station" title="${safeText(station)}">${safeText(station)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動・放送予定'}</span>${streamLink}</div></div><button type="button" class="weekly-edit" data-weekly-edit="${safeText(a.id)}" aria-label="${safeText(a.title)}の視聴曜日を編集" title="視聴曜日を編集">${uiIcon('edit')}</button></div>`;
 }
 function renderWeeklyCalendar(){
  const el=$('#weeklyCalendar');if(!el)return;
@@ -8871,7 +8891,7 @@ async function ensureDetailJapaneseNames(id){
  }
 }
 function detailPeople(characters,staff,nativeNames){let result='';const people=Array.isArray(characters?.data)?characters.data:[];
- if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${safeText(personDisplayName(jap.person,nativeNames))}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
+ if(people.length){result+=detailHeading('キャラクター・声優',`<div class="detail-people">${people.slice(0,24).map(x=>{const jap=(x.voice_actors||[]).find(a=>a.language==='Japanese');return `<div class="detail-person"><b>${safeText(x.character?.name||'キャラクター')}</b>${jap?`<small>CV：${Number.isSafeInteger(jap.person?.mal_id)&&jap.person.mal_id>0?`<button type="button" class="detail-person-link detail-voice-link" data-voice-id="${jap.person.mal_id}" data-voice-name="${safeText(jap.person.name||'')}">${safeText(personDisplayName(jap.person,nativeNames))}</button>`:safeText(personDisplayName(jap.person,nativeNames))}</small>`:''}${x.role?`<small>${safeText(({Main:'主要人物',Supporting:'サブキャラクター'}[x.role]||x.role))}</small>`:''}</div>`}).join('')}</div>`)}
  const staffList=Array.isArray(staff?.data)?staff.data:[];
  if(staffList.length){result+=detailHeading('スタッフ',`<div class="detail-people">${staffList.slice(0,30).map(x=>{const name=x.person?.name||'スタッフ';const displayName=personDisplayName(x.person,nativeNames)||name;const positions=Array.isArray(x.positions)?x.positions:[];const id=x.person?.mal_id;const canLink=Number.isSafeInteger(id)&&id>0;const role=positions.join(' / ').slice(0,300);return `<div class="detail-person"><b>${canLink?`<button type="button" class="detail-person-link" data-person-id="${id}" data-person-name="${safeText(name)}" data-person-role="${safeText(role)}">${safeText(displayName)}</button>`:safeText(displayName)}</b><small>${safeText(positions.map(roleJa).join(' / '))}</small></div>`}).join('')}</div>`)}return result}
 function detailLoadingHtml(){return '<div class="detail-loading" id="detailPending">作品情報を自動取得しています…</div>'}
@@ -8998,8 +9018,8 @@ let studioProfile=null,studioSerial=0,studioPage=0,studioHasNext=false,studioLoa
 let studioItems=[],studioItemRefs=new Map();
 const studioMemoryCache=new Map();
 const validStudioId=id=>Number.isSafeInteger(Number(id))&&Number(id)>0&&Number(id)<=100000000;
-const validRelatedKind=kind=>['studio','genre','theme','person'].includes(kind);
-const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'},person:{crumb:'スタッフ',eyebrow:'STAFF PROFILE',description:'担当作品と役職を表示しています。作品データはAPIの登録範囲に限られ、公開年や評価が取得できない場合もあります。'}};
+const validRelatedKind=kind=>['studio','genre','theme','person','voice'].includes(kind);
+const relatedLabels={studio:{crumb:'制作会社',eyebrow:'ANIMATION STUDIO',description:'この制作会社に関連するアニメ作品を表示しています。制作への関わり方は作品によって異なります。'},genre:{crumb:'ジャンル',eyebrow:'GENRE',description:'このジャンルに分類されているアニメ作品です。'},theme:{crumb:'テーマ',eyebrow:'THEME',description:'このテーマに分類されているアニメ作品です。'},person:{crumb:'スタッフ',eyebrow:'STAFF PROFILE',description:'担当作品と役職を表示しています。作品データはAPIの登録範囲に限られ、公開年や評価が取得できない場合もあります。'},voice:{crumb:'声優',eyebrow:'VOICE ACTOR',description:'出演作品と担当キャラクターを表示しています。掲載内容はAPIに登録された出演情報に基づきます。'}};
 
 // Role names come from Tenrai's person anime credits, not from a guessed biography.
 function personRoleTokens(value){
@@ -9038,6 +9058,31 @@ function personNormalizeCredits(rows){
  }
  return Array.from(map.values());
 }
+// A voice actor may portray multiple characters in one anime. Keep one card per
+// MAL anime ID and list its character credits; do not infer missing character names.
+function voiceNormalizeCredits(rows){
+ const map=new Map();
+ for(const entry of rows){
+  const anime=entry?.anime;
+  if(!anime||!Number.isSafeInteger(anime.mal_id)||anime.mal_id<=0)continue;
+  if(!map.has(anime.mal_id))map.set(anime.mal_id,{...anime,__voiceCharacters:[]});
+  const result=map.get(anime.mal_id);
+  const ch=entry?.character;
+  const name=String(ch?.name_kanji||ch?.name||'').trim();
+  if(!name)continue;
+  const id=Number.isSafeInteger(ch?.mal_id)&&ch.mal_id>0?ch.mal_id:null;
+  const role=['Main','Supporting'].includes(entry?.role)?entry.role:'';
+  const exists=result.__voiceCharacters.some(c=>id!==null&&c.id===id||id===null&&c.id===null&&c.name===name);
+  if(!exists)result.__voiceCharacters.push({id,name,role});
+ }
+ return Array.from(map.values());
+}
+function voiceCharacterSummary(characters){
+ const list=Array.isArray(characters)?characters:[];
+ const labels=list.slice(0,3).map(c=>c.name+(c.role==='Main'?'（メイン）':c.role==='Supporting'?'（サブ）':''));
+ if(list.length>3)labels.push('ほか'+(list.length-3)+'役');
+ return labels.join(' / ')||'出演作品';
+}
 function personSortCredits(items,order){
  return items.slice().sort((a,b)=>{
   if(order==='score')return (Number.isFinite(b.score)?b.score:-1)-(Number.isFinite(a.score)?a.score:-1);
@@ -9071,13 +9116,13 @@ function studioDraw(){
  $('#studioEyebrow').textContent=label.eyebrow;
  $('#studioDescription').textContent=label.description;
  $('#studioOrder').value=studioProfile.order;
- $('#studioView .related-studio-toolbar h2').textContent=studioProfile.kind==='person'?'担当作品':'関連作品';
- $('#studioOrder').querySelector('[value="score"]').disabled=studioProfile.kind==='person'&&!studioLoading&&!studioItems.some(x=>Number.isFinite(x.score));
+ $('#studioView .related-studio-toolbar h2').textContent=studioProfile.kind==='person'?'担当作品':studioProfile.kind==='voice'?'出演作品':'関連作品';
+ $('#studioOrder').querySelector('[value="score"]').disabled=['person','voice'].includes(studioProfile.kind)&&!studioLoading&&!studioItems.some(x=>Number.isFinite(x.score));
  personRenderFilters();
- const visibleItems=studioProfile.kind==='person'?personSortCredits(studioItems.filter(item=>personRoleMatch(item.__staffRoles||[],studioProfile.role)),studioProfile.order):studioItems;
+ const visibleItems=studioProfile.kind==='person'?personSortCredits(studioItems.filter(item=>personRoleMatch(item.__staffRoles||[],studioProfile.role)),studioProfile.order):studioProfile.kind==='voice'?personSortCredits(studioItems,studioProfile.order):studioItems;
  $('#studioStatus').textContent=studioLoading?'作品を読み込んでいます…':studioProfile.error?studioProfile.error:!studioItems.length?'該当する作品が見つかりませんでした。':'';
  const cards=$('#studioCards');cards.replaceChildren();studioItemRefs=new Map();
- const displayed=studioProfile.kind==='person'?visibleItems.slice(0,studioProfile.visibleLimit||24):visibleItems;
+ const displayed=['person','voice'].includes(studioProfile.kind)?visibleItems.slice(0,studioProfile.visibleLimit||24):visibleItems;
  for(const obj of displayed){
   if(!Number.isSafeInteger(obj?.mal_id)||obj.mal_id<=0)continue;
   const work=model(obj),key=work.id;studioItemRefs.set(key,work);
@@ -9086,10 +9131,10 @@ function studioDraw(){
   const src=safeImage(work.image);if(src){const img=document.createElement('img');img.src=src;img.alt='';img.loading='lazy';poster.append(img)}else{poster.textContent='NO IMAGE'}
   const title=document.createElement('span');title.className='related-studio-title';title.textContent=work.title;
   const meta=document.createElement('span');meta.className='related-studio-meta';meta.textContent=[work.year?work.year+'年':'',typeJa(work.type||''),typeof work.score==='number'?'MAL '+work.score.toFixed(2):'',saved[key]?.status?statusLabels[saved[key].status]:''].filter(Boolean).join(' ・ ');
-  card.append(poster,title,meta);if(studioProfile.kind==='person'){const role=document.createElement('span');role.className='related-studio-role';role.textContent=(obj.__staffRoles||[]).map(roleJa).join(' / ');card.append(role)}cards.append(card);
+  card.append(poster,title,meta);if(studioProfile.kind==='person'){const role=document.createElement('span');role.className='related-studio-role';role.textContent=(obj.__staffRoles||[]).map(roleJa).join(' / ');card.append(role)}if(studioProfile.kind==='voice'){const character=document.createElement('span');character.className='related-studio-role';character.textContent=voiceCharacterSummary(obj.__voiceCharacters);card.append(character)}cards.append(card);
  }
  $('#studioRetry').classList.toggle('hidden',!studioProfile.error);
- $('#studioMore').classList.toggle('hidden',studioProfile.kind==='person'?displayed.length>=visibleItems.length:!studioHasNext||studioLoading||!!studioProfile.error);
+ $('#studioMore').classList.toggle('hidden',['person','voice'].includes(studioProfile.kind)?displayed.length>=visibleItems.length:!studioHasNext||studioLoading||!!studioProfile.error);
  $('#studioMore').disabled=studioLoading;
 }
 async function studioLoadPage(next=false){
@@ -9098,17 +9143,17 @@ async function studioLoadPage(next=false){
  const targetPage=next?studioPage+1:1;
  studioLoading=true;studioProfile.error='';studioDraw();
  try{
-  // People return a staff-credit list (position + anime), not an /anime search page.
+  // People return staff credits or voice-character credits, not an /anime search page.
   const common={page:String(targetPage),limit:'24',order_by:order,sort:'desc'};
   const params=kind==='studio'?new URLSearchParams({producers:String(id),...common}):new URLSearchParams({genres:String(id),...common});
-  const response=await detailFetch(kind==='person'?'/people/'+id+'/anime':'/anime?'+params.toString());
+  const response=await detailFetch(kind==='person'?'/people/'+id+'/anime':kind==='voice'?'/people/'+id+'/voices':'/anime?'+params.toString());
   if(serial!==studioSerial||!studioProfile||studioProfile.id!==id||studioProfile.kind!==kind||studioProfile.order!==order)return;
   if(!Array.isArray(response?.data))throw Error('INVALID_STUDIO_RESPONSE');
   const unique=new Set(studioItems.map(e=>e?.mal_id));
-  const normalized=kind==='person'?personNormalizeCredits(response.data):response.data;
+  const normalized=kind==='person'?personNormalizeCredits(response.data):kind==='voice'?voiceNormalizeCredits(response.data):response.data;
   const added=normalized.filter(o=>{if(!Number.isSafeInteger(o?.mal_id)||o.mal_id<=0||unique.has(o.mal_id))return false;unique.add(o.mal_id);return true});
-  studioItems=kind==='person'?added:(next?[...studioItems,...added]:added);
-  studioPage=targetPage;studioHasNext=kind!=='person'&&response?.pagination?.has_next_page===true;
+  studioItems=['person','voice'].includes(kind)?added:(next?[...studioItems,...added]:added);
+  studioPage=targetPage;studioHasNext=!['person','voice'].includes(kind)&&response?.pagination?.has_next_page===true;
   studioMemoryCache.set(kind+':'+id+':'+order,{items:studioItems.slice(),page:studioPage,hasNext:studioHasNext});
   while(studioMemoryCache.size>12)studioMemoryCache.delete(studioMemoryCache.keys().next().value);
  }catch(err){
@@ -9119,10 +9164,11 @@ async function studioLoadPage(next=false){
 function openStudioProfile(id,name){studioShow(id,name,{kind:'studio'})}
 function openCategoryProfile(id,name,kind){studioShow(id,name,{kind})}
 function openPersonProfile(id,name,role){studioShow(id,name,{kind:'person',role:personInitialRole(role)})}
+function openVoiceProfile(id,name){studioShow(id,name,{kind:'voice'})}
 function studioShow(id,name,options={}){
  const kind=validRelatedKind(options.kind)?options.kind:'studio';
  if(!validStudioId(id))return;
- studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,role:kind==='person'?(['all','writing','script','series','original'].includes(options.role)?options.role:'all'):'all',visibleLimit:kind==='person'?Math.min(1500,Math.max(24,Number(options.visibleLimit)||24)):24,order:'start_date',error:''};
+ studioCloseUi();studioProfile={id:Number(id),name:String(name||'関連項目').slice(0,140),kind,role:kind==='person'?(['all','writing','script','series','original'].includes(options.role)?options.role:'all'):'all',visibleLimit:['person','voice'].includes(kind)?Math.min(1500,Math.max(24,Number(options.visibleLimit)||24)):24,order:'start_date',error:''};
  document.body.classList.add('view-detail','view-studio');$('#detailView').classList.add('hidden');$('#studioView').classList.remove('hidden');
  $('#breadcrumb').textContent=relatedLabels[studioProfile.kind].crumb;
  studioItems=[];studioPage=0;studioHasNext=false;
@@ -9138,7 +9184,7 @@ $('#studioBack').addEventListener('click',()=>{
 $('#studioOrder').addEventListener('change',e=>{
  if(!studioProfile||!['start_date','score'].includes(e.target.value))return;
  // Person credits are returned as one list, so changing local sort never consumes another API request.
- if(studioProfile.kind==='person'){studioProfile.order=e.target.value;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();return}
+ if(['person','voice'].includes(studioProfile.kind)){studioProfile.order=e.target.value;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();return}
  studioProfile.order=e.target.value;studioPage=0;studioItems=[];studioHasNext=false;studioProfile.error='';++studioSerial;studioLoading=false;
  const cached=studioMemoryCache.get(studioProfile.kind+':'+studioProfile.id+':'+studioProfile.order);
  if(cached){studioItems=cached.items.slice();studioPage=cached.page;studioHasNext=cached.hasNext;studioDraw()}else void studioLoadPage();
@@ -9152,7 +9198,7 @@ $('#studioRoles').addEventListener('click',e=>{
  studioProfile.role=role;studioProfile.visibleLimit=24;studioDraw();aniHistorySave();
 });
 $('#studioMore').addEventListener('click',()=>{
- if(studioProfile?.kind==='person'){studioProfile.visibleLimit+=24;studioDraw();aniHistorySave();return}
+ if(['person','voice'].includes(studioProfile?.kind)){studioProfile.visibleLimit+=24;studioDraw();aniHistorySave();return}
  if(!studioHasNext){if(studioProfile?.error)void studioLoadPage(studioPage>0);return}void studioLoadPage(true);
 });
 $('#studioCards').addEventListener('click',e=>{
@@ -9255,6 +9301,7 @@ $('#detailContent').addEventListener('click',e=>{
   link.replaceWith(iframe);
   return;
  }
+ const voice=e.target.closest('[data-voice-id]');if(voice){openVoiceProfile(voice.dataset.voiceId,voice.textContent?.trim()||voice.dataset.voiceName);return}
  const person=e.target.closest('[data-person-id]');if(person){openPersonProfile(person.dataset.personId,person.textContent?.trim()||person.dataset.personName,person.dataset.personRole);return}
  const studio=e.target.closest('[data-studio-id]');if(studio){openStudioProfile(studio.dataset.studioId,studio.dataset.studioName);return}
  const category=e.target.closest('[data-category-id]');if(category){openCategoryProfile(category.dataset.categoryId,category.dataset.categoryName,category.dataset.categoryKind);return}
@@ -9322,6 +9369,7 @@ openDetail=aniHistoryWrap(openDetail);
 openStudioProfile=aniHistoryWrap(openStudioProfile);
 openCategoryProfile=aniHistoryWrap(openCategoryProfile);
 openPersonProfile=aniHistoryWrap(openPersonProfile);
+openVoiceProfile=aniHistoryWrap(openVoiceProfile);
 runSeasonSearch=aniHistoryWrap(runSeasonSearch);
 function aniHistoryScroll(y,ticket){
  const target=Math.max(0,Number(y)||0);
