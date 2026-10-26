@@ -17,6 +17,21 @@ import {canonical} from './formal-storage.mjs';
  * stores are NEVER deleted. A new box is joined in a separate encrypted WAL;
  * the active pointer changes only after an independently verified pairing.
  * This module stores no records, QR secrets, box IDs, tokens, or keys. */
+// Read-only diagnostics: never read or serialize conflict values. Unknown
+// property names are masked because custom JSON keys may contain private text.
+export function summarizeSyncConflictPaths(conflicts){
+ const fields=new Set(['id','title','status','watchedEpisodes','episodes','year','season','type','score','members','scoredBy','english','synonyms','image','updatedAt','myRankOrder','rankUpdatedAt','review','overall','aspects','story','visual','characters','music','note','text','noteDeletedAt','reviewDeletedAt','completedOn','nextWatchPinnedAt','streamPreference','service','url','weeklySchedule','mode','day','time','weeklyOptions','statuses','syncLineage','analysisMeta','studios','genres','themes','fetchedAt','deletedAt']);
+ const reasons=new Set(['concurrent-edit','missing-without-tombstone',...['live','deleted','absent'].flatMap(a=>['live','deleted','absent'].map(b=>a+'-versus-'+b))]);
+ if(!Array.isArray(conflicts))return [];
+ return conflicts.map(c=>{
+  const parts=typeof c?.path==='string'?c.path.split('/'):[];
+  const root=parts[0];let path='[unknown-path]';
+  if(['records','tombstones','works','settings'].includes(root)){
+   path=parts.map((p,i)=>i===0?p:i===1&&root!=='settings'?(/^(?:jikan:[1-9][0-9]*|custom:[0-9]+:[A-Za-z0-9_-]+)$/.test(p)?p:'[record-id]'):fields.has(p)||/^[0-9]{1,4}$/.test(p)?p:'[unknown-field]').join('/');
+  }
+  return Object.freeze({path,reason:reasons.has(c?.reason)?c.reason:'unknown-conflict'});
+ });
+}
 export const CONNECTION_PROFILE_KEY='anilog-sync-connection-profile-v1';
 const VALID=/^(?:legacy|p[1-9][0-9]?)$/;
 const profileFail=x=>{throw Error('CONNECTION_PROFILE_STOP:'+x)};
@@ -569,7 +584,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     if(s.phase!=='conflict')conflictDetails.open=false;
    }
    el('conflicts').hidden=s.phase!=='conflict';
-   el('conflicts').textContent=s.phase==='conflict'?(s.conflicts??[]).map(c=>c.path+'\nこの端末: '+JSON.stringify(c.local)+'\n同期先: '+JSON.stringify(c.remote)).join('\n'):'';
+   el('conflicts').textContent=s.phase==='conflict'?summarizeSyncConflictPaths(s.conflicts).map(c=>c.path+' / '+c.reason).join('\n'):'';
    el('retry').hidden=!['conflict','offline','pending','unavailable'].includes(s.phase);
    el('retry').textContent=s.phase==='conflict'?'同期をもう一度試す':'接続を再試行する';
    if(s.phase==='synced')void running?.confirmAutomaticRole();
