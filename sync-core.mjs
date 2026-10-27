@@ -1,3 +1,4 @@
+import {normalizeEquivalentRankMetadata} from './shared/rank-semantics.mjs';
 /* ANI:LOG sync core POC v0.1 (offline only; not wired into ANI:LOG or Cloudflare).
  * This is a reviewable, conservative prototype, NOT production authorization code.
  */
@@ -112,7 +113,23 @@ function mergeWork(base,local,remote,id,conflicts){
   if(stateEq(base,local))return stateCopy(remote);
   if(stateEq(base,remote))return stateCopy(local);
   if(local.kind==='live'&&remote.kind==='live'&&(base.kind==='live'||base.kind==='absent')){
-    return {kind:'live',value:mergeValue(base.kind==='live'?base.value:ABSENT,local.value,remote.value,['records',id],conflicts)};
+    const merged=mergeValue(base.kind==='live'?base.value:ABSENT,local.value,remote.value,['records',id],conflicts);
+    // Content and its deletion marker form one logical value. A newly added
+    // note/review on one device and a deletion marker on the other otherwise
+    // merge as two independent keys without a conflict, leaving hidden content.
+    for(const field of ['note','review']){
+      const marker=field+'DeletedAt';
+      if(!own(merged,field)||!own(merged,marker))continue;
+      const pair=s=>({...(own(s,field)?{content:s[field]}:{}),...(own(s,marker)?{deletedAt:s[marker]}:{})});
+      const combined=pair(merged);
+      if(eq(combined,pair(local.value))||eq(combined,pair(remote.value)))continue;
+      const path=pathJoin(['records',id,field]);
+      if(!conflicts.some(c=>c.path===path))conflict(conflicts,['records',id,field],
+        base.kind==='live'&&own(base.value,field)?base.value[field]:ABSENT,
+        own(local.value,field)?local.value[field]:ABSENT,
+        own(remote.value,field)?remote.value[field]:ABSENT,'concurrent-lifecycle');
+    }
+    return {kind:'live',value:merged};
   }
   // A deletion versus an edit, or a concurrent re-add, is never silently resolved.
   if(local.kind==='deleted'&&remote.kind==='deleted'){
@@ -125,13 +142,14 @@ function mergeWork(base,local,remote,id,conflicts){
 
 export function mergeSnapshots(base,local,remote){
   validateSnapshot(base);validateSnapshot(local);validateSnapshot(remote);
+  const normalized=normalizeEquivalentRankMetadata(base,local,remote);local=normalized.local;remote=normalized.remote;
   const merged=blankSnapshot(),conflicts=[];
   const ids=new Set([...Object.keys(base.records),...Object.keys(base.tombstones),...Object.keys(local.records),
     ...Object.keys(local.tombstones),...Object.keys(remote.records),...Object.keys(remote.tombstones)]);
   for(const id of ids)place(merged,id,mergeWork(stateFor(base,id),stateFor(local,id),stateFor(remote,id),id,conflicts));
   merged.settings=mergeValue(base.settings,local.settings,remote.settings,['settings'],conflicts);
   if(!conflicts.length)validateSnapshot(merged);
-  return {merged,conflicts,ok:conflicts.length===0};
+  return {merged,conflicts,ok:conflicts.length===0,...(normalized.resolved.length?{automaticResolutions:normalized.resolved}:{})};
 }
 
 export function toSnapshot(records,settings={}){

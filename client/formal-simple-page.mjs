@@ -1,3 +1,4 @@
+import {installConflictRecovery} from './conflict-resolution-integration.mjs';
 import {createFormalProductionANIPrimary} from './v408-https-staging-encrypted-primary.mjs';
 import {createFormalStorage,decodeFormalBackup} from './formal-storage.mjs';
 import {createAutomaticDeviceKey} from './automatic-device-key.mjs';
@@ -229,8 +230,9 @@ export async function compareScannedQrDestination({qrUrl,siteOrigin,apiOrigin,li
 // for its non-configurable, non-writable properties. Keep it untouched and
 // expose only the methods the legacy ANI UI actually uses through an
 // independent, frozen forwarding facade. Its ready getter remains live.
-export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false}={}){
+export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false,canWrite=()=>true}={}){
  const beforeWrite=()=>{
+  if(!canWrite())throw Error('CONFLICT_REVIEW_WRITE_FENCE');
   const now=profiles.read();
   if(staging||now.active!==selectedProfile||!['connected','disconnected'].includes(now.phase))
    throw Error('PROFILE_CHANGE_UI_EDIT_BLOCKED');
@@ -295,7 +297,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const profileExclusive=fn=>locks.request('anilog-formal-connection-profile-cutover',{mode:'exclusive'},fn);
  const staging=profileState.phase==='ready',selectedProfile=getSelectedProfile(profileState);
  const factory=()=>createFormalProductionANIPrimary({idb,locks,profileId:selectedProfile}),vault=factory();
- let automatic=null,running=null,busy=false,downloaded=null;
+ let automatic=null,running=null,busy=false,downloaded=null,recoveryActive=false,activeSyncs=0;
  const storage=createFormalStorage({vault,independentVault:factory,onCommitted:()=>automatic?.changed()});
  const suffix=profileSuffix(selectedProfile);
  const keyDB='anilog-FORMAL-AUTOMATIC-DEVICE-KEY';
@@ -315,7 +317,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   // No exception object, credentials, QR URL or source records enter logs/DOM.
   if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';}
  async function action(fn){if(busy)return;busy=true;el('begin').disabled=true;el('retry').disabled=true;
-  try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=false}}
+  try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=recoveryActive}}
  el('backup').addEventListener('click',()=>{
   // A previous checkbox confirmation is not proof that a NEW backup was saved.
   downloaded=null;el('confirmed').checked=false;el('begin').disabled=true;
@@ -365,7 +367,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Old browser tabs must not keep editing an obsolete profile. A pending
  // switch freezes UI writes; its internal authenticated registration may still
  // commit exclusively to the staging vault, never to the original WAL.
- const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging});
+ const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive});
  Object.defineProperty(window,'__formalStorage',{value:uiStorage});
  Object.defineProperty(window,'__formalDecodeBackup',{value:decodeFormalBackup});
  const ui=window.__formalUI;if(!ui)throw Error('FORMAL_ENCRYPTED_UI_REQUIRED');
@@ -566,7 +568,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  function schedule(_session,fresh){
   automatic?.stop();automatic=null;
   if(pauseGuard.paused||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile){showPauseState();return;}
-  automatic=createAutomaticSync({syncOnce:async()=>{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return s.syncOnce()},onState:s=>{
+  automatic=createAutomaticSync({syncOnce:async()=>{activeSyncs++;try{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return await s.syncOnce()}finally{activeSyncs--}},onState:s=>{
    if(pauseGuard.paused)return;
    const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
     unavailable:'同期できませんでした。記録は端末に保存済みです。接続を再試行できます。',
@@ -578,6 +580,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    else if(s.phase==='conflict'||s.phase==='unavailable'||['blocked','too-large','unconfirmed'].includes(s.status))attention(true);
    // Do not expose raw record paths / JSON by default. Keep all diagnostic
    // values available behind a user-opened details element; sync is unchanged.
+   const recoveryEntry=el('resolve-conflict');if(recoveryEntry)recoveryEntry.hidden=s.phase!=='conflict';
    const conflictDetails=el('conflict-details');
    if(conflictDetails){
     conflictDetails.hidden=s.phase!=='conflict';
@@ -622,6 +625,14 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     return {phase:'FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED',serverRevision:vault.readSyncCheckpoint().serverRevision,records:Object.keys(storage.read().records).length};
    }finally{masterKey.fill(0)}
   },beforeSync:()=>{pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+ if(!staging&&profiles.read().phase==='connected')installConflictRecovery({root,locks,scope:suffix,vault,isEligible:()=>local.getItem(LOCAL_MODE)==='sync-enabled',
+  isPaused:()=>pauseGuard.paused,isQuiescent:()=>activeSyncs===0,
+  assertContext:()=>{if(!recoveryActive||!pauseGuard.paused||activeSyncs||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile||local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('REVIEW_CONTEXT_CHANGED');const line=vault.readCurrent().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})},
+  begin:async()=>{recoveryActive=true;pauseGuard.pause();automatic?.stop();automatic=null;await ui.whenWritesIdle();if(activeSyncs)throw Error('WAIT_FOR_SYNC_COMPLETION');await vault.refresh();ui.hydrate(vault.readCurrent());},
+  end:()=>{recoveryActive=false;showPauseState();},
+  getTransport:async()=>running.sealedCredentials.resume({vault,passphrase:await keys.read(),fetcher:createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch}),expectedApiRoot:api.origin,expectedOrigin:location.origin,expectedBoxId:vault.readCurrent().weeklyOptions.__syncLineage.boxId}),
+  complete:async()=>{await storage.refresh();ui.hydrate(storage.read());recoveryActive=false;pauseGuard.resume({verified:true});showPauseState();try{await running.resumeAutomatic({passphrase:await keys.read()})}catch{pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();status.textContent='この端末の記録は保存済みです。接続を再確認してください。';} }
+ });
  async function finishStagedCutover(password){
   const oldVault=createFormalProductionANIPrimary({idb,locks,profileId:profileState.active});
   const fetcher=createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch});

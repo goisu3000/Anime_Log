@@ -1464,6 +1464,10 @@ select:not([data-status-id]){
 
 .anilog-sync-dialog #formal-simple-sync [data-simple="conflicts"]{max-height:250px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;font-size:var(--fs-xs)}
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]{overflow-wrap:anywhere}
+.anilog-sync-dialog .conflict-choice-content{padding:12px 14px;display:grid;gap:12px;overflow-wrap:anywhere;min-width:0}
+.anilog-sync-dialog .conflict-choice-content select,.anilog-sync-dialog .conflict-choice-content input,.anilog-sync-dialog .conflict-choice-content textarea{min-width:0;max-width:100%;width:100%;font:inherit}
+.anilog-sync-dialog .conflict-choice-content p{white-space:pre-wrap;margin:0}
+.anilog-sync-dialog .conflict-choice-content fieldset{min-width:0;margin:0;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 @media(hover:hover){
   .anilog-sync-sidebar .anilog-sync-entry:hover,.anilog-sync-dialog-close:hover{border-color:var(--accent);color:var(--accent);background:var(--surface-hover)}
   .anilog-sync-dialog #formal-simple-sync button:not(:disabled):hover{border-color:var(--accent);filter:brightness(1.08)}
@@ -3888,9 +3892,10 @@ async function moveRankImpl(id,direction){const before=myRatedItems(),item=saved
  const group=before.filter(a=>readReview(a.review)?.overall===rating);
  const idx=group.findIndex(a=>a.id===id),other=idx+direction;
  if(idx<0||other<0||other>=group.length)return;
+ const previousOrder=new Map(group.map((a,n)=>[a.id,n]));
  [group[idx],group[other]]=[group[other],group[idx]];
  const old=group.map(x=>[x.id,x.myRankOrder,x.rankUpdatedAt]);const at=new Date().toISOString();
- group.forEach((a,n)=>{saved[a.id].myRankOrder=n;saved[a.id].rankUpdatedAt=at});
+ group.forEach((a,n)=>{saved[a.id].myRankOrder=n;if(previousOrder.get(a.id)!==n)saved[a.id].rankUpdatedAt=at});
  if(!await persist()){for(const [key,ord,date] of old){if(ord===undefined)delete saved[key].myRankOrder;else saved[key].myRankOrder=ord;if(date===undefined)delete saved[key].rankUpdatedAt;else saved[key].rankUpdatedAt=date}return}
  renderRanking();
 }
@@ -4065,7 +4070,7 @@ $('#rankResults').addEventListener('drop',e=>{e.preventDefault();const target=e.
  const rows=myRatedItems().filter(a=>readReview(a.review)?.overall===readReview(saved[draggedId]?.review)?.overall);
  const from=rows.findIndex(a=>a.id===draggedId),to=rows.findIndex(a=>a.id===targetId);
  if(from!==-1&&to!==-1&&from!==to){const order=rows.slice();const [moved]=order.splice(from,1);order.splice(to,0,moved);
-  const old=rows.map(a=>[a.id,a.myRankOrder,a.rankUpdatedAt]);const stamp=new Date().toISOString();order.forEach((a,i)=>{saved[a.id].myRankOrder=i;saved[a.id].rankUpdatedAt=stamp});
+  const previousOrder=new Map(rows.map((a,n)=>[a.id,n]));const old=rows.map(a=>[a.id,a.myRankOrder,a.rankUpdatedAt]);const stamp=new Date().toISOString();order.forEach((a,i)=>{saved[a.id].myRankOrder=i;if(previousOrder.get(a.id)!==i)saved[a.id].rankUpdatedAt=stamp});
   if(!await persist()){for(const [id,o,d] of old){if(o===undefined)delete saved[id].myRankOrder;else saved[id].myRankOrder=o;if(d===undefined)delete saved[id].rankUpdatedAt;else saved[id].rankUpdatedAt=d}}
  }
  rankDraggedId=null;renderRanking();
@@ -4504,7 +4509,7 @@ for(const dialog of document.querySelectorAll('dialog')){
  if(policy==='never')continue;
  dialog.addEventListener('click',e=>{
   if(!clickedDialogBackdrop(e,dialog))return;
-  if(policy==='always'){dialog.close();return}
+  if(policy==='always'){if(dialog.dataset.conflictBusy==='true')return;dialog.close();return}
   if(policy==='add-when-idle'){if(!addingCustom)dialog.close();return}
   if(policy==='share-before-generated'){
    if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
@@ -5961,6 +5966,7 @@ if(!aniInitialHistoryState){try{history.replaceState(aniHistorySnapshot(),'',loc
 
 window.__formalUI=Object.freeze({
  readSaved:()=>structuredClone(saved),readWeeklyOptions:()=>structuredClone(weeklyOptions),
+ whenWritesIdle:()=>recordWriteQueue,
  hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);mode='saved';updateCounts();render()},
  commitSaved(records,weekly){if(!window.__formalStorage?.ready&&!window.__formalPairing?.bridge?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');saved=structuredClone(records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(weekly);render()}
 });
@@ -7911,9 +7917,10 @@ async function moveRankImpl(id,direction){const before=myRatedItems(),item=saved
  const group=before.filter(a=>readReview(a.review)?.overall===rating);
  const idx=group.findIndex(a=>a.id===id),other=idx+direction;
  if(idx<0||other<0||other>=group.length)return;
+ const previousOrder=new Map(group.map((a,n)=>[a.id,n]));
  [group[idx],group[other]]=[group[other],group[idx]];
  const old=group.map(x=>[x.id,x.myRankOrder,x.rankUpdatedAt]);const at=new Date().toISOString();
- group.forEach((a,n)=>{saved[a.id].myRankOrder=n;saved[a.id].rankUpdatedAt=at});
+ group.forEach((a,n)=>{saved[a.id].myRankOrder=n;if(previousOrder.get(a.id)!==n)saved[a.id].rankUpdatedAt=at});
  if(!await persist()){for(const [key,ord,date] of old){if(ord===undefined)delete saved[key].myRankOrder;else saved[key].myRankOrder=ord;if(date===undefined)delete saved[key].rankUpdatedAt;else saved[key].rankUpdatedAt=date}return}
  renderRanking();
 }
@@ -8088,7 +8095,7 @@ $('#rankResults').addEventListener('drop',e=>{e.preventDefault();const target=e.
  const rows=myRatedItems().filter(a=>readReview(a.review)?.overall===readReview(saved[draggedId]?.review)?.overall);
  const from=rows.findIndex(a=>a.id===draggedId),to=rows.findIndex(a=>a.id===targetId);
  if(from!==-1&&to!==-1&&from!==to){const order=rows.slice();const [moved]=order.splice(from,1);order.splice(to,0,moved);
-  const old=rows.map(a=>[a.id,a.myRankOrder,a.rankUpdatedAt]);const stamp=new Date().toISOString();order.forEach((a,i)=>{saved[a.id].myRankOrder=i;saved[a.id].rankUpdatedAt=stamp});
+  const previousOrder=new Map(rows.map((a,n)=>[a.id,n]));const old=rows.map(a=>[a.id,a.myRankOrder,a.rankUpdatedAt]);const stamp=new Date().toISOString();order.forEach((a,i)=>{saved[a.id].myRankOrder=i;if(previousOrder.get(a.id)!==i)saved[a.id].rankUpdatedAt=stamp});
   if(!await persist()){for(const [id,o,d] of old){if(o===undefined)delete saved[id].myRankOrder;else saved[id].myRankOrder=o;if(d===undefined)delete saved[id].rankUpdatedAt;else saved[id].rankUpdatedAt=d}}
  }
  rankDraggedId=null;renderRanking();
@@ -8521,7 +8528,7 @@ for(const dialog of document.querySelectorAll('dialog')){
  if(policy==='never')continue;
  dialog.addEventListener('click',e=>{
   if(!clickedDialogBackdrop(e,dialog))return;
-  if(policy==='always'){dialog.close();return}
+  if(policy==='always'){if(dialog.dataset.conflictBusy==='true')return;dialog.close();return}
   if(policy==='add-when-idle'){if(!addingCustom)dialog.close();return}
   if(policy==='share-before-generated'){
    if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
@@ -10332,7 +10339,7 @@ if(topBtn){
  const openFrom=event=>show(event.currentTarget);
  pc.addEventListener('click',openFrom);
  mobile?.addEventListener('click',openFrom);
- close.addEventListener('click',()=>dialog.close());
+ close.addEventListener('click',()=>{if(dialog.dataset.conflictBusy!=='true')dialog.close()});
  dialog.addEventListener('close',()=>{if(opener?.isConnected&&opener?.offsetParent!==null)opener.focus();opener=null});
  function syncLabel(){
    const text=status?.textContent??'';
