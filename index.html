@@ -1792,6 +1792,26 @@ select:not([data-status-id]){
 .pattern-a-tools .note-preview.has-note{color:var(--accent);border-color:var(--accent-border);background:var(--accent-soft)}
 .pattern-a-tools .note-preview-quote,.pattern-a-tools .note-preview-label{display:none}
 .pattern-a-tools .note-preview .ui-icon,.pattern-a-tools .note-preview-edit-ico{width:17px;height:17px;flex:0 0 17px;color:inherit}
+/* Two-column My List: provider original-brand assets. No invented text logos when
+   the matching image is installed. Keep transparent exterior and unchanged hitbox. */
+.stream-brand-icon:has(.stream-brand-logo){background:transparent;border-radius:0;color:inherit;}
+.stream-brand-logo{display:block;width:24px;height:24px;max-width:24px;max-height:24px;object-fit:contain;border:0;background:transparent;flex-shrink:0;}
+.stream-brand-logo[hidden]{display:none!important}
+.stream-brand-icon .stream-brand-fallback{display:none;align-items:center;justify-content:center;width:24px;height:24px;border-radius:4px;font-weight:800;text-align:center}
+.stream-brand-icon .stream-brand-fallback:not([hidden]){display:flex}
+.stream-brand-icon .stream-brand-fallback[hidden]{display:none!important}
+.stream-brand-icon .stream-brand-fallback.stream-brand-prime{background:#0969a9;color:#fff;font-size:9px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-netflix{background:#151515;color:#e50914;font-size:22px;font-family:Arial,sans-serif}
+.stream-brand-icon .stream-brand-fallback.stream-brand-danime{background:#e83b7b;color:white;font-size:20px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-abema{background:#171719;color:white;font-size:17px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-unext{background:#202226;color:white;font-size:19px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-hulu{background:#1a2925;color:#1ce783;font-size:21px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-dmm{background:#e60041;color:white;font-size:9px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-fod{background:#1777c5;color:white;font-size:10px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-disney{background:#153b70;color:#e2f4ff;font-size:12px}
+.stream-brand-icon .stream-brand-fallback.stream-brand-lemino{background:#d82855;color:#fff;font-size:19px}
+/* When image loading fails, keep the old service identification accessible. */
+
 /* Compact self-rating is shown only in the desktop 2-column grid.
    The existing rating control remains intact for desktop list and phone layouts. */
 .grid-self-rating{display:none}
@@ -1864,6 +1884,70 @@ select:not([data-status-id]){
 }
 .pattern-a-tools{display:none}
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-tools{display:flex}body.saved-mode:not(.saved-list-view) .pattern-a-main-copy>.stream-inline,body.saved-mode:not(.saved-list-view) .pattern-a-main-copy>.next-watch-toggle{display:none}}
+/* My List two-column: line up title/meta/genre/actions across cards; keep
+   public MAL and private 5-star review together on the right of the info area.
+   Presentation only: both scores retain their original sources and edit action. */
+.pattern-a-score-aside{display:contents}
+.pattern-a-tags-empty{display:none}
+@media(min-width:1251px){
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .record-main{
+  display:grid;grid-template-columns:minmax(0,1fr) 86px;grid-template-rows:23px 21px 28px 32px;column-gap:6px;
+  align-items:center;min-width:0;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-main-copy{
+  display:contents;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .card-title{
+  grid-column:1;grid-row:1;align-self:center;margin:0;min-width:0;line-height:1.4;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-meta{
+  grid-column:1;grid-row:2;align-self:center;min-height:0;margin:0;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tags{
+  grid-column:1;grid-row:3;display:flex;align-items:center;align-self:center;gap:4px;
+  margin:0;min-height:24px;max-height:28px;overflow:hidden;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tags-empty{
+  display:block;visibility:hidden;pointer-events:none;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tools{
+  grid-column:1/-1;grid-row:4;align-self:center;margin:0;min-height:30px;flex-wrap:nowrap;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-score-aside{
+  grid-column:2;grid-row:1/4;display:flex;min-width:0;align-self:stretch;align-items:flex-end;
+  justify-content:center;flex-direction:column;gap:10px;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-score-aside .pattern-a-public-score{
+  position:static;inset:auto;min-width:0;padding:0;
+  display:flex;align-items:flex-end;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-self-rating{
+  display:inline-flex;align-items:center;justify-content:flex-end;
+  min-width:0;max-width:100%;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-self-rating-button{
+  display:inline-flex;align-items:center;justify-content:flex-end;
+  font-size:16px;line-height:1;letter-spacing:-.075em;
+  min-height:32px;padding:4px 0 4px 4px;white-space:nowrap;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-filled{color:var(--gold)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-empty{color:var(--subtle)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-unrated{font-size:11px;letter-spacing:0;color:var(--muted)}
+ /* Retain the agreed original progress caption (視聴進捗 / 2 / 12話),
+    keeping the start button and episode controls in equally tall slots. */
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.record-primary{height:64px;min-height:64px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress{height:64px;min-height:64px;gap:4px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{display:flex;align-items:center;justify-content:space-between;gap:3px;margin:0;min-height:12px;line-height:1.2;font-size:10px;white-space:nowrap}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top>span{display:inline}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top strong{font-size:10px;white-space:nowrap}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions{height:30px;min-height:30px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions button{height:30px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-entry input{height:30px}
+}
+
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .card-title .title-button{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-tools>.stream-inline{flex-shrink:0}}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -3039,7 +3123,8 @@ function patternACompactReview(a){
  const label=reviewStateLabel(a.status);
  const rated=Boolean(r);
  const caption=rated?`${label} ${r.overall}/5。評価を編集`:`${label}を付ける`;
- return `<span class="grid-self-rating"><button type="button" class="grid-self-rating-button${rated?'':' is-unrated'}" data-rate-id="${safeText(a.id)}" title="${safeText(caption)}" aria-label="${safeText(a.title)}：${safeText(caption)}">${rated?'★'+r.overall:'☆評価'}</button></span>`;
+  const stars=rated?`<span class="grid-stars-filled" aria-hidden="true">${'★'.repeat(r.overall)}</span><span class="grid-stars-empty" aria-hidden="true">${'☆'.repeat(5-r.overall)}</span>`:'<span class="grid-stars-unrated" aria-hidden="true">☆評価</span>';
+  return `<span class="grid-self-rating"><button type="button" class="grid-self-rating-button${rated?'':' is-unrated'}" data-rate-id="${safeText(a.id)}" title="${safeText(caption)}" aria-label="${safeText(a.title)}：${safeText(caption)}">${stars}</button></span>`;
 }
 function streamServiceIconMarkup(service){
  const icons={
@@ -3050,7 +3135,11 @@ function streamServiceIconMarkup(service){
   'Disney Plus':['disney','D+'],'Lemino':['lemino','L']
  };
  const icon=icons[service]||['other','▶'];
- return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${safeText(icon[1])}</span>`;
+ // Enable only after the rights review and byte validation are complete.
+ const approvedBrandSlugs=[];
+ if(!approvedBrandSlugs.includes(icon[0]))return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${safeText(icon[1])}</span>`;
+ const img=`<img class="stream-brand-logo" src="./assets/streaming/${icon[0]}.png" alt="" width="24" height="24" decoding="async" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`;
+ return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${img}<span class="stream-brand-fallback stream-brand-${icon[0]}" hidden aria-hidden="true">${safeText(icon[1])}</span></span>`;
 }
 function gridStreamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
@@ -3059,10 +3148,10 @@ function gridStreamRowMarkup(a){
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}" title="視聴サイトを設定" aria-label="${safeText(a.title)}の視聴サイトを設定">${uiIcon('plus')}<span class="grid-stream-empty-label">視聴先</span></button>`;
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('chevron-down')}</button>`:''}</div>`;
 }
-function patternAGridTools(a){const status=saved[a.id]?.status;return `<div class="pattern-a-tools" aria-label="作品の操作">${gridStreamRowMarkup(a)}${status==='planned'?nextWatchToggleMarkup(a):''}${noteMarkup(a)}${patternACompactReview(a)}</div>`}
+function patternAGridTools(a){const status=saved[a.id]?.status;return `<div class="pattern-a-tools" aria-label="作品の操作">${gridStreamRowMarkup(a)}${status==='planned'?nextWatchToggleMarkup(a):''}${noteMarkup(a)}</div>`}
 function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}年`:'放送年未登録',a.type?typeJa(a.type):'',Number.isInteger(a.episodes)&&a.episodes>0?`全${a.episodes}話`:''].filter(Boolean);
  const tags=cleanAnalysisMeta(a.analysisMeta)?.genres?.slice(0,3)||[];
- return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:''}`;
+ return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:'<div class="pattern-a-tags pattern-a-tags-empty" aria-hidden="true"></div>'}`;
 }
 function patternAMalMetric(a){const m=malMetricData(a);if(m.score===null)return '';
  const votesText=m.scoredBy!==null&&m.scoredBy>0?`${m.scoredBy.toLocaleString('ja-JP')}人が評価`:'評価人数未登録';
@@ -3277,7 +3366,7 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div>${malMetric}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}${patternACompactReview(a)}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -7107,7 +7196,8 @@ function patternACompactReview(a){
  const label=reviewStateLabel(a.status);
  const rated=Boolean(r);
  const caption=rated?`${label} ${r.overall}/5。評価を編集`:`${label}を付ける`;
- return `<span class="grid-self-rating"><button type="button" class="grid-self-rating-button${rated?'':' is-unrated'}" data-rate-id="${safeText(a.id)}" title="${safeText(caption)}" aria-label="${safeText(a.title)}：${safeText(caption)}">${rated?'★'+r.overall:'☆評価'}</button></span>`;
+  const stars=rated?`<span class="grid-stars-filled" aria-hidden="true">${'★'.repeat(r.overall)}</span><span class="grid-stars-empty" aria-hidden="true">${'☆'.repeat(5-r.overall)}</span>`:'<span class="grid-stars-unrated" aria-hidden="true">☆評価</span>';
+  return `<span class="grid-self-rating"><button type="button" class="grid-self-rating-button${rated?'':' is-unrated'}" data-rate-id="${safeText(a.id)}" title="${safeText(caption)}" aria-label="${safeText(a.title)}：${safeText(caption)}">${stars}</button></span>`;
 }
 function streamServiceIconMarkup(service){
  const icons={
@@ -7118,7 +7208,11 @@ function streamServiceIconMarkup(service){
   'Disney Plus':['disney','D+'],'Lemino':['lemino','L']
  };
  const icon=icons[service]||['other','▶'];
- return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${safeText(icon[1])}</span>`;
+ // Enable only after the rights review and byte validation are complete.
+ const approvedBrandSlugs=[];
+ if(!approvedBrandSlugs.includes(icon[0]))return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${safeText(icon[1])}</span>`;
+ const img=`<img class="stream-brand-logo" src="./assets/streaming/${icon[0]}.png" alt="" width="24" height="24" decoding="async" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`;
+ return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${img}<span class="stream-brand-fallback stream-brand-${icon[0]}" hidden aria-hidden="true">${safeText(icon[1])}</span></span>`;
 }
 function gridStreamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
@@ -7127,10 +7221,10 @@ function gridStreamRowMarkup(a){
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}" title="視聴サイトを設定" aria-label="${safeText(a.title)}の視聴サイトを設定">${uiIcon('plus')}<span class="grid-stream-empty-label">視聴先</span></button>`;
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('chevron-down')}</button>`:''}</div>`;
 }
-function patternAGridTools(a){const status=saved[a.id]?.status;return `<div class="pattern-a-tools" aria-label="作品の操作">${gridStreamRowMarkup(a)}${status==='planned'?nextWatchToggleMarkup(a):''}${noteMarkup(a)}${patternACompactReview(a)}</div>`}
+function patternAGridTools(a){const status=saved[a.id]?.status;return `<div class="pattern-a-tools" aria-label="作品の操作">${gridStreamRowMarkup(a)}${status==='planned'?nextWatchToggleMarkup(a):''}${noteMarkup(a)}</div>`}
 function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}年`:'放送年未登録',a.type?typeJa(a.type):'',Number.isInteger(a.episodes)&&a.episodes>0?`全${a.episodes}話`:''].filter(Boolean);
  const tags=cleanAnalysisMeta(a.analysisMeta)?.genres?.slice(0,3)||[];
- return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:''}`;
+ return `<div class="pattern-a-meta">${pieces.map(x=>`<span>${safeText(x)}</span>`).join('<span class="pattern-a-separator" aria-hidden="true">·</span>')}</div>${tags.length?`<div class="pattern-a-tags">${tags.map(t=>`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:'<div class="pattern-a-tags pattern-a-tags-empty" aria-hidden="true"></div>'}`;
 }
 function patternAMalMetric(a){const m=malMetricData(a);if(m.score===null)return '';
  const votesText=m.scoredBy!==null&&m.scoredBy>0?`${m.scoredBy.toLocaleString('ja-JP')}人が評価`:'評価人数未登録';
@@ -7345,7 +7439,7 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div>${malMetric}</div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}${patternACompactReview(a)}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -10403,7 +10497,13 @@ if(topBtn){
   const r=visual(owner).getBoundingClientRect(),dlg=owner.closest('dialog[open]');
   const d=dlg?.getBoundingClientRect();
   const leftLimit=d?Math.max(8,d.left+8):8;
-  const rightLimit=d?Math.min(innerWidth-8,d.right-8):innerWidth-8;
+  let rightLimit=d?Math.min(innerWidth-8,d.right-8):innerWidth-8;
+  // My List desktop two-column only: align popup with its containing card inset.
+  // Do not change other selects or mobile menus.
+  if(innerWidth>=1251 && document.body.classList.contains('saved-mode') && !document.body.classList.contains('saved-list-view') && owner.closest('.pattern-a-status-menu')){
+   const card=owner.closest('.pattern-a-card');
+   if(card){rightLimit=Math.min(rightLimit,card.getBoundingClientRect().right-16)}
+  }
   const topLimit=d?Math.max(8,d.top+8):8;
   const bottomLimit=d?Math.min(innerHeight-8,d.bottom-8):innerHeight-8;
   if(r.bottom<topLimit||r.top>bottomLimit){dismiss();return}
