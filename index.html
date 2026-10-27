@@ -1852,7 +1852,7 @@ select:not([data-status-id]){
  /* In the two-column card only, keep the same 48px action slot before and after
     "見始める". The count is still editable in the centre, while n/total remains
     in the DOM for legacy event updates and non-grid views. */
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column{padding-top:26px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column{padding-top:26px;min-height:129px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.record-primary{height:48px;min-height:48px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress{height:48px;min-height:48px;display:flex;flex-direction:column;justify-content:center;gap:6px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{display:none;margin:0}
@@ -1953,7 +1953,13 @@ select:not([data-status-id]){
 
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .card-title .title-button{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
 
-@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-tools>.stream-inline{flex-shrink:0}}
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-tools>.stream-inline{flex-shrink:0}
+ /* Reserve by episode counts, independent of status, without hiding notices. */
+ body.saved-mode:not(.saved-list-view) .pattern-a-card[data-progress-reserve="complete"] .pattern-a-watch-column{min-height:226px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card[data-progress-reserve="warning"] .pattern-a-watch-column{min-height:159px}
+ /* Move only the state selector; preserve the start/progress controls below. */
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-menu{transform:translateY(-14px)}
+}
 @container (max-width:215px){
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tools{flex-wrap:wrap;min-height:64px;row-gap:0}
  body.saved-mode:not(.saved-list-view) .pattern-a-tools>.stream-inline{flex-basis:100%}
@@ -3133,7 +3139,7 @@ function patternACompactReview(a){
  const label=reviewStateLabel(a.status);
  const rated=Boolean(r);
  const caption=rated?`${label} ${r.overall}/5。評価を編集`:`${label}を付ける`;
-  const stars=rated?reviewStars(r.overall):'<span class="grid-stars-unrated" aria-hidden="true">☆評価</span>';
+  const stars=rated?reviewStars(r.overall):'<span class="grid-stars-unrated" aria-hidden="true">評価する</span>';
   return `<span class="grid-self-rating"><button type="button" class="grid-self-rating-button${rated?'':' is-unrated'}" data-rate-id="${safeText(a.id)}" title="${safeText(caption)}" aria-label="${safeText(a.title)}：${safeText(caption)}">${stars}</button></span>`;
 }
 function streamServiceIconMarkup(service){
@@ -3376,7 +3382,8 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current===total?'complete':total!==null&&current>total?'warning':'normal';
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -7206,7 +7213,7 @@ function patternACompactReview(a){
  const label=reviewStateLabel(a.status);
  const rated=Boolean(r);
  const caption=rated?`${label} ${r.overall}/5。評価を編集`:`${label}を付ける`;
-  const stars=rated?reviewStars(r.overall):'<span class="grid-stars-unrated" aria-hidden="true">☆評価</span>';
+  const stars=rated?reviewStars(r.overall):'<span class="grid-stars-unrated" aria-hidden="true">評価する</span>';
   return `<span class="grid-self-rating"><button type="button" class="grid-self-rating-button${rated?'':' is-unrated'}" data-rate-id="${safeText(a.id)}" title="${safeText(caption)}" aria-label="${safeText(a.title)}：${safeText(caption)}">${stars}</button></span>`;
 }
 function streamServiceIconMarkup(service){
@@ -7449,7 +7456,8 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current===total?'complete':total!==null&&current>total?'warning':'normal';
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
