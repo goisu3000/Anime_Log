@@ -2,7 +2,7 @@
 export function createAutomaticSync({syncOnce,onState=()=>{},events=globalThis,document=globalThis.document,
  online=()=>globalThis.navigator?.onLine!==false,setTimer=setTimeout,clearTimer=clearTimeout,debounceMs=800,focusCooldownMs=15000,now=Date.now}={}){
  if(typeof syncOnce!=='function')throw Error('SYNC_SESSION_REQUIRED');
- let stopped=false,timer=null,running=false,dirty=false,followUp=false,lastCheck=-Infinity,blocked=false,lastConflicts=[];
+ let stopped=false,timer=null,running=false,dirty=false,followUp=false,manualFollowUp=false,lastCheck=-Infinity,blocked=false,lastConflicts=[];
  const state=(phase,extra={})=>onState({phase,...extra});
  const clear=()=>{if(timer!==null){clearTimer(timer);timer=null}};
  const schedule=(recheck=false)=>{if(stopped||blocked&&!recheck)return;clear();timer=setTimer(()=>{timer=null;void flush(recheck)},debounceMs)};
@@ -19,7 +19,12 @@ export function createAutomaticSync({syncOnce,onState=()=>{},events=globalThis,d
    // The durable local journal is untouched, and no automatic retry loop runs.
    dirty=dirty||captured;state(online()?'unavailable':'offline',{pending:dirty});
   }
-  finally{running=false;if(followUp&&!blocked&&online())schedule()}
+  finally{running=false;
+   // A user-requested recheck must not vanish behind an in-flight sync. It
+   // may safely re-evaluate an unresolved conflict once, never force a PUT.
+   if(manualFollowUp){manualFollowUp=false;if(online())schedule(true)}
+   else if(followUp&&!blocked&&online())schedule();
+  }
  }
  const changed=()=>{if(stopped)return;dirty=true;if(running)followUp=true;state(blocked?'conflict':'pending',{pending:true,...(blocked?{conflicts:lastConflicts}:{})});schedule()};
  const wake=()=>{if(stopped||!online()||document?.visibilityState==='hidden')return;
@@ -36,7 +41,10 @@ export function createAutomaticSync({syncOnce,onState=()=>{},events=globalThis,d
  events?.addEventListener?.('online',recovered);events?.addEventListener?.('focus',wake);document?.addEventListener?.('visibilitychange',visible);
  return Object.freeze({changed,start:wake,
   // Only an explicit conflict resolution may release this pause.
-  resumeAfterConflict(){if(stopped)return;blocked=false;dirty=true;schedule()},
+  resumeAfterConflict(){if(stopped)return;blocked=false;dirty=true;
+   if(running){followUp=true;manualFollowUp=true;return}
+   schedule(true);
+  },
   stop(){stopped=true;clear();events?.removeEventListener?.('online',recovered);events?.removeEventListener?.('focus',wake);document?.removeEventListener?.('visibilitychange',visible)},
   get pending(){return dirty},get conflict(){return blocked}});
 }

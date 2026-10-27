@@ -15,6 +15,10 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  const show=(s)=>{status.textContent=s};
  const setPhase=s=>{phase=s;render()};
  function render(){
+  // In the ordinary production setup, the QR-confirmation controls belong to
+  // an active invitation. Do not show inactive approval/copy buttons before
+  // the user has asked to add a device. Staging behavior is unchanged.
+  if(automaticMode){const hasInvitation=inviteUrl!==null;code.hidden=!hasInvitation;approve.hidden=!hasInvitation;copy.hidden=!hasInvitation;}
   controls.forEach(c=>c.disabled=true);
   if(busy||stopped)return;
   invite.disabled=owner===null;

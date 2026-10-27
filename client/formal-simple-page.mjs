@@ -297,7 +297,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const profileExclusive=fn=>locks.request('anilog-formal-connection-profile-cutover',{mode:'exclusive'},fn);
  const staging=profileState.phase==='ready',selectedProfile=getSelectedProfile(profileState);
  const factory=()=>createFormalProductionANIPrimary({idb,locks,profileId:selectedProfile}),vault=factory();
- let automatic=null,running=null,busy=false,downloaded=null,recoveryActive=false,activeSyncs=0;
+ let automatic=null,running=null,busy=false,downloaded=null,recoveryActive=false,activeSyncs=0,repairRequested=false;
  const storage=createFormalStorage({vault,independentVault:factory,onCommitted:()=>automatic?.changed()});
  const suffix=profileSuffix(selectedProfile);
  const keyDB='anilog-FORMAL-AUTOMATIC-DEVICE-KEY';
@@ -349,7 +349,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
   const notice=el('pairing-notice');
-  if(notice){notice.hidden=false;notice.textContent='この端末にはすでに同期設定があるため、新しいQRはまだ適用していません。同期先を切り替える場合は、この画面の「この端末の同期を解除する（記録は残す）」を押し、続けてバックアップ・確認・安全な接続を行ってください。単に「接続を再試行」しても新しいQRには接続されません。記録は保持されています。';}
+  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期中のため、新しいQRはまだ適用していません。同期先を変更する場合は「詳細設定・復旧」から「この端末の同期を解除」を選び、バックアップを保存してから新しい端末への接続を進めてください。同期を解除しても視聴記録は消えません。';}
   attention(true);
  }
  if(!mode){
@@ -411,7 +411,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     lineage:storage.read().weeklyOptions.__syncLineage});
    notice.textContent=x.sameDestination?
     '読み取ったQRとこの端末は同じ同期先ID（'+x.currentID+'）です。新しい端末の承認は行っていません。この端末の元の同期を続けるには再読み込みしてください。':
-    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「この端末の同期を解除する（記録は残す）」を押し、続けてこの画面のバックアップ・安全な接続へ進んでください。古い記録・資格情報は保持しています。';
+    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「詳細設定・復旧」から「この端末の同期を解除」を選び、バックアップを保存して安全に再接続してください。視聴記録は消えません。';
   }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
  }
  // The old profile's WAL/credentials remain independent from every new profile.
@@ -434,7 +434,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   cancelReconnection.hidden=!['preparing','ready'].includes(state.phase);
   if(state.phase==='disconnected'){
    pauseButton.hidden=true;resumeButton.hidden=true;
-   attention(true);status.textContent='この端末の同期連携を解除しました。暗号化した記録は端末内に保存されます。サーバー上の端末認証と復旧情報は削除していません。';
+   attention(true);status.textContent='この端末の同期を解除しました。視聴記録と未送信の変更は端末に保存されています。ほかの端末の記録も消えていません。';
   }else if(['preparing','ready'].includes(state.phase)){
    pauseButton.hidden=true;resumeButton.hidden=true;unlink.hidden=true;relink.hidden=true;
    attention(true);status.textContent=state.phase==='ready'?'新しい接続先へ接続準備中です。6桁コードを元の端末で承認し、この端末で「接続を完了」を押してください。':'再接続の準備が完了していません。元の暗号化記録は保持されています。中止して復元できます。';
@@ -504,7 +504,14 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(local.getItem(LOCAL_MODE)!=='sync-enabled')return;
   connectionActions.hidden=false;
   const paused=pauseGuard.paused;
-  pauseButton.hidden=paused;resumeButton.hidden=!paused;switchCheck.hidden=false;
+  // The pause guard and connection inspection remain available internally.
+  // They are not independent user decisions in the ordinary sync dialog.
+  pauseButton.hidden=true;resumeButton.hidden=true;switchCheck.hidden=true;
+  // One primary recovery action for a connected device. The former Resume
+  // and conditional Retry buttons must not compete in the ordinary UI.
+  const canRepair=!staging&&!ignoredExistingQR&&profiles.read().phase==='connected'&&profiles.read().active===selectedProfile;
+  el('retry').hidden=!canRepair;
+  if(canRepair){el('retry').textContent='再同期';el('retry').disabled=busy||recoveryActive;}
   showConnectionActions();
   if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent='この端末の自動同期は一時停止中です。編集は暗号化して端末に保存します。同期先・認証情報・未送信変更は保持しています。';}
  }
@@ -545,7 +552,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(event.key!==SYNC_PAUSE_KEY+profileSuffix(selectedProfile))return;
   if(pauseGuard.paused){automatic?.stop();automatic=null;showPauseState()}
   else {attention(true);status.textContent='別のタブで同期が再開されました。このタブも再読み込みして接続状態を確認してください。';
-   resumeButton.hidden=true;pauseButton.hidden=false;}
+   resumeButton.hidden=true;pauseButton.hidden=true;switchCheck.hidden=true;}
  });
  const panelRoot=document.getElementById('formal-sync-controls');
  // Reuse the existing QR panel, hide developer-only bootstrap/unlock controls.
@@ -580,7 +587,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    else if(s.phase==='conflict'||s.phase==='unavailable'||['blocked','too-large','unconfirmed'].includes(s.status))attention(true);
    // Do not expose raw record paths / JSON by default. Keep all diagnostic
    // values available behind a user-opened details element; sync is unchanged.
-   const recoveryEntry=el('resolve-conflict');if(recoveryEntry)recoveryEntry.hidden=s.phase!=='conflict';
+   const recoveryEntry=el('resolve-conflict');if(recoveryEntry)recoveryEntry.hidden=true;
    const conflictDetails=el('conflict-details');
    if(conflictDetails){
     conflictDetails.hidden=s.phase!=='conflict';
@@ -588,8 +595,17 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    }
    el('conflicts').hidden=s.phase!=='conflict';
    el('conflicts').textContent=s.phase==='conflict'?summarizeSyncConflictPaths(s.conflicts).map(c=>c.path+' / '+c.reason).join('\n'):'';
-   el('retry').hidden=!['conflict','offline','pending','unavailable'].includes(s.phase);
-   el('retry').textContent=s.phase==='conflict'?'同期をもう一度試す':'接続を再試行する';
+   el('retry').hidden=false;el('retry').textContent='再同期';
+   el('retry').disabled=busy||recoveryActive||s.phase==='syncing';
+   // A single tap first tries the normal conservative merge. Only when it
+   // still conflicts do we open the existing protected choice flow.
+   if(s.phase==='conflict'&&repairRequested){
+    repairRequested=false;
+    const dialog=root.closest('dialog');
+    if(recoveryEntry&&dialog?.open)queueMicrotask(()=>{
+     if(dialog.open&&!recoveryActive&&!pauseGuard.paused)recoveryEntry.click();
+    });
+   }else if(['synced','unavailable','offline'].includes(s.phase)||(s.phase==='pending'&&s.status!==undefined))repairRequested=false;
    if(s.phase==='synced')void running?.confirmAutomaticRole();
   }});automatic.start();
   // A registered receiver has no further pairing actions. Avoid leaving a
@@ -683,14 +699,24 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(retryKind!=='NOT_APPLICABLE'&&retryKind!=='EXISTING_CONNECTION_ONLY'){
    automatic?.stop();automatic=null;el('retry').hidden=true;attention(true);showConnectionActions();
    status.textContent=retryKind==='QR_REQUIRES_EXPLICIT_SWITCH'
-    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「この端末の同期を解除する（記録は残す）」を押し、バックアップを保存してから安全に接続してください。既存の記録は保持されています。'
+    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「詳細設定・復旧」の「この端末の同期を解除」から進み、バックアップを保存してください。視聴記録は消えません。'
     :'この端末は接続解除または再接続準備中です。通常の「接続を再試行」では古い同期先へ通信しません。画面に表示されたバックアップ・QR接続手順を進めてください。記録は保持されています。';
    return;
   }
-  if(automatic){automatic.resumeAfterConflict();return}
+  if(currentMode==='sync-enabled'&&profiles.read().phase==='connected'&&pauseGuard.paused){
+   // Explicitly resume the SAME verified lineage; never silently re-pair or
+   // clear the vault, pending WAL or old credentials.
+   inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
+   pauseGuard.resume({verified:true});repairRequested=true;
+   try{await running.resumeAutomatic({passphrase:await keys.read()})}
+   catch(e){repairRequested=false;pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();throw e}
+   showPauseState();return;
+  }
+  if(automatic){repairRequested=true;automatic.resumeAfterConflict();return}
   if(currentMode==='sync-enabled'){
    // Restart only the established, unchanged connection.
-   await running.resumeAutomatic({passphrase:await keys.read()});return;
+   repairRequested=true;
+   try{await running.resumeAutomatic({passphrase:await keys.read()})}catch(e){repairRequested=false;throw e}return;
   }
   if(currentMode==='preparing'||currentMode===null){await beginOrResume();return}
   if(currentMode==='encrypted-local'){

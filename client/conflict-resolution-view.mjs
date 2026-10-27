@@ -9,38 +9,46 @@ function display(option){
  return Object.values(value).filter(v=>['string','number','boolean'].includes(typeof v)).join(' / ')||'保存内容が異なります';
 }
 // Backup stays in the owner's device. File contents never enter logs or URLs.
-export function createConflictBackupSink({root}){
- let cancel;
+export function createConflictBackupSink({root,onOpen=()=>{}}){
+ let cancel,pending=false;
  return {cancel:()=>cancel?.(),save:({bytes})=>new Promise((resolve,reject)=>{
-  const doc=root.ownerDocument,node=(tag,text)=>{const e=doc.createElement(tag);if(text)e.textContent=text;return e};root.replaceChildren();root.hidden=false;
+  const doc=root.ownerDocument,node=(tag,text)=>{const e=doc.createElement(tag);if(text)e.textContent=text;return e};root.replaceChildren();root.hidden=false;pending=true;
   const url=URL.createObjectURL(new Blob([bytes],{type:'application/json'})),link=node('a','バックアップを保存');link.href=url;link.download='anime-log-before-conflict-resolution.json';
   const check=node('input');check.type='checkbox';const label=node('label');label.append(check,doc.createTextNode('保存が完了しました'));
   const file=node('input');file.type='file';file.accept='.json,application/json';file.disabled=true;file.setAttribute('aria-label','保存したバックアップを選び直す');let downloaded=false;
   link.addEventListener('click',()=>{downloaded=true;file.disabled=!check.checked});check.addEventListener('change',()=>{file.disabled=!downloaded||!check.checked});
-  const finish=()=>{URL.revokeObjectURL(url);root.hidden=true;root.replaceChildren();cancel=null};
-  cancel=()=>{finish();reject(Error('BACKUP_CANCELLED'))};const cancelButton=node('button','保存確認を中止');cancelButton.type='button';cancelButton.addEventListener('click',()=>cancel?.());
+  const finish=()=>{URL.revokeObjectURL(url);root.hidden=true;root.replaceChildren();cancel=null;pending=false};
+  cancel=()=>{finish();reject(Error('BACKUP_CANCELLED'))};
   file.addEventListener('change',async()=>{try{if(!downloaded||!check.checked||file.files?.length!==1||file.files[0].size>12000000)throw Error('BACKUP_REQUIRED');const readBack=new Uint8Array(await file.files[0].arrayBuffer());finish();resolve({savedConfirmed:true,readBack})}catch{finish();reject(Error('BACKUP_NOT_VERIFIED'))}});
-  root.append(node('p','保存したJSONを選び直すと、この端末内だけで照合します。メモを含む本人専用のファイルです。外部へ送付しないでください。'),link,label,file,cancelButton);
- })};
+  root.append(node('p','保存したバックアップファイルを選び直して確認してください。ファイルはこの端末内で照合します。第三者へ送らないでください。'),link,label,file);
+  onOpen();
+ }),get pending(){return pending}};
 }
 export function mountConflictResolutionView({root,openFlow,onComplete=()=>{},onBusy=()=>{},onExit=()=>{},onReload=()=>{}}){
  const doc=root.ownerDocument,make=(tag,text)=>{const e=doc.createElement(tag);if(text)e.textContent=text;return e};
  let session,review,choices={},controls=new Map(),backed=false,busy=false,closed=false,reloadRequired=false;
- const status=make('p','変更内容を確認しています。'),toolbar=make('div'),groups=make('div'),backupArea=make('div'),footer=make('div');backupArea.hidden=true;
- root.replaceChildren(make('h3','重複した変更をまとめる'),status,toolbar,groups,backupArea,footer);const backupSink=createConflictBackupSink({root:backupArea});
- const backup=make('button','解決前のバックアップを保存・確認'),approve=make('input'),approveLabel=make('label'),danger=make('input'),dangerLabel=make('label'),choose=make('button','選択内容を確認'),commit=make('button','この内容で確定'),again=make('button','最新の変更を確認し直す');
+ const status=make('p','変更内容を確認しています。'),toolbar=make('div'),groups=make('div'),bulkDetails=make('details'),backupArea=make('div'),footer=make('div');backupArea.hidden=true;
+ root.classList.add('anilog-sync-review');groups.className='anilog-sync-review-groups';footer.className='anilog-sync-review-footer';backupArea.className='anilog-sync-backup-review';
+ bulkDetails.className='anilog-sync-help anilog-sync-review-bulk';toolbar.className='anilog-sync-bulk-actions';
+ const bulkSummary=make('summary','まとめて選ぶ'),bulkHint=make('p','削除・復元を含まない、重複した変更だけをまとめて選びます。選んだ後で項目ごとに変更できます。');
+ bulkDetails.append(bulkSummary,bulkHint,toolbar);
+ root.replaceChildren(make('h3','同期する内容を確認'),status,bulkDetails,groups,backupArea,footer);
+ const backup=make('button','バックアップを保存・確認'),approve=make('input'),approveLabel=make('label'),danger=make('input'),dangerLabel=make('label'),choose=make('button','選択内容を確認'),commit=make('button','この内容で同期を再開'),again=make('button','最新の変更を確認し直す');
+ const backupSink=createConflictBackupSink({root:backupArea,onOpen:()=>{backup.hidden=true;onBusy('backup-prompt')}});
  approve.type=danger.type='checkbox';approve.setAttribute('aria-label','バックアップと選択内容を確認');danger.setAttribute('aria-label','削除・復元を含む変更を確認');approveLabel.append(approve,doc.createTextNode('バックアップと選択内容を確認し、ほかのANIタブを閉じました'));dangerLabel.append(danger,doc.createTextNode('削除・復元を含む選択の影響を確認しました'));
- footer.append(backup,approveLabel,dangerLabel,choose,commit,again);choose.disabled=commit.disabled=true;again.hidden=true;
+ footer.append(backup,approveLabel,dangerLabel,choose,commit,again);choose.disabled=commit.disabled=true;choose.hidden=commit.hidden=again.hidden=approveLabel.hidden=dangerLabel.hidden=true;
  const syncControls=()=>{for(const [id,c] of controls){const value=choices[id];c.select.value=value?.source??'';if(value?.source==='manual')c.input.hidden=false;else c.input.hidden=true}choose.disabled=busy||!backed||!approve.checked||review.units.some(u=>!choices[u.id]||u.dangerous&&!danger.checked||u.kind==='ranking'&&choices[u.id]?.source==='manual'&&!choices[u.id].orders)};
- const run=fn=>async()=>{if(busy||closed)return;busy=true;onBusy(true);choose.disabled=commit.disabled=backup.disabled=true;try{await fn()}catch(error){reloadRequired=/RELOAD_REQUIRED$/.test(error?.message??'');status.textContent=reloadRequired?'記録を保護して停止しています。画面を開き直して、保存された状態から確認してください。':'変更が増えたか、保存・通信を確認できませんでした。記録とバックアップを保持しています。最新の変更を確認し直してください。';again.textContent=reloadRequired?'記録を保持して画面を開き直す':'最新の変更を確認し直す';again.hidden=false;toolbar.querySelectorAll('button').forEach(b=>b.disabled=true);approve.disabled=danger.disabled=true;backup.disabled=choose.disabled=commit.disabled=true;for(const c of controls.values())c.select.disabled=c.input.disabled=true;}finally{busy=false;onBusy(false);}};
+ const run=fn=>async()=>{if(busy||closed)return;busy=true;onBusy(true);choose.disabled=commit.disabled=backup.disabled=true;try{await fn()}catch(error){if(closed)return;reloadRequired=/RELOAD_REQUIRED$/.test(error?.message??'');status.textContent=reloadRequired?'記録を保護して停止しています。画面を開き直して、保存された状態から確認してください。':'変更が増えたか、保存・通信を確認できませんでした。記録とバックアップを保持しています。最新の変更を確認し直してください。';again.textContent=reloadRequired?'記録を保持して画面を開き直す':'最新の変更を確認し直す';again.hidden=false;backup.hidden=choose.hidden=commit.hidden=approveLabel.hidden=dangerLabel.hidden=true;toolbar.querySelectorAll('button').forEach(b=>b.disabled=true);approve.disabled=danger.disabled=true;backup.disabled=choose.disabled=commit.disabled=true;for(const c of controls.values())c.select.disabled=c.input.disabled=true;}finally{busy=false;onBusy(false);}};
  function render(){
-  toolbar.replaceChildren();groups.replaceChildren();controls.clear();choices={};backed=false;approve.checked=danger.checked=false;again.hidden=true;
+  toolbar.replaceChildren();groups.replaceChildren();controls.clear();choices={};backed=false;approve.checked=danger.checked=false;
+  backup.hidden=false;backup.disabled=false;choose.hidden=commit.hidden=again.hidden=approveLabel.hidden=dangerLabel.hidden=true;
   const ordinary=review.units.filter(u=>!u.dangerous).length,dangerous=review.units.length-ordinary;
-  status.textContent=`確認が必要な変更は${review.units.length}組です。通常の変更${ordinary}組、削除・復元を含む変更${dangerous}組。別の項目の変更は保持します。`;
-  dangerLabel.hidden=!dangerous;
-  const bulk=(text,source,destructive=false)=>{const button=make('button',text);button.type='button';button.addEventListener('click',()=>{if(busy||closed)return;try{const selected=bulkConflictChoices(review,source,{includeDangerous:destructive,dangerousConfirmed:danger.checked});Object.assign(choices,selected);const affected=review.units.filter(u=>selected[u.id]);const deletions=affected.filter(u=>['record','lifecycle'].includes(u.kind)&&u.options[source].kind==='deleted').length;status.textContent=destructive?`${affected.length}組を選択しました。削除を採用する変更は${deletions}件です。各組を開いて変更できます。`:`通常の変更${affected.length}組を選択しました。必要な項目だけ変更できます。`;syncControls()}catch{status.textContent='削除・復元を含む変更の影響を確認してから選んでください。'}});toolbar.append(button)};
-  bulk('通常の変更をまとめてこの端末に合わせる','local');bulk('通常の変更をまとめて同期先に合わせる','remote');
-  if(dangerous){bulk('削除・復元の変更をまとめてこの端末に合わせる','local',true);bulk('削除・復元の変更をまとめて同期先に合わせる','remote',true)}
+  status.textContent=`確認が必要な項目は${review.units.length}件です。削除・復元を含まない変更${ordinary}件、削除・復元に関わる変更${dangerous}件。重なっていない変更はそのまま残ります。`;
+  bulkDetails.hidden=ordinary===0;
+  const bulk=(text,source)=>{const button=make('button',text);button.type='button';button.addEventListener('click',()=>{if(busy||closed)return;const selected=bulkConflictChoices(review,source);Object.assign(choices,selected);const affected=review.units.filter(u=>selected[u.id]);status.textContent=`削除・復元を含まない変更${affected.length}件を選びました。必要な項目は個別に変更できます。`;syncControls()});toolbar.append(button)};
+  bulk('この端末の変更を残す','local');bulk('同期先の変更を残す','remote');
+  // Deletion/restoration conflicts always require each item to be chosen
+  // explicitly. Keep the dangerous checks in the flow, never in bulk UI.
   for(const [category,title] of Object.entries(categories)){
    const rows=review.units.filter(u=>u.category===category);if(!rows.length)continue;groups.append(make('h4',title+'（'+rows.length+'組）'));
    for(const u of rows){
@@ -69,16 +77,16 @@ export function mountConflictResolutionView({root,openFlow,onComplete=()=>{},onB
     body.append(select,input);details.append(body);groups.append(details);controls.set(u.id,{select,input});
    }
   }
-  backup.disabled=false;choose.disabled=commit.disabled=true;
+  choose.disabled=commit.disabled=true;
  }
  async function load(){session?.dispose?.();session=await openFlow(backupSink.save);review=await session.flow.review();if(!review.needsSelection){
    status.textContent='変更内容を安全に照合できました。この端末の同期を再確認しています。';const result=await session.flow.recheckNormally();if(!result.durable)throw Error('UNCONFIRMED');await onComplete(result);closed=true;session?.dispose?.();return;
   }render();}
- backup.addEventListener('click',run(async()=>{await session.flow.saveBackup({reviewToken:review.reviewToken});backed=true;status.textContent='バックアップの保存と読み戻しを確認しました。まとめて選んだ後、必要な項目だけ変更できます。';busy=false;syncControls()}));
+ backup.addEventListener('click',run(async()=>{await session.flow.saveBackup({reviewToken:review.reviewToken});backed=true;backup.hidden=true;choose.hidden=approveLabel.hidden=false;dangerLabel.hidden=!review.units.some(u=>u.dangerous);status.textContent='バックアップを確認しました。残す内容を選択し、確認へ進んでください。';busy=false;syncControls()}));
  approve.addEventListener('change',syncControls);danger.addEventListener('change',()=>{for(const u of review?.units??[])if(u.dangerous&&choices[u.id])choices[u.id].dangerousConfirmed=danger.checked;syncControls()});
- choose.addEventListener('click',run(async()=>{await session.flow.choose({reviewToken:review.reviewToken,choices,approved:true});for(const c of controls.values())c.select.disabled=c.input.disabled=true;toolbar.querySelectorAll('button').forEach(b=>b.disabled=true);approve.disabled=danger.disabled=true;const deletions=review.units.filter(u=>['record','lifecycle'].includes(u.kind)&&u.options[choices[u.id].source]?.kind==='deleted').length;status.textContent=`選んだ${review.units.length}組をまとめて確定します。削除を採用する変更は${deletions}件です。元の記録はバックアップに保持しています。`;commit.disabled=false;}));
+ choose.addEventListener('click',run(async()=>{await session.flow.choose({reviewToken:review.reviewToken,choices,approved:true});for(const c of controls.values())c.select.disabled=c.input.disabled=true;toolbar.querySelectorAll('button').forEach(b=>b.disabled=true);approve.disabled=danger.disabled=true;const deletions=review.units.filter(u=>['record','lifecycle'].includes(u.kind)&&u.options[choices[u.id].source]?.kind==='deleted').length;status.textContent=`選んだ${review.units.length}組をこの内容で同期します。削除を採用する変更は${deletions}件です。元の記録はバックアップに保持しています。`;choose.hidden=approveLabel.hidden=dangerLabel.hidden=true;commit.hidden=false;commit.disabled=false;}));
  commit.addEventListener('click',run(async()=>{const result=await session.flow.commit({reviewToken:review.reviewToken,approved:true});await onComplete(result);status.textContent='この端末の保存と同期を確認しました。ほかの端末への反映は、その端末の受信後に確認してください。';closed=true;session?.dispose?.();}));
  again.addEventListener('click',run(async()=>{if(reloadRequired){onReload();return}approve.disabled=danger.disabled=false;await load()}));
  void run(load)();
- return {close(){if(busy)return false;closed=true;backupSink.cancel();session?.dispose?.();root.replaceChildren();onExit();return true}};
+ return {close(){if(busy&&!backupSink.pending)return false;closed=true;backupSink.cancel();session?.dispose?.();root.replaceChildren();onExit();return true}};
 }

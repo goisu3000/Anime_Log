@@ -1445,6 +1445,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync button:not([hidden]){display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:4px 6px 6px 0;padding:9px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.5;white-space:normal;text-align:center}
 .anilog-sync-dialog #formal-simple-sync button:disabled{opacity:.45;cursor:not-allowed}
 .anilog-sync-dialog #formal-simple-sync button[data-simple="begin"],
+.anilog-sync-dialog #formal-simple-sync button[data-simple="retry"],
 .anilog-sync-dialog #formal-simple-sync button[data-simple="relink-start"],
 .anilog-sync-dialog #formal-simple-sync button[data-v407="invite"],
 .anilog-sync-dialog #formal-simple-sync button[data-v407="approve"],
@@ -1674,6 +1675,25 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing [data-v407="qr"]:empty,
 .anilog-sync-dialog #v407-pairing [data-v407="receiver-code"]:empty,
 .anilog-sync-dialog #formal-simple-sync>[data-simple="challenge"]:empty{display:none}
+/* Conflict recovery: quiet single-column steps, in the existing ANI:LOG palette. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review{display:grid;gap:16px;min-width:0}
+.anilog-sync-dialog .anilog-sync-review>h3{margin:0;font-size:var(--fs-lg);line-height:1.5}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review>p{margin:0;color:var(--muted);line-height:1.7}
+.anilog-sync-dialog .anilog-sync-review-groups{display:grid;gap:12px;min-width:0}
+.anilog-sync-dialog .anilog-sync-review-groups>h4{margin:4px 0 0;font-size:var(--fs-sm);line-height:1.5;color:var(--ink)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review-groups>.anilog-sync-help{margin:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review-bulk{margin:0;min-width:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review-bulk>p{padding:0 12px 10px;margin:0;font-size:var(--fs-xs);color:var(--muted)}
+.anilog-sync-dialog .anilog-sync-bulk-actions{display:flex;flex-wrap:wrap;align-items:flex-start;gap:10px;padding:0 12px 12px}
+.anilog-sync-dialog .anilog-sync-bulk-actions button{max-width:100%;min-width:0}
+.anilog-sync-dialog .anilog-sync-review-footer{display:grid;justify-items:start;align-items:start;gap:12px;min-width:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review-footer>label{margin:0;width:100%}
+.anilog-sync-dialog .anilog-sync-review-footer>button{max-width:100%}
+.anilog-sync-dialog .anilog-sync-backup-review:not([hidden]){display:grid;justify-items:start;gap:12px;padding:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.anilog-sync-dialog .anilog-sync-backup-review>p{margin:0;color:var(--muted);font-size:var(--fs-sm)}
+.anilog-sync-dialog .anilog-sync-backup-review>a{color:var(--accent);font-weight:var(--fw-semi)}
+.anilog-sync-dialog .anilog-sync-backup-review>input[type="file"]{max-width:100%;min-width:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-backup-review>label{margin:0}
 @media(max-width:740px){
  .anilog-sync-dialog-head,.anilog-sync-dialog #formal-simple-sync{padding:16px}
  .anilog-sync-dialog #v407-pairing{grid-template-columns:minmax(0,1fr)}
@@ -1681,6 +1701,8 @@ select:not([data-status-id]){
  .anilog-sync-dialog #v407-pairing [data-v407="code"],
  .anilog-sync-dialog #v407-pairing [data-v407="approve"],
  .anilog-sync-dialog #v407-pairing [data-v407="copy"]{grid-column:1;grid-row:auto}
+ .anilog-sync-dialog .anilog-sync-bulk-actions{display:grid;grid-template-columns:minmax(0,1fr)}
+ .anilog-sync-dialog #formal-simple-sync .anilog-sync-bulk-actions>button{width:100%;justify-content:center}
 }
 
 .anilog-sync-dialog #formal-simple-sync>:not(summary):not([hidden]){margin:16px 0 0}
@@ -1701,6 +1723,7 @@ select:not([data-status-id]){
   </div>
 <details id="formal-simple-sync" open><summary>端末間同期</summary>
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
+<button type="button" data-simple="retry" hidden>再同期</button>
 <p data-simple="connection-info" hidden></p>
 <p data-simple="pairing-notice" hidden></p>
 <div data-simple="connection-actions" hidden>
@@ -1722,9 +1745,9 @@ select:not([data-status-id]){
   <div class="anilog-sync-advanced-actions">
    <button type="button" data-simple="pause-sync" hidden>同期を一時停止する</button>
    <button type="button" data-simple="switch-check" hidden>切り替え前の安全確認</button>
-   <button type="button" data-simple="unlink-sync" hidden>この端末の同期を解除する（記録は残す）</button>
+   <button type="button" data-simple="unlink-sync" hidden>この端末の同期を解除</button>
   </div>
-  <p class="anilog-sync-note">解除はこの端末からの同期通信を止めるだけで、クラウドの認証やデータを削除するものではありません。端末内の視聴記録と復旧情報は保持します。</p>
+  <p class="anilog-sync-note">同期を解除しても、この端末の視聴記録は消えません。ほかの端末に保存された記録もそのまま残ります。</p>
  </details>
 </div>
 <div data-simple="setup">
@@ -1736,7 +1759,7 @@ select:not([data-status-id]){
 <p>採用されなかった古いメモや評価は、独立して保存したバックアップから復元する必要があります。接続前にほかのANI:LOGのタブ・端末での編集を終えてください。</p>
 </details>
 <button type="button" data-simple="begin" disabled>端末間同期を始める</button></div>
-<button type="button" data-simple="retry" hidden>接続を再試行する</button><div data-simple="challenge"></div>
+<div data-simple="challenge"></div>
 <details class="anilog-sync-help anilog-sync-conflict-details" data-simple="conflict-details" hidden>
  <summary>同期できなかった項目の詳細</summary>
  <p>これは原因を調べるための情報です。表示するだけでは記録は変更されません。</p>
