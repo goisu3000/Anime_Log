@@ -579,7 +579,14 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .detail-journal-cell>.detail-journal-cell-heading,.detail-note-heading,.detail-rating-header{display:flex;align-items:center;justify-content:space-between;min-height:36px;margin:0 0 12px}
 .detail-journal-cell-heading{color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-bold);margin:0}
 .detail-journal-empty,.detail-note-empty{color:var(--muted);font-size:var(--fs-sm);line-height:1.7;margin:0}
-.detail-status-area select{width:100%;min-height:42px;background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);padding:0 12px;font-size:var(--fs-md);font-weight:var(--fw-semi);cursor:pointer}
+.detail-status-controls{display:flex;align-items:center;flex-wrap:nowrap;column-gap:12px;row-gap:10px}
+.detail-status-controls .detail-status-area{flex:1 1 90px;min-width:90px}
+.detail-status-area select{width:100%;height:42px;min-height:42px;background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);padding:0 12px;font-size:var(--fs-md);font-weight:var(--fw-semi);cursor:pointer}
+.detail-journal-watch .next-watch-toggle{margin-top:0;min-height:42px;padding:0 10px;min-width:0;flex:0 1 auto}
+.detail-journal-watch .next-watch-toggle span{white-space:normal;overflow-wrap:anywhere}
+.detail-journal-watch .next-watch-toggle svg{flex-shrink:0}
+.detail-journal-memo .detail-note-edit{min-height:42px;padding:0 12px;font-size:var(--fs-md)}
+.detail-journal-memo .detail-note-text,.detail-journal-memo .detail-note-empty{margin-top:12px}
 .detail-readonly{display:block;font-size:var(--fs-md);font-weight:var(--fw-bold);color:var(--accent)}
 .detail-journal-cell .detail-progress{margin-top:16px}
 .detail-status-completion{position:relative;display:block;container-type:inline-size;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
@@ -819,6 +826,9 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .review-aspect-options button{border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--muted);border-radius:6px;padding:8px 4px;font-size:var(--fs-xs);font-weight:var(--fw-semi)}
 .review-aspect-options button[aria-pressed="true"]{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
 #noteText{display:block;width:100%;min-height:150px;resize:vertical;background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);padding:12px;margin-top:8px;font-size:var(--fs-md);line-height:1.75}
+/* iPhone Safari may magnify focused fields below 16px. Scope the adjustment to
+   the mobile memo textarea; keep the dialog, typography and desktop unchanged. */
+@media(max-width:740px){#noteText{font-size:16px}}
 .review-meta{font-size:var(--fs-xs);color:var(--muted);display:flex;justify-content:space-between;margin-top:8px}
 .review-dialog-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:20px}
 .review-clear{margin-right:auto;background:transparent;border:0;color:var(--danger);padding-left:0;font-size:var(--fs-xs)}
@@ -2665,8 +2675,15 @@ async function toggleNextWatchImpl(id){
  if(wasPinned)delete a.nextWatchPinnedAt;else a.nextWatchPinnedAt=now;
  a.nextWatchUpdatedAt=now;
  if(!await persist()){saved[id]=before;return false}
+ // Restore only the fields changed by this action. A successful encrypted save
+ // may have merged unrelated fields from another device/tab in the meantime.
+ const after=structuredClone(saved[id]);
+ const undoBefore=structuredClone(after);
+ for(const field of ['nextWatchPinnedAt','nextWatchUpdatedAt']){
+  if(Object.hasOwn(before,field))undoBefore[field]=before[field];else delete undoBefore[field];
+ }
  render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce);
- toast(wasPinned?'「次に観る」の固定を解除しました':'「次に観る」の先頭に固定しました');
+ offerUndo(id,undoBefore,after,wasPinned?'「次に観る」の固定を解除しました':'「次に観る」の先頭に固定しました');
  return true;
 }
 document.addEventListener('click',e=>{const pin=e.target.closest('[data-next-watch-id]');if(pin)toggleNextWatch(pin.dataset.nextWatchId)});
@@ -5128,13 +5145,13 @@ function detailHeader(a,full=null){
  const header=`<section class="detail-head detail-profile" aria-label="作品情報"><div class="detail-cover">${detailPoster(image)}</div><div class="detail-head-info"><div class="detail-heading-badges" aria-label="作品形式と放送時期">${badges.map((b,i)=>`<span class="detail-chip ${i===1?'accent':''}">${safeText(b)}</span>`).join('')}</div><h1>${safeText(title)}</h1>${alt?`<p class="detail-english">${safeText(alt)}</p>`:""}<div class="detail-facts">${facts.map(f=>`<span>${safeText(f)}</span>`).join('')}</div>${tags.length?`<div class="detail-tags">${tags.slice(0,12).map(t=>Number.isSafeInteger(t.mal_id)&&t.mal_id>0&&t.mal_id<=100000000?`<button type="button" class="detail-tag-link" data-category-id="${t.mal_id}" data-category-kind="${t.kind}" data-category-name="${safeText(t.name)}" aria-label="${safeText(genreJa(t.name))}の関連作品を見る">${safeText(genreJa(t.name))}</button>`:`<span>${safeText(genreJa(t.name))}</span>`).join('')}</div>`:""}${studios.length?`<div class="detail-studio"><span>制作会社</span><div class="detail-studio-links">${studios.map(x=>Number.isSafeInteger(x.mal_id)&&x.mal_id>0?`<button type="button" class="detail-studio-link" data-studio-id="${x.mal_id}" data-studio-name="${safeText(x.name)}">${safeText(analysisDisplayName('studios',x.name))}</button>`:`<span class="detail-studio-text">${safeText(analysisDisplayName('studios',x.name))}</span>`).join('<span aria-hidden="true">/</span>')}</div></div>`:""}${detailStreamingLinks(d,title)}${detailLinks(d)}</div>${seriesWatchSummary(a.id,d)}</section>`;
 
  const datePanel=date?`<div class="detail-status-completion"><div class="detail-date-current"><span>${uiIcon('book')} 見終わった時期</span><strong>${safeText(savedDate)}</strong></div><details class="detail-date-disclosure"><summary>${uiIcon('edit')} ${record?.completedOn?'時期を編集する':'時期を記録する'}</summary>${date}</details></div>`:'';
- const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}${status==='planned'?nextWatchToggleMarkup(a):''}</div>`;
+ const watchPanel=`<div class="detail-journal-cell detail-journal-watch"><div class="detail-journal-cell-heading">視聴状況</div><div class="detail-status-controls"><div class="detail-status-area">${mode==='share'?`<span class="detail-readonly">${safeText(statusLabels[a.status]||'閲覧専用')}</span>`:`<label class="sr-only" for="detailStatus">視聴状況</label><select id="detailStatus" aria-label="${safeText(title)}の視聴状況">${optionHtml}</select>`}</div>${status==='planned'&&mode!=='share'?nextWatchToggleMarkup(a):''}</div>${progressMarkup(a,d.episodes||a.episodes,true)}${datePanel}</div>`;
  const reviewPanel=`<div class="detail-journal-cell detail-journal-review">${mode==='share'?(publicReviewMarkup(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">共有されている評価はありません</p>'):(reviewDetail(a)||'<div class="detail-journal-cell-heading">自分の評価</div><p class="detail-journal-empty">「見てる」などに登録すると★評価を記録できます</p>')}</div>`;
  const detailNote=saved[a.id]?readNote(saved[a.id]):null;
 
  const noteAction=saved[a.id]?`<button type="button" class="detail-note-edit" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${detailNote?.text?'編集':'追加'}">${uiIcon('edit')} ${detailNote?.text?'メモを編集する':'メモを書く'}</button>`:'';
  const noteContent=saved[a.id]?(detailNote?.text?`<p class="detail-note-text">${safeText(detailNote.text)}</p>`:'<p class="detail-note-empty">まだメモはありません</p>'):'<p class="detail-note-empty">作品を登録するとメモを残せます</p>';
- const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-note-heading"><div class="detail-journal-cell-heading">作品メモ</div>${noteAction}</div>${noteContent}</div>`;
+ const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-note-heading"><div class="detail-journal-cell-heading">作品メモ</div></div>${noteAction}${noteContent}</div>`;
  const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2><span>${mode==='share'?'共有された情報を表示しています':'このブラウザに保存'}</span></div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}</div></section>`;
  return header+journal;
 }
