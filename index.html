@@ -2535,8 +2535,21 @@ function readNote(a){
 }
 function carryLegacyNote(a){if(!a.note&&!a.noteDeletedAt){const n=readNote(a);if(n)a.note=n}}
 function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]),txt=n?.text?n.text.replace(/\s+/g,' ').trim():'';return txt?`<button type="button" class="note-preview has-note" data-note-id="${safeText(a.id)}" title="${safeText(n.text)}" aria-label="${safeText(a.title)}のメモを編集：${safeText(txt)}"><span class="note-preview-quote">${safeText(txt)}</span><span class="note-preview-edit-ico" aria-hidden="true">${uiIcon('edit')}</span></button>`:`<button type="button" class="note-preview" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを追加">${uiIcon('edit')}<span class="note-preview-label">メモを残す</span></button>`}
-let noteItemId=null,noteOriginal=null;
-function openNote(id){if(!saved[id]||mode==='share')return;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();$('#noteText').focus()}
+let noteItemId=null,noteOriginal=null,noteReturnScroll=null,noteScrollCleanup=null;
+function restoreNoteScroll(){
+ const target=noteReturnScroll;noteReturnScroll=null;if(!target)return;
+ // Keyboard dismissal may resize the visual viewport after dialog.close().
+ const controller=new AbortController();let timer;
+ const cleanup=()=>{controller.abort();clearTimeout(timer);if(noteScrollCleanup===cleanup)noteScrollCleanup=null};
+ noteScrollCleanup=cleanup;
+ const restore=()=>{if(!controller.signal.aborted&&!$('#noteDialog').open)window.scrollTo({left:target.x,top:target.y,behavior:'instant'})};
+ window.visualViewport?.addEventListener('resize',restore,{signal:controller.signal});
+ window.addEventListener('pointerdown',cleanup,{once:true,signal:controller.signal});
+ window.addEventListener('touchstart',cleanup,{once:true,passive:true,signal:controller.signal});
+ timer=setTimeout(cleanup,800);restore();requestAnimationFrame(()=>requestAnimationFrame(restore));
+}
+$('#noteDialog').addEventListener('close',restoreNoteScroll);
+function openNote(id){if(!saved[id]||mode==='share')return;noteScrollCleanup?.();noteReturnScroll=matchMedia('(max-width:740px)').matches?{x:window.scrollX,y:window.scrollY}:null;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();if(noteReturnScroll)$('#noteText').focus({preventScroll:true});else $('#noteText').focus()}
 async function saveNoteImpl(){const id=noteItemId,item=saved[id];if(!item)return;
  if(!sameRecordValue(readNote(item),noteOriginal)){toast('別のタブでメモが変更されました。入力内容を控えて、最新のメモを確認してください。','error');return}
  const before=structuredClone(item),text=$('#noteText').value.trim().slice(0,500),now=new Date().toISOString();
@@ -6570,8 +6583,21 @@ function readNote(a){
 }
 function carryLegacyNote(a){if(!a.note&&!a.noteDeletedAt){const n=readNote(a);if(n)a.note=n}}
 function noteMarkup(a){if(mode==='share'||!saved[a.id])return '';const n=readNote(saved[a.id]),txt=n?.text?n.text.replace(/\s+/g,' ').trim():'';return txt?`<button type="button" class="note-preview has-note" data-note-id="${safeText(a.id)}" title="${safeText(n.text)}" aria-label="${safeText(a.title)}のメモを編集：${safeText(txt)}"><span class="note-preview-quote">${safeText(txt)}</span><span class="note-preview-edit-ico" aria-hidden="true">${uiIcon('edit')}</span></button>`:`<button type="button" class="note-preview" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを追加">${uiIcon('edit')}<span class="note-preview-label">メモを残す</span></button>`}
-let noteItemId=null,noteOriginal=null;
-function openNote(id){if(!saved[id]||mode==='share')return;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();$('#noteText').focus()}
+let noteItemId=null,noteOriginal=null,noteReturnScroll=null,noteScrollCleanup=null;
+function restoreNoteScroll(){
+ const target=noteReturnScroll;noteReturnScroll=null;if(!target)return;
+ // Keyboard dismissal may resize the visual viewport after dialog.close().
+ const controller=new AbortController();let timer;
+ const cleanup=()=>{controller.abort();clearTimeout(timer);if(noteScrollCleanup===cleanup)noteScrollCleanup=null};
+ noteScrollCleanup=cleanup;
+ const restore=()=>{if(!controller.signal.aborted&&!$('#noteDialog').open)window.scrollTo({left:target.x,top:target.y,behavior:'instant'})};
+ window.visualViewport?.addEventListener('resize',restore,{signal:controller.signal});
+ window.addEventListener('pointerdown',cleanup,{once:true,signal:controller.signal});
+ window.addEventListener('touchstart',cleanup,{once:true,passive:true,signal:controller.signal});
+ timer=setTimeout(cleanup,800);restore();requestAnimationFrame(()=>requestAnimationFrame(restore));
+}
+$('#noteDialog').addEventListener('close',restoreNoteScroll);
+function openNote(id){if(!saved[id]||mode==='share')return;noteScrollCleanup?.();noteReturnScroll=matchMedia('(max-width:740px)').matches?{x:window.scrollX,y:window.scrollY}:null;noteItemId=id;noteOriginal=structuredClone(readNote(saved[id]));$('#noteTitle').textContent=saved[id].title;$('#noteText').value=noteOriginal?.text||'';$('#noteCount').textContent=$('#noteText').value.length+' / 500文字';$('#noteDialog').showModal();if(noteReturnScroll)$('#noteText').focus({preventScroll:true});else $('#noteText').focus()}
 async function saveNoteImpl(){const id=noteItemId,item=saved[id];if(!item)return;
  if(!sameRecordValue(readNote(item),noteOriginal)){toast('別のタブでメモが変更されました。入力内容を控えて、最新のメモを確認してください。','error');return}
  const before=structuredClone(item),text=$('#noteText').value.trim().slice(0,500),now=new Date().toISOString();
