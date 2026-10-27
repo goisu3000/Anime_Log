@@ -19,6 +19,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#111417">
 <meta name="description" content="視聴したアニメ、観ているアニメ、気になるアニメをかんたん管理。履歴はこの端末に保存されます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
 <meta name="ani-log-version" content="2.4.84">
@@ -120,12 +123,13 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 /* App Shell & Sidebar */
 .app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
 .sidebar{background:var(--bg-side);border-right:1px solid var(--border);padding:32px 16px 20px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:24px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border-ctrl) transparent}
-.brand{appearance:none;border:0;background:transparent;display:flex;align-items:center;gap:12px;padding:0 12px;text-align:left;width:100%}
-.brand-mark{width:36px;height:36px;display:grid;place-items:center;background:var(--accent);color:var(--accent-ink);border-radius:var(--radius-sm);font-size:var(--fs-2xl);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight);padding-right:2px}
-.brand-text{display:block;min-width:0}
-.brand-name{display:block;font-size:var(--fs-2xl);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight);line-height:1}
-.brand-name span{color:var(--accent)}
-.brand-desc{display:block;color:var(--muted);font-size:var(--fs-xs);line-height:1.5;margin-top:6px}
+/* Sidebar brand only: Gemini Comfortaa neon, exact approved glow/shadow values. */
+.brand.neon-sign{appearance:none;border:0;background:transparent;display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:0 10px;text-align:left;width:100%;cursor:pointer}
+.brand.neon-sign .neon-text{display:inline-flex;align-items:baseline;font-family:'Comfortaa',cursive,system-ui,sans-serif;font-size:26px;font-weight:700;letter-spacing:0.06em;line-height:1.15;color:var(--bg-side);-webkit-text-stroke:1.6px #c4e995;text-shadow:0 0 2px #ffffff,0 0 6px #c4e995,0 0 14px rgba(196,233,149,.55),0 0 28px rgba(196,233,149,.25);transition:text-shadow .2s ease,-webkit-text-stroke .2s ease,transform .12s ease;user-select:none;white-space:nowrap}
+.brand.neon-sign .neon-colon{margin:0 .04em;position:relative;top:-.065em;-webkit-text-stroke:1.8px #c4e995}
+@media(hover:hover){.brand.neon-sign:hover .neon-text{-webkit-text-stroke:1.6px #dfffb0;text-shadow:0 0 3px #ffffff,0 0 8px #c4e995,0 0 20px rgba(196,233,149,.8),0 0 36px rgba(196,233,149,.45)}}
+.brand.neon-sign:active .neon-text{transform:scale(.97)}
+.brand.neon-sign .brand-desc{display:block;color:var(--muted);font-size:var(--fs-xs);line-height:1.5;margin:0;padding-left:2px;letter-spacing:var(--ls-body)}
 .side-block-title{font-size:var(--fs-xs);color:var(--subtle);letter-spacing:var(--ls-wider);font-weight:var(--fw-semi);padding:0 12px;margin-bottom:10px}
 .nav{display:grid;gap:4px}
 .nav button{display:flex;align-items:center;gap:12px;border:0;background:transparent;color:var(--muted);text-align:left;padding:12px 14px;border-radius:var(--radius-sm);font-size:var(--fs-md);font-weight:var(--fw-semi);transition:background .16s,color .16s}
@@ -920,7 +924,6 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .toast-undo:hover{
     filter:brightness(1.08);
   }
-  .brand:hover .brand-name,
   .rank-title:hover,
   .saved-period-heading:hover,
   .filter-disclosure>summary:hover,
@@ -1818,7 +1821,7 @@ select:not([data-status-id]){
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
 <div class="app">
   <aside class="sidebar" aria-label="サイドメニュー">
-    <button type="button" class="brand" id="homeBrand" aria-label="ANI:LOG トップページへ戻る" title="トップページへ戻る"><span class="brand-mark">A</span><span class="brand-text"><span class="brand-name">ANI<span>:</span>LOG</span><span class="brand-desc">観たアニメ、<br>忘れずに残そう。</span></span></button>
+    <button type="button" class="brand neon-sign" id="homeBrand" aria-label="ANI:LOG トップページへ戻る" title="トップページへ戻る"><span class="neon-text" aria-hidden="true"><span class="neon-char">A</span><span class="neon-char">N</span><span class="neon-char">I</span><span class="neon-colon">:</span><span class="neon-char">L</span><span class="neon-char">O</span><span class="neon-char">G</span></span><span class="sr-only">ANI:LOG</span><span class="brand-desc">観たアニメ、<br>忘れずに残そう。</span></button>
     <div><div class="side-block-title">ライブラリ</div><nav class="nav" id="desktopNav">
       <button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg>アニメを探す</button>
       <button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト <span class="count" id="savedBadge">0</span></button>
