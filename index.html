@@ -155,6 +155,16 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .sidebar-bottom .outline-btn .ui-icon{width:13px;height:13px}
 .backup-date,.side-foot{font-size:var(--fs-xs);color:var(--subtle);line-height:1.5}
 .backup-date{margin-top:8px;white-space:nowrap}.side-foot{text-align:center}
+/* Desktop sidebar: compact disclosures, adjacent backup, bottom-aligned footer. */
+@media(min-width:741px){
+ .sidebar #rankingDisclosure,.sidebar #statusDisclosure{padding-inline:10px;gap:var(--sp-2);white-space:nowrap}
+ .sidebar .sidebar-bottom{margin-top:0}
+ .sidebar>.side-foot{margin-top:auto;flex-shrink:0}
+ .sidebar .backup-heading{gap:var(--sp-3);padding:12px 4px;min-height:45px;color:var(--muted);font-size:var(--fs-md);font-weight:var(--fw-semi)}
+ .sidebar .backup-heading .ui-icon{width:18px;height:18px;stroke-width:1.75;color:inherit;flex-shrink:0}
+ .sidebar .backup-heading strong{font-size:inherit;font-weight:inherit;color:inherit}
+}
+
 
 /* Main Content & Header */
 .main{min-width:0;max-width:1450px;width:100%;margin:0 auto;padding:36px clamp(24px,4vw,64px) 72px}
