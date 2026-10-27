@@ -1774,8 +1774,11 @@ select:not([data-status-id]){
 .pattern-a-tools .stream-inline-empty .ui-icon{width:16px;height:16px}
 .pattern-a-tools .stream-inline-edit{width:27px;height:30px;padding:5px;flex:0 0 27px}
 .stream-brand-icon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;min-width:24px;border-radius:4px;color:white;background:#25323c;font-weight:800;font-size:12px;line-height:1;letter-spacing:-.07em;text-align:center}
-.stream-brand-netflix{background:#151515;color:#e50914;font-size:22px;font-weight:900;font-family:Arial,sans-serif}
+.stream-brand-netflix{background:#151515;color:#e50914;font-size:22px;font-weight:900;font-family:Arial,sans-serif;letter-spacing:0}
 .stream-brand-prime{background:#0969a9;color:#fff;font-size:9px;letter-spacing:-.06em;font-weight:800}
+/* Original small curved arrow; no external brand asset or traced geometry. */
+.stream-brand-prime:not(:has(>.stream-brand-logo)){position:relative;padding-bottom:5px}
+.stream-brand-prime:not(:has(>.stream-brand-logo))::after{content:"";position:absolute;left:3px;bottom:3px;width:18px;height:6px;background:center/contain no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 7'%3E%3Cpath d='M2 1.5 Q9 7 17.5 1.8 M14.6 1.7 L17.8 1.5 L17.1 4.4' fill='none' stroke='white' stroke-width='1.15' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");pointer-events:none}
 .stream-brand-danime{background:#e83b7b;color:white;font-size:20px}
 .stream-brand-abema{background:#171719;color:white;font-size:17px}
 .stream-brand-unext{background:#202226;color:#fff;font-size:19px}
@@ -1801,7 +1804,7 @@ select:not([data-status-id]){
 .stream-brand-icon .stream-brand-fallback:not([hidden]){display:flex}
 .stream-brand-icon .stream-brand-fallback[hidden]{display:none!important}
 .stream-brand-icon .stream-brand-fallback.stream-brand-prime{background:#0969a9;color:#fff;font-size:9px}
-.stream-brand-icon .stream-brand-fallback.stream-brand-netflix{background:#151515;color:#e50914;font-size:22px;font-family:Arial,sans-serif}
+.stream-brand-icon .stream-brand-fallback.stream-brand-netflix{background:#151515;color:#e50914;font-size:22px;font-family:Arial,sans-serif;letter-spacing:0}
 .stream-brand-icon .stream-brand-fallback.stream-brand-danime{background:#e83b7b;color:white;font-size:20px}
 .stream-brand-icon .stream-brand-fallback.stream-brand-abema{background:#171719;color:white;font-size:17px}
 .stream-brand-icon .stream-brand-fallback.stream-brand-unext{background:#202226;color:white;font-size:19px}
@@ -1836,7 +1839,7 @@ select:not([data-status-id]){
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score .mal-label{font-size:11px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score .mal-value{font-size:19px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score small{display:none}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column{grid-column:3;grid-row:1;align-self:end;padding:32px 0 0 12px;border-left:1px solid var(--border);gap:5px;align-items:stretch;justify-content:flex-end}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column{grid-column:3;grid-row:1/3;align-self:stretch;padding:32px 0 0 12px;border-left:1px solid var(--border);gap:5px;align-items:stretch;justify-content:flex-start}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-personal-column{grid-column:3;grid-row:2;align-self:start;padding:4px 0 0 12px;border-left:1px solid var(--border);gap:0;justify-content:flex-start;min-height:0}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-menu,body.saved-mode:not(.saved-list-view) .pattern-a-card .record-primary{width:100%;max-width:none;min-width:0}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-summary,body.saved-mode:not(.saved-list-view) .pattern-a-card .record-primary{height:34px;min-height:34px;font-size:var(--fs-xs)}
@@ -1933,7 +1936,7 @@ select:not([data-status-id]){
  }
  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-filled{color:var(--gold)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-empty{color:var(--subtle)}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-unrated{font-size:11px;letter-spacing:0;color:var(--muted)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-unrated{font-size:16px;font-weight:var(--fw-bold);letter-spacing:0;color:var(--muted)}
  /* Retain the agreed original progress caption (視聴進捗 / 2 / 12話),
     keeping the start button and episode controls in equally tall slots. */
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.record-primary{height:64px;min-height:64px}
