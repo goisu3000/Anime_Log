@@ -28,7 +28,22 @@ export function installConflictRecovery({root,locks,scope,begin,end,complete,ass
     if(vault.getState()!=='ACTIVE')throw Error('RELOAD_REQUIRED');assertContext();const transport=await getTransport();assertContext();
     const flow=createConflictResolution({vault,transport,isPaused,isQuiescent,saveAndReadBackBackup,withQuiesced:fn=>locks.request('anilog-conflict-resolution-operation'+scope,{mode:'exclusive'},async()=>{if(!held)throw Error('REVIEW_CLOSED');assertContext();return fn()})});
     return {flow,dispose(){transport.masterKey.fill(0)}};
-   },onComplete:async result=>{if(!result.durable)throw Error('UNCONFIRMED');finish();await complete(result)},onExit:()=>{finish();end()}});
+   },onComplete:async result=>{
+    if(!result.durable)throw Error('UNCONFIRMED');
+    const status=root.querySelector('[data-simple="status"]');
+    try{
+     const resumed=await complete(result);
+     finish();
+     if(status)status.textContent=resumed?.automaticRestored===false
+      ?'今回の変更はこの端末と同期先に保存しました。ただし自動同期の再開に失敗しています。記録を消さずに「再同期」で接続を確認してください。'
+      :'競合を解決し、この端末と同期先への保存を確認しました。ほかの端末には受信後に反映されます。';
+    }catch{
+     // The commit already passed local and remote readback. Do not offer a
+     // second commit of the same choice or describe it as an unsaved change.
+     finish();
+     if(status)status.textContent='今回の変更はこの端末と同期先に保存しました。画面の更新・自動同期の復帰を確認できなかったため、記録を消さずにページを再読み込みしてください。';
+    }
+   },onExit:()=>{finish();end()}});
   }catch{finish();end();const status=root.querySelector('[data-simple="status"]');if(status)status.textContent='記録を保持して一時停止しています。ほかのタブを閉じ、同期画面からもう一度確認してください。';}
   finally{starting=false}
  });

@@ -647,7 +647,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   begin:async()=>{recoveryActive=true;pauseGuard.pause();automatic?.stop();automatic=null;await ui.whenWritesIdle();if(activeSyncs)throw Error('WAIT_FOR_SYNC_COMPLETION');await vault.refresh();ui.hydrate(vault.readCurrent());},
   end:()=>{recoveryActive=false;showPauseState();},
   getTransport:async()=>running.sealedCredentials.resume({vault,passphrase:await keys.read(),fetcher:createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch}),expectedApiRoot:api.origin,expectedOrigin:location.origin,expectedBoxId:vault.readCurrent().weeklyOptions.__syncLineage.boxId}),
-  complete:async()=>{await storage.refresh();ui.hydrate(storage.read());recoveryActive=false;pauseGuard.resume({verified:true});showPauseState();try{await running.resumeAutomatic({passphrase:await keys.read()})}catch{pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();status.textContent='この端末の記録は保存済みです。接続を再確認してください。';} }
+  complete:async()=>{await storage.refresh();ui.hydrate(storage.read());recoveryActive=false;pauseGuard.resume({verified:true});showPauseState();try{await running.resumeAutomatic({passphrase:await keys.read()});return {automaticRestored:true}}catch{pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();return {automaticRestored:false}} }
  });
  async function finishStagedCutover(password){
   const oldVault=createFormalProductionANIPrimary({idb,locks,profileId:profileState.active});
