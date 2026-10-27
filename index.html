@@ -137,10 +137,14 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .nav svg,.nav .icon-glyph .ui-icon,.annual-side-link .ui-icon{width:18px;height:18px;stroke-width:1.75;flex-shrink:0}
 .nav .count{margin-left:auto;font-size:var(--fs-xs);font-weight:var(--fw-normal);font-variant-numeric:tabular-nums}
 .rank-sidebar-block .rank-chevron,.status-sidebar-block .rank-chevron{margin-left:auto;color:var(--muted)}
+/* Sidebar information architecture: three quiet groups, dividers only between groups. */
+.sidebar-library-group .status-sidebar-block{margin:4px 0}
+.sidebar > .rank-sidebar-block,.sidebar > .sidebar-tools{border-top:1px solid var(--border);padding-top:14px}
+.sidebar-tools .anilog-sync-sidebar{margin-top:0}
+.sidebar-tools .anilog-sync-sidebar .anilog-sync-entry{border:0;background:transparent;color:var(--muted);box-shadow:none}
+@media(hover:hover){.sidebar-tools .anilog-sync-sidebar .anilog-sync-entry:hover{border:0;background:var(--surface);color:var(--ink)}}
 .ranking-subnav{display:grid;gap:4px;margin:0 0 6px 18px;padding-left:12px;border-left:1px solid var(--border)}
 .ranking-subnav button{font-size:var(--fs-sm);padding:10px 12px}
-.sidebar .share-card{padding:0;margin:0;border:0;background:none}
-.sidebar .share-card .share-action{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:var(--radius-sm);background:var(--accent-soft);border:1px solid var(--accent-border);color:var(--accent);font-size:var(--fs-md);font-weight:var(--fw-semi)}
 .sidebar-bottom{margin-top:auto;padding:16px 10px 0;border-top:1px solid var(--border);flex-shrink:0}
 .backup-heading{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .backup-heading .ui-icon{width:16px;height:16px;color:var(--muted)}
@@ -906,7 +910,6 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   #noteText:hover{
     border-color:var(--accent);
   }
-  .sidebar .share-card .share-action:hover,
   .share-action:hover,
   .record-primary:hover,
   .pattern-a-rate-cta:hover,
@@ -1822,13 +1825,14 @@ select:not([data-status-id]){
 <div class="app">
   <aside class="sidebar" aria-label="サイドメニュー">
     <button type="button" class="brand neon-sign" id="homeBrand" aria-label="ANI:LOG トップページへ戻る" title="トップページへ戻る"><span class="neon-text" aria-hidden="true"><span class="neon-char">A</span><span class="neon-char">N</span><span class="neon-char">I</span><span class="neon-colon">:</span><span class="neon-char">L</span><span class="neon-char">O</span><span class="neon-char">G</span></span><span class="sr-only">ANI:LOG</span><span class="brand-desc">観たアニメ、忘れずに残そう。</span></button>
-    <div><div class="side-block-title">ライブラリ</div><nav class="nav" id="desktopNav">
+    <div class="sidebar-library-group">
+      <div class="side-block-title">探す・記録する</div>
+      <nav class="nav" id="desktopNav">
       <button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg>アニメを探す</button>
       <button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg>マイリスト <span class="count" id="savedBadge">0</span></button>
-      <button type="button" data-annual-open class="annual-side-link"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg>年間まとめ</button>
-    </nav></div>
-    <div class="status-sidebar-block"><div class="side-block-title">視聴状況で絞り込み</div><nav class="nav" id="statusNav">
-      <button type="button" id="statusDisclosure" aria-expanded="false" aria-controls="statusSubnav"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg></span>視聴状況<span class="rank-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></span></button>
+      </nav>
+    <div class="status-sidebar-block"><nav class="nav" id="statusNav">
+      <button type="button" id="statusDisclosure" aria-label="視聴状況で絞り込む" aria-expanded="false" aria-controls="statusSubnav"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg></span>視聴状況で絞る<span class="rank-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></span></button>
       <div id="statusSubnav" class="ranking-subnav" hidden>
       <button data-status-filter="watching"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/></svg>見てる</button>
       <button data-status-filter="planned"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>見たい</button>
@@ -1837,8 +1841,12 @@ select:not([data-status-id]){
       <button data-status-filter="dropped"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-stop"/></svg></span>視聴中止</button>
       </div>
     </nav></div>
+      <nav class="nav" aria-label="年間まとめ">
+      <button type="button" data-annual-open class="annual-side-link"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3m-3 4h8"/></svg>年間まとめ</button>
+      </nav>
+    </div>
     <div class="rank-sidebar-block"><div class="side-block-title">ランキング</div><nav class="nav" aria-label="人気作ランキング">
-      <button type="button" id="rankingDisclosure" aria-expanded="false" aria-controls="rankingSubnav"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>人気作<span class="rank-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></span></button>
+      <button type="button" id="rankingDisclosure" aria-expanded="false" aria-controls="rankingSubnav"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span>人気ランキング<span class="rank-chevron" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-chevron-down"/></svg></span></button>
       <div id="rankingSubnav" class="ranking-subnav" hidden>
         <button type="button" data-rank-open="now">今期ランキング</button>
         <button type="button" data-rank-open="period">年代・シーズン別</button>
@@ -1846,8 +1854,13 @@ select:not([data-status-id]){
       </div>
       <button type="button" data-rank-open="mine"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></span>マイランキング</button>
     </nav></div>
-    <div class="share-card"><div class="side-block-title">シェア</div><nav class="nav" aria-label="リストの共有"><button type="button" class="share-action" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button></nav></div>
+    <div class="sidebar-tools">
+      <div class="side-block-title">その他の機能</div>
+      <nav class="nav" aria-label="その他の機能">
+        <button type="button" id="shareBtnSidebar"><span class="icon-glyph" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg></span>共有URLを作る</button>
     <div class="anilog-sync-sidebar"><button type="button" id="anilogSyncSidebarOpen" class="anilog-sync-entry" aria-haspopup="dialog" aria-controls="anilog-sync-dialog"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="2" y="4" width="15" height="12" rx="2"/><path d="M8 20h3M9 16v4"/><rect x="17" y="9" width="5" height="11" rx="1.3"/></svg><span class="anilog-sync-entry-text">端末間同期<small id="anilogSyncSidebarStatus">接続状態を確認</small></span><svg class="ui-icon anilog-sync-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-chevron-right"/></svg></button></div>
+      </nav>
+    </div>
     <div class="sidebar-bottom" aria-label="視聴記録のバックアップ"><div class="backup-heading"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-save"/></svg><strong>バックアップ</strong></div><div class="side-actions"><button type="button" class="outline-btn" id="exportBtn">書き出す</button><button type="button" class="outline-btn" id="importBtn">読み込む</button></div><div class="backup-date" id="backupDate">最終書き出し：未作成</div></div>
     <div class="side-foot"><div>ANI:LOG <span id="anilog-version-label"></span></div><div>記録はブラウザ内に保存</div></div>
   </aside>
