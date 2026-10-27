@@ -1955,7 +1955,6 @@ select:not([data-status-id]){
 
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-tools>.stream-inline{flex-shrink:0}
  /* Reserve by episode counts, independent of status, without hiding notices. */
- body.saved-mode:not(.saved-list-view) .pattern-a-card[data-progress-reserve="complete"] .pattern-a-watch-column{min-height:226px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card[data-progress-reserve="warning"] .pattern-a-watch-column{min-height:159px}
  /* Move only the state selector; preserve the start/progress controls below. */
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-menu{transform:translateY(-14px)}
@@ -1964,6 +1963,21 @@ select:not([data-status-id]){
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tools{flex-wrap:wrap;min-height:64px;row-gap:0}
  body.saved-mode:not(.saved-list-view) .pattern-a-tools>.stream-inline{flex-basis:100%}
 }
+
+/* Completion stays inside the existing caption row and progress slot. */
+.watch-progress-top .progress-complete-inline{display:inline-flex;align-items:center;gap:5px;margin:0;padding:0;border:0;background:transparent;color:var(--accent);font:inherit;font-weight:var(--fw-bold);line-height:1.2;white-space:nowrap;cursor:pointer;min-width:0;position:relative}
+.watch-progress-top .progress-complete-inline .ui-icon{box-sizing:border-box;width:13px;height:13px;flex:0 0 13px;border:1px solid currentColor;border-radius:50%;padding:1px;stroke-width:3}
+.watch-progress-top .progress-complete-inline::before{content:"";position:absolute;inset:-6px -3px}
+.watch-progress-top .progress-complete-inline:hover{color:var(--ink)}
+.watch-progress-top .progress-complete-inline:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+@media(min-width:1251px){
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-top .progress-complete-inline{font-size:10px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{height:12px;min-height:12px;flex:0 0 12px}
+}
+.toast.auto-completion-toast{flex-wrap:nowrap;white-space:nowrap}
+.toast.auto-completion-toast .toast-undo{flex:0 0 auto;white-space:nowrap}
+@media(max-width:740px){.toast.auto-completion-toast{font-size:10px;padding:10px 12px;gap:8px}.toast.auto-completion-toast .toast-undo{font-size:inherit;padding:6px 8px}}
+@media(max-width:360px){.toast.auto-completion-toast{font-size:9px;padding:8px 10px;gap:6px}}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -2315,8 +2329,17 @@ function clearDialogNotice(dialog){
  if(!dialog)return;const notice=dialog.querySelector('.dialog-notice');
  if(notice){notice.hidden=true;notice.textContent='';notice.classList.remove('error')}
 }
+function centerToastOnContent(){
+ const node=$('#toast'),cards=$('#cards');if(!node)return;
+ if(mode==='saved'&&cards){
+  const bounds=cards.getBoundingClientRect();
+  if(bounds.width>0){node.style.left=(bounds.left+bounds.width/2)+'px';return;}
+ }
+ node.style.left='50%';
+}
+window.addEventListener('resize',()=>{if($('#toast')?.classList.contains('show'))centerToastOnContent()});
 function toast(msg,kind='info'){
- const el=$('#toast');clearTimeout(toastTimer);el.classList.remove('show','completion-toast');
+ const el=$('#toast');clearTimeout(toastTimer);el.classList.remove('show','completion-toast','auto-completion-toast');
  const dialogs=$$('dialog[open]');const active=dialogs[dialogs.length-1];
  if(active){
   let notice=active.querySelector('.dialog-notice');
@@ -2327,17 +2350,18 @@ function toast(msg,kind='info'){
   notice.classList.toggle('error',kind==='error');notice.textContent=msg;notice.hidden=false;
   return; // Keep the text visible until the dialog is closed or the user changes an option.
  }
- el.classList.toggle('error',kind==='error');el.textContent=msg;el.classList.add('show');
+ el.classList.toggle('error',kind==='error');el.textContent=msg;centerToastOnContent();el.classList.add('show');
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
 }
 let pendingUndo=null,undoTimer=null;
-function offerUndo(id,oldItem,afterItem,label,offerRating=false){
+function offerUndo(id,oldItem,afterItem,label,offerRating=false,undoDuration=9500){
  clearTimeout(undoTimer);
  pendingUndo={id,oldItem:oldItem?structuredClone(oldItem):null,afterItem:afterItem?structuredClone(afterItem):null};
  toast(label);
  const node=$('#toast');node.textContent='';
  if(offerRating){node.classList.add('completion-toast');const message=document.createElement('span');message.className='completion-toast-label';message.textContent=label;node.append(message)}
- else {node.classList.remove('completion-toast');node.append(document.createTextNode(label))}
+ else {node.classList.remove('completion-toast');const message=document.createElement('span');message.className='auto-completion-message';message.textContent=label;node.append(message)}
+ node.classList.toggle('auto-completion-toast',undoDuration===10000);
  const btn=document.createElement('button');btn.type='button';btn.className='toast-undo';btn.textContent='元に戻す';btn.onclick=()=>queueRecordWrite(async()=>{
   if(!pendingUndo||pendingUndo.id!==id)return;
   const expected=pendingUndo.afterItem,current=saved[id];
@@ -2358,8 +2382,8 @@ function offerUndo(id,oldItem,afterItem,label,offerRating=false){
   };
   node.append(rate);
  }
- node.classList.add('show');clearTimeout(toastTimer);
- undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},9500);
+ centerToastOnContent();node.classList.add('show');clearTimeout(toastTimer);
+ undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},undoDuration);
 }
 
 let savedBaseline=structuredClone(saved),recordWriteQueue=Promise.resolve(),recordWrites=0;
@@ -2972,16 +2996,18 @@ function watchedCount(a){const n=Number(saved[a.id]?.watchedEpisodes);return Num
 function totalEpisodes(a,extra){const n=Number(extra??saved[a.id]?.episodes??a.episodes);return Number.isInteger(n)&&n>0&&n<=9999?n:null}
 function progressCountLabel(n,total){return total!==null&&n<=total?`${n} / ${total}話`:`${n}話視聴`}
 function progressHint(n,total,inDetail=false){return total!==null&&n>total?'総話数はAPIの更新待ちかもしれません。':total!==null&&n===total?'':(inDetail?'数字を直接入力することもできます。':'')}
-function completionProposalMarkup(a,current,total){
- const visible=total!==null&&current===total&&['watching','paused'].includes(saved[a.id]?.status);
- return `<div class="progress-completion-offer" data-progress-offer ${visible?'':'hidden'}><span class="progress-completion-copy">全話視聴しました！</span><button type="button" class="progress-completion-btn" data-progress-complete="${safeText(a.id)}">${uiIcon('check')}「見た」に変更</button></div>`;
+function completionTopLabel(a,current,total,status){
+ if(total!==null&&current===total&&['watching','paused'].includes(status)){
+  return `<button type="button" class="progress-complete-inline" data-progress-complete="${safeText(a.id)}" aria-label="${safeText(a.title)}を見たに変更">${uiIcon('check')}<span>見たに変更</span></button>`;
+ }
+ return `<span>${status==='dropped'?'中止した話数':'<span class="progress-label-original">視聴進捗</span><span class="progress-label-grid">視聴話数</span>'}</span>`;
 }
 function progressMarkup(a,extra=null,inDetail=false){const s=saved[a.id]?.status||'';
  if(mode==='share')return '';
  if(!['watching','paused','dropped'].includes(s))return '';
  const current=watchedCount(a),total=totalEpisodes(a,extra),usable=total!==null&&current<=total;
  const value=usable?Math.min(100,current/total*100):0;const hint=progressHint(current,total,inDetail);
- return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>${s==='dropped'?'中止した話数':'<span class="progress-label-original">視聴進捗</span><span class="progress-label-grid">視聴話数</span>'}</span><strong data-progress-count>${s==='dropped'?(current>0?`${current}話まで視聴`:'未登録'):progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}</button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
+ return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top">${completionTopLabel(a,current,total,s)}<strong data-progress-count>${s==='dropped'?(current>0?`${current}話まで視聴`:'未登録'):progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}</button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div></div>`;
 }
 function setWatchedProgress(...args){return queueRecordWrite(()=>setWatchedProgressImpl(...args))}
 async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item=saved[id];
@@ -2989,16 +3015,44 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
  const next=Number(requested);
  if(!Number.isSafeInteger(next)||next<0||next>9999){toast('話数は0〜9999の整数で入力してください。','error');return false}
  const before=watchedCount(item);if(before===next){recentFinalPlusOne.delete(id);return true}
- // v1.5: plan from the latest queued record; do not alter `saved` before
- // persist() reports that the locked write and merge succeeded. Keep the
- // original record object intact on quota errors and cross-tab conflicts.
+ // Accept a known total from the record; otherwise only a consistent positive
+ // total visibly attached to THIS work. Do not infer a total from API changes.
+ const storedTotal=totalEpisodes(item);
+ const displayedTotals=$$('[data-progress-for]').filter(el=>el.dataset.progressFor===id)
+  .map(el=>Number(el.dataset.progressTotal)).filter(n=>Number.isInteger(n)&&n>0&&n<=9999);
+ const visibleTotal=displayedTotals.length&&displayedTotals.every(n=>n===displayedTotals[0])?displayedTotals[0]:null;
+ const finalTotal=storedTotal??visibleTotal;
+ // Only a user's forward progress action causes automatic completion.  Merely
+ // loading a 100%-complete record, receiving sync, or changing API metadata won't.
+ const autoComplete=item.status==='watching'&&finalTotal!==null&&before<finalTotal&&next===finalTotal;
+ const beforeItem=autoComplete?structuredClone(item):null;
  const planned={...item,watchedEpisodes:next,updatedAt:new Date().toISOString()};
+ if(autoComplete){
+  planned.status='watched';
+  if(!item.completedOn){const [y,m,d]=localTodayParts();planned.completedOn=[y,m,d].map((v,i)=>i?String(v).padStart(2,'0'):String(v)).join('-');}
+ }
+ // Save progress and completion together; never report success before persist.
  const draft={...saved,[id]:planned};
  if(!await persist(false,draft))return false;
  const committed=saved[id];
- if(!committed||committed.watchedEpisodes!==next){
+ if(!committed||committed.watchedEpisodes!==next||(autoComplete&&committed.status!=='watched')){
   recentFinalPlusOne.delete(id);
   toast('話数の保存結果を確認できませんでした。ページを再読み込みして状態を確認してください。','error');return true;
+ }
+ if(autoComplete){
+  recentFinalPlusOne.delete(id);
+  // Restore ONLY fields changed by this action: unrelated fields that arrived
+  // during the locked merge must not be replaced by a stale snapshot on Undo.
+  const undoBefore=structuredClone(committed);
+  for(const field of new Set([...Object.keys(beforeItem),...Object.keys(planned)])){
+   if(sameRecordValue(beforeItem[field],planned[field]))continue;
+   if(Object.hasOwn(beforeItem,field))undoBefore[field]=structuredClone(beforeItem[field]);
+   else delete undoBefore[field];
+  }
+  try{updateCounts();render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce)}
+  catch{toast('保存しましたが表示の更新に失敗しました。再読み込みして確認してください。','error');return true;}
+  offerUndo(id,undoBefore,committed,'全話視聴しました！「見た」に変更しました',false,10000);
+  return true;
  }
 
  try{
@@ -3011,12 +3065,13 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
   const minus=el.querySelector('[data-progress-step="-1"]'),plus=el.querySelector('[data-progress-step="1"]');
   if(minus)minus.disabled=next<=0;if(plus)plus.disabled=next>=9999;
   const hint=el.querySelector('[data-progress-hint]');if(hint){const message=progressHint(next,total,el.classList.contains('detail-progress'));hint.textContent=message;hint.hidden=!message;}
-  const offer=el.querySelector('[data-progress-offer]');if(offer){
-   const complete=total!==null&&next===total&&['watching','paused'].includes(committed.status);
-   // No animation for pre-existing completion, unchanged progress, or a move back down from above the known total.
-   offer.hidden=!complete;
-   if(!complete)offer.classList.remove('motion-completed');
-   else if(before<total)offer.classList.add('motion-completed');
+  const caption=el.querySelector('.watch-progress-top');
+  if(caption){
+   const label=caption.querySelector('.progress-complete-inline, span');
+   if(label){
+    const refreshed=completionTopLabel(committed,next,total,committed.status);
+    label.outerHTML=refreshed;
+   }
   }
  });
  const reachedByPlusOne=fromPlusOne&&committed.status==='watching'&&$$('[data-progress-for]').some(el=>{
@@ -3382,7 +3437,7 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current===total?'complete':total!==null&&current>total?'warning':'normal';
+ const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current>total?'warning':'normal';
  return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
@@ -6381,8 +6436,17 @@ function clearDialogNotice(dialog){
  if(!dialog)return;const notice=dialog.querySelector('.dialog-notice');
  if(notice){notice.hidden=true;notice.textContent='';notice.classList.remove('error')}
 }
+function centerToastOnContent(){
+ const node=$('#toast'),cards=$('#cards');if(!node)return;
+ if(mode==='saved'&&cards){
+  const bounds=cards.getBoundingClientRect();
+  if(bounds.width>0){node.style.left=(bounds.left+bounds.width/2)+'px';return;}
+ }
+ node.style.left='50%';
+}
+window.addEventListener('resize',()=>{if($('#toast')?.classList.contains('show'))centerToastOnContent()});
 function toast(msg,kind='info'){
- const el=$('#toast');clearTimeout(toastTimer);el.classList.remove('show','completion-toast');
+ const el=$('#toast');clearTimeout(toastTimer);el.classList.remove('show','completion-toast','auto-completion-toast');
  const dialogs=$$('dialog[open]');const active=dialogs[dialogs.length-1];
  if(active){
   let notice=active.querySelector('.dialog-notice');
@@ -6393,17 +6457,18 @@ function toast(msg,kind='info'){
   notice.classList.toggle('error',kind==='error');notice.textContent=msg;notice.hidden=false;
   return; // Keep the text visible until the dialog is closed or the user changes an option.
  }
- el.classList.toggle('error',kind==='error');el.textContent=msg;el.classList.add('show');
+ el.classList.toggle('error',kind==='error');el.textContent=msg;centerToastOnContent();el.classList.add('show');
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
 }
 let pendingUndo=null,undoTimer=null;
-function offerUndo(id,oldItem,afterItem,label,offerRating=false){
+function offerUndo(id,oldItem,afterItem,label,offerRating=false,undoDuration=9500){
  clearTimeout(undoTimer);
  pendingUndo={id,oldItem:oldItem?structuredClone(oldItem):null,afterItem:afterItem?structuredClone(afterItem):null};
  toast(label);
  const node=$('#toast');node.textContent='';
  if(offerRating){node.classList.add('completion-toast');const message=document.createElement('span');message.className='completion-toast-label';message.textContent=label;node.append(message)}
- else {node.classList.remove('completion-toast');node.append(document.createTextNode(label))}
+ else {node.classList.remove('completion-toast');const message=document.createElement('span');message.className='auto-completion-message';message.textContent=label;node.append(message)}
+ node.classList.toggle('auto-completion-toast',undoDuration===10000);
  const btn=document.createElement('button');btn.type='button';btn.className='toast-undo';btn.textContent='元に戻す';btn.onclick=()=>queueRecordWrite(async()=>{
   if(!pendingUndo||pendingUndo.id!==id)return;
   const expected=pendingUndo.afterItem,current=saved[id];
@@ -6424,8 +6489,8 @@ function offerUndo(id,oldItem,afterItem,label,offerRating=false){
   };
   node.append(rate);
  }
- node.classList.add('show');clearTimeout(toastTimer);
- undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},9500);
+ centerToastOnContent();node.classList.add('show');clearTimeout(toastTimer);
+ undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},undoDuration);
 }
 
 let savedBaseline=structuredClone(saved),recordWriteQueue=Promise.resolve(),recordWrites=0;
@@ -7046,16 +7111,18 @@ function watchedCount(a){const n=Number(saved[a.id]?.watchedEpisodes);return Num
 function totalEpisodes(a,extra){const n=Number(extra??saved[a.id]?.episodes??a.episodes);return Number.isInteger(n)&&n>0&&n<=9999?n:null}
 function progressCountLabel(n,total){return total!==null&&n<=total?`${n} / ${total}話`:`${n}話視聴`}
 function progressHint(n,total,inDetail=false){return total!==null&&n>total?'総話数はAPIの更新待ちかもしれません。':total!==null&&n===total?'':(inDetail?'数字を直接入力することもできます。':'')}
-function completionProposalMarkup(a,current,total){
- const visible=total!==null&&current===total&&['watching','paused'].includes(saved[a.id]?.status);
- return `<div class="progress-completion-offer" data-progress-offer ${visible?'':'hidden'}><span class="progress-completion-copy">全話視聴しました！</span><button type="button" class="progress-completion-btn" data-progress-complete="${safeText(a.id)}">${uiIcon('check')}「見た」に変更</button></div>`;
+function completionTopLabel(a,current,total,status){
+ if(total!==null&&current===total&&['watching','paused'].includes(status)){
+  return `<button type="button" class="progress-complete-inline" data-progress-complete="${safeText(a.id)}" aria-label="${safeText(a.title)}を見たに変更">${uiIcon('check')}<span>見たに変更</span></button>`;
+ }
+ return `<span>${status==='dropped'?'中止した話数':'<span class="progress-label-original">視聴進捗</span><span class="progress-label-grid">視聴話数</span>'}</span>`;
 }
 function progressMarkup(a,extra=null,inDetail=false){const s=saved[a.id]?.status||'';
  if(mode==='share')return '';
  if(!['watching','paused','dropped'].includes(s))return '';
  const current=watchedCount(a),total=totalEpisodes(a,extra),usable=total!==null&&current<=total;
  const value=usable?Math.min(100,current/total*100):0;const hint=progressHint(current,total,inDetail);
- return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top"><span>${s==='dropped'?'中止した話数':'<span class="progress-label-original">視聴進捗</span><span class="progress-label-grid">視聴話数</span>'}</span><strong data-progress-count>${s==='dropped'?(current>0?`${current}話まで視聴`:'未登録'):progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}</button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div>${completionProposalMarkup(a,current,total)}</div>`;
+ return `<div class="watch-progress ${inDetail?'detail-progress':'pattern-a-progress'}" data-progress-for="${safeText(a.id)}" data-progress-total="${total??''}"><div class="watch-progress-top">${completionTopLabel(a,current,total,s)}<strong data-progress-count>${s==='dropped'?(current>0?`${current}話まで視聴`:'未登録'):progressCountLabel(current,total)}</strong></div><div class="watch-progress-track" ${!usable?'hidden':''}><div class="watch-progress-fill" style="width:${value}%" data-progress-bar></div></div><div class="watch-progress-actions"><button type="button" title="1話戻す" aria-label="${safeText(a.title)}の視聴話数を1減らす" data-progress-id="${safeText(a.id)}" data-progress-step="-1" ${current<=0?'disabled':''}>${uiIcon('minus')}</button><label class="watch-progress-entry"><input type="number" inputmode="numeric" pattern="[0-9]*" min="0" max="9999" step="1" value="${current}" aria-label="${safeText(a.title)}の視聴済み話数" data-progress-input="${safeText(a.id)}"></label><button type="button" title="1話進める" aria-label="${safeText(a.title)}の視聴話数を1増やす" data-progress-id="${safeText(a.id)}" data-progress-step="1" ${current>=9999?'disabled':''}>${uiIcon('plus')}</button></div><div class="watch-progress-hint" data-progress-hint ${hint?'':'hidden'}>${hint}</div></div>`;
 }
 function setWatchedProgress(...args){return queueRecordWrite(()=>setWatchedProgressImpl(...args))}
 async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item=saved[id];
@@ -7063,16 +7130,44 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
  const next=Number(requested);
  if(!Number.isSafeInteger(next)||next<0||next>9999){toast('話数は0〜9999の整数で入力してください。','error');return false}
  const before=watchedCount(item);if(before===next){recentFinalPlusOne.delete(id);return true}
- // v1.5: plan from the latest queued record; do not alter `saved` before
- // persist() reports that the locked write and merge succeeded. Keep the
- // original record object intact on quota errors and cross-tab conflicts.
+ // Accept a known total from the record; otherwise only a consistent positive
+ // total visibly attached to THIS work. Do not infer a total from API changes.
+ const storedTotal=totalEpisodes(item);
+ const displayedTotals=$$('[data-progress-for]').filter(el=>el.dataset.progressFor===id)
+  .map(el=>Number(el.dataset.progressTotal)).filter(n=>Number.isInteger(n)&&n>0&&n<=9999);
+ const visibleTotal=displayedTotals.length&&displayedTotals.every(n=>n===displayedTotals[0])?displayedTotals[0]:null;
+ const finalTotal=storedTotal??visibleTotal;
+ // Only a user's forward progress action causes automatic completion.  Merely
+ // loading a 100%-complete record, receiving sync, or changing API metadata won't.
+ const autoComplete=item.status==='watching'&&finalTotal!==null&&before<finalTotal&&next===finalTotal;
+ const beforeItem=autoComplete?structuredClone(item):null;
  const planned={...item,watchedEpisodes:next,updatedAt:new Date().toISOString()};
+ if(autoComplete){
+  planned.status='watched';
+  if(!item.completedOn){const [y,m,d]=localTodayParts();planned.completedOn=[y,m,d].map((v,i)=>i?String(v).padStart(2,'0'):String(v)).join('-');}
+ }
+ // Save progress and completion together; never report success before persist.
  const draft={...saved,[id]:planned};
  if(!await persist(false,draft))return false;
  const committed=saved[id];
- if(!committed||committed.watchedEpisodes!==next){
+ if(!committed||committed.watchedEpisodes!==next||(autoComplete&&committed.status!=='watched')){
   recentFinalPlusOne.delete(id);
   toast('話数の保存結果を確認できませんでした。ページを再読み込みして状態を確認してください。','error');return true;
+ }
+ if(autoComplete){
+  recentFinalPlusOne.delete(id);
+  // Restore ONLY fields changed by this action: unrelated fields that arrived
+  // during the locked merge must not be replaced by a stale snapshot on Undo.
+  const undoBefore=structuredClone(committed);
+  for(const field of new Set([...Object.keys(beforeItem),...Object.keys(planned)])){
+   if(sameRecordValue(beforeItem[field],planned[field]))continue;
+   if(Object.hasOwn(beforeItem,field))undoBefore[field]=structuredClone(beforeItem[field]);
+   else delete undoBefore[field];
+  }
+  try{updateCounts();render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce)}
+  catch{toast('保存しましたが表示の更新に失敗しました。再読み込みして確認してください。','error');return true;}
+  offerUndo(id,undoBefore,committed,'全話視聴しました！「見た」に変更しました',false,10000);
+  return true;
  }
 
  try{
@@ -7085,12 +7180,13 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
   const minus=el.querySelector('[data-progress-step="-1"]'),plus=el.querySelector('[data-progress-step="1"]');
   if(minus)minus.disabled=next<=0;if(plus)plus.disabled=next>=9999;
   const hint=el.querySelector('[data-progress-hint]');if(hint){const message=progressHint(next,total,el.classList.contains('detail-progress'));hint.textContent=message;hint.hidden=!message;}
-  const offer=el.querySelector('[data-progress-offer]');if(offer){
-   const complete=total!==null&&next===total&&['watching','paused'].includes(committed.status);
-   // No animation for pre-existing completion, unchanged progress, or a move back down from above the known total.
-   offer.hidden=!complete;
-   if(!complete)offer.classList.remove('motion-completed');
-   else if(before<total)offer.classList.add('motion-completed');
+  const caption=el.querySelector('.watch-progress-top');
+  if(caption){
+   const label=caption.querySelector('.progress-complete-inline, span');
+   if(label){
+    const refreshed=completionTopLabel(committed,next,total,committed.status);
+    label.outerHTML=refreshed;
+   }
   }
  });
  const reachedByPlusOne=fromPlusOne&&committed.status==='watching'&&$$('[data-progress-for]').some(el=>{
@@ -7456,7 +7552,7 @@ async function saveStreamPreference(){
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
- const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current===total?'complete':total!==null&&current>total?'warning':'normal';
+ const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current>total?'warning':'normal';
  return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
