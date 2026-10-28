@@ -1,0 +1,14 @@
+[
+  {"malId": 5114, "title": "鋼の錬金術師 FULLMETAL ALCHEMIST", "case": "completed_tv"},
+  {"malId": 21, "title": "ONE PIECE", "case": "long_running_paginated"},
+  {"malId": 16498, "title": "進撃の巨人（第1期）", "case": "season_1"},
+  {"malId": 38000, "title": "鬼滅の刃（第1期）", "case": "season_1"},
+  {"malId": 52991, "title": "葬送のフリーレン", "case": "recent_tv"},
+  {"malId": 9253, "title": "STEINS;GATE", "case": "completed_tv"},
+  {"malId": 11061, "title": "HUNTER×HUNTER（2011）", "case": "long_tv"},
+  {"malId": 1535, "title": "DEATH NOTE", "case": "completed_tv"},
+  {"malId": 199, "title": "千と千尋の神隠し", "case": "movie_no_episodes"},
+  {"malId": 44511, "title": "チェンソーマン", "case": "recent_tv"},
+  {"malId": 47917, "title": "ぼっち・ざ・ろっく！", "case": "tv"},
+  {"malId": 50265, "title": "SPY×FAMILY", "case": "tv"}
+]

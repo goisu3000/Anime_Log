@@ -1,0 +1,7 @@
+{
+  "note": "作品の公式放送・配信ページを人間が確認して入力。APIの aired から公開済みを推定しないこと。",
+  "checkedAtJST": "",
+  "references": [
+    {"malId": 5114, "officialUrl": "", "verifiedPublicThrough": null, "scope": "TV / Web / selected platform", "reviewer": ""}
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "scope": "new experiment files only; original 368 zip entries all unchanged",
+  "files": {
+    "experiments/episode-source/CODEX_CHECK_AND_UPLOAD.md": {
+      "sha256": "009abaa36c12c0809b45a3e301b915a45da387eb37457f984627a23a928445bc",
+      "size": 3257
+    },
+    "experiments/episode-source/PREVIEW_ONLY.html": {
+      "sha256": "d84a8e3dc6e4d2c256bd3d2b804612aaab959b835b5256558ed0efdbbe0a70e6",
+      "size": 7644
+    },
+    "experiments/episode-source/README.md": {
+      "sha256": "bcd179b5d9c4ef4f89a70a84c0d661196ad51fbbdab86d8e627d76d6e20877e7",
+      "size": 4195
+    },
+    "experiments/episode-source/SOURCE_AUDIT_SUMMARY.md": {
+      "sha256": "9d23b5730043f685b61f0b1b9c1edf4f3b6285ffa68a6a924de976e0e967e136",
+      "size": 1485
+    },
+    "experiments/episode-source/audit-tenrai.mjs": {
+      "sha256": "d804cefe571642244e60e62e451b66f8f6eae37a2e1c896d936d5b9d693ee72e",
+      "size": 6544
+    },
+    "experiments/episode-source/episode-audit-core.mjs": {
+      "sha256": "d172296314c6a71d455ad573d8ee5ae8efac10b88f1544cefad03538062bbd95",
+      "size": 3268
+    },
+    "experiments/episode-source/fixtures/mock-tenrai.json": {
+      "sha256": "230d36989849a3f76177094fdde076ae4419b50f0dc059f18073479824c50bf6",
+      "size": 386
+    },
+    "experiments/episode-source/samples/fixture-sample.json": {
+      "sha256": "ab857b40ae82e8a539a19be8ecc2466858e7f665e2b5b191624cd2ff111d088e",
+      "size": 147
+    },
+    "experiments/episode-source/samples/official-verification-template.json": {
+      "sha256": "2e659318d326d9573fb837ad2dc9cb00b7b67997af4f5339dce094adf91e2420",
+      "size": 319
+    },
+    "experiments/episode-source/samples/tenrai-mal-ids.json": {
+      "sha256": "2cef7b1cce90e8e05d888259cc88226d4b0be4ff9d9a9c5d118f2477e71befd4",
+      "size": 910
+    },
+    "tests/test-episode-source-audit.mjs": {
+      "sha256": "b447d8bd8ad491dae29f1785dcfa2f8f09a7edde80e33924328a334aa7e5c018",
+      "size": 3207
+    }
+  }
+}

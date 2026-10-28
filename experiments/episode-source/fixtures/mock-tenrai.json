@@ -1,0 +1,9 @@
+{
+  "5114": [
+    {"data":[{"mal_id":1,"aired":"2009-04-05T17:00:00+09:00"},{"mal_id":2,"aired":"2009-04-12T17:00:00+09:00"}],"pagination":{"has_next_page":false}}
+  ],
+  "21": [
+    {"data":[{"mal_id":1,"aired":"1999-10-20T19:00:00+09:00"}],"pagination":{"has_next_page":true}},
+    {"data":[{"mal_id":2,"aired":"1999-10-27T19:00:00+09:00"}],"pagination":{"has_next_page":true}}
+  ]
+}

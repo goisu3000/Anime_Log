@@ -1,0 +1,62 @@
+{
+  "at": "2026-10-28T03:49:33.327Z",
+  "baseMain": "6c406e9d5ea116f70457b0e57b7671b4be49d368",
+  "branch": "experiments/tenrai-episode-audit-20261028",
+  "inputManifestVerified": 11,
+  "originalOfficialZipEntriesUnchanged": 368,
+  "public59FilesUnchanged": true,
+  "providedCodeEdited": false,
+  "tests": {
+    "buildVerifyPublished": "PASS 59 files",
+    "suppliedFixedTests": "PASS,0 live calls",
+    "fixtureExports": "PASS CSV/JSON/Markdown,0 live calls",
+    "syntax": "PASS",
+    "schemaAndIdentity": "PASS for3 selected titles",
+    "offlineSafetyReview": "6 findings reproduced with fake responses;0 live calls",
+    "broadRegression": "NOT_RUN: all original368 entries and59 public files unchanged"
+  },
+  "actualTenraiRequests": 7,
+  "metadataRequests": 3,
+  "episodePageRequests": 4,
+  "minRequestIntervalMs": 1500,
+  "http429": 0,
+  "failedLiveRequests": 0,
+  "identityMatchCount": 3,
+  "officialPublicationVerifiedCount": 0,
+  "episodesRetrieved": 264,
+  "missingDates": 0,
+  "missingEpisodeNumbers": 0,
+  "unfinishedPagination": [
+    {
+      "malId": 21,
+      "requestedPages": 2,
+      "lastVisiblePage": 12,
+      "retrievedEpisodes": 200,
+      "latestEpisodeKnown": false
+    }
+  ],
+  "emptyEpisodeListings": [
+    {
+      "malId": 199,
+      "metadataEpisodes": 1,
+      "actualEpisodeRows": 0,
+      "interpretation": "Movie empty response; not evidence of wrong identity or HTTP failure"
+    }
+  ],
+  "unrequestedSampleIds": [
+    16498,
+    38000,
+    52991,
+    9253,
+    11061,
+    1535,
+    44511,
+    47917,
+    50265
+  ],
+  "sourceReportedRequestCountNote": "RESULTS.json requestCount=4 counts episodes only. HTTP_TELEMETRY.json total=7 also includes3 identity requests; no live retries occurred.",
+  "safeForProductionNotice": false,
+  "productionDeployment": false,
+  "cloudflareChanged": false,
+  "personalDataAccess": false
+}

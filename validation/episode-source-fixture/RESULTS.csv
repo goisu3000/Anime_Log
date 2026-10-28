@@ -1,0 +1,3 @@
+malId,title,case,requestedPages,complete,error,count,lastIndexedEpisode,pastDatedMaximum,missingDate,future,consecutive,suitability,publishVerification
+"5114","TEST completed","offline_fixture","1","true","","2","2","2","0","0","true","SCHEDULE_ONLY","NOT_VERIFIED"
+"21","TEST paginated","offline_fixture","2","false","","2","2","2","0","0","true","PAGINATION_INCOMPLETE","NOT_VERIFIED"

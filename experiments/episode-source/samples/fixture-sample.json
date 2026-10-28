@@ -1,0 +1,4 @@
+[
+  {"malId": 5114, "title": "TEST completed", "case": "offline_fixture"},
+  {"malId": 21, "title": "TEST paginated", "case": "offline_fixture"}
+]

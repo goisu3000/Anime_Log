@@ -1,0 +1,4 @@
+malId,title,case,requestedPages,complete,error,count,lastIndexedEpisode,pastDatedMaximum,missingDate,future,consecutive,suitability,publishVerification
+"5114","鋼の錬金術師 FULLMETAL ALCHEMIST","completed_tv","1","true","","64","64","64","0","0","true","SCHEDULE_ONLY","NOT_VERIFIED"
+"21","ONE PIECE","long_running_paginated","2","false","","200","200","200","0","0","true","PAGINATION_INCOMPLETE","NOT_VERIFIED"
+"199","千と千尋の神隠し","movie_no_episodes","1","true","","0","","","0","0","false","NONCONSECUTIVE_EPISODES","NOT_VERIFIED"

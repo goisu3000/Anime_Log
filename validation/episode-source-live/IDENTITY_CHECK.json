@@ -1,0 +1,120 @@
+[
+  {
+    "requestedMalId": 5114,
+    "expectedTitle": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+    "returnedMalId": 5114,
+    "title": "Fullmetal Alchemist: Brotherhood",
+    "titleJapanese": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+    "titles": [
+      {
+        "type": "Default",
+        "title": "Fullmetal Alchemist: Brotherhood"
+      },
+      {
+        "type": "Japanese",
+        "title": "鋼の錬金術師 FULLMETAL ALCHEMIST"
+      },
+      {
+        "type": "English",
+        "title": "Fullmetal Alchemist: Brotherhood"
+      },
+      {
+        "type": "French",
+        "title": "Fullmetal Alchemist Brotherhood"
+      },
+      {
+        "type": "Synonym",
+        "title": "Hagane no Renkinjutsushi: Fullmetal Alchemist"
+      },
+      {
+        "type": "Synonym",
+        "title": "Fullmetal Alchemist (2009)"
+      },
+      {
+        "type": "Synonym",
+        "title": "FMA"
+      },
+      {
+        "type": "Synonym",
+        "title": "FMAB"
+      }
+    ],
+    "type": "TV",
+    "episodes": 64,
+    "url": "https://myanimelist.net/anime/5114/Fullmetal_Alchemist__Brotherhood",
+    "idMatches": true,
+    "officialPublicationVerified": false
+  },
+  {
+    "requestedMalId": 21,
+    "expectedTitle": "ONE PIECE",
+    "returnedMalId": 21,
+    "title": "One Piece",
+    "titleJapanese": "ONE PIECE",
+    "titles": [
+      {
+        "type": "Default",
+        "title": "One Piece"
+      },
+      {
+        "type": "Japanese",
+        "title": "ONE PIECE"
+      },
+      {
+        "type": "English",
+        "title": "One Piece"
+      },
+      {
+        "type": "Synonym",
+        "title": "OP"
+      }
+    ],
+    "type": "TV",
+    "episodes": null,
+    "url": "https://myanimelist.net/anime/21/One_Piece",
+    "idMatches": true,
+    "officialPublicationVerified": false
+  },
+  {
+    "requestedMalId": 199,
+    "expectedTitle": "千と千尋の神隠し",
+    "returnedMalId": 199,
+    "title": "Sen to Chihiro no Kamikakushi",
+    "titleJapanese": "千と千尋の神隠し",
+    "titles": [
+      {
+        "type": "Default",
+        "title": "Sen to Chihiro no Kamikakushi"
+      },
+      {
+        "type": "Japanese",
+        "title": "千と千尋の神隠し"
+      },
+      {
+        "type": "English",
+        "title": "Spirited Away"
+      },
+      {
+        "type": "German",
+        "title": "Chihiros Reise ins Zauberland"
+      },
+      {
+        "type": "Spanish",
+        "title": "El viaje de Chihiro"
+      },
+      {
+        "type": "French",
+        "title": "Le Voyage de Chihiro"
+      },
+      {
+        "type": "Synonym",
+        "title": "Sen and Chihiro's Spiriting Away"
+      }
+    ],
+    "type": "Movie",
+    "episodes": 1,
+    "url": "https://myanimelist.net/anime/199/Sen_to_Chihiro_no_Kamikakushi",
+    "idMatches": true,
+    "officialPublicationVerified": false
+  }
+]

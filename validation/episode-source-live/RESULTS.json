@@ -1,0 +1,1664 @@
+{
+  "name": "ANI:LOG episode source quality audit",
+  "source": "Tenrai public episodes endpoint",
+  "runAt": "2026-10-28T03:43:17.799Z",
+  "requestCount": 4,
+  "live": true,
+  "productionChange": false,
+  "publishedClaimsVerified": false,
+  "summary": "EPISODE AIR_DATE IS NOT PROOF OF PUBLIC AVAILABILITY. Verification requires external official sources.",
+  "entries": [
+    {
+      "malId": 5114,
+      "title": "鋼の錬金術師 FULLMETAL ALCHEMIST",
+      "case": "completed_tv",
+      "requestedPages": 1,
+      "complete": true,
+      "error": null,
+      "count": 64,
+      "firstEpisode": 1,
+      "lastIndexedEpisode": 64,
+      "pastDatedMaximum": 64,
+      "missingDate": 0,
+      "future": 0,
+      "duplicates": 0,
+      "missingNumber": 0,
+      "consecutive": true,
+      "errors": [],
+      "publishedThrough": null,
+      "publishVerification": "NOT_VERIFIED",
+      "suitability": "SCHEDULE_ONLY",
+      "episodes": [
+        {
+          "episode": 1,
+          "aired": "2009-04-05T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 2,
+          "aired": "2009-04-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 3,
+          "aired": "2009-04-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 4,
+          "aired": "2009-04-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 5,
+          "aired": "2009-05-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 6,
+          "aired": "2009-05-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 7,
+          "aired": "2009-05-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 8,
+          "aired": "2009-05-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 9,
+          "aired": "2009-05-31T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 10,
+          "aired": "2009-06-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 11,
+          "aired": "2009-06-14T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 12,
+          "aired": "2009-06-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 13,
+          "aired": "2009-06-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 14,
+          "aired": "2009-07-05T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 15,
+          "aired": "2009-07-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 16,
+          "aired": "2009-07-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 17,
+          "aired": "2009-07-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 18,
+          "aired": "2009-08-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 19,
+          "aired": "2009-08-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 20,
+          "aired": "2009-08-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 21,
+          "aired": "2009-08-30T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 22,
+          "aired": "2009-09-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 23,
+          "aired": "2009-09-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 24,
+          "aired": "2009-09-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 25,
+          "aired": "2009-09-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 26,
+          "aired": "2009-10-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 27,
+          "aired": "2009-10-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 28,
+          "aired": "2009-10-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 29,
+          "aired": "2009-10-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 30,
+          "aired": "2009-11-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 31,
+          "aired": "2009-11-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 32,
+          "aired": "2009-11-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 33,
+          "aired": "2009-11-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 34,
+          "aired": "2009-11-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 35,
+          "aired": "2009-12-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 36,
+          "aired": "2009-12-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 37,
+          "aired": "2009-12-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 38,
+          "aired": "2009-12-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 39,
+          "aired": "2010-01-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 40,
+          "aired": "2010-01-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 41,
+          "aired": "2010-01-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 42,
+          "aired": "2010-01-31T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 43,
+          "aired": "2010-02-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 44,
+          "aired": "2010-02-14T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 45,
+          "aired": "2010-02-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 46,
+          "aired": "2010-02-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 47,
+          "aired": "2010-03-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 48,
+          "aired": "2010-03-14T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 49,
+          "aired": "2010-03-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 50,
+          "aired": "2010-03-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 51,
+          "aired": "2010-04-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 52,
+          "aired": "2010-04-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 53,
+          "aired": "2010-04-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 54,
+          "aired": "2010-04-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 55,
+          "aired": "2010-05-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 56,
+          "aired": "2010-05-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 57,
+          "aired": "2010-05-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 58,
+          "aired": "2010-05-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 59,
+          "aired": "2010-05-30T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 60,
+          "aired": "2010-06-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 61,
+          "aired": "2010-06-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 62,
+          "aired": "2010-06-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 63,
+          "aired": "2010-06-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 64,
+          "aired": "2010-07-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        }
+      ]
+    },
+    {
+      "malId": 21,
+      "title": "ONE PIECE",
+      "case": "long_running_paginated",
+      "requestedPages": 2,
+      "complete": false,
+      "error": null,
+      "count": 200,
+      "firstEpisode": 1,
+      "lastIndexedEpisode": 200,
+      "pastDatedMaximum": 200,
+      "missingDate": 0,
+      "future": 0,
+      "duplicates": 0,
+      "missingNumber": 0,
+      "consecutive": true,
+      "errors": [],
+      "publishedThrough": null,
+      "publishVerification": "NOT_VERIFIED",
+      "suitability": "PAGINATION_INCOMPLETE",
+      "episodes": [
+        {
+          "episode": 1,
+          "aired": "1999-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 2,
+          "aired": "1999-11-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 3,
+          "aired": "1999-11-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 4,
+          "aired": "1999-12-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 5,
+          "aired": "1999-12-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 6,
+          "aired": "1999-12-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 7,
+          "aired": "1999-12-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 8,
+          "aired": "1999-12-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 9,
+          "aired": "2000-01-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 10,
+          "aired": "2000-01-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 11,
+          "aired": "2000-01-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 12,
+          "aired": "2000-02-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 13,
+          "aired": "2000-02-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 14,
+          "aired": "2000-02-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 15,
+          "aired": "2000-02-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 16,
+          "aired": "2000-03-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 17,
+          "aired": "2000-03-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 18,
+          "aired": "2000-03-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 19,
+          "aired": "2000-03-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 20,
+          "aired": "2000-04-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 21,
+          "aired": "2000-04-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 22,
+          "aired": "2000-04-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 23,
+          "aired": "2000-05-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 24,
+          "aired": "2000-05-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 25,
+          "aired": "2000-05-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 26,
+          "aired": "2000-05-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 27,
+          "aired": "2000-05-31T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 28,
+          "aired": "2000-06-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 29,
+          "aired": "2000-06-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 30,
+          "aired": "2000-06-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 31,
+          "aired": "2000-07-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 32,
+          "aired": "2000-07-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 33,
+          "aired": "2000-07-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 34,
+          "aired": "2000-07-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 35,
+          "aired": "2000-08-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 36,
+          "aired": "2000-08-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 37,
+          "aired": "2000-08-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 38,
+          "aired": "2000-08-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 39,
+          "aired": "2000-08-30T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 40,
+          "aired": "2000-09-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 41,
+          "aired": "2000-09-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 42,
+          "aired": "2000-09-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 43,
+          "aired": "2000-09-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 44,
+          "aired": "2000-10-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 45,
+          "aired": "2000-10-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 46,
+          "aired": "2000-11-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 47,
+          "aired": "2000-11-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 48,
+          "aired": "2000-11-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 49,
+          "aired": "2000-11-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 50,
+          "aired": "2000-11-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 51,
+          "aired": "2000-12-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 52,
+          "aired": "2000-12-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 53,
+          "aired": "2001-01-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 54,
+          "aired": "2001-01-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 55,
+          "aired": "2001-01-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 56,
+          "aired": "2001-01-31T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 57,
+          "aired": "2001-02-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 58,
+          "aired": "2001-02-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 59,
+          "aired": "2001-02-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 60,
+          "aired": "2001-02-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 61,
+          "aired": "2001-03-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 62,
+          "aired": "2001-03-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 63,
+          "aired": "2001-03-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 64,
+          "aired": "2001-04-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 65,
+          "aired": "2001-04-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 66,
+          "aired": "2001-04-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 67,
+          "aired": "2001-04-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 68,
+          "aired": "2001-05-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 69,
+          "aired": "2001-05-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 70,
+          "aired": "2001-05-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 71,
+          "aired": "2001-06-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 72,
+          "aired": "2001-06-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 73,
+          "aired": "2001-06-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 74,
+          "aired": "2001-07-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 75,
+          "aired": "2001-08-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 76,
+          "aired": "2001-08-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 77,
+          "aired": "2001-08-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 78,
+          "aired": "2001-08-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 79,
+          "aired": "2001-09-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 80,
+          "aired": "2001-09-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 81,
+          "aired": "2001-09-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 82,
+          "aired": "2001-10-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 83,
+          "aired": "2001-10-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 84,
+          "aired": "2001-10-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 85,
+          "aired": "2001-10-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 86,
+          "aired": "2001-11-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 87,
+          "aired": "2001-11-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 88,
+          "aired": "2001-11-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 89,
+          "aired": "2001-11-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 90,
+          "aired": "2001-12-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 91,
+          "aired": "2001-12-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 92,
+          "aired": "2001-12-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 93,
+          "aired": "2001-12-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 94,
+          "aired": "2001-12-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 95,
+          "aired": "2002-01-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 96,
+          "aired": "2002-01-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 97,
+          "aired": "2002-01-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 98,
+          "aired": "2002-01-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 99,
+          "aired": "2002-02-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 100,
+          "aired": "2002-02-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 101,
+          "aired": "2002-02-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 102,
+          "aired": "2002-02-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 103,
+          "aired": "2002-03-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 104,
+          "aired": "2002-03-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 105,
+          "aired": "2002-03-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 106,
+          "aired": "2002-03-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 107,
+          "aired": "2002-04-14T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 108,
+          "aired": "2002-04-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 109,
+          "aired": "2002-04-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 110,
+          "aired": "2002-05-05T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 111,
+          "aired": "2002-05-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 112,
+          "aired": "2002-05-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 113,
+          "aired": "2002-06-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 114,
+          "aired": "2002-06-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 115,
+          "aired": "2002-06-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 116,
+          "aired": "2002-06-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 117,
+          "aired": "2002-06-30T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 118,
+          "aired": "2002-07-14T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 119,
+          "aired": "2002-07-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 120,
+          "aired": "2002-08-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 121,
+          "aired": "2002-08-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 122,
+          "aired": "2002-08-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 123,
+          "aired": "2002-08-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 124,
+          "aired": "2002-09-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 125,
+          "aired": "2002-09-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 126,
+          "aired": "2002-09-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 127,
+          "aired": "2002-10-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 128,
+          "aired": "2002-10-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 129,
+          "aired": "2002-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 130,
+          "aired": "2002-10-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 131,
+          "aired": "2002-11-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 132,
+          "aired": "2002-11-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 133,
+          "aired": "2002-11-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 134,
+          "aired": "2002-11-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 135,
+          "aired": "2002-12-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 136,
+          "aired": "2002-12-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 137,
+          "aired": "2002-12-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 138,
+          "aired": "2002-12-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 139,
+          "aired": "2003-01-05T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 140,
+          "aired": "2003-01-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 141,
+          "aired": "2003-01-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 142,
+          "aired": "2003-01-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 143,
+          "aired": "2003-02-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 144,
+          "aired": "2003-02-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 145,
+          "aired": "2003-02-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 146,
+          "aired": "2003-02-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 147,
+          "aired": "2003-03-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 148,
+          "aired": "2003-03-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 149,
+          "aired": "2003-03-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 150,
+          "aired": "2003-04-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 151,
+          "aired": "2003-04-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 152,
+          "aired": "2003-04-27T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 153,
+          "aired": "2003-05-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 154,
+          "aired": "2003-05-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 155,
+          "aired": "2003-05-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 156,
+          "aired": "2003-06-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 157,
+          "aired": "2003-06-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 158,
+          "aired": "2003-06-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 159,
+          "aired": "2003-07-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 160,
+          "aired": "2003-07-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 161,
+          "aired": "2003-07-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 162,
+          "aired": "2003-08-03T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 163,
+          "aired": "2003-08-10T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 164,
+          "aired": "2003-08-17T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 165,
+          "aired": "2003-08-24T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 166,
+          "aired": "2003-09-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 167,
+          "aired": "2003-09-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 168,
+          "aired": "2003-10-12T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 169,
+          "aired": "2003-10-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 170,
+          "aired": "2003-10-19T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 171,
+          "aired": "2003-10-26T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 172,
+          "aired": "2003-11-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 173,
+          "aired": "2003-11-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 174,
+          "aired": "2003-11-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 175,
+          "aired": "2003-12-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 176,
+          "aired": "2004-01-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 177,
+          "aired": "2004-01-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 178,
+          "aired": "2004-01-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 179,
+          "aired": "2004-02-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 180,
+          "aired": "2004-02-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 181,
+          "aired": "2004-02-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 182,
+          "aired": "2004-02-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 183,
+          "aired": "2004-02-29T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 184,
+          "aired": "2004-03-07T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 185,
+          "aired": "2004-03-14T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 186,
+          "aired": "2004-03-21T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 187,
+          "aired": "2004-03-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 188,
+          "aired": "2004-03-28T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 189,
+          "aired": "2004-04-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 190,
+          "aired": "2004-04-25T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 191,
+          "aired": "2004-05-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 192,
+          "aired": "2004-05-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 193,
+          "aired": "2004-05-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 194,
+          "aired": "2004-06-06T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 195,
+          "aired": "2004-06-13T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 196,
+          "aired": "2004-06-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 197,
+          "aired": "2004-07-04T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 198,
+          "aired": "2004-07-11T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 199,
+          "aired": "2004-07-18T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 200,
+          "aired": "2004-08-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        }
+      ]
+    },
+    {
+      "malId": 199,
+      "title": "千と千尋の神隠し",
+      "case": "movie_no_episodes",
+      "requestedPages": 1,
+      "complete": true,
+      "error": null,
+      "count": 0,
+      "firstEpisode": null,
+      "lastIndexedEpisode": null,
+      "pastDatedMaximum": null,
+      "missingDate": 0,
+      "future": 0,
+      "duplicates": 0,
+      "missingNumber": 0,
+      "consecutive": false,
+      "errors": [],
+      "publishedThrough": null,
+      "publishVerification": "NOT_VERIFIED",
+      "suitability": "NONCONSECUTIVE_EPISODES",
+      "episodes": []
+    }
+  ]
+}

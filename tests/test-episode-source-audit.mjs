@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {assessEpisodes,deriveNotice,acknowledgeNotice,safeEpisodeDate} from '../experiments/episode-source/episode-audit-core.mjs';
+import {runAudit,fetchTenrai,parseArgs} from '../experiments/episode-source/audit-tenrai.mjs';
+const page={data:[{mal_id:2,aired:'2023-01-08T12:00:00+09:00'},{mal_id:1,aired:'2023-01-01T12:00:00+09:00'}]};
+assert.equal(assessEpisodes([page],{now:Date.parse('2025-01-01'),complete:true}).suitability,'SCHEDULE_ONLY');
+assert.equal(assessEpisodes([page],{now:Date.parse('2025-01-01'),complete:true}).publishedThrough,null);
+assert.equal(assessEpisodes([page],{complete:false}).suitability,'PAGINATION_INCOMPLETE');
+assert.equal(assessEpisodes([{data:[{mal_id:2,aired:null}]}]).suitability,'NONCONSECUTIVE_EPISODES');
+assert.equal(assessEpisodes([{data:[{mal_id:1,aired:null}]}]).suitability,'INCOMPLETE_DATES');
+assert.equal(assessEpisodes([{data:[{mal_id:1,aired:'2023-01-01'},{mal_id:1,aired:'2023-01-02'}]}]).duplicates,1);
+assert.equal(safeEpisodeDate('not-date'),null);
+assert.equal(safeEpisodeDate('2024-02-30'),null);
+assert.equal(deriveNotice({publishedThrough:4,verification:'schedule-only',seenThrough:2,watched:0,initialized:true}).state,'none');
+assert.equal(deriveNotice({publishedThrough:4,verification:'confirmed-publication',seenThrough:0,watched:0,initialized:false}).state,'none');
+assert.deepEqual(deriveNotice({publishedThrough:4,verification:'confirmed-publication',seenThrough:2,watched:1,initialized:true}),{state:'new',from:3,to:4,text:'新着 第3〜4話'});
+assert.equal(deriveNotice({publishedThrough:4,verification:'confirmed-publication',seenThrough:2,watched:4,initialized:true}).state,'seen');
+assert.equal(deriveNotice({publishedThrough:5,verification:'confirmed-publication',seenThrough:4,watched:0,initialized:true}).text,'新着 第5話');
+assert.equal(acknowledgeNotice({publishedThrough:4,seenThrough:1}),4);
+assert.equal(parseArgs(['--max-pages','11']).pages,4);
+let callCount=0;const x=await fetchTenrai({malId:5114,page:1,fetchFn:async()=>{callCount++;return {ok:true,status:200,json:async()=>({data:[]})};},pace:async()=>{}});
+assert.equal(callCount,1);assert.deepEqual(x.data,{data:[]});
+const dir=await fs.mkdtemp(path.join(os.tmpdir(),'ani-episode-audit-'));
+try{
+ const sample=path.join(dir,'sample.json');await fs.writeFile(sample,JSON.stringify([{malId:5114,title:'TEST'},{malId:21,title:'LONG'}]));
+ const report=await runAudit({sample,out:dir,fixture:path.resolve('experiments/episode-source/fixtures/mock-tenrai.json'),pages:2});
+ assert.equal(report.live,false);assert.equal(report.requestCount,0);assert.equal(report.entries[0].suitability,'SCHEDULE_ONLY');assert.equal(report.entries[1].suitability,'PAGINATION_INCOMPLETE');
+ assert.ok((await fs.readFile(path.join(dir,'REVIEW.md'),'utf8')).includes('未承認'));
+ assert.ok((await fs.readFile(path.join(dir,'RESULTS.csv'),'utf8')).includes('TEST'));
+ assert.equal(report.publishedClaimsVerified,false);
+}finally{await fs.rm(dir,{force:true,recursive:true});}
+console.log('PASS episode-audit pure + fixture + export (zero live API calls)');

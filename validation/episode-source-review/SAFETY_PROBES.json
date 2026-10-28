@@ -1,0 +1,55 @@
+{
+  "liveApiRequests": 0,
+  "sourceModified": false,
+  "findings": [
+    {
+      "id": "COUNT_RETRY",
+      "severity": "needs-fix-before-reliable-telemetry",
+      "expectedHttpAttempts": 2,
+      "sourceReportedCalls": 1,
+      "actualFakeAttempts": 2,
+      "location": "audit-tenrai.mjs:fetchTenrai/runAudit",
+      "reason": "runAudit increments calls once per page, not per HTTP retry"
+    },
+    {
+      "id": "RETRY_PACING",
+      "severity": "needs-fix-before-unattended-live-use",
+      "retryAfterHeader": "0",
+      "observedWaitMs": 0,
+      "requiredMinimumMs": 1250,
+      "location": "audit-tenrai.mjs:retryAfterMs/fetchTenrai",
+      "reason": "retry skips the inter-page1250ms guard"
+    },
+    {
+      "id": "RETRY_AFTER",
+      "severity": "needs-fix-before-unattended-live-use",
+      "retryAfter120SecondsWaitMs": 60000,
+      "httpDateWaitMs": 5000,
+      "location": "audit-tenrai.mjs:retryAfterMs",
+      "reason": "120s is shortened to60s; HTTP-date headers fall back to5s"
+    },
+    {
+      "id": "QUALITY_CLASSIFICATION",
+      "severity": "report-accuracy",
+      "duplicates": 1,
+      "duplicateSuitability": "SCHEDULE_ONLY",
+      "missingNumber": 1,
+      "invalidNumberSuitability": "SCHEDULE_ONLY",
+      "location": "episode-audit-core.mjs:assessEpisodes",
+      "reason": "duplicate and malformed-number counters do not disqualify SCHEDULE_ONLY"
+    },
+    {
+      "id": "IDENTITY_NOT_BUILT_IN",
+      "severity": "must-verify-before-UI-use",
+      "location": "audit-tenrai.mjs:runAudit",
+      "reason": "title is copied from sample; no metadata/title/season matching in runner. Separate3-title metadata check passed,9 titles untested"
+    },
+    {
+      "id": "EMPTY_MOVIE",
+      "severity": "interpretation",
+      "location": "episode-audit-core.mjs:consecutive/suitability",
+      "reason": "a valid empty movie episodes response is labelled NONCONSECUTIVE_EPISODES; do not call this a confirmed API outage or wrong work"
+    }
+  ],
+  "recommendation": "Return concrete fixes to ChatGPT; do not implement notification, AniList replacement or modify app. Original experiment remains unchanged."
+}

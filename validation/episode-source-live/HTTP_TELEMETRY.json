@@ -1,0 +1,200 @@
+{
+  "runAt": "2026-10-28T03:43:24.652Z",
+  "selected": [
+    5114,
+    21,
+    199
+  ],
+  "notRequested": [
+    16498,
+    38000,
+    52991,
+    9253,
+    11061,
+    1535,
+    44511,
+    47917,
+    50265
+  ],
+  "requestBudget": 8,
+  "actualRequestCount": 7,
+  "metadataRequests": 3,
+  "episodeRequests": 4,
+  "rateLimitResponses": 0,
+  "failedRequests": 0,
+  "minStartIntervalMs": 1500,
+  "guardPolicy": "Serial GET only; >=1500ms starts; no retry after HTTP/network failure; <=8 calls; supplied source not edited",
+  "sourceReportedEpisodePageCalls": 4,
+  "trace": [
+    {
+      "request": 1,
+      "url": "https://api.tenrai.org/v1/anime/5114",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:14.289Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 1540,
+      "topLevelKeys": [
+        "data"
+      ],
+      "dataType": "object",
+      "pagination": null
+    },
+    {
+      "request": 2,
+      "url": "https://api.tenrai.org/v1/anime/21",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:15.832Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 454,
+      "topLevelKeys": [
+        "data"
+      ],
+      "dataType": "object",
+      "pagination": null
+    },
+    {
+      "request": 3,
+      "url": "https://api.tenrai.org/v1/anime/199",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:17.333Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 461,
+      "topLevelKeys": [
+        "data"
+      ],
+      "dataType": "object",
+      "pagination": null
+    },
+    {
+      "request": 4,
+      "url": "https://api.tenrai.org/v1/anime/5114/episodes?page=1",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:18.833Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 498,
+      "topLevelKeys": [
+        "pagination",
+        "data"
+      ],
+      "dataType": "array",
+      "pagination": {
+        "last_visible_page": 1,
+        "has_next_page": false
+      },
+      "episodeItemKeys": [
+        "mal_id",
+        "url",
+        "title",
+        "title_japanese",
+        "title_romanji",
+        "duration",
+        "aired",
+        "score",
+        "filler",
+        "recap",
+        "synopsis",
+        "replies",
+        "forum_url",
+        "images"
+      ]
+    },
+    {
+      "request": 5,
+      "url": "https://api.tenrai.org/v1/anime/21/episodes?page=1",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:20.618Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 489,
+      "topLevelKeys": [
+        "pagination",
+        "data"
+      ],
+      "dataType": "array",
+      "pagination": {
+        "last_visible_page": 12,
+        "has_next_page": true
+      },
+      "episodeItemKeys": [
+        "mal_id",
+        "url",
+        "title",
+        "title_japanese",
+        "title_romanji",
+        "duration",
+        "aired",
+        "score",
+        "filler",
+        "recap",
+        "synopsis",
+        "replies",
+        "forum_url",
+        "images"
+      ]
+    },
+    {
+      "request": 6,
+      "url": "https://api.tenrai.org/v1/anime/21/episodes?page=2",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:22.412Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 492,
+      "topLevelKeys": [
+        "pagination",
+        "data"
+      ],
+      "dataType": "array",
+      "pagination": {
+        "last_visible_page": 12,
+        "has_next_page": true
+      },
+      "episodeItemKeys": [
+        "mal_id",
+        "url",
+        "title",
+        "title_japanese",
+        "title_romanji",
+        "duration",
+        "aired",
+        "score",
+        "filler",
+        "recap",
+        "synopsis",
+        "replies",
+        "forum_url",
+        "images"
+      ]
+    },
+    {
+      "request": 7,
+      "url": "https://api.tenrai.org/v1/anime/199/episodes?page=1",
+      "method": "GET",
+      "startedAt": "2026-10-28T03:43:24.189Z",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "retryAfter": null,
+      "durationMs": 460,
+      "topLevelKeys": [
+        "pagination",
+        "data"
+      ],
+      "dataType": "array",
+      "pagination": {
+        "last_visible_page": 1,
+        "has_next_page": false
+      },
+      "episodeItemKeys": []
+    }
+  ]
+}
