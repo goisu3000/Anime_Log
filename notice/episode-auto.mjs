@@ -115,7 +115,7 @@ export function createPublicAnimeRequests({fetcher=globalThis.fetch,now=Date.now
  return Object.freeze({peek,request,get retryAfter(){return cooldown},get requestCount(){return history.length}});
 }
 
-export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull=()=>null,getCachedEpisodes=()=>null,getSchedule=()=>null,onChange=()=>{},storage=null,now=Date.now,visible=()=>true,online=()=>true}={}){
+export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull=()=>null,getCachedEpisodes=()=>null,getSchedule=()=>null,onChange=()=>{},onStatus=()=>{},storage=null,now=Date.now,visible=()=>true,online=()=>true}={}){
  if(!requests||typeof getTargets!=='function')throw Error('NOTICE_AUTO_ARGUMENTS');
  const key='anilog-notice-observations-public-v1';let states=new Map(),estimates=new Map(),busy=null,enabled=true;
  function validCachedEstimate(id,s){
@@ -124,7 +124,39 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
   }catch{return false}
  }
  try{const raw=storage?.getItem(key);const data=raw&&raw.length<600000?JSON.parse(raw):null;if(data?.version===1&&Array.isArray(data.entries))for(const [id,s] of data.entries.slice(0,500)){if(idOf(id)&&object(s)&&Number.isFinite(s.observedAt)&&s.observedAt<=now()&&now()-s.observedAt<POLICY.archive&&Number.isFinite(s.next)&&s.next<=now()+POLICY.archive){states.set(id,s);if(s.estimate){if(validCachedEstimate(id,s))estimates.set(id,s.estimate);else states.set(id,{...s,first:null,estimate:null,next:now()});}}}}catch{/* untrusted/blocked public cache: use fresh observations */}
- function publish(){if(!enabled)estimates.clear();const active=new Set(getTargets().map(t=>t.id));for(const [id,e] of estimates)if(!active.has(id)||e.expiresAt<=now())estimates.delete(id);try{onChange(Object.freeze(Object.fromEntries([...estimates].map(([id,e])=>[id,e.through]))))}catch{}}
+ function visibleStatuses(){
+  if(!enabled)return Object.freeze({});
+  const result={};
+  for(const t of getTargets()){
+   const s=states.get(t.id),e=estimates.get(t.id);
+   if(e&&e.expiresAt>now()){result[t.id]={kind:'estimated',through:e.through};continue;}
+   // A single Tenrai observation is *not* a publication confirmation.
+   // Show it immediately as a read-only possibility. Do not write ACK.
+   const f=s?.first;
+   let validFirst=false;
+   try{
+    const rows=JSON.parse(f?.signature);
+    validFirst=f?.ok===true&&f.id===t.malId&&count(f.through)&&f.through>=1&&f.through<=300&&Number.isSafeInteger(f.startDay)&&
+     Number.isFinite(f.at)&&f.at<=now()&&now()-f.at<=2*POLICY.poll&&typeof f.signature==='string'&&f.signature.length<64000&&
+     Array.isArray(rows)&&rows.length===f.through&&rows.every((r,i)=>Array.isArray(r)&&r.length===4&&r[0]===i+1&&Number.isSafeInteger(r[1])&&r[1]%86400000===0&&Number.isSafeInteger(r[3])&&r[3]>=r[1]+24*HOUR&&r[3]<=r[1]+POLICY.grace&&r[3]<=f.at&&/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(r[2])&&(i===0?Math.abs(r[1]-f.startDay)<=2*24*HOUR:r[1]-rows[i-1][1]>=5*24*HOUR&&r[1]-rows[i-1][1]<=10*24*HOUR));
+   }catch{/* Invalid optional public cache cannot supply an episode number. */}
+   if(validFirst){
+    result[t.id]={kind:'possible',through:f.through};continue;
+   }
+   if(s?.reason==='ARCHIVED'&&count(s.completeThrough)&&s.completeThrough>=1&&s.completeThrough<=300){
+    result[t.id]={kind:'finished',through:s.completeThrough};continue;
+   }
+   if(!s||['BACKGROUND_BUDGET','API_COOLDOWN'].includes(s.reason)){result[t.id]={kind:'loading'};continue;}
+   result[t.id]={kind:s.reason==='PRE_AIRING'?'upcoming':'unavailable'};
+  }
+  return Object.freeze(result);
+ }
+ function publish(){
+  if(!enabled)estimates.clear();const active=new Set(getTargets().map(t=>t.id));
+  for(const [id,e] of estimates)if(!active.has(id)||e.expiresAt<=now())estimates.delete(id);
+  try{onChange(Object.freeze(Object.fromEntries([...estimates].map(([id,e])=>[id,e.through]))))}catch{}
+  try{onStatus(visibleStatuses())}catch{}
+ }
  function persist(){try{const entries=[...states].sort((a,b)=>b[1].observedAt-a[1].observedAt).slice(0,500);const raw=JSON.stringify({version:1,entries});if(raw.length<600000)storage?.setItem(key,raw)}catch{}}
  async function one(t){
   const previous=states.get(t.id),time=now();
@@ -132,7 +164,15 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
   const meta=full&&now()-full.at<POLICY.poll&&full.at<=now()?full.body:(await requests.request('/anime/'+t.malId+'/full',{background:true,maxAge:POLICY.poll})).body.data;
   if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;
   const eligible=inspectMetadata(meta,t.malId,time);
-  if(!eligible.eligible){states.set(t.id,{observedAt:time,next:eligible.next,reason:eligible.reason});estimates.delete(t.id);return;}
+  if(!eligible.eligible){
+   // Finished shows may be displayed as metadata, not as a new-release alert.
+   const end=stamp(meta?.aired?.to);
+   const completeThrough=eligible.reason==='ARCHIVED'&&meta?.status==='Finished Airing'&&meta?.airing===false&&
+     meta?.type==='TV'&&end!==null&&end<=time-POLICY.archive&&
+     count(meta?.episodes)&&meta.episodes>=1&&meta.episodes<=300?meta.episodes:null;
+   states.set(t.id,{observedAt:time,next:eligible.next,reason:eligible.reason,completeThrough});
+   estimates.delete(t.id);return;
+  }
   const pages=[];let cached=getCachedEpisodes(t.id);if(cached?.then)cached=await cached;
   if(cached&&cached.at<=now()&&now()-cached.at<60000&&cached.body?.pagination?.current_page===1)pages.push(cached.body);
   if(!pages.length||pages[0].pagination.has_next_page===true)for(let page=pages.length+1;page<=POLICY.maxPages;page++){if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;const r=await requests.request('/anime/'+t.malId+'/episodes?page='+page,{background:true,maxAge:60000});pages.push(r.body);if(r.body.pagination?.has_next_page===false)break;if(r.body.pagination?.has_next_page!==true||!r.body.data?.length)break;}
@@ -153,5 +193,5 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
     // The user may have deleted/changed this work during the awaited request.
     publish();persist();
    }publish();persist();})().catch(()=>{}).finally(()=>{busy=null});return busy;
- },disable(){enabled=false;estimates.clear();publish();},getState(){return cp(Object.fromEntries(states))},get estimates(){return Object.freeze(Object.fromEntries([...estimates].map(([id,e])=>[id,e.through])));}});
+ },disable(){enabled=false;estimates.clear();publish();},getState(){return cp(Object.fromEntries(states))},get displayStatuses(){return visibleStatuses()},get estimates(){return Object.freeze(Object.fromEntries([...estimates].map(([id,e])=>[id,e.through])));}});
 }

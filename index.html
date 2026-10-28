@@ -1980,6 +1980,7 @@ select:not([data-status-id]){
 @media(max-width:360px){.toast.auto-completion-toast{font-size:9px;padding:8px 10px;gap:6px}}
 /* Private minimal episode notice. No source of truth is stored in synced records. */
 .episode-notice{display:block;max-width:100%;min-width:0;border:0;background:none;padding:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:16px;font-weight:700;color:var(--muted)}
+@media(max-width:740px){.pattern-a-watch-column:not(:has(>.pattern-a-mobile-score))>.episode-notice{flex:1 1 0;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}}
 .episode-notice.is-unread{color:#e5b64c;cursor:pointer}
 .episode-notice.is-unread:hover{color:var(--accent)}
 .episode-notice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
@@ -3466,6 +3467,7 @@ async function saveStreamPreference(){
 let NOTICE_REVIEWED_THROUGH=Object.freeze({});
 let NOTICE_ESTIMATED_THROUGH=Object.freeze({});
 let NOTICE_AUTO_THROUGH=Object.freeze({});
+let NOTICE_AUTO_STATUS=Object.freeze({});
 // Compile-time kill switch: disables only public polling/estimates, never sync.
 const NOTICE_AUTO_ENABLED=true;
 let noticeRequestPool=null,noticeAutomatic=null,noticeAutoLoading=null,noticeAutoRetryAt=0,noticeHydratedStorage=null;
@@ -3493,6 +3495,7 @@ function ensureAutomaticEpisodeNotices(){
    getCachedEpisodes:id=>{const read=()=>{const e=detailCache.get(id);return e?.episodes&&Number.isFinite(e.episodeFetchedAt)&&(e.episodePage===1||e.episodes.pagination?.has_next_page===false)?{body:{...e.episodes,pagination:{...e.episodes.pagination,current_page:1}},at:e.episodeFetchedAt}:null};const pending=detailCache.get(id)?.fieldPromises?.episodes;return pending?pending.then(read).catch(()=>null):read()},
    getSchedule:id=>saved[id]?.weeklySchedule?.mode==='manual'?null:weeklyEpisodeCache?.data?.[id.split(':')[1]],
    onChange:next=>{if(JSON.stringify(NOTICE_AUTO_THROUGH)!==JSON.stringify(next)){NOTICE_AUTO_THROUGH=next;refreshAutomaticNoticeLabels();}},
+   onStatus:next=>{if(JSON.stringify(NOTICE_AUTO_STATUS)!==JSON.stringify(next)){NOTICE_AUTO_STATUS=next;refreshAutomaticNoticeLabels();}},
    storage:publicStorage,visible:()=>!document.hidden&&noticeHydratedStorage===window.__formalStorage&&window.__formalStorage?.ready===true,online:()=>navigator.onLine!==false});
   return noticeAutomatic.tick();
  }).catch(()=>{noticeAutoRetryAt=Date.now()+15*60000}).finally(()=>{noticeAutoLoading=null});
@@ -3570,10 +3573,31 @@ function episodeNoticeState(record){
  return {through,unread:effective<through,estimated:NOTICE_REVIEWED_THROUGH[record.id]===through?NOTICE_ESTIMATED_THROUGH[record.id]===through:NOTICE_AUTO_THROUGH[record.id]===through};
 }
 function episodeNoticeMarkup(record){
- const state=episodeNoticeState(record);if(!state)return '';
- const label=`第${state.through}話まで公開${state.estimated?'（推定）':''}`;
- return state.unread?`<button type="button" class="episode-notice is-unread" data-notice-ack="${safeText(record.id)}" data-notice-through="${state.through}" aria-label="${label}、確認済みにする">${label}</button>`
-  :`<span class="episode-notice">${label}</span>`;
+ if(!noticeEligible(record)||!/^jikan:[1-9]\d{0,8}$/.test(record.id))return '';
+ const state=episodeNoticeState(record);
+ if(state){
+  const label=`第${state.through}話まで公開${state.estimated?'（推定）':''}`;
+  return state.unread?`<button type="button" class="episode-notice is-unread" data-notice-ack="${safeText(record.id)}" data-notice-through="${state.through}" aria-label="${label}、確認済みにする">${label}</button>`
+   :`<span class="episode-notice">${label}</span>`;
+ }
+ // A reviewed or twice-observed release can be shown immediately while the
+ // existing asynchronous baseline write is pending. It is not yet clickable.
+ const through=reviewedEpisodeThrough(record.id);
+ if(through!==null&&(!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY]))){
+  const estimated=NOTICE_REVIEWED_THROUGH[record.id]===through?NOTICE_ESTIMATED_THROUGH[record.id]===through:NOTICE_AUTO_THROUGH[record.id]===through;
+  const label=`第${through}話まで公開${estimated?'（推定）':''}`;
+  return `<span class="episode-notice" title="${safeText(label)}">${label}</span>`;
+ }
+ // First-time users get a visible status before the six-hour recheck.
+ // The possible count is deliberately non-interactive and never writes ACK.
+ if(!NOTICE_AUTO_ENABLED)return '';
+ const current=NOTICE_AUTO_STATUS[record.id];
+ let label='公開話数を確認中';
+ if(current?.kind==='possible')label=`第${current.through}話まで公開の可能性`;
+ else if(current?.kind==='finished')label=`全${current.through}話 放送終了（作品情報）`;
+ else if(current?.kind==='upcoming')label='放送開始前';
+ else if(current?.kind==='unavailable')label='公開状況を確認できません';
+ return `<span class="episode-notice" title="${safeText(label)}">${safeText(label)}</span>`;
 }
 // A one-time baseline prevents a backlog of old episodes. No write without trusted evidence.
 let noticeInitQueued=false;
