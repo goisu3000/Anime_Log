@@ -1978,6 +1978,13 @@ select:not([data-status-id]){
 .toast.auto-completion-toast .toast-undo{flex:0 0 auto;white-space:nowrap}
 @media(max-width:740px){.toast.auto-completion-toast{font-size:10px;padding:10px 12px;gap:8px}.toast.auto-completion-toast .toast-undo{font-size:inherit;padding:6px 8px}}
 @media(max-width:360px){.toast.auto-completion-toast{font-size:9px;padding:8px 10px;gap:6px}}
+/* Private minimal episode notice. No source of truth is stored in synced records. */
+.episode-notice{display:block;max-width:100%;min-width:0;border:0;background:none;padding:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px;line-height:16px;font-weight:700;color:var(--muted)}
+.episode-notice.is-unread{color:#e5b64c;cursor:pointer}
+.episode-notice.is-unread:hover{color:var(--accent)}
+.episode-notice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:46px;left:12px;right:0;font-size:10px;line-height:15px;max-width:none}}
+@media(min-width:741px) and (max-width:1250px){body.saved-mode .pattern-a-card:has(.episode-notice){position:relative}body.saved-mode .pattern-a-card .episode-notice{position:absolute;left:132px;bottom:30px;right:auto;top:auto;font-size:10px;line-height:16px;max-width:calc(100% - 144px)}}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -3027,6 +3034,12 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
  const autoComplete=item.status==='watching'&&finalTotal!==null&&before<finalTotal&&next===finalTotal;
  const beforeItem=autoComplete?structuredClone(item):null;
  const planned={...item,watchedEpisodes:next,updatedAt:new Date().toISOString()};
+ // A progress action may acknowledge a verified episode within the SAME existing save.
+ const reviewed=typeof NOTICE_REVIEWED_THROUGH==='undefined'?null:NOTICE_REVIEWED_THROUGH[id];
+ if(Number.isSafeInteger(reviewed)&&reviewed>0&&reviewed<=9999&&
+    Number.isSafeInteger(item.episodeNoticeAckThrough)&&item.episodeNoticeAckThrough>=0&&
+    item.episodeNoticeAckThrough<=reviewed&&next>before)
+  planned.episodeNoticeAckThrough=Math.max(item.episodeNoticeAckThrough,Math.min(next,reviewed));
  if(autoComplete){
   planned.status='watched';
   if(!item.completedOn){const [y,m,d]=localTodayParts();planned.completedOn=[y,m,d].map((v,i)=>i?String(v).padStart(2,'0'):String(v)).join('-');}
@@ -3074,6 +3087,16 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
    }
   }
  });
+ // Keep the notice in step with the committed progress without rebuilding the card.
+ if(typeof episodeNoticeState==='function'){
+  const notice=episodeNoticeState(committed);
+  if(notice&&!notice.unread){
+   $$('[data-notice-ack]').filter(el=>el.dataset.noticeAck===id).forEach(el=>{
+    const done=document.createElement('span');done.className='episode-notice';
+    done.textContent=`第${notice.through}話まで公開${notice.estimated?'（推定）':''}`;el.replaceWith(done);
+   });
+  }
+ }
  const reachedByPlusOne=fromPlusOne&&committed.status==='watching'&&$$('[data-progress-for]').some(el=>{
   if(el.dataset.progressFor!==id)return false;
   const total=totalEpisodes(saved[id],el.dataset.progressTotal?Number(el.dataset.progressTotal):null);
@@ -3434,11 +3457,126 @@ async function saveStreamPreference(){
  return true;
 }
 
+// Minimal new-episode notice: public release evidence is never copied into synced data.
+// Real approvals remain EMPTY until an independently verified source is implemented.
+// Tests inject synthetic approvals only in a disposable copy of this HTML.
+// Read-only reviewed release feed. The site publisher must independently verify
+// each entry before deploying it. Tenrai episode lists are NOT release proof.
+// No reviewed public count, source URL or fetched data enters encrypted records.
+let NOTICE_REVIEWED_THROUGH=Object.freeze({});
+let NOTICE_ESTIMATED_THROUGH=Object.freeze({});
+const NOTICE_REVIEWED_FEED_PATH='/assets/episode-releases-reviewed.v1.json';
+const NOTICE_REVIEWED_FEED_TTL=30*60*1000;
+let noticeFeedLastAttempt=-Infinity,noticeFeedInFlight=null;
+function noticeValidReviewTimestamp(raw,now){
+ if(typeof raw!=='string'||!/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d{1,3})?Z$/.test(raw))return false;
+ const ms=Date.parse(raw);
+ return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,19)===raw.slice(0,19)&&ms<=now+300000;
+}
+function parseNoticeReviewedFeed(data,now=Date.now()){
+ if(!data||typeof data!=='object'||Array.isArray(data)||data.version!==1||
+    !noticeValidReviewTimestamp(data.updatedAt,now)||
+    !data.releases||typeof data.releases!=='object'||Array.isArray(data.releases)||
+    Object.keys(data.releases).length>1000)throw Error('NOTICE_FEED_INVALID');
+ const approved=Object.create(null);
+ for(const [id,entry] of Object.entries(data.releases)){
+  if(!/^jikan:[1-9]\d{0,8}$/.test(id)||!entry||typeof entry!=='object'||Array.isArray(entry)||
+     (Object.hasOwn(entry,'confidence')&&entry.confidence!=='estimated_schedule_tenrai_v1')||
+     !Number.isSafeInteger(entry.through)||entry.through<1||entry.through>9999||
+     !noticeValidReviewTimestamp(entry.verifiedAt,now)||
+     Date.parse(entry.verifiedAt)>Date.parse(data.updatedAt)||
+     typeof entry.sourceUrl!=='string'||entry.sourceUrl.length>2048)throw Error('NOTICE_FEED_INVALID_ENTRY');
+  let url;try{url=new URL(entry.sourceUrl)}catch{throw Error('NOTICE_FEED_INVALID_SOURCE')}
+  if(url.protocol!=='https:'||url.username||url.password||url.port||!url.hostname||url.hash||
+    /^(?:localhost|127\.|10\.|192\.168\.|169\.254\.|0\.|\[)/i.test(url.hostname))throw Error('NOTICE_FEED_INVALID_SOURCE');
+  approved[id]=entry.through;
+ }
+ return Object.freeze(approved);
+}
+function loadReviewedNoticeFeed(){
+ if(mode!=='saved'||noticeFeedInFlight||Date.now()-noticeFeedLastAttempt<NOTICE_REVIEWED_FEED_TTL||
+    !Object.values(saved).some(r=>noticeEligible(r)&&/^jikan:[1-9]\d*$/.test(r.id)))return;
+ noticeFeedLastAttempt=Date.now();
+ noticeFeedInFlight=(async()=>{
+  const oldEstimates=NOTICE_ESTIMATED_THROUGH;
+  let next=Object.freeze({});
+  try{
+   const response=await fetch(NOTICE_REVIEWED_FEED_PATH,{cache:'no-store',headers:{Accept:'application/json'}});
+   if(!response.ok)throw Error('NOTICE_FEED_HTTP_'+response.status);
+   const raw=await response.text();
+   if(raw.length>131072)throw Error('NOTICE_FEED_TOO_LARGE');
+   const payload=JSON.parse(raw);
+   next=parseNoticeReviewedFeed(payload);
+   NOTICE_ESTIMATED_THROUGH=Object.freeze(Object.fromEntries(Object.entries(payload.releases).filter(([,e])=>e.confidence==='estimated_schedule_tenrai_v1').map(([id,e])=>[id,e.through])));
+  }catch{NOTICE_ESTIMATED_THROUGH=Object.freeze({});/* Fail closed on missing, stale, malformed or unavailable feed. */}
+  const old=NOTICE_REVIEWED_THROUGH;
+  NOTICE_REVIEWED_THROUGH=next;
+  if(mode==='saved'&&(Object.keys(old).length!==Object.keys(next).length||
+     Object.entries(next).some(([id,n])=>old[id]!==n)||
+     Object.keys(oldEstimates).length!==Object.keys(NOTICE_ESTIMATED_THROUGH).length||
+     Object.entries(NOTICE_ESTIMATED_THROUGH).some(([id,n])=>oldEstimates[id]!==n)))render();
+ })().finally(()=>{noticeFeedInFlight=null});
+}
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadReviewedNoticeFeed()});
+const NOTICE_ACK_KEY='episodeNoticeAckThrough';
+const noticeValidCount=n=>Number.isSafeInteger(n)&&n>=0&&n<=9999;
+function reviewedEpisodeThrough(id){
+ const n=NOTICE_REVIEWED_THROUGH[id];return Number.isSafeInteger(n)&&n>0&&n<=9999?n:null;
+}
+function noticeEligible(record){return record&&['watching','watched'].includes(record.status)}
+function episodeNoticeState(record){
+ if(!noticeEligible(record))return null;
+ const through=reviewedEpisodeThrough(record.id);
+ if(through===null||!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY])||record[NOTICE_ACK_KEY]>through)return null;
+ const watched=noticeValidCount(record.watchedEpisodes)?record.watchedEpisodes:0;
+ const effective=Math.max(record[NOTICE_ACK_KEY],Math.min(watched,through));
+ return {through,unread:effective<through,estimated:NOTICE_ESTIMATED_THROUGH[record.id]===through};
+}
+function episodeNoticeMarkup(record){
+ const state=episodeNoticeState(record);if(!state)return '';
+ const label=`第${state.through}話まで公開${state.estimated?'（推定）':''}`;
+ return state.unread?`<button type="button" class="episode-notice is-unread" data-notice-ack="${safeText(record.id)}" data-notice-through="${state.through}" aria-label="${label}、確認済みにする">${label}</button>`
+  :`<span class="episode-notice">${label}</span>`;
+}
+// A one-time baseline prevents a backlog of old episodes. No write without trusted evidence.
+let noticeInitQueued=false;
+function scheduleNoticeBaselines(){
+ if(noticeInitQueued||!window.__formalStorage?.ready||mode!=='saved')return;
+ if(!Object.values(saved).some(r=>noticeEligible(r)&&reviewedEpisodeThrough(r.id)!==null&&!Object.hasOwn(r,NOTICE_ACK_KEY)))return;
+ noticeInitQueued=true;
+ void queueRecordWrite(async()=>{
+  try{
+   const draft=structuredClone(saved);let changed=false;
+   for(const r of Object.values(draft)){
+    if(!noticeEligible(r)||Object.hasOwn(r,NOTICE_ACK_KEY))continue;
+    const through=reviewedEpisodeThrough(r.id);if(through===null)continue;
+    r[NOTICE_ACK_KEY]=through;changed=true;
+   }
+   if(changed&&await persist(false,draft,'notice-init'))render();
+  }finally{noticeInitQueued=false;}
+ });
+}
+function acknowledgeEpisodeNotice(id,expectedThrough){
+ return queueRecordWrite(async()=>{
+  const record=saved[id],state=record&&episodeNoticeState(record);
+  if(!record||!state||!state.unread||state.through!==expectedThrough||mode!=='saved')return false;
+  const draft={...saved,[id]:{...record,[NOTICE_ACK_KEY]:state.through}};
+  if(!await persist(false,draft,'notice-ack'))return false;
+  render();return true;
+ });
+}
+document.addEventListener('click',e=>{
+ const button=e.target.closest('[data-notice-ack]');if(!button)return;
+ const through=Number(button.dataset.noticeThrough);
+ if(!Number.isSafeInteger(through))return;
+ void acknowledgeEpisodeNotice(button.dataset.noticeAck,through);
+});
+
 function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching','paused'].includes(status),completed=status==='watched';
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
  const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current>total?'warning':'normal';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${episodeNoticeMarkup(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
@@ -3858,6 +3996,7 @@ function render(){
    emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  observeSavedPosters();
+ if(isSaved){scheduleNoticeBaselines();loadReviewedNoticeFeed();}
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
 let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='', activeSeasonKey='', browseCursor=null;
