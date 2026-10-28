@@ -1984,7 +1984,8 @@ select:not([data-status-id]){
 .episode-notice.is-unread{color:#e5b64c;cursor:pointer}
 .episode-notice.is-unread:hover{color:var(--accent)}
 .episode-notice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
-@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:46px;left:12px;right:0;font-size:10px;line-height:15px;max-width:none}}
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:50.25px;left:12px;right:0;font-size:10px;line-height:15px;max-width:none}}
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.watch-progress[data-progress-total=""])>.episode-notice{top:52.5px}}
 @media(min-width:741px) and (max-width:1250px){body.saved-mode .pattern-a-card:has(.episode-notice){position:relative}body.saved-mode .pattern-a-card .episode-notice{position:absolute;left:132px;bottom:30px;right:auto;top:auto;font-size:10px;line-height:16px;max-width:calc(100% - 144px)}}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
@@ -3482,9 +3483,15 @@ function refreshAutomaticNoticeLabels(){
  }
  scheduleNoticeBaselines();
 }
+function noticeCalendarSchedule(id){
+ if(saved[id]?.weeklySchedule?.mode==='manual'||!weeklyEpisodeCache)return null;
+ const cache=weeklyEpisodeCache,malId=Number(id.split(':')[1]),data=cache.data?.[malId];
+ if(!data||!cache.ids?.includes(malId)||cache.week!==weeklyTokyoDate().monday.toISOString().slice(0,10))return null;
+ return {...data,malId,observedAt:cache.at};
+}
 function ensureAutomaticEpisodeNotices(){
  if(!NOTICE_AUTO_ENABLED||noticeHydratedStorage!==window.__formalStorage||!window.__formalStorage?.ready||document.hidden)return;
- if(noticeAutomatic){void noticeAutomatic.tick();return;}
+ if(noticeAutomatic){void ensureWeeklyEpisodes({noticeOnly:true});void noticeAutomatic.tick();return;}
  if(noticeAutoLoading||Date.now()<noticeAutoRetryAt)return;
  noticeAutoLoading=import('./notice/episode-auto.mjs').then(({createPublicAnimeRequests,createAutomaticEpisodeNotices,targetsFromRecords})=>{
   let publicStorage=null;try{publicStorage=localStorage}catch{}
@@ -3493,9 +3500,9 @@ function ensureAutomaticEpisodeNotices(){
    getTargets:()=>targetsFromRecords(saved),
    getCachedFull:id=>{const read=()=>{const e=detailCache.get(id);return e?.full&&Number.isFinite(e.fullFetchedAt)?{body:e.full,at:e.fullFetchedAt}:null};return inFlightFullRequests.has(id)?inFlightFullRequests.get(id).then(read).catch(()=>null):read()},
    getCachedEpisodes:id=>{const read=()=>{const e=detailCache.get(id);return e?.episodes&&Number.isFinite(e.episodeFetchedAt)&&(e.episodePage===1||e.episodes.pagination?.has_next_page===false)?{body:{...e.episodes,pagination:{...e.episodes.pagination,current_page:1}},at:e.episodeFetchedAt}:null};const pending=detailCache.get(id)?.fieldPromises?.episodes;return pending?pending.then(read).catch(()=>null):read()},
-   getSchedule:id=>saved[id]?.weeklySchedule?.mode==='manual'?null:weeklyEpisodeCache?.data?.[id.split(':')[1]],
+   getSchedule:id=>noticeCalendarSchedule(id),
    onChange:next=>{if(JSON.stringify(NOTICE_AUTO_THROUGH)!==JSON.stringify(next)){NOTICE_AUTO_THROUGH=next;refreshAutomaticNoticeLabels();}},
-   onStatus:next=>{if(JSON.stringify(NOTICE_AUTO_STATUS)!==JSON.stringify(next)){NOTICE_AUTO_STATUS=next;refreshAutomaticNoticeLabels();}},
+   onStatus:next=>{if(JSON.stringify(NOTICE_AUTO_STATUS)!==JSON.stringify(next)){NOTICE_AUTO_STATUS=next;refreshAutomaticNoticeLabels();void ensureWeeklyEpisodes({noticeOnly:true});}},
    storage:publicStorage,visible:()=>!document.hidden&&noticeHydratedStorage===window.__formalStorage&&window.__formalStorage?.ready===true,online:()=>navigator.onLine!==false});
   return noticeAutomatic.tick();
  }).catch(()=>{noticeAutoRetryAt=Date.now()+15*60000}).finally(()=>{noticeAutoLoading=null});
@@ -3574,6 +3581,8 @@ function episodeNoticeState(record){
 }
 function episodeNoticeMarkup(record){
  if(!noticeEligible(record)||!/^jikan:[1-9]\d{0,8}$/.test(record.id))return '';
+ const pending=NOTICE_AUTO_ENABLED?NOTICE_AUTO_STATUS[record.id]:null;
+ if(pending?.kind==='possible'&&noticeValidCount(pending.through)&&pending.through>(reviewedEpisodeThrough(record.id)||0))return `<span class="episode-notice" title="カレンダーの過去の放送予定を含む推定・公開未確認">第${pending.through}話まで公開の可能性</span>`;
  const state=episodeNoticeState(record);
  if(state){
   const label=`第${state.through}話まで公開${state.estimated?'（推定）':''}`;
@@ -3749,10 +3758,11 @@ function weeklyEpisodeFor(a,info,scope=null){
  if(!data||!Number.isInteger(data.episode)||data.episode<1||!Number.isInteger(data.airingAt))return null;
  return info.source==='manual'||weeklyEpisodeMatchesSlot(monday,info,data.airingAt)?data.episode:null;
 }
-async function ensureWeeklyEpisodes(){
- if(!isWeeklyCalendarVisible()||!weeklyOptions.open||weeklyFetching||weeklyEpisodeFetching||Date.now()<weeklyEpisodeRetryAfter)return;
+async function ensureWeeklyEpisodes({noticeOnly=false}={}){
+ if(noticeOnly&&(!weeklyEpisodeCache||!Object.values(saved).some(r=>noticeEligible(r)&&r.weeklySchedule?.mode!=='manual'&&NOTICE_AUTO_STATUS[r.id]&&weeklyEpisodeCache.data?.[weeklyMalId(r.id)]?.episode>(NOTICE_AUTO_STATUS[r.id].through||0)+1)))return;
+ if(!isWeeklyCalendarVisible()||(!weeklyOptions.open&&!noticeOnly)||weeklyFetching||weeklyEpisodeFetching||Date.now()<weeklyEpisodeRetryAfter)return;
  const {monday,week,ids,key}=weeklyEpisodeScope();if(!ids.length)return;
- if(weeklyEpisodeCache&&weeklyEpisodeCache.week===week&&weeklyEpisodeCache.ids.join(',')===key&&Date.now()-weeklyEpisodeCache.at<WEEKLY_EPISODES_TTL)return;
+ if(weeklyEpisodeCache&&weeklyEpisodeCache.week===week&&weeklyEpisodeCache.ids.join(',')===key&&weeklyEpisodeCache.historyVersion===1&&Date.now()-weeklyEpisodeCache.at<WEEKLY_EPISODES_TTL)return;
  weeklyEpisodeFetching=(async()=>{
   try{
    const weekStart=Math.floor((monday.getTime()-9*3600000)/1000),start=weekStart-6*3600,end=start+7*86400+12*3600;
@@ -3773,16 +3783,16 @@ async function ensureWeeklyEpisodes(){
       episodes=valid.filter(item=>weeklyEpisodeMatchesSlot(monday,manual,item.airingAt));
       if(!episodes.length)episodes=valid.filter(item=>item.airingAt>=weekStart&&item.airingAt<weekStart+7*86400+6*3600);
      }
-     if(episodes.length===1)data[id]={episode:episodes[0].episode,airingAt:episodes[0].airingAt};
+     if(episodes.length===1)data[id]={episode:episodes[0].episode,airingAt:episodes[0].airingAt,history:(Array.isArray(media.airingSchedule?.nodes)?media.airingSchedule.nodes:[]).filter(item=>item&&Number.isInteger(item.episode)&&item.episode>0&&item.episode<=300&&Number.isSafeInteger(item.airingAt)).map(item=>({episode:item.episode,airingAt:item.airingAt}))};
     }
     // Keep AniList under the current reduced public rate limit.
     if(i+WEEKLY_EPISODES_BATCH<ids.length)await new Promise(r=>setTimeout(r,2200));
    }
    // Do not cache incomplete results after a batch fails.
-   weeklyEpisodeCache={week,ids,at:Date.now(),data};
+   weeklyEpisodeCache={week,ids,at:Date.now(),historyVersion:1,data};
    try{localStorage.setItem(WEEKLY_EPISODES_KEY,JSON.stringify(weeklyEpisodeCache))}catch{}
   }catch{weeklyEpisodeRetryAfter=Math.max(weeklyEpisodeRetryAfter,Date.now()+15*60000)}
-  finally{weeklyEpisodeFetching=null;renderWeeklyCalendar()}
+  finally{weeklyEpisodeFetching=null;renderWeeklyCalendar();if(noticeAutomatic)void noticeAutomatic.tick();}
  })();
  return weeklyEpisodeFetching;
 }

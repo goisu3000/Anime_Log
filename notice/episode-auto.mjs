@@ -62,6 +62,20 @@ export function summarizeEpisodes({meta,id,pages,now,schedule=null}){
  const signature=JSON.stringify(Array.from({length:through},(_,i)=>[i+1,dates[i],byNumber.get(i+1).forum_url,matureAfter[i]]));
  return {ok:true,id,startDay,through,signature,at:now,confidence:'estimated_schedule_tenrai_v1',actualReleaseProven:false};
 }
+// Read-only possibility from individually recorded calendar slots. Never N-1 from a future slot.
+export function calendarEpisodePossibility(first,schedule,now){
+ if(!first?.ok||!Number.isSafeInteger(first.startDay)||(!Number.isSafeInteger(first.id)||first.id<1)||schedule?.malId!==first.id||!Number.isFinite(schedule.observedAt)||schedule.observedAt>now||now-schedule.observedAt>=POLICY.poll||!Array.isArray(schedule.history)||!schedule.history.length||schedule.history.length>25)return null;
+ const rows=[...schedule.history].sort((a,b)=>a.episode-b.episode);let through=0,previous=null;
+ for(const row of rows){
+  if(!object(row)||row.episode!==through+1||!Number.isSafeInteger(row.airingAt))return null;
+  const at=row.airingAt*1000;
+  if(through===0?Math.abs(at-first.startDay)>2*24*HOUR:at-previous<5*24*HOUR||at-previous>10*24*HOUR)return null;
+  if(at+24*HOUR>now)break;
+  through=row.episode;previous=at;
+ }
+ if(!through||!count(schedule.episode)||schedule.episode!==through+1||!Number.isSafeInteger(schedule.airingAt)||schedule.airingAt*1000<=now||schedule.airingAt*1000-previous<5*24*HOUR||schedule.airingAt*1000-previous>10*24*HOUR)return null;
+ return through;
+}
 export function evaluateObservation(previous,current,now){
  if(!current?.ok)return {estimate:null,first:null,reason:current?.reason||'INVALID'};
  if(!previous||previous.id!==current.id||!count(previous.through)||previous.through!==current.through||previous.signature!==current.signature||!Number.isFinite(previous.at)||previous.at>now||now-previous.at>14*24*HOUR)return {estimate:null,first:cp(current),reason:'SECOND_OBSERVATION_REQUIRED'};
@@ -129,7 +143,6 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
   const result={};
   for(const t of getTargets()){
    const s=states.get(t.id),e=estimates.get(t.id);
-   if(e&&e.expiresAt>now()){result[t.id]={kind:'estimated',through:e.through};continue;}
    // A single Tenrai observation is *not* a publication confirmation.
    // Show it immediately as a read-only possibility. Do not write ACK.
    const f=s?.first;
@@ -137,12 +150,13 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
    try{
     const rows=JSON.parse(f?.signature);
     validFirst=f?.ok===true&&f.id===t.malId&&count(f.through)&&f.through>=1&&f.through<=300&&Number.isSafeInteger(f.startDay)&&
-     Number.isFinite(f.at)&&f.at<=now()&&now()-f.at<=2*POLICY.poll&&typeof f.signature==='string'&&f.signature.length<64000&&
+     Number.isFinite(f.at)&&f.at<=now()&&(now()-f.at<=2*POLICY.poll||e&&e.expiresAt>now())&&typeof f.signature==='string'&&f.signature.length<64000&&
      Array.isArray(rows)&&rows.length===f.through&&rows.every((r,i)=>Array.isArray(r)&&r.length===4&&r[0]===i+1&&Number.isSafeInteger(r[1])&&r[1]%86400000===0&&Number.isSafeInteger(r[3])&&r[3]>=r[1]+24*HOUR&&r[3]<=r[1]+POLICY.grace&&r[3]<=f.at&&/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(r[2])&&(i===0?Math.abs(r[1]-f.startDay)<=2*24*HOUR:r[1]-rows[i-1][1]>=5*24*HOUR&&r[1]-rows[i-1][1]<=10*24*HOUR));
    }catch{/* Invalid optional public cache cannot supply an episode number. */}
-   if(validFirst){
-    result[t.id]={kind:'possible',through:f.through};continue;
-   }
+   const calendar=validFirst?calendarEpisodePossibility(f,getSchedule(t.id),now()):null;
+   if(calendar!==null&&calendar>Math.max(f.through,e?.through||0)){result[t.id]={kind:'possible',through:calendar};continue;}
+   if(e&&e.expiresAt>now()){result[t.id]={kind:'estimated',through:e.through};continue;}
+   if(validFirst){result[t.id]={kind:'possible',through:f.through};continue;}
    if(s?.reason==='ARCHIVED'&&count(s.completeThrough)&&s.completeThrough>=1&&s.completeThrough<=300){
     result[t.id]={kind:'finished',through:s.completeThrough};continue;
    }
