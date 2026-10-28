@@ -1,0 +1,291 @@
+{
+  "name": "ANI:LOG Tenrai episode source quality audit",
+  "source": "Tenrai public episodes endpoint",
+  "runAt": "2026-10-28T06:10:34.645Z",
+  "requestCount": 6,
+  "metadataRequests": 3,
+  "episodePageRequests": 3,
+  "rateLimitResponses": 0,
+  "failedRequests": 0,
+  "requestBudget": 9,
+  "minimumRequestStartGapMs": 1500,
+  "stoppedReason": null,
+  "trace": [
+    {
+      "attempt": 1,
+      "kind": "metadata",
+      "malId": 63337,
+      "page": null,
+      "status": 200,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null
+    },
+    {
+      "attempt": 2,
+      "kind": "episodes",
+      "malId": 63337,
+      "page": 1,
+      "status": 200,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null
+    },
+    {
+      "attempt": 3,
+      "kind": "metadata",
+      "malId": 61987,
+      "page": null,
+      "status": 200,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null
+    },
+    {
+      "attempt": 4,
+      "kind": "episodes",
+      "malId": 61987,
+      "page": 1,
+      "status": 200,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null
+    },
+    {
+      "attempt": 5,
+      "kind": "metadata",
+      "malId": 61990,
+      "page": null,
+      "status": 200,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null
+    },
+    {
+      "attempt": 6,
+      "kind": "episodes",
+      "malId": 61990,
+      "page": 1,
+      "status": 200,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null
+    }
+  ],
+  "retryAfterMs": null,
+  "retryAfterHeader": null,
+  "live": true,
+  "productionChange": false,
+  "publishedClaimsVerified": false,
+  "summary": "Episode aired dates are NOT proof of public availability.",
+  "entries": [
+    {
+      "malId": 63337,
+      "title": "FX Senshi Kurumi-chan",
+      "case": "fall2026_weekly_streaming",
+      "identity": {
+        "status": "ID_TITLE_MATCH",
+        "returnedMalId": 63337,
+        "type": "TV",
+        "title": "FX Senshi Kurumi-chan",
+        "matchedTitle": true,
+        "seasonChecked": false
+      },
+      "requestedPages": 1,
+      "complete": true,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null,
+      "count": 4,
+      "firstEpisode": 1,
+      "lastIndexedEpisode": 4,
+      "pastDatedMaximum": 4,
+      "missingDate": 0,
+      "future": 0,
+      "duplicates": 0,
+      "missingNumber": 0,
+      "consecutive": true,
+      "errors": [],
+      "publishedThrough": null,
+      "publishVerification": "NOT_VERIFIED",
+      "suitability": "SCHEDULE_ONLY",
+      "episodes": [
+        {
+          "episode": 1,
+          "aired": "2026-10-01T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 2,
+          "aired": "2026-10-08T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 3,
+          "aired": "2026-10-15T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 4,
+          "aired": "2026-10-22T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        }
+      ]
+    },
+    {
+      "malId": 61987,
+      "title": "Kusuriya no Hitorigoto 3rd Season",
+      "case": "fall2026_sequel_season_mapping",
+      "identity": {
+        "status": "ID_TITLE_MATCH",
+        "returnedMalId": 61987,
+        "type": "TV",
+        "title": "Kusuriya no Hitorigoto 3rd Season",
+        "matchedTitle": true,
+        "seasonChecked": false
+      },
+      "requestedPages": 1,
+      "complete": true,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null,
+      "count": 4,
+      "firstEpisode": 1,
+      "lastIndexedEpisode": 4,
+      "pastDatedMaximum": 4,
+      "missingDate": 0,
+      "future": 0,
+      "duplicates": 0,
+      "missingNumber": 0,
+      "consecutive": true,
+      "errors": [],
+      "publishedThrough": null,
+      "publishVerification": "NOT_VERIFIED",
+      "suitability": "SCHEDULE_ONLY",
+      "episodes": [
+        {
+          "episode": 1,
+          "aired": "2026-10-02T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 2,
+          "aired": "2026-10-09T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 3,
+          "aired": "2026-10-16T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 4,
+          "aired": "2026-10-23T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        }
+      ]
+    },
+    {
+      "malId": 61990,
+      "title": "Cyberpunk: Edgerunners 2",
+      "case": "fall2026_batch_web_release",
+      "identity": {
+        "status": "ID_TITLE_MATCH",
+        "returnedMalId": 61990,
+        "type": "ONA",
+        "title": "Cyberpunk: Edgerunners 2",
+        "matchedTitle": true,
+        "seasonChecked": false
+      },
+      "requestedPages": 1,
+      "complete": true,
+      "error": null,
+      "retryAfterMs": null,
+      "retryAfterHeader": null,
+      "count": 10,
+      "firstEpisode": 1,
+      "lastIndexedEpisode": 10,
+      "pastDatedMaximum": 10,
+      "missingDate": 0,
+      "future": 1,
+      "duplicates": 0,
+      "missingNumber": 0,
+      "consecutive": true,
+      "errors": [],
+      "publishedThrough": null,
+      "publishVerification": "NOT_VERIFIED",
+      "suitability": "SCHEDULE_ONLY",
+      "episodes": [
+        {
+          "episode": 1,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 2,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 3,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 4,
+          "aired": "2026-11-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": false
+        },
+        {
+          "episode": 5,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 6,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 7,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 8,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 9,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        },
+        {
+          "episode": 10,
+          "aired": "2026-10-20T00:00:00+00:00",
+          "dateParsed": true,
+          "hasPastDate": true
+        }
+      ]
+    }
+  ],
+  "notRequested": []
+}

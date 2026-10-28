@@ -1,0 +1,206 @@
+{
+  "at": "2026-10-28T06:13:25.995Z",
+  "baseExperimentCommit": "28f31a2fa4cda81ae3a158aa4e6257b965ff7b53",
+  "branch": "experiments/tenrai-episode-audit-20261028",
+  "codeChanged": false,
+  "codeDefectFound": false,
+  "tests": {
+    "syntax": "PASS3files",
+    "suppliedFixed": "PASS",
+    "independent": "PASS12/12, findings0",
+    "fixture": "PASS,0livecalls",
+    "inputManifest": "PASS4files",
+    "v3CodeSHA": "PASS3files",
+    "JSONCSVMarkdownConsistency": "PASS; extra future-date finding documented in companion report"
+  },
+  "tenraiHttpRequests": 6,
+  "metadataRequests": 3,
+  "episodeRequests": 3,
+  "rateLimits": 0,
+  "failures": 0,
+  "retries": 0,
+  "minStartIntervalMs": 1500,
+  "budget": 9,
+  "unusedBudgetNotSpent": 3,
+  "notRequested": [],
+  "sourceDiscrepancy": {
+    "malId": 61990,
+    "episode": 4,
+    "apiDate": "2026-11-20T00:00:00+00:00",
+    "officialStatement": "All10 available2026-10-20 onNetflix"
+  },
+  "sufficientForGenericPublishedThrough": false,
+  "productionChange": false,
+  "mainChanged": false,
+  "vercelChanged": false,
+  "syncOrStorageChanged": false,
+  "comparisons": [
+    {
+      "malId": 63337,
+      "identity": "ID_TITLE_MATCH",
+      "type": "TV",
+      "count": 4,
+      "max": 4,
+      "missingDate": 0,
+      "missingNumber": 0,
+      "future": 0,
+      "requestedPages": 1,
+      "paginationComplete": true,
+      "dates": [
+        {
+          "episode": 1,
+          "aired": "2026-10-01T00:00:00+00:00"
+        },
+        {
+          "episode": 2,
+          "aired": "2026-10-08T00:00:00+00:00"
+        },
+        {
+          "episode": 3,
+          "aired": "2026-10-15T00:00:00+00:00"
+        },
+        {
+          "episode": 4,
+          "aired": "2026-10-22T00:00:00+00:00"
+        }
+      ],
+      "publishedThrough": null,
+      "officialEvidence": {
+        "malId": 63337,
+        "url": "https://fxkurumi-info.com/onair/",
+        "access": "DIRECT_PAGE_READ",
+        "checkedDateJST": "2026-10-28",
+        "confirmedScope": "Schedule only",
+        "facts": {
+          "firstBroadcastDate": "2026-10-01",
+          "broadcast": {
+            "weekday": "Thursday",
+            "ATX": "21:30 JST",
+            "TOKYOMX": "22:30 JST"
+          },
+          "earlyStreaming": "Thursdays22:00 JST fromOct1",
+          "otherStreaming": "Tuesdays22:00 JST fromOct6"
+        },
+        "publicationCountVerified": null,
+        "comparison": "Episode dates Oct1/8/15/22 match scheduled Thursday dates. API00:00UTC=09:00JST is not any cited broadcast/streaming time. No current released-through count stated.",
+        "limitations": "Schedules can change; availability differs per service; do not derive released-through from elapsed dates."
+      }
+    },
+    {
+      "malId": 61987,
+      "identity": "ID_TITLE_MATCH",
+      "type": "TV",
+      "count": 4,
+      "max": 4,
+      "missingDate": 0,
+      "missingNumber": 0,
+      "future": 0,
+      "requestedPages": 1,
+      "paginationComplete": true,
+      "dates": [
+        {
+          "episode": 1,
+          "aired": "2026-10-02T00:00:00+00:00"
+        },
+        {
+          "episode": 2,
+          "aired": "2026-10-09T00:00:00+00:00"
+        },
+        {
+          "episode": 3,
+          "aired": "2026-10-16T00:00:00+00:00"
+        },
+        {
+          "episode": 4,
+          "aired": "2026-10-23T00:00:00+00:00"
+        }
+      ],
+      "publishedThrough": null,
+      "officialEvidence": {
+        "malId": 61987,
+        "url": "https://kusuriyanohitorigoto.jp/season3/onair/",
+        "searchIndexedUrl": "https://kusuriyanohitorigoto.jp/season3//onair/",
+        "additionalOfficialNewsUrl": "https://kusuriyanohitorigoto.jp/news/2623/",
+        "access": "DIRECT_FETCH_403; OFFICIAL_DOMAIN_SEARCH_INDEX_READ",
+        "checkedDateJST": "2026-10-28",
+        "indexRecency": "onair search result crawled3weeks ago; official news crawled last week",
+        "facts": {
+          "firstBroadcastDate": "2026-10-02",
+          "broadcast": "Fridays23:00 JST",
+          "streaming": "Saturdays after TV broadcast, sequential release",
+          "secondCour": "April2027 per indexed onair"
+        },
+        "publicationCountVerified": null,
+        "comparison": "Episode dates Oct2/9/16/23 match scheduled Friday dates, but00:00UTC=09:00JST does not establish23:00broadcast or following-day streaming. Metadata title/type/year/season are plausible; tool seasonChecked remains false.",
+        "limitations": "Specified onair and alternate official news direct fetch returned403. Only official search-index content corroborated schedule; current live-page contents and episode/cour ID mapping are not independently confirmed."
+      }
+    },
+    {
+      "malId": 61990,
+      "identity": "ID_TITLE_MATCH",
+      "type": "ONA",
+      "count": 10,
+      "max": 10,
+      "missingDate": 0,
+      "missingNumber": 0,
+      "future": 1,
+      "requestedPages": 1,
+      "paginationComplete": true,
+      "dates": [
+        {
+          "episode": 1,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 2,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 3,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 4,
+          "aired": "2026-11-20T00:00:00+00:00"
+        },
+        {
+          "episode": 5,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 6,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 7,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 8,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 9,
+          "aired": "2026-10-20T00:00:00+00:00"
+        },
+        {
+          "episode": 10,
+          "aired": "2026-10-20T00:00:00+00:00"
+        }
+      ],
+      "publishedThrough": null,
+      "officialEvidence": {
+        "malId": 61990,
+        "url": "https://www.cdprojekt.com/en/media/news/cyberpunk-edgerunners-2-premieres-on-netflix-new-update-announced-for-cyberpunk-2077/",
+        "access": "DIRECT_PAGE_READ",
+        "checkedDateJST": "2026-10-28",
+        "articleDate": "2026-10-20",
+        "confirmedScope": "Producer announcement of all10 episodes available onNetflix",
+        "publicationCountVerified": 10,
+        "publicationEvidenceType": "PRODUCER_STATEMENT_NOT_A_SERVICE_PLAYBACK_CHECK",
+        "comparison": "Metadata total10 and10 returned rows align with announcement. Episode4 aired2026-11-20T00:00:00+00:00 contradicts the producer statement that all10 were available onOct20.",
+        "limitations": "No per-episode playback/region entitlement check; announcement does not establish exact individual timestamps or all providers. Auditor publishedThrough remains null."
+      }
+    }
+  ]
+}

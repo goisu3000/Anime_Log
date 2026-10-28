@@ -1,0 +1,164 @@
+[
+  {
+    "malId": 63337,
+    "returnedMalId": 63337,
+    "title": "FX Senshi Kurumi-chan",
+    "titleJapanese": "FX戦士くるみちゃん",
+    "titleEnglish": "FX Fighter Kurumi-chan",
+    "titles": [
+      {
+        "type": "Default",
+        "title": "FX Senshi Kurumi-chan"
+      },
+      {
+        "type": "Japanese",
+        "title": "FX戦士くるみちゃん"
+      },
+      {
+        "type": "English",
+        "title": "FX Fighter Kurumi-chan"
+      }
+    ],
+    "type": "TV",
+    "episodes": 12,
+    "status": "Currently Airing",
+    "year": 2026,
+    "season": "fall",
+    "aired": {
+      "from": "2026-10-01T00:00:00+00:00",
+      "to": null,
+      "prop": {
+        "from": {
+          "day": 1,
+          "month": 10,
+          "year": 2026
+        },
+        "to": {
+          "day": null,
+          "month": null,
+          "year": null
+        }
+      },
+      "string": "Oct 1, 2026 to ?"
+    },
+    "broadcast": {
+      "day": "Thursdays",
+      "time": "21:30",
+      "timezone": "Asia/Tokyo",
+      "string": "Thursdays at 21:30 (JST)"
+    },
+    "url": "https://myanimelist.net/anime/63337/FX_Senshi_Kurumi-chan"
+  },
+  {
+    "malId": 61987,
+    "returnedMalId": 61987,
+    "title": "Kusuriya no Hitorigoto 3rd Season",
+    "titleJapanese": "薬屋のひとりごと 第3期",
+    "titleEnglish": "The Apothecary Diaries Season 3",
+    "titles": [
+      {
+        "type": "Default",
+        "title": "Kusuriya no Hitorigoto 3rd Season"
+      },
+      {
+        "type": "Japanese",
+        "title": "薬屋のひとりごと 第3期"
+      },
+      {
+        "type": "English",
+        "title": "The Apothecary Diaries Season 3"
+      },
+      {
+        "type": "Synonym",
+        "title": "The Pharmacist's Monologue"
+      },
+      {
+        "type": "Synonym",
+        "title": "Drugstore Soliloquy"
+      }
+    ],
+    "type": "TV",
+    "episodes": 12,
+    "status": "Currently Airing",
+    "year": 2026,
+    "season": "fall",
+    "aired": {
+      "from": "2026-10-02T00:00:00+00:00",
+      "to": null,
+      "prop": {
+        "from": {
+          "day": 2,
+          "month": 10,
+          "year": 2026
+        },
+        "to": {
+          "day": null,
+          "month": null,
+          "year": null
+        }
+      },
+      "string": "Oct 2, 2026 to ?"
+    },
+    "broadcast": {
+      "day": "Fridays",
+      "time": "23:00",
+      "timezone": "Asia/Tokyo",
+      "string": "Fridays at 23:00 (JST)"
+    },
+    "url": "https://myanimelist.net/anime/61987/Kusuriya_no_Hitorigoto_3rd_Season"
+  },
+  {
+    "malId": 61990,
+    "returnedMalId": 61990,
+    "title": "Cyberpunk: Edgerunners 2",
+    "titleJapanese": "サイバーパンク エッジランナーズ2",
+    "titleEnglish": "Cyberpunk: Edgerunners 2",
+    "titles": [
+      {
+        "type": "Default",
+        "title": "Cyberpunk: Edgerunners 2"
+      },
+      {
+        "type": "Japanese",
+        "title": "サイバーパンク エッジランナーズ2"
+      },
+      {
+        "type": "English",
+        "title": "Cyberpunk: Edgerunners 2"
+      },
+      {
+        "type": "Synonym",
+        "title": "Cyberpunk Edgerunners 2"
+      }
+    ],
+    "type": "ONA",
+    "episodes": 10,
+    "status": "Finished Airing",
+    "year": 2026,
+    "season": "fall",
+    "aired": {
+      "from": "2026-10-20T00:00:00+00:00",
+      "to": null,
+      "prop": {
+        "from": {
+          "day": 20,
+          "month": 10,
+          "year": 2026
+        },
+        "to": {
+          "day": null,
+          "month": null,
+          "year": null
+        }
+      },
+      "string": "Oct 20, 2026"
+    },
+    "broadcast": {
+      "day": null,
+      "time": null,
+      "timezone": null,
+      "string": null
+    },
+    "url": "https://myanimelist.net/anime/61990/Cyberpunk__Edgerunners_2"
+  }
+]

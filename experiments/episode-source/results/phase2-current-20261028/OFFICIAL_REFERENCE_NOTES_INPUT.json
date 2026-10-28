@@ -1,0 +1,33 @@
+{
+  "purpose": "External official reference, NOT data scraped from Tenrai, and not proof of any other streaming service availability.",
+  "checkedAtJST": "2026-10-28",
+  "references": [
+    {
+      "malId": 63337,
+      "title": "FX戦士くるみちゃん",
+      "officialUrl": "https://fxkurumi-info.com/onair/",
+      "confirmedFact": "2026年10月1日開始、木曜に放送・最速先行配信。その他配信サイトは火曜。",
+      "verifiedPublicThrough": null,
+      "scope": "各サービスでの最新話公開数は個別に未確認",
+      "caveat": "配信時差がある。日時経過から話数を断定しない。"
+    },
+    {
+      "malId": 61987,
+      "title": "薬屋のひとりごと 第3期",
+      "officialUrl": "https://kusuriyanohitorigoto.jp/season3/onair/",
+      "confirmedFact": "2026年10月2日から毎週金曜23時に放送、配信は翌土曜順次。",
+      "verifiedPublicThrough": null,
+      "scope": "各サービスでの最新話公開数は個別に未確認",
+      "caveat": "放送と配信に遅延がある。予定から話数を断定しない。"
+    },
+    {
+      "malId": 61990,
+      "title": "Cyberpunk: Edgerunners 2",
+      "officialUrl": "https://www.cdprojekt.com/en/media/news/cyberpunk-edgerunners-2-premieres-on-netflix-new-update-announced-for-cyberpunk-2077/",
+      "confirmedFact": "制作元が2026年10月20日にNetflixで全10話公開済みと明記。",
+      "verifiedPublicThrough": 10,
+      "scope": "Netflixでの制作元発表。日本の各配信サービスは対象外",
+      "caveat": "各話の個別公開日時やMALの話数区分まで保証する情報ではない。"
+    }
+  ]
+}

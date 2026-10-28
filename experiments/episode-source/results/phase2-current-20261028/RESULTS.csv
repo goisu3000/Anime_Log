@@ -1,0 +1,4 @@
+malId,title,case,requestedPages,complete,error,retryAfterMs,retryAfterHeader,count,lastIndexedEpisode,pastDatedMaximum,missingDate,duplicates,missingNumber,suitability,publishVerification
+"63337","FX Senshi Kurumi-chan","fall2026_weekly_streaming","1","true","","","","4","4","4","0","0","0","SCHEDULE_ONLY","NOT_VERIFIED"
+"61987","Kusuriya no Hitorigoto 3rd Season","fall2026_sequel_season_mapping","1","true","","","","4","4","4","0","0","0","SCHEDULE_ONLY","NOT_VERIFIED"
+"61990","Cyberpunk: Edgerunners 2","fall2026_batch_web_release","1","true","","","","10","10","10","0","0","0","SCHEDULE_ONLY","NOT_VERIFIED"

@@ -1,0 +1,156 @@
+{
+  "actualHttpRequests": 6,
+  "metadataRequests": 3,
+  "episodeRequests": 3,
+  "http429": 0,
+  "failedRequests": 0,
+  "minStartIntervalMs": 1500,
+  "retries": 0,
+  "redirectPolicy": "manual; redirects count as failures and are not followed",
+  "auditorArgs": [
+    "--sample",
+    "C:\\Users\\NFG\\Desktop\\ANI-LOG_sync_poc_v4.11_OFF_owner_member_F5_resume_staging_kit\\build\\tenrai-phase2\\source\\experiments\\episode-source\\samples\\phase2-current-20261028.json",
+    "--max-pages",
+    "2",
+    "--max-requests",
+    "9",
+    "--out",
+    "C:\\Users\\NFG\\Desktop\\ANI-LOG_sync_poc_v4.11_OFF_owner_member_F5_resume_staging_kit\\build\\tenrai-phase2\\source\\experiments\\episode-source\\results\\phase2-current-20261028"
+  ],
+  "guardViolation": null,
+  "codeModified": false,
+  "trace": [
+    {
+      "attempt": 1,
+      "url": "https://api.tenrai.org/v1/anime/63337",
+      "method": "GET",
+      "kind": "metadata",
+      "malId": 63337,
+      "startedAt": "2026-10-28T06:10:34.645Z",
+      "startGapMs": null,
+      "status": 200,
+      "durationMs": 1283,
+      "retryAfter": null,
+      "schema": {
+        "topLevelKeys": [
+          "data"
+        ],
+        "dataArray": false,
+        "rowCount": null,
+        "pagination": null
+      }
+    },
+    {
+      "attempt": 2,
+      "url": "https://api.tenrai.org/v1/anime/63337/episodes?page=1",
+      "method": "GET",
+      "kind": "episodes",
+      "malId": 63337,
+      "startedAt": "2026-10-28T06:10:36.147Z",
+      "startGapMs": 1502,
+      "status": 200,
+      "durationMs": 355,
+      "retryAfter": null,
+      "schema": {
+        "topLevelKeys": [
+          "pagination",
+          "data"
+        ],
+        "dataArray": true,
+        "rowCount": 4,
+        "pagination": {
+          "last_visible_page": 1,
+          "has_next_page": false
+        }
+      }
+    },
+    {
+      "attempt": 3,
+      "url": "https://api.tenrai.org/v1/anime/61987",
+      "method": "GET",
+      "kind": "metadata",
+      "malId": 61987,
+      "startedAt": "2026-10-28T06:10:37.648Z",
+      "startGapMs": 1501,
+      "status": 200,
+      "durationMs": 362,
+      "retryAfter": null,
+      "schema": {
+        "topLevelKeys": [
+          "data"
+        ],
+        "dataArray": false,
+        "rowCount": null,
+        "pagination": null
+      }
+    },
+    {
+      "attempt": 4,
+      "url": "https://api.tenrai.org/v1/anime/61987/episodes?page=1",
+      "method": "GET",
+      "kind": "episodes",
+      "malId": 61987,
+      "startedAt": "2026-10-28T06:10:39.149Z",
+      "startGapMs": 1501,
+      "status": 200,
+      "durationMs": 376,
+      "retryAfter": null,
+      "schema": {
+        "topLevelKeys": [
+          "pagination",
+          "data"
+        ],
+        "dataArray": true,
+        "rowCount": 4,
+        "pagination": {
+          "last_visible_page": 1,
+          "has_next_page": false
+        }
+      }
+    },
+    {
+      "attempt": 5,
+      "url": "https://api.tenrai.org/v1/anime/61990",
+      "method": "GET",
+      "kind": "metadata",
+      "malId": 61990,
+      "startedAt": "2026-10-28T06:10:40.649Z",
+      "startGapMs": 1500,
+      "status": 200,
+      "durationMs": 361,
+      "retryAfter": null,
+      "schema": {
+        "topLevelKeys": [
+          "data"
+        ],
+        "dataArray": false,
+        "rowCount": null,
+        "pagination": null
+      }
+    },
+    {
+      "attempt": 6,
+      "url": "https://api.tenrai.org/v1/anime/61990/episodes?page=1",
+      "method": "GET",
+      "kind": "episodes",
+      "malId": 61990,
+      "startedAt": "2026-10-28T06:10:42.149Z",
+      "startGapMs": 1500,
+      "status": 200,
+      "durationMs": 354,
+      "retryAfter": null,
+      "schema": {
+        "topLevelKeys": [
+          "pagination",
+          "data"
+        ],
+        "dataArray": true,
+        "rowCount": 10,
+        "pagination": {
+          "last_visible_page": 1,
+          "has_next_page": false
+        }
+      }
+    }
+  ]
+}

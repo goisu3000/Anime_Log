@@ -1,0 +1,20 @@
+[
+  {
+    "malId": 63337,
+    "title": "FX Senshi Kurumi-chan",
+    "expectedType": "TV",
+    "case": "fall2026_weekly_streaming"
+  },
+  {
+    "malId": 61987,
+    "title": "Kusuriya no Hitorigoto 3rd Season",
+    "expectedType": "TV",
+    "case": "fall2026_sequel_season_mapping"
+  },
+  {
+    "malId": 61990,
+    "title": "Cyberpunk: Edgerunners 2",
+    "expectedType": "ONA",
+    "case": "fall2026_batch_web_release"
+  }
+]
