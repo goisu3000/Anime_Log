@@ -1,14 +1,14 @@
 // Public metadata only. This module has no record/save/sync/credential interface.
 // All derived releases are HEURISTICS, never independent publication proof.
 export const HOUR=3600000;
-export const POLICY=Object.freeze({poll:6*HOUR,unknown:24*HOUR,archive:30*24*HOUR,gap:6*HOUR,grace:72*HOUR,maxPages:3,interval:1700,window:15*60000,maxWindow:8,maxHour:32});
+export const POLICY=Object.freeze({poll:HOUR,unknown:24*HOUR,archive:30*24*HOUR,grace:24*HOUR,maxPages:3,interval:1700,window:15*60000,maxWindow:8,maxHour:32});
 const cp=structuredClone,object=x=>x&&typeof x==='object'&&!Array.isArray(x);
 const idOf=x=>/^jikan:[1-9]\d{0,8}$/.test(x||'')?Number(x.slice(6)):null;
 const count=x=>Number.isSafeInteger(x)&&x>=0&&x<=9999;
 const stamp=x=>typeof x==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(x)&&Number.isFinite(Date.parse(x))?Date.parse(x):null;
 const day=x=>{if(stamp(x)===null)return null;const ms=Date.parse(x.slice(0,10)+'T00:00:00Z');return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===x.slice(0,10)?ms:null;};
 const fail=(code,until=0)=>Object.assign(Error(code),{code,until,...(/^HTTP_\d{3}$/.test(code)?{status:Number(code.slice(5))}:code==='API_COOLDOWN'?{status:429}:{})});
-export function targetsFromRecords(records){return Object.values(records||{}).filter(r=>r&&r.status==='watching'&&idOf(r.id)).map(r=>({id:r.id,malId:idOf(r.id),priority:r.status==='watching'?0:1})).sort((a,b)=>a.priority-b.priority||a.malId-b.malId);}
+export function targetsFromRecords(records){return Object.values(records||{}).filter(r=>r&&r.status==='watching'&&idOf(r.id)).map(r=>({id:r.id,malId:idOf(r.id),priority:0})).sort((a,b)=>a.priority-b.priority||a.malId-b.malId);}
 export function retryAt(value,now){const seconds=Number(value);const absolute=typeof value==='string'?Date.parse(value):NaN;return Math.max(now+60000,Number.isFinite(seconds)&&seconds>0?now+Math.min(seconds*1000,24*HOUR):Number.isFinite(absolute)?absolute:now+15*60000);}
 export function inspectMetadata(meta,id,now){
  if(!object(meta)||meta.mal_id!==id)return {eligible:false,reason:'IDENTITY_MISMATCH',next:now+POLICY.unknown};
@@ -51,20 +51,23 @@ export function summarizeEpisodes({meta,id,pages,now,schedule=null}){
   if(schedule?.episode===n&&Number.isSafeInteger(schedule.airingAt)){
    const at=schedule.airingAt*1000;
    if(at<d-24*HOUR||at>d+2*24*HOUR)break; // known schedule/date mismatch, never ignore a possible delay
-   safeAfter=Math.max(d+24*HOUR,at+24*HOUR);
+   safeAfter=Math.max(d,at+HOUR);
   }
   if(safeAfter>now)break;
-  if(!(typeof e.score==='number'&&Number.isFinite(e.score)&&e.score>0&&e.score<=5&&typeof e.forum_url==='string'&&/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(e.forum_url)))break;
+  // Episode ID/date continuity and the elapsed broadcast time are sufficient.
+  // Scores and forum URLs often appear late and are not publication prerequisites.
+  // Keep future timestamps excluded; the output is informational, not a guarantee.
+  if(!object(e)||e.mal_id!==n)break;
   through=n;matureAfter.push(safeAfter);
  }
  if(!through)return {ok:false,reason:'NO_MATURE_SUPPORTED_EPISODE'};
  // Keep a compact public signature, not titles, notes, scores, API tokens or keys.
- const signature=JSON.stringify(Array.from({length:through},(_,i)=>[i+1,dates[i],byNumber.get(i+1).forum_url,matureAfter[i]]));
+ const signature=JSON.stringify(Array.from({length:through},(_,i)=>[i+1,dates[i],null,matureAfter[i]]));
  return {ok:true,id,startDay,through,signature,at:now,confidence:'estimated_schedule_tenrai_v1',actualReleaseProven:false};
 }
 // Read-only possibility from individually recorded calendar slots. Never N-1 from a future slot.
 export function calendarEpisodePossibility(first,schedule,now){
- if(!first?.ok||!Number.isSafeInteger(first.startDay)||(!Number.isSafeInteger(first.id)||first.id<1)||schedule?.malId!==first.id||!Number.isFinite(schedule.observedAt)||schedule.observedAt>now||now-schedule.observedAt>=POLICY.poll||!Array.isArray(schedule.history)||!schedule.history.length||schedule.history.length>25)return null;
+ if(!first?.ok||!Number.isSafeInteger(first.startDay)||(!Number.isSafeInteger(first.id)||first.id<1)||schedule?.malId!==first.id||!Number.isFinite(schedule.observedAt)||schedule.observedAt>now||now-schedule.observedAt>=6*HOUR||!Array.isArray(schedule.history)||!schedule.history.length||schedule.history.length>25)return null;
  const rows=[...schedule.history].sort((a,b)=>a.episode-b.episode);let through=0,previous=null;
  for(const row of rows){
   if(!object(row)||row.episode!==through+1||!Number.isSafeInteger(row.airingAt))return null;
@@ -76,11 +79,11 @@ export function calendarEpisodePossibility(first,schedule,now){
  if(!through||!count(schedule.episode)||schedule.episode!==through+1||!Number.isSafeInteger(schedule.airingAt)||schedule.airingAt*1000<=now||schedule.airingAt*1000-previous<5*24*HOUR||schedule.airingAt*1000-previous>10*24*HOUR)return null;
  return through;
 }
-export function evaluateObservation(previous,current,now){
+export function evaluateObservation(_previous,current,now){
  if(!current?.ok)return {estimate:null,first:null,reason:current?.reason||'INVALID'};
- if(!previous||previous.id!==current.id||!count(previous.through)||previous.through!==current.through||previous.signature!==current.signature||!Number.isFinite(previous.at)||previous.at>now||now-previous.at>14*24*HOUR)return {estimate:null,first:cp(current),reason:'SECOND_OBSERVATION_REQUIRED'};
- if(now-previous.at<POLICY.gap)return {estimate:null,first:cp(previous),reason:'OBSERVATIONS_TOO_CLOSE'};
- return {estimate:{through:current.through,at:now,expiresAt:now+2*POLICY.poll,confidence:current.confidence},first:cp(previous),reason:'ESTIMATE_ONLY'};
+ // Every observed episode is dated, numbered and eligible; never wait six hours.
+ const estimate={through:current.through,at:now,expiresAt:now+2*POLICY.poll,confidence:current.confidence};
+ return {estimate,first:cp(current),reason:'OBSERVED'};
 }
 
 // One shared request lane for background checks and existing detail/full calls.
@@ -133,25 +136,30 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
  if(!requests||typeof getTargets!=='function')throw Error('NOTICE_AUTO_ARGUMENTS');
  const key='anilog-notice-observations-public-v1';let states=new Map(),estimates=new Map(),busy=null,enabled=true;
  function validCachedEstimate(id,s){
-  try{const f=s.first,e=s.estimate;if(f?.ok!==true||f.id!==idOf(id)||!Number.isSafeInteger(f.startDay)||!count(f.through)||f.through<1||f.through>300||e?.confidence!=='estimated_schedule_tenrai_v1'||e.through!==f.through||!Number.isFinite(f.at)||!Number.isFinite(e.at)||e.at<f.at+POLICY.gap||e.at-f.at>14*24*HOUR||e.at>s.observedAt||e.expiresAt!==e.at+2*POLICY.poll||e.expiresAt<=now()||typeof f.signature!=='string'||f.signature.length>64000)return false;
-   const rows=JSON.parse(f.signature);return Array.isArray(rows)&&rows.length===f.through&&rows.every((r,i)=>Array.isArray(r)&&r.length===4&&r[0]===i+1&&Number.isSafeInteger(r[1])&&r[1]%86400000===0&&Number.isSafeInteger(r[3])&&r[3]>=r[1]+24*HOUR&&r[3]<=r[1]+POLICY.grace&&r[3]<=f.at&&/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(r[2])&&(i===0?Math.abs(r[1]-f.startDay)<=2*24*HOUR:r[1]-rows[i-1][1]>=5*24*HOUR&&r[1]-rows[i-1][1]<=10*24*HOUR));
+  try{const f=s.first,e=s.estimate;if(f?.ok!==true||f.id!==idOf(id)||!Number.isSafeInteger(f.startDay)||!count(f.through)||f.through<1||f.through>300||e?.confidence!=='estimated_schedule_tenrai_v1'||e.through!==f.through||!Number.isFinite(f.at)||!Number.isFinite(e.at)||e.at<f.at||e.at-f.at>14*24*HOUR||e.at>s.observedAt||e.expiresAt!==e.at+2*POLICY.poll||e.expiresAt<=now()||typeof f.signature!=='string'||f.signature.length>64000)return false;
+   const rows=JSON.parse(f.signature);return Array.isArray(rows)&&rows.length===f.through&&rows.every((r,i)=>Array.isArray(r)&&r.length===4&&r[0]===i+1&&Number.isSafeInteger(r[1])&&r[1]%86400000===0&&Number.isSafeInteger(r[3])&&r[3]>=r[1]&&r[3]<=r[1]+4*24*HOUR&&r[3]<=f.at&&(r[2]===null||/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(r[2]))&&(i===0?Math.abs(r[1]-f.startDay)<=2*24*HOUR:r[1]-rows[i-1][1]>=5*24*HOUR&&r[1]-rows[i-1][1]<=10*24*HOUR));
   }catch{return false}
  }
- try{const raw=storage?.getItem(key);const data=raw&&raw.length<600000?JSON.parse(raw):null;if(data?.version===1&&Array.isArray(data.entries))for(const [id,s] of data.entries.slice(0,500)){if(idOf(id)&&object(s)&&Number.isFinite(s.observedAt)&&s.observedAt<=now()&&now()-s.observedAt<POLICY.archive&&Number.isFinite(s.next)&&s.next<=now()+POLICY.archive){states.set(id,s);if(s.estimate){if(validCachedEstimate(id,s))estimates.set(id,s.estimate);else states.set(id,{...s,first:null,estimate:null,next:now()});}}}}catch{/* untrusted/blocked public cache: use fresh observations */}
+ try{const raw=storage?.getItem(key);const data=raw&&raw.length<600000?JSON.parse(raw):null;if([1,2].includes(data?.version)&&Array.isArray(data.entries))for(const [id,s] of data.entries.slice(0,500)){if(idOf(id)&&object(s)&&Number.isFinite(s.observedAt)&&s.observedAt<=now()&&now()-s.observedAt<POLICY.archive&&Number.isFinite(s.next)&&s.next<=now()+POLICY.archive){
+   // Old v1 cache scheduled six-hour checks and may contain stale observations.
+   // Force a fresh v2 check without changing any user record or encrypted store.
+   if(data.version===1){states.set(id,{observedAt:s.observedAt,next:now(),first:null,estimate:null,reason:'BACKGROUND_BUDGET'});continue;}
+   states.set(id,s);if(s.estimate){if(validCachedEstimate(id,s))estimates.set(id,s.estimate);else states.set(id,{...s,first:null,estimate:null,next:now()});}
+  }}}catch{/* untrusted/blocked public cache: use fresh observations */}
  function visibleStatuses(){
   if(!enabled)return Object.freeze({});
   const result={};
   for(const t of getTargets()){
    const s=states.get(t.id),e=estimates.get(t.id);
-   // A single Tenrai observation is *not* a publication confirmation.
-   // Show it immediately as a read-only possibility. Do not write ACK.
+   // Retain the most recent validated count in public cache while refreshing.
+   // This status path never writes synced records or a new ACK.
    const f=s?.first;
    let validFirst=false;
    try{
     const rows=JSON.parse(f?.signature);
     validFirst=f?.ok===true&&f.id===t.malId&&count(f.through)&&f.through>=1&&f.through<=300&&Number.isSafeInteger(f.startDay)&&
      Number.isFinite(f.at)&&f.at<=now()&&(now()-f.at<=2*POLICY.poll||e&&e.expiresAt>now())&&typeof f.signature==='string'&&f.signature.length<64000&&
-     Array.isArray(rows)&&rows.length===f.through&&rows.every((r,i)=>Array.isArray(r)&&r.length===4&&r[0]===i+1&&Number.isSafeInteger(r[1])&&r[1]%86400000===0&&Number.isSafeInteger(r[3])&&r[3]>=r[1]+24*HOUR&&r[3]<=r[1]+POLICY.grace&&r[3]<=f.at&&/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(r[2])&&(i===0?Math.abs(r[1]-f.startDay)<=2*24*HOUR:r[1]-rows[i-1][1]>=5*24*HOUR&&r[1]-rows[i-1][1]<=10*24*HOUR));
+     Array.isArray(rows)&&rows.length===f.through&&rows.every((r,i)=>Array.isArray(r)&&r.length===4&&r[0]===i+1&&Number.isSafeInteger(r[1])&&r[1]%86400000===0&&Number.isSafeInteger(r[3])&&r[3]>=r[1]&&r[3]<=r[1]+4*24*HOUR&&r[3]<=f.at&&(r[2]===null||/^https:\/\/myanimelist\.net\/forum\/\?topicid=[1-9]\d*$/.test(r[2]))&&(i===0?Math.abs(r[1]-f.startDay)<=2*24*HOUR:r[1]-rows[i-1][1]>=5*24*HOUR&&r[1]-rows[i-1][1]<=10*24*HOUR));
    }catch{/* Invalid optional public cache cannot supply an episode number. */}
    const calendar=validFirst?calendarEpisodePossibility(f,getSchedule(t.id),now()):null;
    if(calendar!==null&&calendar>Math.max(f.through,e?.through||0)){result[t.id]={kind:'possible',through:calendar};continue;}
@@ -171,7 +179,7 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
   try{onChange(Object.freeze(Object.fromEntries([...estimates].map(([id,e])=>[id,e.through]))))}catch{}
   try{onStatus(visibleStatuses())}catch{}
  }
- function persist(){try{const entries=[...states].sort((a,b)=>b[1].observedAt-a[1].observedAt).slice(0,500);const raw=JSON.stringify({version:1,entries});if(raw.length<600000)storage?.setItem(key,raw)}catch{}}
+ function persist(){try{const entries=[...states].sort((a,b)=>b[1].observedAt-a[1].observedAt).slice(0,500);const raw=JSON.stringify({version:2,entries});if(raw.length<600000)storage?.setItem(key,raw)}catch{}}
  async function one(t){
   const previous=states.get(t.id),time=now();
   let full=getCachedFull(t.id);if(full?.then)full=await full;
@@ -192,7 +200,10 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
   if(cached&&cached.at<=now()&&now()-cached.at<60000&&cached.body?.pagination?.current_page===1)pages.push(cached.body);
   if(!pages.length||pages[0].pagination.has_next_page===true)for(let page=pages.length+1;page<=POLICY.maxPages;page++){if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;const r=await requests.request('/anime/'+t.malId+'/episodes?page='+page,{background:true,maxAge:60000});pages.push(r.body);if(r.body.pagination?.has_next_page===false)break;if(r.body.pagination?.has_next_page!==true||!r.body.data?.length)break;}
   if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;
-  const current=summarizeEpisodes({meta,id:t.malId,pages,now:time,schedule:getSchedule(t.id)}),result=evaluateObservation(previous?.first,current,time);
+  const current=summarizeEpisodes({meta,id:t.malId,pages,now:time,schedule:getSchedule(t.id)});
+  // First observation emits the release count. The host safely baselines new
+  // registrations using its existing encrypted ACK write, never a new schema.
+  const result=evaluateObservation(previous?.first,current,time);
   states.set(t.id,{observedAt:time,next:time+POLICY.poll,first:result.first,estimate:result.estimate,reason:result.reason});
   if(result.estimate)estimates.set(t.id,result.estimate);else estimates.delete(t.id);
  }

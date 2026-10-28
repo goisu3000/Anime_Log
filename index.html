@@ -1983,6 +1983,11 @@ select:not([data-status-id]){
 @media(max-width:740px){.pattern-a-watch-column:not(:has(>.pattern-a-mobile-score))>.episode-notice{flex:1 1 0;white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2}}
 .episode-notice.is-unread{color:#e5b64c;cursor:pointer}
 .episode-notice.is-unread:hover{color:var(--accent)}
+/* An informative overlay only: the poster remains the original detail button. */
+.pattern-a-card .record-poster{position:relative}
+.pattern-a-card .episode-new-badge{position:absolute;top:6px;left:6px;z-index:1;display:inline-flex;align-items:center;justify-content:center;min-height:19px;padding:2px 7px;border-radius:4px;background:#edc44c;color:#24200f;font-size:10px;font-weight:800;line-height:1.3;letter-spacing:.02em;box-shadow:0 1px 5px #0008;white-space:nowrap;pointer-events:none}
+
+.episode-notice.is-unread{text-decoration:none}
 .episode-notice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:52.25px;left:12px;right:0;font-size:10px;line-height:15px;max-width:none}}
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.watch-progress[data-progress-total=""])>.episode-notice{top:54.5px}}
@@ -3093,9 +3098,10 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
  if(typeof episodeNoticeState==='function'){
   const notice=episodeNoticeState(committed);
   if(notice&&!notice.unread){
+   $$('#cards .pattern-a-card').filter(card=>card.querySelector('[data-status-id]')?.dataset.statusId===id).forEach(card=>card.querySelector('.episode-new-badge')?.remove());
    $$('[data-notice-ack]').filter(el=>el.dataset.noticeAck===id).forEach(el=>{
     const done=document.createElement('span');done.className='episode-notice';
-    done.textContent=`第${notice.through}話まで公開${notice.estimated?'（推定）':''}`;el.replaceWith(done);
+    done.textContent=`第${notice.through}話まで公開`;el.replaceWith(done);
    });
   }
  }
@@ -3480,6 +3486,8 @@ function refreshAutomaticNoticeLabels(){
   if(!id||!column||!saved[id])continue;
   column.querySelector('.episode-notice')?.remove();
   column.querySelector('.pattern-a-status-menu')?.insertAdjacentHTML('afterend',episodeNoticeMarkup(saved[id]));
+  const poster=card.querySelector('.record-poster');
+  if(poster){poster.querySelector('.episode-new-badge')?.remove();poster.insertAdjacentHTML('beforeend',episodeNewBadgeMarkup(saved[id]));}
  }
  scheduleNoticeBaselines();
 }
@@ -3579,31 +3587,39 @@ function episodeNoticeState(record){
  const effective=Math.max(record[NOTICE_ACK_KEY],Math.min(watched,through));
  return {through,unread:effective<through,estimated:NOTICE_REVIEWED_THROUGH[record.id]===through?NOTICE_ESTIMATED_THROUGH[record.id]===through:NOTICE_AUTO_THROUGH[record.id]===through};
 }
+function episodeNewBadgeMarkup(record){
+ return episodeNoticeState(record)?.unread?'<span class="episode-new-badge" aria-hidden="true">新着</span>':'';
+}
 function episodeNoticeMarkup(record){
  if(!noticeEligible(record)||!/^jikan:[1-9]\d{0,8}$/.test(record.id))return '';
  const pending=NOTICE_AUTO_ENABLED?NOTICE_AUTO_STATUS[record.id]:null;
- if(pending?.kind==='possible'&&noticeValidCount(pending.through)&&pending.through>(reviewedEpisodeThrough(record.id)||0))return `<span class="episode-notice" title="カレンダーの過去の放送予定を含む推定・公開未確認">第${pending.through}話まで公開の可能性</span>`;
+ if(pending?.kind==='possible'&&noticeValidCount(pending.through)&&pending.through>(reviewedEpisodeThrough(record.id)||0))return `<span class="episode-notice">第${pending.through}話まで公開</span>`;
  const state=episodeNoticeState(record);
  if(state){
-  const label=`第${state.through}話まで公開${state.estimated?'（推定）':''}`;
-  return state.unread?`<button type="button" class="episode-notice is-unread" data-notice-ack="${safeText(record.id)}" data-notice-through="${state.through}" aria-label="${label}、確認済みにする">${label}</button>`
-   :`<span class="episode-notice">${label}</span>`;
+  const label=`第${state.through}話まで公開`;
+  if(!state.unread)return `<span class="episode-notice">${label}</span>`;
+  // The exact same permitted viewing link is used by the existing card.
+  // Native anchor navigation retains normal browser/tab/app-link behavior.
+  const pref=cleanStreamPreference(record.streamPreference),service=pref&&pref.service;
+  const url=service&&(pref.url||jpStreamSearchUrl(streamService(service).domain,record.title));
+  const common=`class="episode-notice is-unread" data-notice-ack="${safeText(record.id)}" data-notice-through="${state.through}"`;
+  return url?`<a ${common} href="${safeText(url)}" target="_blank" rel="noopener noreferrer" aria-label="${label}、確認して${safeText(service)}を開く">${label}</a>`
+   :`<button type="button" ${common} aria-label="${label}、確認済みにする">${label}</button>`;
  }
  // A reviewed or twice-observed release can be shown immediately while the
  // existing asynchronous baseline write is pending. It is not yet clickable.
  const through=reviewedEpisodeThrough(record.id);
  if(through!==null&&(!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY]))){
-  const estimated=NOTICE_REVIEWED_THROUGH[record.id]===through?NOTICE_ESTIMATED_THROUGH[record.id]===through:NOTICE_AUTO_THROUGH[record.id]===through;
-  const label=`第${through}話まで公開${estimated?'（推定）':''}`;
+  const label=`第${through}話まで公開`;
   return `<span class="episode-notice" title="${safeText(label)}">${label}</span>`;
  }
- // First-time users get a visible status before the six-hour recheck.
+ // First-time users see a loading state until the first usable observation.
  // The possible count is deliberately non-interactive and never writes ACK.
  if(!NOTICE_AUTO_ENABLED)return '';
  const current=NOTICE_AUTO_STATUS[record.id];
  let label='公開話数を確認中';
- if(current?.kind==='possible')label=`第${current.through}話まで公開の可能性`;
- else if(current?.kind==='finished')label=`全${current.through}話 放送終了（作品情報）`;
+ if(current?.kind==='possible')label=`第${current.through}話まで公開`;
+ else if(current?.kind==='finished')label=`全${current.through}話 放送終了`;
  else if(current?.kind==='upcoming')label='放送開始前';
  else if(current?.kind==='unavailable')label='公開状況を確認できません';
  return `<span class="episode-notice" title="${safeText(label)}">${safeText(label)}</span>`;
@@ -3635,6 +3651,15 @@ function acknowledgeEpisodeNotice(id,expectedThrough){
   render();return true;
  });
 }
+// Visiting a selected service acknowledges the unread notification, but never
+// changes watchedEpisodes. Navigation is never held up by encrypted persistence.
+document.addEventListener('click',e=>{
+ const anchor=e.target.closest('#cards .pattern-a-card a.stream-inline-link[href]');
+ if(!anchor||e.defaultPrevented)return;
+ const id=anchor.closest('.pattern-a-card')?.querySelector('[data-status-id]')?.dataset.statusId;
+ const state=id&&saved[id]&&episodeNoticeState(saved[id]);
+ if(state?.unread)void acknowledgeEpisodeNotice(id,state.through);
+},true);
 document.addEventListener('click',e=>{
  const button=e.target.closest('[data-notice-ack]');if(!button)return;
  const through=Number(button.dataset.noticeThrough);
@@ -3646,7 +3671,7 @@ function recordCard(a){const status=a.status,id=safeText(a.id),watch=['watching'
  const date=completed?`<button class="record-date pattern-a-date" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:'';
  const malMetric=patternAMalMetric(a);
  const current=watchedCount(a),total=totalEpisodes(a),progressReserve=total!==null&&current>total?'warning':'normal';
- return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${episodeNoticeMarkup(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
+ return `<article class="anime-card record-card record-row pattern-a-card pattern-a-${safeText(status)}" data-progress-reserve="${progressReserve}"><button class="record-poster" data-detail-id="${id}" aria-label="${safeText(a.title)}の作品詳細を開く">${posterMarkup(a)}${episodeNewBadgeMarkup(a)}</button><div class="record-main"><div class="pattern-a-main-copy">${recordTitle(a)}${patternARecordMeta(a)}${patternAGridTools(a)}${streamRowMarkup(a)}${date}${status==='planned'?nextWatchToggleMarkup(a):''}</div><div class="pattern-a-score-aside">${malMetric}</div></div><div class="pattern-a-watch-column">${patternAStatusMenu(a)}${episodeNoticeMarkup(a)}${watch||status==='dropped'?progressMarkup(a):''}${status==='planned'?quickStatus(a,'watching','見始める'):''}${completed?`<button type="button" class="pattern-a-date-watch" data-detail-id="${id}">${a.completedOn?'見終えた時期：'+safeText(formatCompletedOn(a.completedOn)):'見終えた時期を記録'}</button>`:''}${malMetric?`<div class="pattern-a-mobile-score" aria-label="スマホ用MAL評価">${malMetric}</div>`:''}</div><div class="pattern-a-personal-column">${patternAReview(a)}${noteMarkup(a)}${a.updatedAt&&Number.isFinite(Date.parse(a.updatedAt))?`<span class="pattern-a-update">更新日：${safeText(new Date(a.updatedAt).toLocaleDateString('ja-JP',{year:'numeric',month:'long',day:'numeric'}))}</span>`:''}</div></article>`;
 }
 document.addEventListener('click',e=>{const panel=$('#filterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#filterDisclosure').open){$('#filterDisclosure').open=false;$('#filterDisclosure summary').focus()}});
