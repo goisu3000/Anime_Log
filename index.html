@@ -3035,7 +3035,7 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
  const beforeItem=autoComplete?structuredClone(item):null;
  const planned={...item,watchedEpisodes:next,updatedAt:new Date().toISOString()};
  // A progress action may acknowledge a verified episode within the SAME existing save.
- const reviewed=typeof NOTICE_REVIEWED_THROUGH==='undefined'?null:NOTICE_REVIEWED_THROUGH[id];
+ const reviewed=typeof reviewedEpisodeThrough==='function'?reviewedEpisodeThrough(id):null;
  if(Number.isSafeInteger(reviewed)&&reviewed>0&&reviewed<=9999&&
     Number.isSafeInteger(item.episodeNoticeAckThrough)&&item.episodeNoticeAckThrough>=0&&
     item.episodeNoticeAckThrough<=reviewed&&next>before)
@@ -3465,6 +3465,41 @@ async function saveStreamPreference(){
 // No reviewed public count, source URL or fetched data enters encrypted records.
 let NOTICE_REVIEWED_THROUGH=Object.freeze({});
 let NOTICE_ESTIMATED_THROUGH=Object.freeze({});
+let NOTICE_AUTO_THROUGH=Object.freeze({});
+// Compile-time kill switch: disables only public polling/estimates, never sync.
+const NOTICE_AUTO_ENABLED=true;
+let noticeRequestPool=null,noticeAutomatic=null,noticeAutoLoading=null,noticeAutoRetryAt=0,noticeHydratedStorage=null;
+function refreshAutomaticNoticeLabels(){
+ if(mode!=='saved'||noticeHydratedStorage!==window.__formalStorage||!window.__formalStorage?.ready)return;
+ for(const card of $$('#cards .pattern-a-card')){
+  const id=card.querySelector('[data-status-id]')?.dataset.statusId;
+  const column=card.querySelector('.pattern-a-watch-column');
+  if(!id||!column||!saved[id])continue;
+  column.querySelector('.episode-notice')?.remove();
+  column.querySelector('.pattern-a-status-menu')?.insertAdjacentHTML('afterend',episodeNoticeMarkup(saved[id]));
+ }
+ scheduleNoticeBaselines();
+}
+function ensureAutomaticEpisodeNotices(){
+ if(!NOTICE_AUTO_ENABLED||noticeHydratedStorage!==window.__formalStorage||!window.__formalStorage?.ready||document.hidden)return;
+ if(noticeAutomatic){void noticeAutomatic.tick();return;}
+ if(noticeAutoLoading||Date.now()<noticeAutoRetryAt)return;
+ noticeAutoLoading=import('./notice/episode-auto.mjs').then(({createPublicAnimeRequests,createAutomaticEpisodeNotices,targetsFromRecords})=>{
+  let publicStorage=null;try{publicStorage=localStorage}catch{}
+  noticeRequestPool=createPublicAnimeRequests({fetcher:(...args)=>fetch(...args),storage:publicStorage,locks:navigator.locks});
+  noticeAutomatic=createAutomaticEpisodeNotices({requests:noticeRequestPool,
+   getTargets:()=>targetsFromRecords(saved),
+   getCachedFull:id=>{const read=()=>{const e=detailCache.get(id);return e?.full&&Number.isFinite(e.fullFetchedAt)?{body:e.full,at:e.fullFetchedAt}:null};return inFlightFullRequests.has(id)?inFlightFullRequests.get(id).then(read).catch(()=>null):read()},
+   getCachedEpisodes:id=>{const read=()=>{const e=detailCache.get(id);return e?.episodes&&Number.isFinite(e.episodeFetchedAt)&&(e.episodePage===1||e.episodes.pagination?.has_next_page===false)?{body:{...e.episodes,pagination:{...e.episodes.pagination,current_page:1}},at:e.episodeFetchedAt}:null};const pending=detailCache.get(id)?.fieldPromises?.episodes;return pending?pending.then(read).catch(()=>null):read()},
+   getSchedule:id=>saved[id]?.weeklySchedule?.mode==='manual'?null:weeklyEpisodeCache?.data?.[id.split(':')[1]],
+   onChange:next=>{if(JSON.stringify(NOTICE_AUTO_THROUGH)!==JSON.stringify(next)){NOTICE_AUTO_THROUGH=next;refreshAutomaticNoticeLabels();}},
+   storage:publicStorage,visible:()=>!document.hidden&&noticeHydratedStorage===window.__formalStorage&&window.__formalStorage?.ready===true,online:()=>navigator.onLine!==false});
+  return noticeAutomatic.tick();
+ }).catch(()=>{noticeAutoRetryAt=Date.now()+15*60000}).finally(()=>{noticeAutoLoading=null});
+}
+setInterval(()=>{ensureAutomaticEpisodeNotices();loadReviewedNoticeFeed();},60000);
+window.addEventListener('online',ensureAutomaticEpisodeNotices);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)ensureAutomaticEpisodeNotices()});
 const NOTICE_REVIEWED_FEED_PATH='/assets/episode-releases-reviewed.v1.json';
 const NOTICE_REVIEWED_FEED_TTL=30*60*1000;
 let noticeFeedLastAttempt=-Infinity,noticeFeedInFlight=null;
@@ -3521,7 +3556,9 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadReview
 const NOTICE_ACK_KEY='episodeNoticeAckThrough';
 const noticeValidCount=n=>Number.isSafeInteger(n)&&n>=0&&n<=9999;
 function reviewedEpisodeThrough(id){
- const n=NOTICE_REVIEWED_THROUGH[id];return Number.isSafeInteger(n)&&n>0&&n<=9999?n:null;
+ const approved=NOTICE_REVIEWED_THROUGH[id],automatic=NOTICE_AUTO_THROUGH[id];
+ const n=Math.max(Number.isSafeInteger(approved)?approved:0,Number.isSafeInteger(automatic)?automatic:0);
+ return n>0&&n<=9999?n:null;
 }
 function noticeEligible(record){return record&&['watching','watched'].includes(record.status)}
 function episodeNoticeState(record){
@@ -3530,7 +3567,7 @@ function episodeNoticeState(record){
  if(through===null||!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY])||record[NOTICE_ACK_KEY]>through)return null;
  const watched=noticeValidCount(record.watchedEpisodes)?record.watchedEpisodes:0;
  const effective=Math.max(record[NOTICE_ACK_KEY],Math.min(watched,through));
- return {through,unread:effective<through,estimated:NOTICE_ESTIMATED_THROUGH[record.id]===through};
+ return {through,unread:effective<through,estimated:NOTICE_REVIEWED_THROUGH[record.id]===through?NOTICE_ESTIMATED_THROUGH[record.id]===through:NOTICE_AUTO_THROUGH[record.id]===through};
 }
 function episodeNoticeMarkup(record){
  const state=episodeNoticeState(record);if(!state)return '';
@@ -3996,7 +4033,7 @@ function render(){
    emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
  observeSavedPosters();
- if(isSaved){scheduleNoticeBaselines();loadReviewedNoticeFeed();}
+ if(isSaved){scheduleNoticeBaselines();loadReviewedNoticeFeed();ensureAutomaticEpisodeNotices();}
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
 let lastRequestAt=0, activeController=null, searchProgress=[], fetchedSeasonKey='', activeSeasonKey='', browseCursor=null;
@@ -5936,7 +5973,7 @@ async function ensureDetailField(id,field,force=false){
   try{
    const result=await detailFetch(`/anime/${id.split(':')[1]}/${field}`);
    entry[field]=result;entry.fieldStates[field]='done';
-   if(field==='episodes'){entry.episodePage=1;if(detailActiveItem?.id===id)detailEpisodePage=1}
+   if(field==='episodes'){entry.episodeFetchedAt=Date.now();entry.episodePage=1;if(detailActiveItem?.id===id)detailEpisodePage=1}
   }catch(e){entry.fieldStates[field]='error';entry.fieldErrors||={};entry.fieldErrors[field]=e?.message||'取得できませんでした'}
   finally{delete entry.fieldPromises[field]}
  })();
@@ -5965,14 +6002,15 @@ function selectDetailTab(tab,focus=false){
  if(focus)$('#detail-tab-'+tab)?.focus({preventScroll:true});
  ensureDetailTab(tab,detailActiveItem.id);
 }
-async function detailFetch(path){const time=Math.max(0,370-(Date.now()-detailReqAt));if(time)await delay(time);detailReqAt=Date.now();const resp=await fetch(`${API}${path}`,{headers:{Accept:'application/json'}});if(!resp.ok)throw Error(resp.status===429?'リクエスト制限（429）':`HTTP ${resp.status}`);return resp.json()}
+async function detailFetch(path){if(noticeRequestPool&&/^\/anime\/[1-9]\d*\/(?:full|episodes)(?:\?page=[1-9]\d*)?$/.test(path)){try{return (await noticeRequestPool.request(path)).body}catch(error){if(error.status===429)error.message='リクエスト制限（429）';throw error}}const time=Math.max(0,370-(Date.now()-detailReqAt));if(time)await delay(time);detailReqAt=Date.now();const resp=await fetch(`${API}${path}`,{headers:{Accept:'application/json'}});if(!resp.ok)throw Error(resp.status===429?'リクエスト制限（429）':`HTTP ${resp.status}`);return resp.json()}
 const inFlightFullRequests=new Map();
 async function fetchAnimeFullShared(id,useThrottle=false){
  if(inFlightFullRequests.has(id))return inFlightFullRequests.get(id);
  const malId=String(id||'').split(':')[1];
  const job=(async()=>{
   let data;
-  if(useThrottle){
+  if(noticeRequestPool){data=(await noticeRequestPool.request(`/anime/${malId}/full`)).body?.data||null;}
+  else if(useThrottle){
    const result=await detailFetch(`/anime/${malId}/full`);
    data=result?.data||null;
   }else{
@@ -5982,7 +6020,7 @@ async function fetchAnimeFullShared(id,useThrottle=false){
   }
   if(!data||typeof data!=='object')throw Error('作品詳細データが空です');
   const prev=detailCache.get(id)||{};
-  detailCache.set(id,{...prev,full:data,loading:false,fullError:''});
+  detailCache.set(id,{...prev,full:data,fullFetchedAt:Date.now(),loading:false,fullError:''});
   cacheMalMetric(id,data);
   if(saved[id]?.status==='watched'&&extractAnalysisMeta(data))await storeAnalysisMeta(id,data);
   return data;
@@ -6499,8 +6537,8 @@ if(!aniInitialHistoryState){try{history.replaceState(aniHistorySnapshot(),'',loc
 window.__formalUI=Object.freeze({
  readSaved:()=>structuredClone(saved),readWeeklyOptions:()=>structuredClone(weeklyOptions),
  whenWritesIdle:()=>recordWriteQueue,
- hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);mode='saved';updateCounts();render()},
- commitSaved(records,weekly){if(!window.__formalStorage?.ready&&!window.__formalPairing?.bridge?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');saved=structuredClone(records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(weekly);render()}
+ hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage;saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);mode='saved';updateCounts();render()},
+ commitSaved(records,weekly){if(!window.__formalStorage?.ready&&!window.__formalPairing?.bridge?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage?.ready?window.__formalStorage:null;saved=structuredClone(records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(weekly);render()}
 });
 updateCounts();
 if(location.hash.startsWith(SHARE_PREFIX)){readShareFromHash()}
