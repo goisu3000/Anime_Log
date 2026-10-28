@@ -3570,7 +3570,7 @@ function reviewedEpisodeThrough(id){
  const n=Math.max(Number.isSafeInteger(approved)?approved:0,Number.isSafeInteger(automatic)?automatic:0);
  return n>0&&n<=9999?n:null;
 }
-function noticeEligible(record){return record&&['watching','watched'].includes(record.status)}
+function noticeEligible(record){return record&&record.status==='watching'}
 function episodeNoticeState(record){
  if(!noticeEligible(record))return null;
  const through=reviewedEpisodeThrough(record.id);

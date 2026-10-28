@@ -8,7 +8,7 @@ const count=x=>Number.isSafeInteger(x)&&x>=0&&x<=9999;
 const stamp=x=>typeof x==='string'&&/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?(?:Z|[+-]\d\d:\d\d)$/.test(x)&&Number.isFinite(Date.parse(x))?Date.parse(x):null;
 const day=x=>{if(stamp(x)===null)return null;const ms=Date.parse(x.slice(0,10)+'T00:00:00Z');return Number.isFinite(ms)&&new Date(ms).toISOString().slice(0,10)===x.slice(0,10)?ms:null;};
 const fail=(code,until=0)=>Object.assign(Error(code),{code,until,...(/^HTTP_\d{3}$/.test(code)?{status:Number(code.slice(5))}:code==='API_COOLDOWN'?{status:429}:{})});
-export function targetsFromRecords(records){return Object.values(records||{}).filter(r=>r&&['watching','watched'].includes(r.status)&&idOf(r.id)).map(r=>({id:r.id,malId:idOf(r.id),priority:r.status==='watching'?0:1})).sort((a,b)=>a.priority-b.priority||a.malId-b.malId);}
+export function targetsFromRecords(records){return Object.values(records||{}).filter(r=>r&&r.status==='watching'&&idOf(r.id)).map(r=>({id:r.id,malId:idOf(r.id),priority:r.status==='watching'?0:1})).sort((a,b)=>a.priority-b.priority||a.malId-b.malId);}
 export function retryAt(value,now){const seconds=Number(value);const absolute=typeof value==='string'?Date.parse(value):NaN;return Math.max(now+60000,Number.isFinite(seconds)&&seconds>0?now+Math.min(seconds*1000,24*HOUR):Number.isFinite(absolute)?absolute:now+15*60000);}
 export function inspectMetadata(meta,id,now){
  if(!object(meta)||meta.mal_id!==id)return {eligible:false,reason:'IDENTITY_MISMATCH',next:now+POLICY.unknown};
@@ -175,6 +175,7 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
  async function one(t){
   const previous=states.get(t.id),time=now();
   let full=getCachedFull(t.id);if(full?.then)full=await full;
+  if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;
   const meta=full&&now()-full.at<POLICY.poll&&full.at<=now()?full.body:(await requests.request('/anime/'+t.malId+'/full',{background:true,maxAge:POLICY.poll})).body.data;
   if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;
   const eligible=inspectMetadata(meta,t.malId,time);
@@ -190,6 +191,7 @@ export function createAutomaticEpisodeNotices({requests,getTargets,getCachedFull
   const pages=[];let cached=getCachedEpisodes(t.id);if(cached?.then)cached=await cached;
   if(cached&&cached.at<=now()&&now()-cached.at<60000&&cached.body?.pagination?.current_page===1)pages.push(cached.body);
   if(!pages.length||pages[0].pagination.has_next_page===true)for(let page=pages.length+1;page<=POLICY.maxPages;page++){if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;const r=await requests.request('/anime/'+t.malId+'/episodes?page='+page,{background:true,maxAge:60000});pages.push(r.body);if(r.body.pagination?.has_next_page===false)break;if(r.body.pagination?.has_next_page!==true||!r.body.data?.length)break;}
+  if(!enabled||!visible()||!online()||!getTargets().some(x=>x.id===t.id))return;
   const current=summarizeEpisodes({meta,id:t.malId,pages,now:time,schedule:getSchedule(t.id)}),result=evaluateObservation(previous?.first,current,time);
   states.set(t.id,{observedAt:time,next:time+POLICY.poll,first:result.first,estimate:result.estimate,reason:result.reason});
   if(result.estimate)estimates.set(t.id,result.estimate);else estimates.delete(t.id);
