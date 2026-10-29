@@ -23,6 +23,9 @@ export async function preparePairedFormalRegistration({apiOrigin,siteOrigin,stor
  const snapshot=await decryptSnapshot(remote.data.payload,{masterKey,boxId:transport.boxId,revision:remote.data.revision});
  const current=storage.read(),merge=planInitialRecordMerge({localApp:current,remoteSnapshot:snapshot,apiOrigin,boxId:transport.boxId});
  if(!merge.ok)fail('INITIAL_RECORD_CONFLICT_KEEP_BOTH_COPIES');
+ // A reset/rejoin must NEVER propose changing the established owner box.
+ if(current.weeklyOptions.__syncJoinDestinationOnly===true&&canonical(merge.snapshot)!==canonical(snapshot))
+  fail('DESTINATION_ONLY_MERGE_CHANGED_REMOTE');
  const lineage=merge.snapshot.settings.syncLineage,local=structuredClone(current);local.weeklyOptions.__syncLineage=lineage;
  return intentStore.create({v:1,registrationMode:'paired-device',api:apiOrigin,origin:siteOrigin,boxId:transport.boxId,device:{...device},
   masterKey:secretToUrl(masterKey),lineage,sourceAppDigest:await digestText(canonical(current)),pairingLocalBaseline:appToSnapshot(local),
@@ -76,6 +79,7 @@ async function finishRegistration({networkApproved=false,recoveryKitSaved=false,
  const key=keyBytes(intent.masterKey);
  try{
   const cp=vault.readSyncCheckpoint();
+  const destinationOnly=paired&&storage.read().weeklyOptions.__syncJoinDestinationOnly===true;
   const auth={Origin:siteOrigin,Authorization:'Bearer '+intent.device.deviceToken,'X-Device-Id':intent.device.deviceId};
   let role=await fetcher(apiOrigin+'/v1/boxes/'+intent.boxId+'/me',{method:'GET',headers:auth});
   if(role.status===401&&!cp&&!paired){
@@ -124,6 +128,10 @@ async function finishRegistration({networkApproved=false,recoveryKitSaved=false,
    }else if(base!==0||remote.data.payload!==null)fail('INITIAL_REMOTE_DIFFERS');
    await storage.refresh();
    const current=appToSnapshot(storage.read());
+   // Joined devices may receive an owner's records, but never PUT their own
+   // previous records or a stale merged snapshot into that owner's group.
+   if(destinationOnly&&(!plain||canonical(current)!==canonical(plain)))
+    fail('DESTINATION_ONLY_NO_REMOTE_PUT');
    if(!plain||canonical(current)!==canonical(plain)){
     // Persist the exact candidate and the previous server revision before PUT.
     // Local edits may continue while the request is in flight.

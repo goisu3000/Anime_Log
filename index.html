@@ -1999,13 +1999,25 @@ select:not([data-status-id]){
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:52.25px;left:12px;right:0;font-size:11px;line-height:15px;max-width:none}}
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.watch-progress[data-progress-total=""])>.episode-notice{top:54.5px}}
 @media(min-width:741px) and (max-width:1250px){body.saved-mode .pattern-a-card:has(.episode-notice){position:relative}body.saved-mode .pattern-a-card .episode-notice{position:absolute;left:132px;bottom:30px;right:auto;top:auto;font-size:10px;line-height:16px;max-width:calc(100% - 144px)}}
+/* Connection reset guidance is local to this device, without changing any record UI. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-confirm:not([hidden]),
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-guide:not([hidden]){display:grid;gap:10px;padding:14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-confirm>p,
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-guide>p{margin:0;color:var(--ink);font-size:var(--fs-sm);line-height:1.75}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-guide>p:not(:first-child){color:var(--muted)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-buttons{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-buttons>[data-simple="restart-accept"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="restart-sync"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* Do not make the connected screen compete with the ordinary 「再同期」 CTA. */
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"][data-sync-phase="connected"] > [data-simple="restart-sync"]{background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-target:not([hidden]){color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.6;overflow-wrap:anywhere}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
 <body>
 <dialog id="anilog-sync-dialog" class="anilog-sync-dialog" aria-labelledby="anilogSyncDialogTitle">
   <div class="anilog-sync-dialog-head">
-    <div><h2 id="anilogSyncDialogTitle">端末間同期</h2><p>PCとスマホで同じ視聴記録を使えます。</p></div>
+    <div><h2 id="anilogSyncDialogTitle">端末間同期</h2><p>PC・スマホ・タブレットで同じ視聴記録を使えます。</p></div>
     <button type="button" class="anilog-sync-dialog-close" id="anilogSyncDialogClose" aria-label="同期設定を閉じる">閉じる</button>
   </div>
 <details id="formal-simple-sync" open><summary>端末間同期</summary>
@@ -2015,14 +2027,26 @@ select:not([data-status-id]){
 <p data-simple="pairing-notice" hidden></p>
 <div data-simple="connection-actions" hidden>
  <button type="button" data-simple="resume-sync" hidden>同期を再開する</button>
- <button type="button" data-simple="relink-sync" hidden>元の同期先に戻す</button>
+ <button type="button" data-simple="restart-sync" hidden>同期設定を最初からやり直す</button>
+ <div class="anilog-sync-restart-confirm" data-simple="restart-confirm" hidden>
+  <p>この端末だけの同期を解除し、新しいQRで接続し直します。PC・スマホの同期設定やクラウドの記録は変更しません。この端末の記録と未送信の変更も残します。</p>
+  <div class="anilog-sync-restart-buttons"><button type="button" data-simple="restart-accept">やり直す</button><button type="button" data-simple="restart-dismiss">キャンセル</button></div>
+ </div>
+ <div class="anilog-sync-restart-guide" data-simple="restart-guide" hidden>
+  <p><strong>この端末の再接続手順</strong></p>
+  <p>1．同期できているPCまたはスマホで「新しい端末を追加する」を押し、QRコードを表示します。</p>
+  <p>2．この端末でそのQRコードを読み取り、ANI:LOGを開きます。</p>
+  <p>3．両端末に表示された同期先IDを照合し、この端末のバックアップを保存してから接続を進めます。</p>
+  <p>この端末の以前の記録は消さずに保管し、新しい同期先には持ち込みません。QRを読み取るまでは解除されたままです。</p>
+ </div>
+ <p class="anilog-sync-target" data-simple="relink-target" hidden></p>
  <div data-simple="relink-qr-actions" hidden>
-  <p class="anilog-sync-lead">接続先を変更する前に、記録をバックアップしてください。現在の接続と記録は、切り替えが成功するまで保持されます。</p>
+  <p class="anilog-sync-lead">接続先のPC・スマホの記録をこの端末へ取り込みます。この端末の以前の記録は新しい同期先へ送らず、元の暗号化記録とバックアップに保管します。まずバックアップを保存してください。</p>
   <button type="button" data-simple="relink-backup">バックアップを保存する</button>
-  <label><input type="checkbox" data-simple="relink-confirm">バックアップを保存し、ほかのANI:LOGのタブを閉じました。統合で採用されなかった内容はバックアップから復元する必要があることを確認しました。</label>
+  <label><input type="checkbox" data-simple="relink-confirm">バックアップを保存し、ほかのANI:LOGのタブを閉じました。QRの同期先IDがPCまたはスマホ側と一致すること、この端末の以前の記録は新しい同期先へ送られないことを確認しました。</label>
   <details class="anilog-sync-help"><summary>詳しい統合ルールと注意事項</summary>
-   <p>初回の記録統合は項目別ルールで自動判定します。同じ作品の視聴話数は原則として大きい値を、視聴状況・評価・メモ・設定は信頼できる項目別の更新日時が新しい方を採用します。同日時や時刻不明ならQR発行側を優先します。削除履歴は尊重します。</p>
-   <p>採用されなかった元のメモ・評価などは、独立バックアップから復元してください。通信・認証・保存に問題があれば記録を保持して安全停止します。</p>
+   <p>今回の再接続は、iPadの旧記録を同期先へ統合しません。接続先のPC・スマホにある記録・削除履歴・設定をそのまま受け取ります。以前のiPadの記録は元の暗号化領域と保存したバックアップに残ります。</p>
+   <p>旧iPadの記録を後から確認したい場合はバックアップを利用してください。通信・認証・保存に問題があれば記録を保持して安全停止します。</p>
   </details>
   <button type="button" data-simple="relink-start" disabled>この端末を接続する</button>
  </div>
@@ -2033,6 +2057,7 @@ select:not([data-status-id]){
    <button type="button" data-simple="pause-sync" hidden>同期を一時停止する</button>
    <button type="button" data-simple="switch-check" hidden>切り替え前の安全確認</button>
    <button type="button" data-simple="unlink-sync" hidden>この端末の同期を解除</button>
+   <button type="button" data-simple="relink-sync" hidden>以前の同期先に戻す</button>
   </div>
   <p class="anilog-sync-note">同期を解除しても、この端末の視聴記録は消えません。ほかの端末に保存された記録もそのまま残ります。</p>
  </details>
