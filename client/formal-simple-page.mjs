@@ -767,8 +767,11 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const inviteButton=panelUI.querySelector('[data-v407="invite"]');
   // Only the owner sees the management entry beside the add-device action.
   if(!staging&&profiles.read().phase==='connected'&&selectedProfile){
-   inviteButton.after(el('manage-devices'));
-   panelRoot.after(el('device-management'));
+   // Keep the owner device list beside its trigger, before recovery actions.
+   // Moving the already registered nodes preserves existing listeners and IDs.
+   el('restart-sync').before(manageDevices);
+   manageDevices.after(deviceManagement);
+   deviceManagement.after(el('retry')); // keep management the first owner action
    inviteButton.addEventListener('click',()=>{ownerJourneyActive=true;const v=panelUI.querySelector('[data-v407="status"]');if(v)v.hidden=false;nextQrStep('QRを準備しています','QRが表示されたら、新しい端末で読み取ってください。',{force:true,step:1,device:'新しい端末で操作'});});
   }
  // A QR scan plus a confirmed local cutover is sufficient to submit the
@@ -779,6 +782,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   root.closest('dialog')?.addEventListener('close',()=>{
    if(!receiver){ownerJourneyActive=false;if(qrNext)qrNext.hidden=true;const v=panelUI.querySelector('[data-v407="status"]');if(v)v.hidden=true;}
    deviceManagement.hidden=true;el('device-confirm').hidden=true;selectedRemoval=null;
+   manageDevices.setAttribute('aria-expanded','false');
+   manageDevices.textContent='登録済み端末を管理';
   });
   const ownDeviceButton=el('own-device-button'),ownDeviceInfo=el('own-device-info');
   ownDeviceButton.hidden=staging||profiles.read().phase!=='connected';
@@ -846,10 +851,26 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    el('device-confirm').hidden=true;
    deviceManagementStatus.textContent='端末名が分からない場合は、各端末でIDを確認してください。';
   }
-  manageDevices.addEventListener('click',()=>action(async()=>{
-   if(staging||profiles.read().phase!=='connected')throw Error('MANAGEMENT_NOT_CONNECTED');
-   deviceManagement.hidden=false;await updateDeviceList();
-  }));
+  function closeDeviceManagement(){
+   deviceManagement.hidden=true;
+   el('device-confirm').hidden=true;
+   selectedRemoval=null;
+   manageDevices.setAttribute('aria-expanded','false');
+   manageDevices.textContent='登録済み端末を管理';
+  }
+  manageDevices.setAttribute('aria-controls','anilog-device-management');
+  manageDevices.setAttribute('aria-expanded','false');
+  manageDevices.addEventListener('click',()=>{
+   if(!deviceManagement.hidden){closeDeviceManagement();return;}
+   action(async()=>{
+    if(staging||profiles.read().phase!=='connected')throw Error('MANAGEMENT_NOT_CONNECTED');
+    deviceManagement.hidden=false;
+    manageDevices.setAttribute('aria-expanded','true');
+    manageDevices.textContent='登録済み端末を閉じる';
+    await updateDeviceList();
+   });
+  });
+  el('device-management-close').addEventListener('click',closeDeviceManagement);
   el('device-confirm-check').addEventListener('change',()=>{el('device-revoke').disabled=!el('device-confirm-check').checked});
   el('device-cancel').addEventListener('click',()=>{selectedRemoval=null;el('device-confirm').hidden=true});
   el('device-revoke').addEventListener('click',()=>action(async()=>{
@@ -875,7 +896,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
 
  const hide=selector=>{const node=panelUI.querySelector('[data-v407="'+selector+'"]');if(node)node.hidden=true};
  hide('claim');hide('sync');
- panelUI.querySelector('[data-v407="refresh"]').textContent='承認状態を確認';
+ panelUI.querySelector('[data-v407="refresh"]').textContent='QRの申請状況を確認';
  panelUI.querySelector('[data-v407="approve"]').textContent='承認する';
  if(receiver){
   for(const id of ['invite','copy','qr','code','approve','receive','repair','refresh'])hide(id);

@@ -2067,10 +2067,11 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing [data-v407="receiver-code"]:not(:empty){display:block;max-width:260px;margin:12px auto;padding:12px 8px;background:var(--surface);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);font-size:clamp(24px,7vw,30px);font-weight:var(--fw-bold);letter-spacing:.17em;text-align:center;font-variant-numeric:tabular-nums}
 .anilog-sync-dialog #v407-pairing [data-v407="status"]{font-size:var(--fs-sm);color:var(--muted);line-height:1.6}
 .anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tools{margin:10px 0 0}
+.anilog-sync-dialog #v407-pairing .anilog-sync-tool-note{font-size:var(--fs-xs);color:var(--muted);line-height:1.55;margin:12px 12px 8px}
 .anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tool-buttons{display:flex;flex-wrap:wrap;gap:12px;padding:0 12px 12px}
 .anilog-sync-dialog #v407-pairing [data-v407="approve"],.anilog-sync-dialog #v407-pairing [data-v407="receive"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* Device management: shown only on explicit owner action. */
-.anilog-sync-dialog #formal-simple-sync .anilog-device-management:not([hidden]){display:grid;gap:10px;padding:14px;margin-top:10px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management:not([hidden]){display:grid;gap:12px;padding:14px;margin:0;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 .anilog-sync-dialog #formal-simple-sync [data-simple="device-list"]{display:grid;gap:12px}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-row span{font-size:12px;overflow-wrap:anywhere}
@@ -2084,25 +2085,23 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-device-confirm:not([hidden]){display:grid;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 @media(max-width:740px){.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next:not([hidden]){padding:12px}.anilog-sync-dialog .anilog-sync-progress-head{font-size:12px}}
 
-/* ANI:LOG 2026-10-30: desktop My List, one-column mode only.
-   Reuse the existing two-column streaming/pin button markup; keep their actions
-   and all saved data unchanged. Phone and desktop two-column are unaffected. */
+/* ANI:LOG 2026-10-30: desktop-only single-column My List layout.
+   Source: published PC icons version, with the user's requested two-column-like
+   action grouping. Existing card handlers/data attributes are unchanged.
+   Pin/stream/note/review reuse existing grid markup; only visibility/order move. */
 @media (min-width:1251px){
  body.saved-mode.saved-list-view .pattern-a-card{
-  position:relative;
-  grid-template-columns:30px 82px minmax(0,1fr) minmax(300px,350px) minmax(106px,128px);
-  grid-template-rows:minmax(106px,auto);
-  column-gap:12px;
-  min-height:124px;
-  padding:10px 12px;
+  display:grid;grid-template-columns:82px minmax(0,1fr) minmax(185px,218px);
+  grid-template-rows:minmax(106px,auto);column-gap:16px;row-gap:0;
+  min-height:128px;padding:12px 14px;align-items:center;
  }
  body.saved-mode.saved-list-view .pattern-a-card .record-poster{
-  grid-column:2;grid-row:1;width:82px;height:104px;align-self:center;
+  grid-column:1;grid-row:1;width:82px;height:106px;align-self:center;
  }
  body.saved-mode.saved-list-view .pattern-a-card .record-main{
-  grid-column:3;grid-row:1;display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:center;column-gap:10px;
+  grid-column:2;grid-row:1;display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(72px,108px);
+  align-items:center;column-gap:10px;min-width:0;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy{min-width:0}
  body.saved-mode.saved-list-view .pattern-a-card .card-title{margin-bottom:5px}
@@ -2117,96 +2116,68 @@ select:not([data-status-id]){
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score .mal-label{font-size:11px}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score .mal-value{font-size:22px}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score small{display:none}
- /* The 2-column buttons are already rendered inside .pattern-a-tools. */
+ /* Icon row: provider -> pin (planned only) -> personal rating -> memo.
+    The compact controls are the same DOM/actions already used in 2-col mode. */
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{
-  display:flex;align-items:center;flex-wrap:nowrap;gap:5px;margin-top:7px;
+  display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-top:7px;
+  min-height:30px;max-width:100%;
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.stream-inline{flex:0 0 auto}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy>.stream-inline,
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy>.next-watch-toggle{display:none}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.stream-inline{display:flex;order:1;flex:0 0 auto}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.next-watch-toggle{
-  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  display:inline-flex;order:2;position:static;inset:auto;transform:none;
   width:30px;height:30px;min-height:30px;margin:0;padding:5px;
  }
- /* The memo control keeps the same data-note-id and edit behavior; only its
-    presentation follows the existing two-column 30px icon rule. */
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview{display:none}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column{
-  grid-column:5;grid-row:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;align-self:stretch;
-  min-width:0;gap:8px;padding:0;border-left:0;
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.grid-self-rating{
+  display:inline-flex;order:3;align-items:center;min-width:0;max-width:100%;
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview,
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview:not(.has-note),
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview.has-note{
-  display:inline-flex;align-items:center;justify-content:center;
-  flex:0 0 34px;width:34px;max-width:34px;height:34px;min-height:34px;
-  padding:6px;gap:0;border:1px solid var(--border-ctrl);border-radius:6px;
-  background:transparent;color:var(--muted);text-align:center;
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.grid-self-rating .grid-self-rating-button{
+  display:inline-flex;align-items:center;min-height:30px;max-width:100%;
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview.has-note{
-  border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent);
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview:not(.has-note),
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note{
+  display:inline-flex;order:4;align-items:center;justify-content:center;
+  width:30px;height:30px;min-height:30px;max-width:30px;
+  padding:5px;gap:0;flex:0 0 30px;
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview-label,
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview-quote{display:none}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview .ui-icon,
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview-edit-ico{
-  display:block;width:17px;height:17px;flex:0 0 17px;color:inherit;
- }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy>.stream-inline,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy>.next-watch-toggle{display:none}
+ /* The visible compact rating and memo retain original handlers, so their
+    second copy in the old right-hand personal column is not displayed. */
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column{display:none}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-update{display:none}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.pattern-a-rating{
-  width:auto;max-width:100%;min-width:0;
- }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-rating-line{
-  flex-wrap:wrap;justify-content:center;gap:4px;
- }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-rate-cta{
-  width:auto;min-height:28px;height:auto;padding:4px 6px;font-size:11px;
- }
+ /* Restore original one-column vertical hierarchy: status above Start/Progress. */
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column{
-  grid-column:4;grid-row:1;display:grid;
-  grid-template-columns:170px minmax(0,1fr);
-  grid-template-rows:minmax(38px,auto) auto;
-  align-content:center;align-items:center;column-gap:12px;row-gap:6px;
-  align-self:stretch;min-width:0;padding:0 0 0 14px;
+  grid-column:3;grid-row:1;display:flex;flex-direction:column;
+  justify-content:center;align-items:stretch;align-self:stretch;
+  min-width:0;gap:10px;padding:6px 0 6px 14px;
   border-left:1px solid var(--border);
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-status-menu{
-  grid-column:1;grid-row:1;width:170px;max-width:100%;
- }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-status-menu,
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.record-primary,
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress{
-  grid-column:2;grid-row:1;width:100%;min-width:0;
+  width:100%;max-width:100%;min-width:0;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.record-primary{
-  height:38px;min-height:38px;padding:0 8px;
+  min-height:42px;height:42px;padding:0 9px;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{
   gap:4px;font-size:10px;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions{gap:5px}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.episode-notice{
-  grid-column:1/-1;grid-row:2;max-width:100%;
- }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.pattern-a-date-watch{
-  grid-column:1/-1;grid-row:2;
- }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-mobile-score{display:none}
 }
-/* Narrow desktop list layout: allow the same icon controls to fit without
-   clipping the status selector or the progress buttons. */
-@media(min-width:1251px) and (max-width:1440px){
+@media (min-width:1251px) and (max-width:1440px){
  body.saved-mode.saved-list-view .pattern-a-card{
-  grid-template-columns:25px 72px minmax(0,1fr) minmax(264px,304px) minmax(106px,128px);
-  gap:10px;padding:10px;
+  grid-template-columns:72px minmax(0,1fr) minmax(167px,187px);
+  column-gap:12px;padding:10px;
  }
  body.saved-mode.saved-list-view .pattern-a-card .record-poster{width:72px;height:101px}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column{
-  grid-template-columns:minmax(125px,1fr) minmax(0,1fr);gap:8px;padding-left:10px;
+ body.saved-mode.saved-list-view .pattern-a-card .record-main{
+  grid-template-columns:minmax(0,1fr) minmax(68px,92px);column-gap:7px;
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-status-menu{width:100%}
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.next-watch-toggle{left:8px}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score .mal-value{font-size:19px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column{gap:8px;padding-left:10px}
 }
 
 </style>
@@ -2272,7 +2243,7 @@ select:not([data-status-id]){
    <p data-simple="own-device-info" hidden></p>
   </div>
  </details>
-  <div data-simple="device-management" class="anilog-device-management" hidden>
+  <div id="anilog-device-management" data-simple="device-management" class="anilog-device-management" hidden>
     <strong>登録済み端末</strong>
     <p data-simple="device-count">登録数を確認しています</p>
     <p class="anilog-sync-note">端末名は自分で付けられます。解除前にIDを確認してください。</p>
@@ -2283,6 +2254,7 @@ select:not([data-status-id]){
       <div class="anilog-sync-restart-buttons"><button type="button" data-simple="device-revoke" disabled>選んだ端末の登録を解除</button><button type="button" data-simple="device-cancel">キャンセル</button></div>
     </div>
     <p class="anilog-sync-note">登録解除しても記録は消えません。</p>
+    <button type="button" data-simple="device-management-close">閉じる</button>
   </div>
 </div>
 <div data-simple="setup">
@@ -2320,7 +2292,7 @@ select:not([data-status-id]){
 <input data-v408="box-id" placeholder="接続ID（省略可）"><button type="button" data-v408="unlock-owner" disabled>承認済み端末を解錠</button><button type="button" data-v409="first-owner" disabled>所有者初回設定</button>
 <button type="button" data-v407="invite" disabled>招待QRを作成</button><input data-v407="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" aria-label="新端末の6桁コード" placeholder="新端末の6桁コード">
 <button type="button" data-v407="approve" disabled>番号を確認して承認</button><div data-v407="qr"></div>
-<details class="anilog-sync-help anilog-sync-pairing-tools" data-v407="tools"><summary>接続が進まない場合・補助操作</summary><div class="anilog-sync-pairing-tool-buttons"><button type="button" data-v407="refresh" disabled>承認状態を確認</button><button type="button" data-v407="copy" disabled>リンクをコピー</button></div></details>
+<details class="anilog-sync-help anilog-sync-pairing-tools" data-v407="tools"><summary>接続が進まない場合・補助操作</summary><p class="anilog-sync-tool-note">QRの読取後に申請が届いたかを確認します。確認するだけでは接続されません。</p><div class="anilog-sync-pairing-tool-buttons"><button type="button" data-v407="refresh" disabled>QRの申請状況を確認</button><button type="button" data-v407="copy" disabled>リンクをコピー</button></div></details>
 <button type="button" data-v407="claim" disabled>招待を受け取る</button><span data-v407="receiver-code"></span><button type="button" data-v407="check" disabled>承認を確認</button><button type="button" data-v407="receive" disabled>初回受信</button><button type="button" data-v407="repair" disabled>認証のみ再登録</button><button type="button" data-v407="sync" disabled>同期する</button><p data-v407="status">接続処理を確認しています。</p>
 </div></section>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>

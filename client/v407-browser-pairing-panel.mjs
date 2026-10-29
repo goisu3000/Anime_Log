@@ -17,14 +17,14 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  const remember=()=>{if(automaticMode&&owner&&invitation)try{globalThis.sessionStorage?.setItem(referenceKey(),invitation)}catch{}};
  const recall=()=>{try{const id=automaticMode&&globalThis.sessionStorage?.getItem(referenceKey());return /^[A-Za-z0-9_-]{22,43}$/.test(id??'')?id:null}catch{return null}};
  const messages={
-  INVITATION_PENDING:'新しい端末から申請が届いています。「承認状態を確認」で6桁コードを確認してください。',
+  INVITATION_PENDING:'新しい端末から申請が届いています。6桁コードを入力して承認してください。',
   INVITATION_ALREADY_APPROVED:'承認済みです。新しい端末で接続を完了してください。',
   APPROVAL_IN_PROGRESS:'承認結果を確認中です。',
   CODE_NOT_MATCHED:'番号が一致しません。新しい端末の6桁コードを入力し直してください。',
   NOT_CLAIMED:'申請待ちです。新しい端末でQRを読み取ってください。',
-  NETWORK:'通信結果を確認できません。「承認状態を確認」を押してください。承認は再送していません。',
+  NETWORK:'通信結果が不明です。「QRの申請状況を確認」を押してください。承認は再送しません。',
   RATE_LIMITED:'通信が混み合っています。少し待ってから再確認してください。',
-  APPROVAL_UNAVAILABLE:'承認できたか確認できません。端末数の上限などが原因の可能性があります。「承認状態を確認」を押してください。',
+  APPROVAL_UNAVAILABLE:'承認できたか確認できません。端末数の上限などが原因かもしれません。「QRの申請状況を確認」を押してください。',
   DEVICE_LIMIT:'登録上限の4台に達しています。不要な端末を確認してから解除してください。',
   OWNER_NOT_APPROVED:'まだ承認されていません。QRを表示した端末で6桁コードを承認してください。',
   INVITATION_EXPIRED:'QRの期限が切れました。接続準備中なら安全に中止し、QR発行側で新しいQRを作成してください。記録は消えません。',
@@ -137,16 +137,20 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  }));
  async function inspectOwner(){
   if(!owner||!invitation)fail('NO_INVITATION');
+  show('QRの申請状況を確認しています…');
   const s=await owner.flow.inspectOwner({owner:owner.owner,boxId:owner.boxId,invitationId:invitation});
   serverCode=s.state==='claimed'?s.confirmationCode:null;
   if(s.state==='approved'){
    code.value='';clearQr();show('承認済みです。新しい端末で承認を確認し、接続を完了してください。');
   }else if(['expired','denied','used'].includes(s.state)){
    clearQr();show(messages['INVITATION_'+s.state.toUpperCase()]);
-  }else if(s.state==='open'&&inviteUrl===null)show('QR画像は再表示できません。6桁コードが出ている場合は「承認状態を確認」、そうでなければ新しいQRを発行してください。');
+  }else if(s.state==='open'&&inviteUrl===null)show('QR画像は再表示できません。6桁コードが出ている場合は「QRの申請状況を確認」、そうでなければ新しいQRを発行してください。');
   else show(s.state==='claimed'
    ?'新しい端末の6桁コードを入力して承認してください。'
    :messages.NOT_CLAIMED);
+  // Make each read-only inspection visibly acknowledge its result, even
+  // when the server state has not changed since the previous check.
+  show('確認結果（'+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+'）：'+status.textContent);
   setPhase('OWNER_'+s.state.toUpperCase());return s;
  }
  refresh.addEventListener('click',()=>action(inspectOwner));
