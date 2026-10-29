@@ -10858,7 +10858,7 @@ if(topBtn){
   // Do not change other selects or mobile menus.
   if(innerWidth>=1251 && document.body.classList.contains('saved-mode') && !document.body.classList.contains('saved-list-view') && owner.closest('.pattern-a-status-menu')){
    const card=owner.closest('.pattern-a-card');
-   if(card){rightLimit=Math.min(rightLimit,card.getBoundingClientRect().right-16)}
+   if(card){rightLimit=Math.min(rightLimit,card.getBoundingClientRect().right-14)}
   }
   const topLimit=d?Math.max(8,d.top+8):8;
   const bottomLimit=d?Math.min(innerHeight-8,d.bottom-8):innerHeight-8;
