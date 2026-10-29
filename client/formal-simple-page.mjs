@@ -323,7 +323,19 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const invitations=createRegistrationIntentStore({idb:{open:(name,...args)=>scopedIDB.open('receiver:'+name,...args)},locks:scopedLocks,origin:location.origin});
  const captured=window.__v407TakePairingURL?.();
  const receiving=captured?.hash?.startsWith('#anilog-pair=');
+ const qrNext=el('qr-next'),qrTitle=el('qr-step-title'),qrMessage=el('qr-step-message');
+ const qrFlow=Boolean(receiving||window.__anilogSyncQrResume);
+ // A resume bit is UI intent, never a replacement for a consumed QR.
+ const qrNeedsFreshScan=()=>qrFlow&&!captured&&window.__anilogSyncQrResume===true&&local.getItem(LOCAL_MODE)===null;
+ function nextQrStep(title,detail){
+  if(!qrFlow||!qrNext)return;
+  qrNext.hidden=false;
+  if(qrTitle)qrTitle.textContent=title;
+  if(qrMessage)qrMessage.textContent=detail;
+ }
+ if(qrFlow)nextQrStep('QRからの同期設定を開きました','接続先とこの端末の記録を確認してから進めます。次の操作を下に表示します。');
  function message(error){attention(true);status.textContent='端末の記録と原本を保持しています。接続を再試行できます。';el('retry').hidden=false;
+  if(qrFlow)nextQrStep('接続を停止しました','以前の記録は残しています。下の状態表示と案内を確認し、必要ならPC側で新しいQRを作成してください。初期化や削除はしないでください。');
   // No exception object, credentials, QR URL or source records enter logs/DOM.
   if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';}
  async function action(fn){if(busy)return;busy=true;el('begin').disabled=true;el('retry').disabled=true;
@@ -339,9 +351,10 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    downloaded=raw;
   }catch(error){message(error)}
  });
- el('confirmed').addEventListener('change',()=>{el('begin').disabled=!downloaded||!el('confirmed').checked||busy});
+ el('confirmed').addEventListener('change',()=>{el('begin').disabled=!downloaded||!el('confirmed').checked||busy||qrNeedsFreshScan()});
  async function beginOrResume(){
   const currentMode=local.getItem(LOCAL_MODE);
+  if(qrNeedsFreshScan())throw Error('QR_RESCAN_REQUIRED_KEEP_RECORDS');
   // A prior attempt can leave a safely fenced preparing state. Complete the
   // existing transition instead of trying registration with a locked vault.
   if(currentMode==='preparing'){await setup.resume();location.reload();return}
@@ -363,6 +376,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   attention(true);
  }
  if(!mode){
+  if(qrNeedsFreshScan()){nextQrStep('QRをもう一度読み取ってください','更新前のQR情報はURLから取り除いているため、この画面では接続を開始しません。PC・スマホ側のQRをもう一度読み取ってください。この端末の記録は変更していません。');el('begin').disabled=true;}
+  else if(qrFlow)nextQrStep('手順1：この端末の記録を保護','下の「バックアップを保存する」を押し、保存を確認してチェックを入れ、「端末間同期を始める」へ進んでください。PC側の6桁承認は後で行います。');
   // This page is mounted before the first opt-in. A failure may occur after
   // the durable cutover fence is written, while the current JS mount still
   // follows the legacy branch. The visible retry must never be inert.
@@ -374,6 +389,14 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return {phase:'LEGACY_OFF',storage,vault,setup};
  }
  el('setup').hidden=true;
+ if(qrFlow){
+  if(profileState.phase==='disconnected'&&!receiving)nextQrStep('QRをもう一度読み取ってください','更新前のQR情報はURLから取り除いているため、接続先IDは表示できません。接続したいPC・スマホのQRをもう一度読み取り、ID照合から進めてください。以前の記録は保持しています。');
+  else if(profileState.phase==='disconnected')nextQrStep('手順1：同期先IDを確認','下にQRで読み取った同期先IDが表示されます。PC・スマホ側のIDと一致するか確認し、バックアップを保存して接続を進めてください。');
+  else if(staging)nextQrStep('手順2：PCで6桁コードを承認','iPadに6桁コードが表示されたらPCで入力・承認し、iPadの「接続を完了」を押してください。接続中はこの画面を閉じないでください。');
+  else if(ignoredExistingQR)nextQrStep('接続先を確認してください','この端末は既に別の同期設定を使用しています。QRだけでは切り替えません。「同期設定を最初からやり直す」で解除してから新しいQRを読み取ってください。');
+  else if(mode==='encrypted-local')nextQrStep('手順2：PCで6桁コードを承認','iPadに表示される6桁コードをPCで入力・承認し、iPadで「接続を完了」を押します。記録は承認後に受け取ります。');
+  else nextQrStep('同期の状態を確認','下の「同期済み」表示と同期先IDを確認してください。まだ承認中の場合は画面の案内に従ってください。');
+ }
  // Old browser tabs must not keep editing an obsolete profile. A pending
  // switch freezes UI writes; its internal authenticated registration may still
  // commit exclusively to the staging vault, never to the original WAL.
@@ -433,7 +456,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const restart=el('restart-sync'),restartConfirm=el('restart-confirm'),restartAccept=el('restart-accept'),restartDismiss=el('restart-dismiss'),restartGuide=el('restart-guide'),targetLabel=el('relink-target');
  const backupButton=el('relink-backup'),confirmReconnection=el('relink-confirm'),startReconnection=el('relink-start'),cancelReconnection=el('relink-cancel');
  let restartGuideOpen=false;
- let newBackupDownloaded=false,backupRevision=null;
+ let newBackupDownloaded=false,backupRevision=null,qrTargetAllowed=!receiving;
  const oldConnectionKey=SYNC_PAUSE_KEY+profileSuffix(profileState.active);
  const oldPause=createSyncPauseGuard({local,key:oldConnectionKey});
  function showConnectionActions(){
@@ -446,7 +469,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   relink.hidden=state.phase!=='disconnected';
   restart.hidden=staging||!['connected','disconnected'].includes(state.phase)||!restartConfirm.hidden;
   if(state.phase!=='connected')restartConfirm.hidden=true;
-  restartGuide.hidden=state.phase!=='disconnected'||!restartGuideOpen;
+  restartGuide.hidden=state.phase!=='disconnected'||!restartGuideOpen||(qrFlow&&receiving);
   relinkActions.hidden=state.phase!=='disconnected'||!receiving;
   targetLabel.hidden=state.phase!=='disconnected'||!receiving;
   cancelReconnection.hidden=!['preparing','ready'].includes(state.phase);
@@ -503,11 +526,12 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    const raw=storage.exportBackup();const url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
    const a=document.createElement('a');a.href=url;a.download='anime-log-before-reconnect.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
    backupRevision=vault.readRevision();newBackupDownloaded=true;
+   if(receiving&&qrTargetAllowed)nextQrStep('手順2：保存したバックアップを確認','ダウンロードしたファイルを保存できたこと、同期先IDがPC側と一致すること、他のANI:LOGタブを閉じたことを確認して、下のチェックを入れてください。');
   }catch(e){message(e)}
  });
- confirmReconnection.addEventListener('change',()=>{startReconnection.disabled=!(newBackupDownloaded&&confirmReconnection.checked)});
+ confirmReconnection.addEventListener('change',()=>{startReconnection.disabled=!(newBackupDownloaded&&confirmReconnection.checked&&qrTargetAllowed);if(receiving&&qrTargetAllowed&&newBackupDownloaded&&confirmReconnection.checked)nextQrStep('手順3：この端末を接続する','下の「この端末を接続する」を押してください。続いてiPadに表示される6桁の番号をPCで承認し、iPad側の接続を完了します。');});
  startReconnection.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
-  if(!receiving||!captured?.href||!newBackupDownloaded||!confirmReconnection.checked||profiles.read().phase!=='disconnected'||!oldPause.paused)throw Error('CONFIRMED_BACKUP_AND_QR_REQUIRED');
+  if(!receiving||!captured?.href||!qrTargetAllowed||!newBackupDownloaded||!confirmReconnection.checked||profiles.read().phase!=='disconnected'||!oldPause.paused)throw Error('CONFIRMED_BACKUP_AND_QR_REQUIRED');
   const source=storage.read(),lineage=source.weeklyOptions.__syncLineage;
   const comparison=await compareScannedQrDestination({qrUrl:captured.href,siteOrigin:location.origin,apiOrigin:api.origin,lineage});
   if(comparison.sameDestination)throw Error('SAME_DESTINATION_USE_RECONNECT');
@@ -561,12 +585,18 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
   restartGuideOpen=true;showConnectionActions();
+  // The QR has already been scanned. Do not tell the user to scan it again.
+  restartGuide.hidden=true;
+  nextQrStep('手順1：同期先IDを照合','下の「読み取ったQRの同期先ID」とPC側のIDを比較します。一致したら「バックアップを保存する」→確認チェック→「この端末を接続する」の順に進みます。続いてPCで6桁のコードを承認してください。');
   try{
    const comparison=await compareScannedQrDestination({qrUrl:captured.href,siteOrigin:location.origin,apiOrigin:api.origin,
     lineage:storage.read().weeklyOptions.__syncLineage});
    targetLabel.textContent='読み取ったQRの同期先ID：'+comparison.scannedID+'。接続したいPCまたはスマホ側の「同期先ID」と必ず比較してください。'+(comparison.sameDestination?' このQRは以前の同期先です。別の同期先に変更する場合は、新しいQRを読み取ってください。':'');
    targetLabel.hidden=false;
+   qrTargetAllowed=!comparison.sameDestination;startReconnection.disabled=!(qrTargetAllowed&&newBackupDownloaded&&confirmReconnection.checked);
+   if(comparison.sameDestination)nextQrStep('以前の同期先と同じQRです','元の同期先に戻したい場合は「詳細設定・復旧」の「以前の同期先に戻す」を使います。別の同期先に変更したい場合はPCから新しいQRを作成し、もう一度読み取ってください。');
   }catch{
+   nextQrStep('QRの同期先を確認できません','この接続は進めず、元のPCで新しいQRを作成して読み取ってください。視聴記録は保護されています。');
    targetLabel.textContent='読み取ったQRの同期先IDを照合できません。接続を中止し、元の端末の新しいQRを読み取ってください。';
    targetLabel.hidden=false;
   }
@@ -661,6 +691,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
      if(dialog.open&&!recoveryActive&&!pauseGuard.paused)recoveryEntry.click();
     });
    }else if(['synced','unavailable','offline'].includes(s.phase)||(s.phase==='pending'&&s.status!==undefined))repairRequested=false;
+   if(s.phase==='synced')nextQrStep('同期先IDと同期結果を確認','下の同期結果と同期先IDを確認してください。接続したいPC・スマホとIDが一致していれば、この画面を閉じて使えます。');
    if(s.phase==='synced')void running?.confirmAutomaticRole();
   }});automatic.start();
   // A registered receiver has no further pairing actions. Avoid leaving a

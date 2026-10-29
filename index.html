@@ -2,17 +2,46 @@
 <html lang="ja">
 <head>
 <script>
-/* Strip QR secret before deferred scripts or any app-initiated network work. */
+/* A QR opened in an existing Safari tab may be a same-document fragment
+ * navigation: no deferred script or DOMContentLoaded runs again. Re-enter the
+ * ordinary protected bootstrap exactly once. The QR secret stays in the
+ * fragment until the next HEAD executes, then is stripped synchronously,
+ * before app scripts/network. Only a non-secret UI continuation bit survives
+ * reloads; no URL, token, box ID or records are stored in sessionStorage. */
 (()=>{
+  const resumeKey='anilog-sync-qr-dialog-open-v1';
+  const isPairHash=()=>location.hash.startsWith('#anilog-pair=')||location.hash.startsWith('#anilog-owner=');
   let captured=null;
-  if(location.hash.startsWith('#anilog-pair=')||location.hash.startsWith('#anilog-owner=')){
+  if(isPairHash()){
     captured={href:location.href,hash:location.hash,pathname:location.pathname,search:location.search};
     history.replaceState(history.state,'',location.pathname+location.search);
   }
-  // UI-only flag: show the existing sync panel when arriving via a QR link.
-  // Never store the QR URL or its secret in this flag.
-  window.__anilogSyncQrEntry = captured !== null;
+  let resume=captured!==null;
+  try{
+    if(resume)sessionStorage.setItem(resumeKey,'1');
+    else resume=sessionStorage.getItem(resumeKey)==='1';
+  }catch{/* Private browsing may deny storage; the fresh QR still opens. */}
+  window.__anilogSyncQrEntry=resume;
+  window.__anilogSyncQrResume=resume;
+  window.__anilogSyncClearQrDialogResume=()=>{
+    window.__anilogSyncQrResume=false;
+    try{sessionStorage.removeItem(resumeKey)}catch{}
+  };
   Object.defineProperty(window,'__v407TakePairingURL',{value:()=>{const result=captured;captured=null;return result},configurable:false,writable:false});
+  let reentering=false;
+  const enterReusedTab=event=>{
+    if(!isPairHash()||reentering)return;
+    if(event?.stopImmediatePropagation)event.stopImmediatePropagation();
+    reentering=true;
+    // This is a UI intent only. Never persist the secret-bearing URL.
+    try{sessionStorage.setItem(resumeKey,'1')}catch{}
+    location.reload();
+  };
+  // Capture before ANI:LOG's ordinary share-route hash handlers.
+  window.addEventListener('hashchange',enterReusedTab,true);
+  // iPad Safari may restore an existing tab from the page cache after camera.
+  window.addEventListener('pageshow',enterReusedTab,true);
+  document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')enterReusedTab()},true);
 })();
 </script>
 <meta charset="UTF-8">
@@ -2008,6 +2037,10 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-buttons{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-restart-buttons>[data-simple="restart-accept"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .anilog-sync-dialog #formal-simple-sync [data-simple="restart-sync"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+/* QR continuation: compact and non-animated; does not change any controls. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next:not([hidden]){padding:12px 14px;border:1px solid var(--accent-border);border-radius:var(--radius-sm);background:var(--accent-soft);display:grid;gap:5px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next strong{color:var(--ink);font-size:var(--fs-sm);font-weight:700}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next p{color:var(--muted);font-size:var(--fs-sm);line-height:1.65;margin:0}
 /* Do not make the connected screen compete with the ordinary 「再同期」 CTA. */
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"][data-sync-phase="connected"] > [data-simple="restart-sync"]{background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink)}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-target:not([hidden]){color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.6;overflow-wrap:anywhere}
@@ -2021,6 +2054,10 @@ select:not([data-status-id]){
     <button type="button" class="anilog-sync-dialog-close" id="anilogSyncDialogClose" aria-label="同期設定を閉じる">閉じる</button>
   </div>
 <details id="formal-simple-sync" open><summary>端末間同期</summary>
+<div class="anilog-sync-qr-next" data-simple="qr-next" hidden role="status" aria-live="polite">
+  <strong data-simple="qr-step-title">QRコードを受け取りました</strong>
+  <p data-simple="qr-step-message">この画面から接続を進めます。同期先の確認とバックアップが必要です。</p>
+</div>
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
 <button type="button" data-simple="retry" hidden>再同期</button>
 <p data-simple="connection-info" hidden></p>
@@ -11094,7 +11131,7 @@ if(topBtn){
  pc.addEventListener('click',openFrom);
  mobile?.addEventListener('click',openFrom);
  close.addEventListener('click',()=>{if(dialog.dataset.conflictBusy!=='true')dialog.close()});
- dialog.addEventListener('close',()=>{if(opener?.isConnected&&opener?.offsetParent!==null)opener.focus();opener=null});
+ dialog.addEventListener('close',()=>{window.__anilogSyncClearQrDialogResume?.();if(opener?.isConnected&&opener?.offsetParent!==null)opener.focus();opener=null});
  function syncLabel(){
    const text=status?.textContent??'';
    const needs=summary?.textContent?.includes('要確認')||/失敗|できません|停止しました|確認してください|競合/.test(text);
