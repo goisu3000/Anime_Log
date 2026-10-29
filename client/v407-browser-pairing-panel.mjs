@@ -9,8 +9,8 @@ const by=(root,id)=>{const n=root.querySelector('[data-v407="'+id+'"]');if(!n)fa
 export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticMode=false,autoClaimReceiver=false,location=globalThis.location,history=globalThis.history}={}){
  if(!root?.querySelector||typeof syncFactory!=='function')fail('CONTEXT_REQUIRED');
  const status=by(root,'status'),pass=by(root,'passphrase'),qr=by(root,'qr'),invite=by(root,'invite'),refresh=by(root,'refresh'),approve=by(root,'approve'),code=by(root,'code'),claim=by(root,'claim'),check=by(root,'check'),receive=by(root,'receive'),repair=by(root,'repair'),sync=by(root,'sync'),copy=by(root,'copy'),newCode=by(root,'receiver-code');
- const controls=[invite,refresh,approve,claim,check,receive,repair,sync,copy];
- let owner=null,receiver=null,invitation=null,inviteUrl=null,serverCode=null,receiverStatus=null,session=null,ready=false,busy=false,stopped=false,phase='IDLE';
+ const controls=[invite,refresh,approve,claim,check,receive,repair,sync,copy],tools=root.querySelector('[data-v407="tools"]');
+ let owner=null,receiver=null,invitation=null,inviteUrl=null,serverCode=null,receiverStatus=null,session=null,ready=false,busy=false,stopped=false,phase='IDLE',lastIssue=null;
  // This tab-only reference is untrusted UI intent, NOT a credential. No QR,
  // invitation secret, six digits, token, key or records are persisted here.
  const referenceKey=()=> 'anilog-pairing-owner-reference-v1:'+owner.boxId;
@@ -40,12 +40,20 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
   // an active invitation. Do not show inactive approval/copy buttons before
   // the user has asked to add a device. Staging behavior is unchanged.
   if(automaticMode){
-   const active=invitation!==null&&!['OWNER_APPROVED','OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase);
+   const active=invitation!==null&&(phase!=='OWNER_OPEN'||inviteUrl!==null)&&!['OWNER_APPROVED','OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase);
    code.hidden=!active;approve.hidden=!active;copy.hidden=inviteUrl===null;
    refresh.hidden=owner===null||invitation===null;
-   if(receiver){check.hidden=ready;receive.hidden=ready||receiverStatus!=='approved';}
+   // A live invitation has only one primary decision: approve the code.
+   // Keep reissue, read-only inspection and copy accessible as recoveries.
+   invite.hidden=owner!==null&&invitation!==null&&
+    !(['OWNER_APPROVED','OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE','OWNER_OPEN','RESTORED_ACTIVE'].includes(phase)&&inviteUrl===null);
+   if(receiver){check.hidden=ready||receiverStatus==='approved';receive.hidden=ready||receiverStatus!=='approved';}
+   if(tools){tools.hidden=owner===null||(!invitation&&!inviteUrl);if(lastIssue&&owner)tools.open=true;}
   }
   controls.forEach(c=>c.disabled=true);
+  if(automaticMode&&root.dispatchEvent&&typeof globalThis.CustomEvent==='function'){
+   root.dispatchEvent(new CustomEvent('anilog-pairing-visual-state',{bubbles:true,detail:{phase,role:owner?'owner':receiver?'receiver':null,stopped,busy,issue:lastIssue,hasQr:inviteUrl!==null}}));
+  }
   if(busy||stopped)return;
   invite.disabled=owner===null||(automaticMode&&invitation!==null&&!(phase==='OWNER_OPEN'&&inviteUrl===null)&&!['OWNER_APPROVED','OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase));
   refresh.disabled=owner===null||invitation===null;
@@ -59,7 +67,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  }
  async function action(fn){
   if(busy||stopped)return;
-  busy=true;render();
+  busy=true;lastIssue=null;render();
   try{await fn()}catch(err){
    const reason=String(err?.message??'UNKNOWN_ERROR');
    // A mistyped owner code is rejected locally BEFORE approveOwner/network.
@@ -72,6 +80,8 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
    ].includes(reason);
    const kind=reason.startsWith('V406_PAIRING_STOP:')?reason.slice('V406_PAIRING_STOP:'.length):null;
    const recoveryKind=kind==='EXPIRED'?'INVITATION_EXPIRED':kind;
+   // Presentation events contain fixed categories only, never exception text.
+   lastIssue=Object.hasOwn(messages,recoveryKind)?recoveryKind:localRetry?'LOCAL_RETRY':'SAFE_STOP';
    if(automaticMode&&Object.hasOwn(messages,recoveryKind)){
     serverCode=null;
     if(recoveryKind==='APPROVAL_UNAVAILABLE')phase='OWNER_APPROVAL_BLOCKED';

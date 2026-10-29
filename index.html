@@ -2052,6 +2052,24 @@ select:not([data-status-id]){
 /* Do not make the connected screen compete with the ordinary 「再同期」 CTA. */
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"][data-sync-phase="connected"] > [data-simple="restart-sync"]{background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink)}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-target:not([hidden]){color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.6;overflow-wrap:anywhere}
+/* Pairing journey v1: presentation only. No network/save/credential changes. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next:not([hidden]){padding:16px;border:1px solid var(--accent-border);border-radius:var(--radius-sm);background:var(--accent-soft);display:grid;gap:9px;margin-bottom:16px}
+.anilog-sync-dialog .anilog-sync-progress-head{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi)}
+.anilog-sync-dialog .anilog-sync-progress-head [data-simple="qr-step-count"]{white-space:nowrap;color:var(--ink);font-variant-numeric:tabular-nums}
+.anilog-sync-dialog .anilog-sync-progress-bars{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.anilog-sync-dialog .anilog-sync-progress-bars>span{height:4px;border-radius:5px;background:var(--border-ctrl)}
+.anilog-sync-dialog .anilog-sync-progress-bars>span.is-complete{background:var(--accent)}
+.anilog-sync-dialog .anilog-sync-device-prompt{justify-self:start;display:inline-flex;padding:4px 9px;border:1px solid var(--accent-border);border-radius:20px;color:var(--ink);font-size:var(--fs-xs);font-weight:var(--fw-semi)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next strong{font-size:var(--fs-lg);line-height:1.4;color:var(--ink);font-weight:var(--fw-bold)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next p{margin:0;color:var(--muted);font-size:var(--fs-sm);line-height:1.6}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next[data-journey-state="needs-attention"]{background:var(--surface);border-color:var(--border-ctrl)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next[data-journey-state="done"]{border-color:var(--accent-border)}
+.anilog-sync-dialog #v407-pairing [data-v407="receiver-code"]:not(:empty){display:block;max-width:260px;margin:12px auto;padding:12px 8px;background:var(--surface);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);font-size:clamp(24px,7vw,30px);font-weight:var(--fw-bold);letter-spacing:.17em;text-align:center;font-variant-numeric:tabular-nums}
+.anilog-sync-dialog #v407-pairing [data-v407="status"]{font-size:var(--fs-sm);color:var(--muted);line-height:1.6}
+.anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tools{margin:10px 0 0}
+.anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tool-buttons{display:flex;flex-wrap:wrap;gap:12px;padding:0 12px 12px}
+.anilog-sync-dialog #v407-pairing [data-v407="approve"],.anilog-sync-dialog #v407-pairing [data-v407="receive"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+@media(max-width:740px){.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next:not([hidden]){padding:12px}.anilog-sync-dialog .anilog-sync-progress-head{font-size:12px}}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -2062,7 +2080,10 @@ select:not([data-status-id]){
     <button type="button" class="anilog-sync-dialog-close" id="anilogSyncDialogClose" aria-label="同期設定を閉じる">閉じる</button>
   </div>
 <details id="formal-simple-sync" open><summary>端末間同期</summary>
-<div class="anilog-sync-qr-next" data-simple="qr-next" hidden role="status" aria-live="polite">
+<div class="anilog-sync-qr-next" data-simple="qr-next" hidden role="status" aria-live="polite" aria-atomic="true">
+  <div class="anilog-sync-progress-head"><span>接続の進行状況</span><span data-simple="qr-step-count">手順 1 / 3</span></div>
+  <div class="anilog-sync-progress-bars" aria-hidden="true"><span data-simple="qr-step-bar"></span><span data-simple="qr-step-bar"></span><span data-simple="qr-step-bar"></span></div>
+  <span class="anilog-sync-device-prompt" data-simple="qr-step-device">この端末で操作</span>
   <strong data-simple="qr-step-title">QRコードを受け取りました</strong>
   <p data-simple="qr-step-message">この画面から接続を進めます。同期先の確認とバックアップが必要です。</p>
 </div>
@@ -2140,8 +2161,9 @@ select:not([data-status-id]){
 </details>
 <div id="v407-pairing">
 <input data-v408="box-id" placeholder="接続ID（省略可）"><button type="button" data-v408="unlock-owner" disabled>承認済み端末を解錠</button><button type="button" data-v409="first-owner" disabled>所有者初回設定</button>
-<button type="button" data-v407="invite" disabled>招待QRを作成</button><button type="button" data-v407="refresh" disabled>6桁コードを確認</button><input data-v407="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" aria-label="新端末の6桁コード" placeholder="新端末の6桁コード">
-<button type="button" data-v407="approve" disabled>番号を確認して承認</button><button type="button" data-v407="copy" disabled>リンクをコピー</button><div data-v407="qr"></div>
+<button type="button" data-v407="invite" disabled>招待QRを作成</button><input data-v407="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" aria-label="新端末の6桁コード" placeholder="新端末の6桁コード">
+<button type="button" data-v407="approve" disabled>番号を確認して承認</button><div data-v407="qr"></div>
+<details class="anilog-sync-help anilog-sync-pairing-tools" data-v407="tools"><summary>接続が進まない場合・補助操作</summary><div class="anilog-sync-pairing-tool-buttons"><button type="button" data-v407="refresh" disabled>承認状態を確認</button><button type="button" data-v407="copy" disabled>リンクをコピー</button></div></details>
 <button type="button" data-v407="claim" disabled>招待を受け取る</button><span data-v407="receiver-code"></span><button type="button" data-v407="check" disabled>承認を確認</button><button type="button" data-v407="receive" disabled>初回受信</button><button type="button" data-v407="repair" disabled>認証のみ再登録</button><button type="button" data-v407="sync" disabled>同期する</button><p data-v407="status">接続処理を確認しています。</p>
 </div></section>
 <svg class="icon-definitions" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs><symbol id="ui-play" viewBox="0 0 24 24"><path d="m9 5 11 7-11 7z"/></symbol><symbol id="ui-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol><symbol id="ui-stop" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2"/></symbol><symbol id="ui-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.5 1.1 6.3-5.6-3-5.6 3 1.1-6.3L3 9.6l6.2-.9z"/></symbol><symbol id="ui-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol><symbol id="ui-award" viewBox="0 0 24 24"><path d="M8 3h8v6a4 4 0 0 1-8 0zM8 5H4v3a4 4 0 0 0 4 4m8-7h4v3a4 4 0 0 1-4 4m-4 1v7m-4 1h8"/></symbol><symbol id="ui-share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7.4 6.6 4.4"/></symbol><symbol id="ui-save" viewBox="0 0 24 24"><path d="M5 3h12l4 4v14H3V3zm2 0v6h10V3M7 21v-7h10v7"/></symbol><symbol id="ui-down" viewBox="0 0 24 24"><path d="M12 4v16m-6-6 6 6 6-6"/></symbol><symbol id="ui-up" viewBox="0 0 24 24"><path d="M12 20V4m-6 6 6-6 6 6"/></symbol><symbol id="ui-chevron-down" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol><symbol id="ui-chevron-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol><symbol id="ui-back" viewBox="0 0 24 24"><path d="M20 12H4m6-6-6 6 6 6"/></symbol><symbol id="ui-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol><symbol id="ui-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol><symbol id="ui-edit" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l5-1L21 7l-5-5L4 14z"/></symbol><symbol id="ui-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol><symbol id="ui-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></symbol><symbol id="ui-book" viewBox="0 0 24 24"><path d="M4 3h13a2 2 0 0 1 2 2v16H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2m-2 14h16M7 3v14"/></symbol><symbol id="ui-loading" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-8-8"/></symbol><symbol id="ui-offline" viewBox="0 0 24 24"><path d="m3 3 18 18M5 9a12 12 0 0 0-2 2m6-5a14 14 0 0 1 12 5M7 15a7 7 0 0 1 3-2m5 0 2 2M12 19h.01"/></symbol><symbol id="ui-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol><symbol id="ui-pin" viewBox="0 0 24 24"><path d="M8 3h8l-1 5 4 4v2H5v-2l4-4zM12 14v7"/></symbol><symbol id="ui-grip" viewBox="0 0 24 24"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01"/></symbol></defs></svg>
