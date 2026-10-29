@@ -2083,6 +2083,132 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing > [data-v407="invite"],.anilog-sync-dialog #v407-pairing > [data-simple="manage-devices"]{margin:0 8px 12px 0}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-confirm:not([hidden]){display:grid;gap:12px;padding:12px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 @media(max-width:740px){.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next:not([hidden]){padding:12px}.anilog-sync-dialog .anilog-sync-progress-head{font-size:12px}}
+
+/* ANI:LOG 2026-10-30: desktop My List, one-column mode only.
+   Reuse the existing two-column streaming/pin button markup; keep their actions
+   and all saved data unchanged. Phone and desktop two-column are unaffected. */
+@media (min-width:1251px){
+ body.saved-mode.saved-list-view .pattern-a-card{
+  position:relative;
+  grid-template-columns:30px 82px minmax(0,1fr) minmax(300px,350px) minmax(106px,128px);
+  grid-template-rows:minmax(106px,auto);
+  column-gap:12px;
+  min-height:124px;
+  padding:10px 12px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .record-poster{
+  grid-column:2;grid-row:1;width:82px;height:104px;align-self:center;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .record-main{
+  grid-column:3;grid-row:1;display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;column-gap:10px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy{min-width:0}
+ body.saved-mode.saved-list-view .pattern-a-card .card-title{margin-bottom:5px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-meta{gap:5px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tags{margin-top:5px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-score-aside{
+  display:flex;align-items:center;justify-content:flex-end;min-width:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score{
+  min-width:0;padding:0;gap:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score .mal-label{font-size:11px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score .mal-value{font-size:22px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score small{display:none}
+ /* The 2-column buttons are already rendered inside .pattern-a-tools. */
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{
+  display:flex;align-items:center;flex-wrap:nowrap;gap:5px;margin-top:7px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.stream-inline{flex:0 0 auto}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy>.stream-inline,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy>.next-watch-toggle{display:none}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.next-watch-toggle{
+  position:absolute;left:12px;top:50%;transform:translateY(-50%);
+  width:30px;height:30px;min-height:30px;margin:0;padding:5px;
+ }
+ /* The memo control keeps the same data-note-id and edit behavior; only its
+    presentation follows the existing two-column 30px icon rule. */
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview{display:none}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column{
+  grid-column:5;grid-row:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;align-self:stretch;
+  min-width:0;gap:8px;padding:0;border-left:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview:not(.has-note),
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview.has-note{
+  display:inline-flex;align-items:center;justify-content:center;
+  flex:0 0 34px;width:34px;max-width:34px;height:34px;min-height:34px;
+  padding:6px;gap:0;border:1px solid var(--border-ctrl);border-radius:6px;
+  background:transparent;color:var(--muted);text-align:center;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.note-preview.has-note{
+  border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent);
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview-label,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview-quote{display:none}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview .ui-icon,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column .note-preview-edit-ico{
+  display:block;width:17px;height:17px;flex:0 0 17px;color:inherit;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-update{display:none}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-personal-column>.pattern-a-rating{
+  width:auto;max-width:100%;min-width:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-rating-line{
+  flex-wrap:wrap;justify-content:center;gap:4px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-rate-cta{
+  width:auto;min-height:28px;height:auto;padding:4px 6px;font-size:11px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column{
+  grid-column:4;grid-row:1;display:grid;
+  grid-template-columns:170px minmax(0,1fr);
+  grid-template-rows:minmax(38px,auto) auto;
+  align-content:center;align-items:center;column-gap:12px;row-gap:6px;
+  align-self:stretch;min-width:0;padding:0 0 0 14px;
+  border-left:1px solid var(--border);
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-status-menu{
+  grid-column:1;grid-row:1;width:170px;max-width:100%;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.record-primary,
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress{
+  grid-column:2;grid-row:1;width:100%;min-width:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.record-primary{
+  height:38px;min-height:38px;padding:0 8px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{
+  gap:4px;font-size:10px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions{gap:5px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.episode-notice{
+  grid-column:1/-1;grid-row:2;max-width:100%;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.pattern-a-date-watch{
+  grid-column:1/-1;grid-row:2;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-mobile-score{display:none}
+}
+/* Narrow desktop list layout: allow the same icon controls to fit without
+   clipping the status selector or the progress buttons. */
+@media(min-width:1251px) and (max-width:1440px){
+ body.saved-mode.saved-list-view .pattern-a-card{
+  grid-template-columns:25px 72px minmax(0,1fr) minmax(264px,304px) minmax(106px,128px);
+  gap:10px;padding:10px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .record-poster{width:72px;height:101px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column{
+  grid-template-columns:minmax(125px,1fr) minmax(0,1fr);gap:8px;padding-left:10px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-status-menu{width:100%}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.next-watch-toggle{left:8px}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-public-score .mal-value{font-size:19px}
+}
+
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
