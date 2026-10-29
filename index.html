@@ -1937,6 +1937,12 @@ select:not([data-status-id]){
  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-filled{color:var(--gold)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-empty{color:var(--subtle)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stars-unrated{font-size:15px;font-weight:var(--fw-bold);letter-spacing:0;color:var(--muted);transform:translateY(1px)}
+ /* Move the intact action row to the episode-button baseline in the
+    unwrapped desktop grid; phone/list and narrow wrapped tools stay intact. */
+ @container (min-width:216px){
+  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tools{transform:translateY(9px)}
+  body.saved-mode:not(.saved-list-view) .pattern-a-card:has(.watch-progress[data-progress-total=""]) .pattern-a-tools{transform:translateY(4.5px)}
+ }
  /* Retain the agreed original progress caption (視聴進捗 / 2 / 12話),
     keeping the start button and episode controls in equally tall slots. */
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.record-primary{height:64px;min-height:64px}
