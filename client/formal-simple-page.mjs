@@ -34,6 +34,26 @@ export function summarizeSyncConflictPaths(conflicts){
   return Object.freeze({path,reason:reasons.has(c?.reason)?c.reason:'unknown-conflict'});
  });
 }
+// Optional names are labels on THIS browser only, never device identities.
+// The server's authenticated registration ID remains the sole revoke target.
+export function createLocalDeviceNames(local,profileId){
+ if(!/^(?:legacy|p[1-9][0-9]?)$/.test(profileId)||!local?.getItem||!local?.setItem)throw Error('DEVICE_NAME_SCOPE_INVALID');
+ const key='anilog-local-device-names-v1:'+profileId;
+ const validId=id=>/^[A-Za-z0-9_-]{22,43}$/.test(id);
+ const read=()=>{let raw;try{raw=local.getItem(key)}catch{return {}};
+  if(raw===null)return {};let obj;try{obj=JSON.parse(raw)}catch{return {}};
+  if(!obj||Array.isArray(obj)||typeof obj!=='object')return {};
+  return Object.fromEntries(Object.entries(obj).filter(([id,name])=>validId(id)&&typeof name==='string'&&name.length<=24));
+ };
+ return Object.freeze({get:id=>validId(id)?read()[id]??'':'',save:(id,value)=>{
+  if(!validId(id)||typeof value!=='string')throw Error('DEVICE_NAME_INVALID');
+  const name=value.trim();if(name.length>24||/[\x00-\x1F\x7F]/.test(name))throw Error('DEVICE_NAME_INVALID');
+  const current=read();if(name)current[id]=name;else delete current[id];
+  // Preserve only the current handful of names; labels never authorize removal.
+  const raw=JSON.stringify(current);local.setItem(key,raw);
+  if(local.getItem(key)!==raw)throw Error('DEVICE_NAME_SAVE_NOT_CONFIRMED');return name;
+ }});
+}
 export const CONNECTION_PROFILE_KEY='anilog-sync-connection-profile-v1';
 const VALID=/^(?:legacy|p[1-9][0-9]?)$/;
 const profileFail=x=>{throw Error('CONNECTION_PROFILE_STOP:'+x)};
@@ -331,6 +351,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const receiving=captured?.hash?.startsWith('#anilog-pair=');
  const qrNext=el('qr-next'),qrTitle=el('qr-step-title'),qrMessage=el('qr-step-message'),qrStepCount=el('qr-step-count'),qrStepDevice=el('qr-step-device'),qrBars=[...(root.querySelectorAll?.('[data-simple="qr-step-bar"]')??[])];
  const qrFlow=Boolean(receiving||window.__anilogSyncQrResume);
+ let ownerJourneyActive=false;
+ const receiverJourneyActive=Boolean(qrFlow||staging||profileState.phase==='preparing'||local.getItem(LOCAL_MODE)==='encrypted-local');
  // A resume bit is UI intent, never a replacement for a consumed QR.
  const qrNeedsFreshScan=()=>qrFlow&&!captured&&window.__anilogSyncQrResume===true&&local.getItem(LOCAL_MODE)===null;
  // Presentation only: never derive approval, registration or sync success
@@ -345,27 +367,38 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(qrStepDevice)qrStepDevice.textContent=device;
   qrBars.forEach((bar,i)=>bar.classList.toggle('is-complete',i<step));
  }
- if(qrFlow)nextQrStep('QRからの同期設定を開きました','接続先とこの端末の記録を確認してから進めます。次の操作を下に表示します。',{device:'この端末：接続準備'});
+ if(qrFlow)nextQrStep('QRを読み取りました','接続先を確認し、画面の案内に沿って進めてください。',{device:'この端末：接続準備'});
  // The pairing panel emits only nonsecret UI phase labels. It NEVER supplies
  // an approval result or changes durable state through this presentation.
  root.addEventListener?.('anilog-pairing-visual-state',event=>{
   const {phase,role,stopped,issue,hasQr}=event.detail??{};
   if(!role)return;
   const owner=role==='owner',failed=stopped||!!issue;
-  if(failed){nextQrStep('接続状態を確認してください','下の案内を確認してください。保存した記録は消さず、必要な操作だけやり直せます。',{force:true,step:owner?2:2,device:owner?'PC側：確認・復旧':'新しい端末：確認・復旧',state:'needs-attention'});return;}
+  // A stale expired QR must not cover an already connected owner's dashboard.
+  if(owner){
+   if((phase==='OWNER_INVITED'&&hasQr)||phase==='OWNER_CLAIMED')ownerJourneyActive=true;
+   const messageNode=root.querySelector('[data-v407="status"]');
+   if(messageNode)messageNode.hidden=!ownerJourneyActive;
+   if(!ownerJourneyActive)return;
+  }else if(!receiverJourneyActive){
+   const messageNode=root.querySelector('[data-v407="status"]');
+   if(messageNode)messageNode.hidden=true;
+   return;
+  }
+  if(failed){nextQrStep('接続状態を確認してください','記録はそのままです。下の案内に沿って進めてください。',{force:true,step:owner?2:2,device:owner?'PC側：確認・復旧':'新しい端末：確認・復旧',state:'needs-attention'});return;}
   if(owner){
    if(phase==='OWNER_OPEN'&&!hasQr)nextQrStep('新しいQRを発行してください','以前のQR画像は再読み込み後に復元できません。接続申請がまだ届いていないことを確認し、下の「新しい端末を追加する」から発行してください。',{force:true,step:1,device:'この端末で操作'});
-   else if(phase==='OWNER_INVITED'||phase==='OWNER_OPEN'||phase==='OWNER_CLAIMED')nextQrStep(phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力':'新しい端末でQRを読み取ってください',phase==='OWNER_CLAIMED'?'新しい端末に表示された6桁コードを、ここに入力して「承認する」を押します。':'QRを読み取ると新しい端末に6桁コードが表示されます。表示されたらこのPCで承認してください。',{force:true,step:phase==='OWNER_CLAIMED'?2:1,device:phase==='OWNER_CLAIMED'?'この端末で操作':'新しい端末で操作'});
-   else if(phase==='OWNER_APPROVED')nextQrStep('この端末での承認が完了しました','新しい端末に戻り、「承認状態を確認」→「接続を完了」と進めてください。',{force:true,step:3,device:'新しい端末で操作'});
-   else if(['OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase))nextQrStep('このQRでは接続を続けられません','保存した記録はそのままです。PCで新しいQRを発行し、新しい端末から読み取ってください。',{force:true,step:1,device:'この端末で操作',state:'needs-attention'});
+   else if(phase==='OWNER_INVITED'||phase==='OWNER_OPEN'||phase==='OWNER_CLAIMED')nextQrStep(phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力':'新しい端末でQRを読み取ってください',phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力して承認します。':'新しい端末でQRを読み取ってください。6桁コードが表示されたら、この端末で承認します。',{force:true,step:phase==='OWNER_CLAIMED'?2:1,device:phase==='OWNER_CLAIMED'?'この端末で操作':'新しい端末で操作'});
+   else if(phase==='OWNER_APPROVED')nextQrStep('この端末での承認が完了しました','新しい端末で承認を確認し、「接続を完了」を押してください。',{force:true,step:3,device:'新しい端末で操作'});
+   else if(['OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase))nextQrStep('このQRは使えません','この端末で新しいQRを発行してください。記録はそのままです。',{force:true,step:1,device:'この端末で操作',state:'needs-attention'});
   }else{
-   if(phase==='RECEIVER_PENDING'||phase==='RECEIVER_CLAIMED')nextQrStep('QRを表示した端末で承認してください','下の6桁コードを、QRを表示したPC・スマホに入力してください。承認後、この端末で「承認状態を確認」を押します。',{force:true,step:2,device:'QRを表示した端末で操作'});
-   else if(phase==='RECEIVER_APPROVED')nextQrStep('QR発行側の承認を確認できました','この端末で「接続を完了」を押してください。完了が確認されるまで記録は受信しません。',{force:true,step:3,device:'この端末で操作'});
-   else if(phase==='RECEIVER_ACTIVE')nextQrStep('接続情報の保存が完了しました','この端末で最初の記録の同期結果を確認しています。まだ同期成功と断定しません。',{force:true,step:3,device:'この端末で確認'});
-   else if(['RECEIVER_EXPIRED','RECEIVER_DENIED','RECEIVER_USED','RECEIVER_UNAVAILABLE'].includes(phase))nextQrStep('新しいQRが必要です','PCで新しいQRを発行し、記録を消さずに安全な再接続手順からやり直してください。',{force:true,step:1,device:'QRを表示した端末で操作',state:'needs-attention'});
+   if(phase==='RECEIVER_PENDING'||phase==='RECEIVER_CLAIMED')nextQrStep('QRを表示した端末で承認してください','表示された6桁コードをQR発行側に入力してください。その後、この端末で承認を確認します。',{force:true,step:2,device:'QRを表示した端末で操作'});
+   else if(phase==='RECEIVER_APPROVED')nextQrStep('QR発行側の承認を確認できました','この端末で「接続を完了」を押してください。',{force:true,step:3,device:'この端末で操作'});
+   else if(phase==='RECEIVER_ACTIVE')nextQrStep('接続情報の保存が完了しました','最初の同期を確認中です。',{force:true,step:3,device:'この端末で確認'});
+   else if(['RECEIVER_EXPIRED','RECEIVER_DENIED','RECEIVER_USED','RECEIVER_UNAVAILABLE'].includes(phase))nextQrStep('新しいQRが必要です','QR発行側で新しいQRを作成し、読み直してください。記録はそのままです。',{force:true,step:1,device:'QRを表示した端末で操作',state:'needs-attention'});
   }
  });
- function message(error){attention(true);status.textContent='端末の記録と原本を保持しています。接続を再試行できます。';el('retry').hidden=false;
+ function message(error){attention(true);status.textContent='接続を確認できません。記録はそのままです。';el('retry').hidden=false;
   if(qrFlow)nextQrStep('接続を停止しました','以前の記録は残しています。下の状態表示と案内を確認し、必要ならPC側で新しいQRを作成してください。初期化や削除はしないでください。');
   // No exception object, credentials, QR URL or source records enter logs/DOM.
   if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「同期設定を最初からやり直す」から再確認してください。';
@@ -406,7 +439,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
   const notice=el('pairing-notice');
-  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期中のため、新しいQRはまだ適用していません。同期先を変更する場合は「詳細設定・復旧」から「この端末の同期を解除」を選び、バックアップを保存してから新しい端末への接続を進めてください。同期を解除しても視聴記録は消えません。';}
+  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期中です。別の同期先に変えるには、バックアップを保存し「同期設定を最初からやり直す」を選んでください。記録は消えません。';}
   attention(true);
  }
  if(!mode){
@@ -467,9 +500,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    if(!lineage)throw Error('SYNC_DESTINATION_NOT_FOUND');
    const code=await syncDestinationCode(lineage);
    const disconnected=profiles.read().phase!=='connected';
-   output.textContent=(disconnected?'以前の同期先ID：':'同期先ID：')+code+'（QR承認用の6桁番号とは別です。接続するPCまたはスマホの同期先IDと比較してください。同じIDでも同期成功を保証しません）';
+   output.textContent=(disconnected?'以前の同期先ID：':'同期先ID：')+code+'（QRの6桁番号とは別です。接続先と照合してください）';
    output.hidden=false;
-  }catch{output.textContent='同期先IDを表示できません。接続状態の確認が必要です。記録は変更していません。';output.hidden=false;}
+  }catch{output.textContent='同期先IDを確認できません。記録はそのままです。';output.hidden=false;}
  }
  await showDestination();
  if(ignoredExistingQR){
@@ -515,7 +548,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }
   if(state.phase==='disconnected'){
    pauseButton.hidden=true;resumeButton.hidden=true;
-   attention(true);status.textContent=restartGuideOpen?'この端末の同期は解除されています。PC・スマホの記録はそのままです。下の手順で正しい同期先に接続してください。':'この端末の同期は解除されています。PC・スマホの同期や記録には影響しません。別の同期先へ接続するには、下の「同期設定を最初からやり直す」から進んでください。';
+   attention(true);status.textContent=restartGuideOpen?'この端末の同期を解除しました。下の手順で再接続できます。':'この端末の同期を解除しました。記録はそのままです。下から再接続できます。';
    restart.hidden=restartGuideOpen||revokeJournal.read()==='confirmed';
    if(revokeJournal.read()==='confirmed')status.textContent='この端末のサーバー登録を解除しました。記録は保持しています。再接続するには、管理端末で新しいQRを発行して読み取ってください。以前の同期先に直接戻すことはできません。';
   }else if(['preparing','ready'].includes(state.phase)){
@@ -544,7 +577,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   savedRevokeBackup=false;backupFingerprint=null;revokeBackupConfirmed.checked=false;restartAccept.disabled=true;
   try{
    const x=inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
-   revokeWarning.textContent=x.localDiffersFromCheckpoint?'この端末には未送信の変更が含まれる可能性があります。まず通常の再同期を成功させるか、独立バックアップを必ず保存してください。解除後、未送信変更はほかの端末へ自動反映されません。':'同期先への最終反映状況は保証できません。必ずバックアップを保存してください。';
+   revokeWarning.textContent=x.localDiffersFromCheckpoint?'未送信の変更がある可能性があります。先に再同期するか、バックアップを保存してください。解除後は他端末に自動反映されません。':'バックアップを保存してから解除してください。';
   }catch{revokeWarning.textContent='同期の確認状態が不明です。記録を消さず、独立バックアップを保存してから進んでください。';}
   restartConfirm.hidden=false;restart.hidden=true;
  });
@@ -661,7 +694,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   el('retry').hidden=!canRepair;
   if(canRepair){el('retry').textContent='再同期';el('retry').disabled=busy||recoveryActive;}
   showConnectionActions();
-  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':'この端末の自動同期は一時停止中です。編集は暗号化して端末に保存します。同期先・認証情報・未送信変更は保持しています。';}
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':'同期は一時停止中です。記録と接続情報はそのままです。';}
  }
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
@@ -699,7 +732,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   catch(e){pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();throw e}
   showPauseState();
   switchResult.hidden=false;
-  switchResult.textContent='保存済みの同じ同期先へ再接続しました。新しい通信結果は同期状態の表示で確認してください。';
+  switchResult.textContent='同期を再開しました。結果は同期状態で確認してください。';
  }));
  switchCheck.addEventListener('click',()=>action(async()=>{
   // Never initiate a QR claim or change the server box in this operation.
@@ -725,46 +758,93 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Reuse the existing QR panel, hide developer-only bootstrap/unlock controls.
  for(const n of panelRoot.children)if(n.id!=='v407-pairing')n.hidden=true;
  const panelUI=panelRoot.querySelector('#v407-pairing');root.append(panelRoot);
+ // A restored member has no pending pairing role event. Hide old guidance
+ // up front; an explicit QR journey reveals it through the existing handler.
+ panelUI.querySelector('[data-v407="status"]').hidden=!receiverJourneyActive;
  panelRoot.hidden=profileState.phase==='disconnected'||profileState.phase==='preparing';
  for(const selector of ['[data-v408="box-id"]','[data-v408="unlock-owner"]','[data-v409="first-owner"]','[data-v407="repair"]','[data-v407="sync"]'])panelUI.querySelector(selector).hidden=true;
  panelUI.querySelector('[data-v407="invite"]').textContent='新しい端末を追加する';
+  const inviteButton=panelUI.querySelector('[data-v407="invite"]');
+  // Only the owner sees the management entry beside the add-device action.
+  if(!staging&&profiles.read().phase==='connected'&&selectedProfile){
+   inviteButton.after(el('manage-devices'));
+   panelRoot.after(el('device-management'));
+   inviteButton.addEventListener('click',()=>{ownerJourneyActive=true;const v=panelUI.querySelector('[data-v407="status"]');if(v)v.hidden=false;nextQrStep('QRを準備しています','QRが表示されたら、新しい端末で読み取ってください。',{force:true,step:1,device:'新しい端末で操作'});});
+  }
  // A QR scan plus a confirmed local cutover is sufficient to submit the
  // receiver claim. The owner still approves the exact six digits explicitly.
  // Keep only the actions relevant to this device; staging diagnostics remain
  // untouched and this does not alter any security checks.
  const receiver=staging||selectedProfile!=='legacy'||setup.readReceipt().role==='receiver';
+  root.closest('dialog')?.addEventListener('close',()=>{
+   if(!receiver){ownerJourneyActive=false;if(qrNext)qrNext.hidden=true;const v=panelUI.querySelector('[data-v407="status"]');if(v)v.hidden=true;}
+   deviceManagement.hidden=true;el('device-confirm').hidden=true;selectedRemoval=null;
+  });
   const ownDeviceButton=el('own-device-button'),ownDeviceInfo=el('own-device-info');
   ownDeviceButton.hidden=staging||profiles.read().phase!=='connected';
   ownDeviceButton.addEventListener('click',()=>action(async()=>{
    const t=await getRegisteredTransport();
    ownDeviceInfo.hidden=false;
-   ownDeviceInfo.textContent='この端末の登録ID：'+shortDeviceId(t.device.deviceId)+'（管理端末の登録一覧と比較してください）';
+   ownDeviceInfo.textContent='この端末の登録ID：'+shortDeviceId(t.device.deviceId)+'（管理画面のIDと照合してください）';
   }));
   manageDevices.hidden=receiver||staging||profiles.read().phase!=='connected';
+  const localNames=createLocalDeviceNames(local,selectedProfile);
   let selectedRemoval=null;
   async function updateDeviceList(){
-   deviceManagementStatus.textContent='サーバーの登録情報を確認しています。';
+   deviceManagementStatus.textContent='登録端末を確認中…';
    const t=await getRegisteredTransport();
    const list=await listOwnerDevices(t);
    deviceCount.textContent='登録数：'+list.activeDevices+' / '+list.maxDevices+'台';
    deviceList.replaceChildren();selectedRemoval=null;
    for(const item of list.devices){
     const row=document.createElement('div');row.className='anilog-device-row';
-    const info=document.createElement('span');
+    const identity=document.createElement('div');identity.className='anilog-device-identity';
+    const heading=document.createElement('strong');
+    const registered=document.createElement('small');
     const date=new Date(item.createdAt).toLocaleDateString('ja-JP');
-    info.textContent=(item.isThisDevice?'この端末（管理者）':item.role==='owner'?'管理端末':'追加端末')+'：'+shortDeviceId(item.deviceId)+'　登録 '+date;
-    row.append(info);
+    const name=localNames.get(item.deviceId);
+    const standard=item.isThisDevice?'この端末（管理者）':item.role==='owner'?'管理端末':'追加端末';
+    heading.textContent=name?name+' ・ '+standard:standard;
+    registered.textContent='ID: '+shortDeviceId(item.deviceId)+' ・ 登録 '+date;
+    identity.append(heading,registered);row.append(identity);
     if(item.role==='member'&&!item.isThisDevice){
-     const choose=document.createElement('button');choose.type='button';choose.textContent='解除を選ぶ';
+     const choose=document.createElement('button');choose.type='button';choose.textContent='解除する';
      choose.addEventListener('click',()=>{
-      selectedRemoval=item;deviceManagementStatus.textContent='端末 '+shortDeviceId(item.deviceId)+' の登録を解除します。機種名は保存されていません。登録日とIDを確認し、不明なら解除しないでください。';
+      selectedRemoval=item;
+      deviceManagementStatus.textContent=(localNames.get(item.deviceId)||'追加端末')+'（'+shortDeviceId(item.deviceId)+'）を解除します。IDを確認してください。';
       el('device-confirm').hidden=false;el('device-confirm-check').checked=false;el('device-revoke').disabled=true;
      });row.append(choose);
+    }
+    // Aliases are optional, local-only and never used to identify a revoke target.
+    if(!item.isThisDevice){
+     const edit=document.createElement('button');edit.type='button';
+     edit.textContent=name?'名前を変更':'名前を付ける';
+     edit.addEventListener('click',()=>{
+      if(row.querySelector('.anilog-device-name-edit'))return;
+      const form=document.createElement('div');form.className='anilog-device-name-edit';
+      const input=document.createElement('input');input.type='text';input.maxLength=24;
+      input.placeholder='例：iPad';input.setAttribute('aria-label','この端末の名前');input.value=localNames.get(item.deviceId);
+      const save=document.createElement('button');save.type='button';save.textContent='保存';
+      const cancel=document.createElement('button');cancel.type='button';cancel.textContent='やめる';
+      const close=()=>{form.remove();edit.hidden=false};
+      cancel.addEventListener('click',close);
+      save.addEventListener('click',()=>{
+       try{
+        const saved=localNames.save(item.deviceId,input.value);
+        heading.textContent=saved?saved+' ・ '+standard:standard;
+        edit.textContent=saved?'名前を変更':'名前を付ける';
+        deviceManagementStatus.textContent='端末名を保存しました（このブラウザのみ）。';
+        close();
+       }catch{deviceManagementStatus.textContent='端末名を保存できませんでした。ブラウザの保存設定を確認してください。';}
+      });
+      form.append(input,save,cancel);row.append(form);edit.hidden=true;input.focus();
+     });
+     row.append(edit);
     }
     deviceList.append(row);
    }
    el('device-confirm').hidden=true;
-   deviceManagementStatus.textContent='機種名は自動判定できません。不要と確認できた追加端末だけを解除してください。';
+   deviceManagementStatus.textContent='端末名が分からない場合は、各端末でIDを確認してください。';
   }
   manageDevices.addEventListener('click',()=>action(async()=>{
    if(staging||profiles.read().phase!=='connected')throw Error('MANAGEMENT_NOT_CONNECTED');
@@ -782,7 +862,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    const t=await getRegisteredTransport();
    const before=await listOwnerDevices(t);
    if(!unchanged()||!before.devices.some(d=>d.deviceId===target&&d.role==='member'&&!d.isThisDevice))throw Error('REVOKE_TARGET_CHANGED');
-   deviceManagementStatus.textContent='解除結果を確認しています。応答が失われても自動で解除を再送しません。確認できない場合は、登録一覧を再確認してください。';
+   deviceManagementStatus.textContent='解除結果を確認中です。結果が分からない場合は、一覧を更新してください。';
    let postError=null;
    try{await revokeSelectedMember(t,target)}catch(error){postError=error}
    // The POST may have committed even if its response was lost. Reconcile
@@ -790,7 +870,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    const after=await listOwnerDevices(t);
    if(after.devices.some(d=>d.deviceId===target))throw postError??Error('REVOKE_READBACK_MISMATCH');
    await updateDeviceList();
-   deviceManagementStatus.textContent='端末 '+shortDeviceId(target)+' の解除を確認しました。現在の登録数：'+after.activeDevices+' / 4台。ほかの端末の記録は削除していません。';
+   deviceManagementStatus.textContent='端末 '+shortDeviceId(target)+' の解除を確認しました。現在の登録数：'+after.activeDevices+' / 4台。ほかの端末と記録はそのままです。';
   }));
 
  const hide=selector=>{const node=panelUI.querySelector('[data-v407="'+selector+'"]');if(node)node.hidden=true};
@@ -807,9 +887,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(pauseGuard.paused||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile){showPauseState();return;}
   automatic=createAutomaticSync({syncOnce:async()=>{activeSyncs++;try{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return await s.syncOnce()}finally{activeSyncs--}},onState:s=>{
    if(pauseGuard.paused)return;
-   const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'端末に保存済み・未同期',offline:'端末に保存済み・オンライン復帰時に同期',
-    unavailable:'同期できませんでした。記録は端末に保存済みです。接続を再試行できます。',
-    conflict:'同期を一時停止しました。2台の端末で同じ項目が別々に変更されたため、自動でまとめられません。記録は上書きしていません。両端末のデータを消さずに、そのまま保持してください。'};
+   const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'この端末に保存済み（未同期）',offline:'オフラインです。記録はこの端末に保存しています。',
+    unavailable:'同期できませんでした。記録は保存済みです。',
+    conflict:'記録に競合があります。自動同期を停止しました。両端末の記録はそのままです。'};
    status.textContent=labels[s.phase]??'端末に保存済み';
    // A closed settings panel must not hide unresolved sync errors. Keep the
    // notice until a later *confirmed* success instead of blinking on edits.
@@ -842,7 +922,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     const waiting=s.phase==='syncing'||(s.phase==='pending'&&s.status===undefined);
     nextQrStep(waiting?'この端末の同期結果を確認しています':'この端末の同期はまだ確認できません',waiting?'同期結果が確認できるまでお待ちください。保存した記録は保持しています。':'下の同期状態を確認してください。記録は端末に保持しています。通信が戻ってから「再同期」で結果を確認できます。',{force:true,step:3,device:'この端末で確認',state:waiting?'active':'needs-attention'});
    }
-   if(s.phase==='synced'&&receiver&&(qrFlow||!qrNext.hidden))nextQrStep('この端末の同期が完了しました','同期済みの表示と同期先IDを確認できました。この画面を閉じて使えます。',{force:qrFlow||!qrNext.hidden,step:3,device:'この端末：同期済み',state:'done'});
+   if(s.phase==='synced'&&receiver&&(qrFlow||!qrNext.hidden))nextQrStep('この端末の同期が完了しました','接続できました。この画面を閉じて使えます。',{force:qrFlow||!qrNext.hidden,step:3,device:'この端末：同期済み',state:'done'});
    if(s.phase==='synced')void running?.confirmAutomaticRole();
   }});automatic.start();
   // A registered receiver has no further pairing actions. Avoid leaving a

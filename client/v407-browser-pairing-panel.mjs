@@ -17,20 +17,20 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  const remember=()=>{if(automaticMode&&owner&&invitation)try{globalThis.sessionStorage?.setItem(referenceKey(),invitation)}catch{}};
  const recall=()=>{try{const id=automaticMode&&globalThis.sessionStorage?.getItem(referenceKey());return /^[A-Za-z0-9_-]{22,43}$/.test(id??'')?id:null}catch{return null}};
  const messages={
-  INVITATION_PENDING:'この招待にはiPadから申請が届いています。新しいQRは発行していません。「承認状態を確認」で同じ招待を確認し、iPadの6桁番号を入力してください。',
-  INVITATION_ALREADY_APPROVED:'この招待はすでに承認されています。新しいQRは発行していません。「承認状態を確認」を押し、iPad側で接続を完了してください。',
-  APPROVAL_IN_PROGRESS:'承認結果を確認しています。新しい操作をせず、確認が終わるまでお待ちください。',
-  CODE_NOT_MATCHED:'6桁の番号が一致しません。同じQRのまま、新しい端末に表示された番号を入力し直してください。',
-  NOT_CLAIMED:'接続申請はまだ届いていません。iPadでQRを読み取り、6桁番号が表示されてから、このPCで入力して承認してください。',
-  NETWORK:'通信結果を確認できませんでした。招待と記録は保持しています。「承認状態を確認」で同じ招待を再確認してください。承認を自動で再送していません。',
-  RATE_LIMITED:'通信が混み合っています。少し待って「承認状態を確認」を押してください。',
-  APPROVAL_UNAVAILABLE:'承認は確定していません。端末上限などにより承認できない可能性があります。このAPI応答だけでは原因を特定できません。「承認状態を確認」で再確認してください。既存端末の解除・削除は行わないでください。',
-  DEVICE_LIMIT:'接続端末の上限です。既存端末を勝手に解除せず、追加を停止してください。',
-  OWNER_NOT_APPROVED:'まだPCの承認がありません。PCでこの端末の6桁番号を入力して承認し、その後「承認状態を確認」を押してください。',
-  INVITATION_EXPIRED:'招待の有効期限が切れています。PCで新しいQRを発行してください。iPadでは再接続準備を安全に中止して元の記録へ戻り、新しいQRを読み取ってください。以前の記録・保存領域は消さないでください。',
-  INVITATION_DENIED:'この招待は拒否されています。PCで新しいQRを発行してください。以前の記録は保持したまま、安全な再接続手順から読み取り直してください。',
-  INVITATION_USED:'この招待は使用済みです。元の端末で新しいQRを発行し、保存領域を消さずに読み取り直してください。',
-  UNAVAILABLE:'招待を確認できません。元の端末で新しいQRを発行し、保存領域を消さずに読み取り直してください。'
+  INVITATION_PENDING:'新しい端末から申請が届いています。「承認状態を確認」で6桁コードを確認してください。',
+  INVITATION_ALREADY_APPROVED:'承認済みです。新しい端末で接続を完了してください。',
+  APPROVAL_IN_PROGRESS:'承認結果を確認中です。',
+  CODE_NOT_MATCHED:'番号が一致しません。新しい端末の6桁コードを入力し直してください。',
+  NOT_CLAIMED:'申請待ちです。新しい端末でQRを読み取ってください。',
+  NETWORK:'通信結果を確認できません。「承認状態を確認」を押してください。承認は再送していません。',
+  RATE_LIMITED:'通信が混み合っています。少し待ってから再確認してください。',
+  APPROVAL_UNAVAILABLE:'承認できたか確認できません。端末数の上限などが原因の可能性があります。「承認状態を確認」を押してください。',
+  DEVICE_LIMIT:'登録上限の4台に達しています。不要な端末を確認してから解除してください。',
+  OWNER_NOT_APPROVED:'まだ承認されていません。QRを表示した端末で6桁コードを承認してください。',
+  INVITATION_EXPIRED:'QRの期限が切れました。接続準備中なら安全に中止し、QR発行側で新しいQRを作成してください。記録は消えません。',
+  INVITATION_DENIED:'このQRは使えません。新しいQRを発行して読み直してください。記録はそのままです。',
+  INVITATION_USED:'このQRは使用済みです。新しいQRを読み直してください。記録はそのままです。',
+  UNAVAILABLE:'QRを確認できません。新しいQRを読み直してください。記録はそのままです。'
  };
  const clearQr=()=>{qr.replaceChildren();inviteUrl=null;copy.disabled=true};
  const show=(s)=>{status.textContent=s};
@@ -95,8 +95,8 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
    }else if(localRetry){
     if(reason.endsWith('VISIBLE_CODE_MISMATCH'))code.value='';
     show(reason.endsWith('VISIBLE_CODE_MISMATCH')
-     ?'6桁の番号が一致しません。新しい端末に表示された番号を確認して入力し直してください。'
-     :'リンクをコピーできませんでした。QRコードを読み取るか、もう一度お試しください。');
+     ?'番号が一致しません。新しい端末の6桁コードを確認してください。'
+     :'リンクをコピーできません。QRを読み取るか再試行してください。');
    }else{
     stopped=true;clearQr();
     const claimReasons={EXPIRED:'招待の有効期限が切れています。',DENIED:'この招待は承認されていません。',UNAVAILABLE:'招待は期限切れ・使用済み、または利用できない状態です。',
@@ -108,7 +108,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
     const kind=reason.startsWith('V406_PAIRING_STOP:CLAIM_FAILED:')?reason.slice('V406_PAIRING_STOP:CLAIM_FAILED:'.length):null;
     if(automaticMode&&Object.hasOwn(claimReasons,kind)){
      newCode.textContent='';
-     show(claimReasons[kind]+' 端末内の記録・以前の接続情報は保持しています。通信が戻ったら同じタブを再読み込みして再開できます。期限切れ・使用済みや番号を復元できない場合は、元の端末で新しいQRを発行してください。再接続準備中は「再接続を中止して元の端末内記録へ戻る」で戻り、バックアップを保全して新しいQRを読み取ってください。\n'+reason);
+     show(claimReasons[kind]+' 記録はそのままです。通信エラーなら再読み込みして確認してください。QRが期限切れ・使用済みなら、再接続準備を中止し、新しいQRを読み取ってください。\n'+reason);
     }else show(reason==='V406_PAIRING_STOP:ACCESS_DENIED'
      ?'端末追加の権限がありません。この接続操作を安全に停止しました。所有者の端末から操作してください。既存の同期・記録は保持しています。'
      :reason==='V406_PAIRING_STOP:UNAUTHORIZED'
@@ -128,7 +128,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
   img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(makeV407QrSvg(info.url));
   qr.appendChild(img);
   invitation=info.invitationId;inviteUrl=info.url;serverCode=null;code.value='';remember();
-  show('iPadでQRを読み取り、6桁コードが表示されたら、このPCの入力欄にその番号を入力して「番号を確認して承認」を押してください。');
+  show('新しい端末でQRを読み取り、表示された6桁コードをここに入力してください。');
  }
  invite.addEventListener('click',()=>action(async()=>{
   if(!owner)fail('OWNER_NOT_READY');
@@ -140,12 +140,12 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
   const s=await owner.flow.inspectOwner({owner:owner.owner,boxId:owner.boxId,invitationId:invitation});
   serverCode=s.state==='claimed'?s.confirmationCode:null;
   if(s.state==='approved'){
-   code.value='';clearQr();show('PCでの承認は完了しています。iPadで「承認状態を確認」を押し、その後「接続を完了」を押してください。');
+   code.value='';clearQr();show('承認済みです。新しい端末で承認を確認し、接続を完了してください。');
   }else if(['expired','denied','used'].includes(s.state)){
    clearQr();show(messages['INVITATION_'+s.state.toUpperCase()]);
-  }else if(s.state==='open'&&inviteUrl===null)show('QR画像は秘密情報を保持しないため復元できません。「新しい端末を追加する」で、以前のQRを無効にして新しく発行できます。すでにiPadに6桁番号がある場合は、まず「承認状態を確認」を押してください。');
+  }else if(s.state==='open'&&inviteUrl===null)show('QR画像は再表示できません。6桁コードが出ている場合は「承認状態を確認」、そうでなければ新しいQRを発行してください。');
   else show(s.state==='claimed'
-   ?'iPadに表示された6桁コードをこのPCに入力し、番号が一致するときだけ「番号を確認して承認」を押してください。'
+   ?'新しい端末の6桁コードを入力して承認してください。'
    :messages.NOT_CLAIMED);
   setPhase('OWNER_'+s.state.toUpperCase());return s;
  }
@@ -157,7 +157,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
   const ack=await owner.flow.approveOwner({owner:owner.owner,boxId:owner.boxId,invitationId:invitation,codeSeenOnOtherDevice:code.value,confirmedByUser:true});
   if(ack.state!=='approved')fail('NO_APPROVAL_ACK');
   code.value='';serverCode=null;clearQr();
-  show('PCでの承認が完了しました。iPadで「承認状態を確認」を押し、その後「接続を完了」を押してください。');setPhase('OWNER_APPROVED');
+  show('承認しました。新しい端末で承認を確認し、接続を完了してください。');setPhase('OWNER_APPROVED');
  }));
  const claimFromQr=async()=>{
   if(!receiver)fail('RECEIVER_NOT_READY');
@@ -168,7 +168,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
   }
   if(r.state!=='pending'||!/^[0-9]{6}$/.test(r.confirmationCode))fail('CLAIM_INVALID');
   newCode.textContent=r.confirmationCode;receiverStatus='pending';
-  show('この6桁コードを元の端末で入力し、承認してください。');setPhase('RECEIVER_PENDING');
+  show('この6桁コードをQR発行側に入力してください。');setPhase('RECEIVER_PENDING');
  };
  claim.addEventListener('click',()=>action(claimFromQr));
  // The ordinary receiver has one explicit completion action after showing
@@ -180,13 +180,13 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
   if(result.phase!=='FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED')fail('FIRST_RECEIVE_NOT_PERSISTED');
   ready=true;session=await syncFactory({receiver,passphrase:p});
   if(!session?.syncOnce)fail('NO_SYNC_SESSION');
-  newCode.textContent='';show(automaticMode?'記録を安全に取り込みました。これからは自動で同期します。':'架空データの初回受信と暗号化保管が完了しました。今後は「同期」を押したときだけ通信します。');setPhase('RECEIVER_ACTIVE');
+  newCode.textContent='';show(automaticMode?'記録の受信が完了しました。自動同期を開始します。':'架空データの初回受信と暗号化保管が完了しました。今後は「同期」を押したときだけ通信します。');setPhase('RECEIVER_ACTIVE');
  }
  check.addEventListener('click',()=>action(async()=>{
   if(!receiver?.flow.pendingClaim)fail('NOT_CLAIMED');
   const s=await receiver.flow.inspectReceiver();receiverStatus=s.state;
   if(automaticMode){
-   if(s.state==='approved'){show('PCでの承認を確認できました。「接続を完了」を押してください。');setPhase('RECEIVER_APPROVED');return;}
+   if(s.state==='approved'){show('承認を確認しました。「接続を完了」を押してください。');setPhase('RECEIVER_APPROVED');return;}
    if(['expired','denied','used'].includes(s.state)){newCode.textContent='';show(messages['INVITATION_'+s.state.toUpperCase()]);}
    else show(messages.OWNER_NOT_APPROVED);
    setPhase('RECEIVER_'+s.state.toUpperCase());return;
