@@ -17,10 +17,46 @@ function confirmedOwner(vault){
  catch{fail('OWNER_CHECKPOINT_REQUIRED')}
 }
 export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageOrigin=globalThis.location?.origin,browserFetch=globalThis.fetch,claimStore}={}){
- const fetcher=createV405BrowserWorkerFetch({apiOrigin,siteOrigin,pageOrigin,browserFetch});
- const siteUrl=siteOrigin+'/';let pending=null,claimed=false,halted=false;
+ if(typeof browserFetch!=='function')fail('INVALID_CONTEXT');
+ // Pairing-only bounded requests. Aborting a POST does NOT imply rejection;
+ // approveOwner still reconciles it via authenticated readback before retry.
+ const boundedFetch=async(url,options)=>{
+  const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),15000);
+  try{return await browserFetch(url,{...options,signal:controller.signal})}finally{clearTimeout(timer)}
+ };
+ const fetcher=createV405BrowserWorkerFetch({apiOrigin,siteOrigin,pageOrigin,browserFetch:boundedFetch});
+ const siteUrl=siteOrigin+'/';let pending=null,claimed=false,halted=false,ownerApproving=false;
  const stop=why=>{halted=true;fail(why)};
  const guard=()=>{if(halted)fail('STOPPED_AFTER_ERROR')};
+ // Fixed classifications only: never expose server bodies or arbitrary errors.
+ const classified=(error)=>{
+  if(error instanceof SyntaxError)return 'INVALID_RESPONSE';
+  if(String(error?.message).startsWith('V405_BROWSER_TRANSPORT_STOP:'))return 'INVALID_CONTEXT';
+  if(error?.status===401)return 'UNAUTHORIZED';
+  if(error?.status===403)return 'ACCESS_DENIED';
+  if(error?.status===404)return 'UNAVAILABLE';
+  if(error?.status===410)return 'EXPIRED';
+  if(error?.status===429)return error?.message==='device_limit'?'DEVICE_LIMIT':'RATE_LIMITED';
+  if(error?.status===409)return 'APPROVAL_UNAVAILABLE';
+  if(error?.status>=400&&error?.status<500)return 'INVALID_RESPONSE';
+  return 'NETWORK';
+ };
+ const problem=(kind)=>{
+  if(['UNAUTHORIZED','ACCESS_DENIED','INVALID_CONTEXT','INVALID_RESPONSE','DEVICE_LIMIT'].includes(kind))halted=true;
+  fail(kind);
+ };
+ const ownerState=info=>{
+  if(!info||!['open','claimed','approved','expired','denied','used'].includes(info.state)||
+    !Number.isSafeInteger(info.expiresAt)||info.expiresAt<=0||
+    (info.state==='claimed'&&!/^\d{6}$/.test(info.confirmationCode??'')))problem('INVALID_RESPONSE');
+  return {state:info.state,expiresAt:info.expiresAt,confirmationCode:info.state==='claimed'?info.confirmationCode:null};
+ };
+ const readOwner=async({owner,boxId,invitationId})=>{
+  if(!ID.test(boxId)||!ID.test(invitationId)||!ID.test(owner?.deviceId)||!/^[-\w]{43}$/.test(owner?.deviceToken??''))problem('INVALID_CONTEXT');
+  let info;try{info=await getOwnerInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,owner,boxId,invitationId})}
+  catch(error){problem(classified(error))}
+  return ownerState(info);
+ };
  const currentClaim=async()=>{
   if(claimStore&&JSON.stringify(await claimStore.read())!==JSON.stringify(pending?.claimAttempt))fail('CLAIM_CHANGED');
  };
@@ -28,27 +64,54 @@ export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageO
   get pendingClaim(){return claimed},
   // Owner has been provisioned by the trusted staging system; never accepts
   // bootstrapping or recovery secrets in browser code.
-  async inviteOwner({vault,owner,boxId,masterKey}={}){
+  async inviteOwner({vault,owner,boxId,masterKey,replaceInvitationId}={}){
    guard();confirmedOwner(vault);
    if(!ID.test(boxId)||!(masterKey instanceof Uint8Array)||masterKey.length!==32)fail('OWNER_CONTEXT_REQUIRED');
+   if(replaceInvitationId!==undefined){
+    // Explicit QR reissue after an owner reload. Only the existing owner-only
+    // deny endpoint is used; no new API or stored QR secret is introduced.
+    const scope={owner,boxId,invitationId:replaceInvitationId},before=await readOwner(scope);
+    if(before.state==='claimed')fail('INVITATION_PENDING');
+    if(before.state==='approved')fail('INVITATION_ALREADY_APPROVED');
+    if(before.state==='open'){
+     try{
+      const r=await fetcher(apiOrigin+'/v1/boxes/'+boxId+'/invitations/'+replaceInvitationId+'/deny',{
+       method:'POST',headers:{'Content-Type':'application/json',Origin:siteOrigin,Authorization:'Bearer '+owner.deviceToken,'X-Device-Id':owner.deviceId},body:'{}'});
+      if(!r.ok)throw Object.assign(Error('DENY_FAILED'),{status:r.status});
+     }catch(error){const kind=classified(error);if(['UNAUTHORIZED','ACCESS_DENIED','INVALID_CONTEXT','INVALID_RESPONSE'].includes(kind))problem(kind);}
+     // Even a lost deny response must be authenticated/read back before reissue.
+     const after=await readOwner(scope);
+     if(after.state==='approved')fail('INVITATION_ALREADY_APPROVED');
+     if(!['denied','expired'].includes(after.state))fail('NETWORK');
+    }
+   }
    try{return await createOwnerInvitation({fetcher,apiRoot:apiOrigin,siteUrl,origin:siteOrigin,
-     owner,boxId,masterKey})}catch(e){stop('INVITATION_FAILED')}
+     owner,boxId,masterKey})}catch(e){problem(classified(e))}
   },
-  async inspectOwner({owner,boxId,invitationId}={}){
-   guard();try{
-    const info=await getOwnerInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,owner,boxId,invitationId});
-    return {state:info.state,expiresAt:info.expiresAt,confirmationCode:info.state==='claimed'?info.confirmationCode:null};
-   }catch{stop('INVITATION_READ_FAILED')}
-  },
+  async inspectOwner(scope={}){guard();return readOwner(scope)},
   async approveOwner({owner,boxId,invitationId,codeSeenOnOtherDevice,confirmedByUser=false}={}){
-   guard();if(confirmedByUser!==true||!/^\d{6}$/.test(codeSeenOnOtherDevice))fail('OWNER_VISUAL_CODE_CONFIRMATION_REQUIRED');
+   guard();if(ownerApproving)fail('APPROVAL_IN_PROGRESS');ownerApproving=true;
+   try{if(confirmedByUser!==true||!/^\d{6}$/.test(codeSeenOnOtherDevice))fail('OWNER_VISUAL_CODE_CONFIRMATION_REQUIRED');
+   const scope={owner,boxId,invitationId},info=await readOwner(scope);
+   if(info.state==='approved')return {state:'approved'}; // authenticated readback, no second POST
+   if(info.state==='open')fail('NOT_CLAIMED');
+   if(info.state!=='claimed')fail('INVITATION_'+info.state.toUpperCase());
+   if(info.confirmationCode!==codeSeenOnOtherDevice)fail('CODE_NOT_MATCHED');
+   let postError;
    try{
-    const info=await getOwnerInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,owner,boxId,invitationId});
-    if(info.state!=='claimed'||info.confirmationCode!==codeSeenOnOtherDevice)fail('CODE_NOT_MATCHED');
-    const approved=await approveOwnerInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
+    const ack=await approveOwnerInvitation({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
      owner,boxId,invitationId,confirmationCode:codeSeenOnOtherDevice,confirmedByUser:true});
-    if(approved.approved!==true)fail('NO_APPROVAL_ACK');return {state:'approved'};
-   }catch{stop('APPROVAL_NOT_CONFIRMED')}
+    if(ack.approved!==true)postError='INVALID_RESPONSE';
+   }catch(error){postError=classified(error)}
+   // A missing POST response is ambiguous. Always read this same authenticated
+   // invitation; NEVER automatically repeat approval or create another claim.
+   if(['UNAUTHORIZED','ACCESS_DENIED','INVALID_CONTEXT','INVALID_RESPONSE'].includes(postError))problem(postError);
+   const after=await readOwner(scope);
+   if(after.state==='approved')return {state:'approved'};
+   if(after.state!=='claimed')fail(after.state==='open'?'NOT_CLAIMED':'INVITATION_'+after.state.toUpperCase());
+   if(after.confirmationCode!==codeSeenOnOtherDevice)problem('INVALID_RESPONSE');
+   problem(postError??'APPROVAL_UNAVAILABLE');
+   }finally{ownerApproving=false}
   },
   // Parse exact location with URL fragment containing key material, then strip
   // the fragment synchronously BEFORE any await/network/browser UI update.
@@ -131,10 +194,13 @@ export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageO
   },
   async inspectReceiver(){
    guard();if(!pending)fail('NO_PENDING_CLAIM');
-   try{await currentClaim();const out=await checkNewDeviceStatus({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
-     invitationId:pending.invitationId,claimSecret:pending.credentials.claimSecret});
-    await currentClaim();
-    return {state:out.state};}catch{stop('RECEIVER_STATUS_FAILED')}
+   try{await currentClaim()}catch{stop('CLAIM_CHANGED')}
+   let out;try{out=await checkNewDeviceStatus({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
+    invitationId:pending.invitationId,claimSecret:pending.credentials.claimSecret})}
+   catch(error){problem(classified(error))}
+   try{await currentClaim()}catch{stop('CLAIM_CHANGED')}
+   if(!['pending','approved','expired','denied','used'].includes(out?.state))problem('INVALID_RESPONSE');
+   return {state:out.state};
   },
   // If an earlier first-receive committed its WAL but the separate credential
   // store failed/crashed, a FRESH owner-approved QR can re-enroll credentials
@@ -165,14 +231,13 @@ export function createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageO
   async receiveApproved({vault,uiBridge,sealedCredentials,passphrase,initialLocalApp,receiveIntoLocal}={}){
    guard();if(!pending||!vault?.inspectReadOnly||!uiBridge?.firstReceive||!sealedCredentials?.enroll)
     fail('RECEIVER_COMPONENTS_REQUIRED');
-   const claim=pending;halted=true; // permanent single attempt, even on failure
+   const claim=pending;
    await currentClaim();
    if(!receiveIntoLocal&&((await vault.inspectReadOnly()).phase!=='EMPTY_LOCKED'||uiBridge.ready))
     fail('RECEIVER_MUST_BE_EMPTY');
-   const status=await checkNewDeviceStatus({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
-    invitationId:claim.invitationId,claimSecret:claim.credentials.claimSecret});
-   if(status.state!=='approved')fail('OWNER_NOT_APPROVED');
-   await currentClaim();
+   const status=await this.inspectReceiver();
+   if(status.state!=='approved')fail(status.state==='pending'?'OWNER_NOT_APPROVED':'INVITATION_'+status.state.toUpperCase());
+   await currentClaim();guard();halted=true; // one irreversible attempt AFTER approved preflight
    const device={deviceId:claim.credentials.deviceId,deviceToken:claim.credentials.deviceToken};
    let transport=new V30EncryptedClient({fetcher,apiRoot:apiOrigin,origin:siteOrigin,
     boxId:claim.boxId,device,masterKey:claim.masterKey,local:blankSnapshot(),baseline:blankSnapshot(),revision:0});

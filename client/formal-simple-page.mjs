@@ -392,9 +392,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  if(qrFlow){
   if(profileState.phase==='disconnected'&&!receiving)nextQrStep('QRをもう一度読み取ってください','更新前のQR情報はURLから取り除いているため、接続先IDは表示できません。接続したいPC・スマホのQRをもう一度読み取り、ID照合から進めてください。以前の記録は保持しています。');
   else if(profileState.phase==='disconnected')nextQrStep('手順1：同期先IDを確認','下にQRで読み取った同期先IDが表示されます。PC・スマホ側のIDと一致するか確認し、バックアップを保存して接続を進めてください。');
-  else if(staging)nextQrStep('手順2：PCで6桁コードを承認','iPadに6桁コードが表示されたらPCで入力・承認し、iPadの「接続を完了」を押してください。接続中はこの画面を閉じないでください。');
+  else if(staging)nextQrStep('手順2：PCで6桁コードを承認','iPadに6桁コードが表示されたらPCで入力・承認し、iPadで「承認状態を確認」→「接続を完了」と進んでください。接続中はこの画面を閉じないでください。');
   else if(ignoredExistingQR)nextQrStep('接続先を確認してください','この端末は既に別の同期設定を使用しています。QRだけでは切り替えません。「同期設定を最初からやり直す」で解除してから新しいQRを読み取ってください。');
-  else if(mode==='encrypted-local')nextQrStep('手順2：PCで6桁コードを承認','iPadに表示される6桁コードをPCで入力・承認し、iPadで「接続を完了」を押します。記録は承認後に受け取ります。');
+  else if(mode==='encrypted-local')nextQrStep('手順2：PCで6桁コードを承認','iPadに表示される6桁コードをPCで入力・承認し、iPadで「承認状態を確認」→「接続を完了」と進みます。記録は承認後に受け取ります。');
   else nextQrStep('同期の状態を確認','下の「同期済み」表示と同期先IDを確認してください。まだ承認中の場合は画面の案内に従ってください。');
  }
  // Old browser tabs must not keep editing an obsolete profile. A pending
@@ -652,10 +652,12 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // untouched and this does not alter any security checks.
  const receiver=staging||selectedProfile!=='legacy'||setup.readReceipt().role==='receiver';
  const hide=selector=>{const node=panelUI.querySelector('[data-v407="'+selector+'"]');if(node)node.hidden=true};
- hide('refresh');hide('claim');hide('sync');
+ hide('claim');hide('sync');
+ panelUI.querySelector('[data-v407="refresh"]').textContent='承認状態を確認';
  if(receiver){
-  for(const id of ['invite','copy','qr','code','approve','receive','repair'])hide(id);
-  panelUI.querySelector('[data-v407="check"]').textContent='接続を完了';
+  for(const id of ['invite','copy','qr','code','approve','receive','repair','refresh'])hide(id);
+  panelUI.querySelector('[data-v407="check"]').textContent='承認状態を確認';
+  panelUI.querySelector('[data-v407="receive"]').textContent='接続を完了';
  }else{for(const id of ['receiver-code','check','receive','repair'])hide(id)}
  function schedule(_session,fresh){
   automatic?.stop();automatic=null;
@@ -696,7 +698,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }});automatic.start();
   // A registered receiver has no further pairing actions. Avoid leaving a
   // disabled "complete connection" button beside normal watchlist usage.
-  if(receiver){hide('check');hide('receiver-code')}
+  if(receiver){hide('check');hide('receive');hide('receiver-code')}
  }
  // A failed/expired QR must not permanently pin the new device to an
  // unusable invitation. An explicitly rescanned fresh QR replaces only this

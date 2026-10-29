@@ -1730,6 +1730,14 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing [data-v407="qr"]:empty,
 .anilog-sync-dialog #v407-pairing [data-v407="receiver-code"]:empty,
 .anilog-sync-dialog #formal-simple-sync>[data-simple="challenge"]:empty{display:none}
+/* Keep section/control spacing even when optional QR steps become visible.
+   Existing ANI rules: 16px between sections, 12px within related controls. */
+.anilog-sync-dialog #formal-simple-sync>.anilog-sync-qr-next:not([hidden])+p[data-simple="status"]{margin-top:16px}
+.anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]:not([hidden]){display:grid;gap:12px;min-width:0}
+.anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>p,
+.anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>label,
+.anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>.anilog-sync-help{margin:0}
+.anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>button{justify-self:start;max-width:100%}
 /* Conflict recovery: quiet single-column steps, in the existing ANI:LOG palette. */
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-review{display:grid;gap:16px;min-width:0}
 .anilog-sync-dialog .anilog-sync-review>h3{margin:0;font-size:var(--fs-lg);line-height:1.5}
