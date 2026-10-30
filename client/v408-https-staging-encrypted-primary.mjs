@@ -36,10 +36,25 @@ const eq=(a,b)=>canonical(a)===canonical(b);
 const clone=x=>structuredClone(x);
 const object=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
 const shape=(x,keys)=>object(x)&&Object.keys(x).sort().join(',')===keys.slice().sort().join(',');
-const base64=b=>{let s='';for(const c of b)s+=String.fromCharCode(c);return btoa(s)};
+// Native byte codecs avoid per-byte JS callbacks/strings on current browsers.
+// Older browsers retain the same canonical round-trip check via bounded chunks.
+const base64=b=>{
+ if(typeof b.toBase64==='function')return b.toBase64();
+ const chunks=[];
+ for(let i=0;i<b.length;i+=32768)chunks.push(String.fromCharCode(...b.subarray(i,i+32768)));
+ return btoa(chunks.join(''));
+};
 function from64(s,n){
  if(typeof s!=='string'||s.length>(n===undefined?6500000:131072)||!/^[A-Za-z0-9+/]+={0,2}$/.test(s))fail('INVALID_BASE64');
- let bytes;try{bytes=Uint8Array.from(atob(s),x=>x.charCodeAt(0))}catch{fail('INVALID_BASE64')}
+ let bytes;
+ try{
+  if(typeof Uint8Array.fromBase64==='function')bytes=Uint8Array.fromBase64(s,{alphabet:'base64',lastChunkHandling:'strict'});
+  else{
+   const binary=atob(s);bytes=new Uint8Array(binary.length);
+   for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  }
+ }catch{fail('INVALID_BASE64')}
+ // Preserve byte-for-byte canonicality, fixed-length bounds and the error code.
  if(base64(bytes)!==s||(n!==undefined&&bytes.length!==n))fail('INVALID_BASE64');
  return bytes;
 }
