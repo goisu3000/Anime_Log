@@ -8,6 +8,7 @@ import {V366_CREATE_ID,V366_CREATE_TITLE} from './v366-reviewed-create-test-only
 import {assertMixedMap,assertMixedTombstones} from './v29-mixed-record-gate.mjs';
 import {appToSnapshot,snapshotToApp} from './app-bridge.mjs';
 import {validateSnapshot,mergeSnapshots} from '../sync-core.mjs';
+import {createVerifiedWalCache,PERSISTENT_VALIDATOR_VERSION} from './verified-wal-cache-poc.mjs';
 export const V408_DB='anilog-v408-HTTPS-STAGING-SYNTHETIC-ENCRYPTED-PRIMARY';
 export const V408_ORIGIN=globalThis.location?.origin??null;
 const allowedStagingOrigin=()=>{try{const u=new URL(V408_ORIGIN);return u.protocol==='https:'&&u.href===u.origin+'/'&&u.hostname!=='anime-log-rouge.vercel.app'&&u.hostname!=='www.anime-log-rouge.vercel.app'&&u.hostname!=='anime-log-rouge.vercel.app'}catch{return false}};
@@ -417,13 +418,39 @@ async function validateAll(c, key, rows, cacheBox = null, onStats = null) {
 }
 /* === [2-A DIFF END] === */
 
-function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,locks=globalThis.navigator?.locks,origin=V408_ORIGIN,onValidationStats=null}={}){
+function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,locks=globalThis.navigator?.locks,origin=V408_ORIGIN,onValidationStats=null,onPersistentCacheStats=null}={}){
  const loopback=formal&&/^http:\/\/(?:localhost|127\.0\.0\.1)(?::\d+)?$/.test(origin);
  const approvedProduction=production&&new URL(origin).protocol==='https:';
  if((!approvedProduction&&!allowedStagingOrigin()&&!loopback)||origin!==V408_ORIGIN||globalThis.location?.origin!==V408_ORIGIN||!idb?.databases||!cryptoProvider?.subtle||!cryptoProvider?.getRandomValues||!locks?.request)fail('ISOLATED_CONTEXT_ONLY');
  let state='LOCKED',key=null,current=null,head=null,attempted=false,undoReceipt=null,checkpoint=null;
  /* === [2-A DIFF START: Instance-scoped Cache Container & Safe Operation Guard] === */
  const cacheBox={current:null};
+ // PRIVATE Stage 3: only validated durable states can issue auxiliary receipts.
+ let validationMode=null,persistedStamp=null;
+ const pendingReceipts=new Set();
+ const validationStats=x=>{validationMode=x.mode;if(typeof onValidationStats==='function')onValidationStats(x)};
+ const persistent=formal?createVerifiedWalCache({idb,cryptoProvider,databaseName,onStats:onPersistentCacheStats}):null;
+ const persistentIdentity=meta=>({origin:V408_ORIGIN,profileId,databaseName,walVersion:VERSION,walPurpose:PURPOSE,kdf:meta.kdf,iterations:meta.iterations,salt:meta.salt,validationRules:PERSISTENT_VALIDATOR_VERSION});
+ const stamp=cache=>cache.revision+':'+cache.headDigest;
+ function checkedReceipt(x){
+  if(!shape(x,['validatorVersion','escrowDigest','revision','entryDigests','last','beforeLast','checkpoint','headDigest'])||x.validatorVersion!==VALIDATOR_CACHE_VERSION||!Number.isSafeInteger(x.revision)||x.revision<0||x.revision>maxRevision||!/^[a-f0-9]{64}$/.test(x.escrowDigest)||!/^[a-f0-9]{64}$/.test(x.headDigest)||!Array.isArray(x.entryDigests)||x.entryDigests.length!==x.revision+1||x.entryDigests.some(d=>typeof d!=='string'||!/^[a-f0-9]{64}$/.test(d))||x.entryDigests[x.revision]!==x.headDigest||(x.revision===0?x.beforeLast!==null:!object(x.beforeLast)))throw Error('INVALID_AUXILIARY_RECEIPT');
+  reviewedSnapshot(x.last);if(x.beforeLast!==null)reviewedSnapshot(x.beforeLast);
+  if(x.checkpoint!==null){
+   if(!shape(x.checkpoint,['serverRevision','snapshot'])||!Number.isSafeInteger(x.checkpoint.serverRevision)||x.checkpoint.serverRevision<1)throw Error('INVALID_AUXILIARY_CHECKPOINT');
+   jsonSafe(x.checkpoint);validateSnapshot(x.checkpoint.snapshot);
+  }
+  return x;
+ }
+ async function persistVerified(k,meta){
+  if(!persistent||state!=='ACTIVE'||!cacheBox.current||cacheBox.current.keyRef!==k||cacheBox.current.revision!==meta.revision||cacheBox.current.headDigest!==meta.headDigest||cacheBox.current.escrowDigest!==meta.escrowDigest)return;
+  const c=cacheBox.current,token=stamp(c);if(token===persistedStamp||pendingReceipts.has(token))return;
+  pendingReceipts.add(token);
+  try{
+   const receipt={};for(const name of ['validatorVersion','escrowDigest','revision','entryDigests','last','beforeLast','checkpoint','headDigest'])receipt[name]=c[name];
+   if(await persistent.save(k,persistentIdentity(meta),receipt)&&cacheBox.current&&stamp(cacheBox.current)===token)persistedStamp=token;
+  }catch{}finally{pendingReceipts.delete(token)} // Optional cache failure never changes a successful vault result.
+ }
+
  const runGuarded=async fn=>{
   try{return await fn()}
   catch(err){cacheBox.current=null;throw err}
@@ -445,9 +472,9 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    const entry=await seal(cryptoProvider,k,'wal',0,'genesis',{kind:'initial',id:'synthetic',snapshot});
    const meta={version:VERSION,purpose:PURPOSE,kdf:'PBKDF2-SHA256',iterations:V408_ITERATIONS,salt:base64(salt),revision:0,headDigest:await digest(cryptoProvider,entry),escrowDigest:await digest(cryptoProvider,escrow)};
    if(!await transactionCheckAndPut(idb,'initialize',null,{meta,escrow,'entry:0':entry}))fail('INIT_CAS_REJECTED');
-   const rows=await readRecords(idb),result=await validateAll(cryptoProvider,k,rows,cacheBox,onValidationStats);
+   const rows=await readRecords(idb),result=await validateAll(cryptoProvider,k,rows,cacheBox,validationStats);
    if(result.revision!==0||!eq(result.snapshot,snapshot))fail('INITIAL_READBACK_MISMATCH');
-   key=k;head=rows.meta;current=result.snapshot;checkpoint=result.checkpoint;state='ACTIVE';return status('INIT_ENCRYPTED_READBACK_VERIFIED',{revision:0});
+   key=k;head=rows.meta;current=result.snapshot;checkpoint=result.checkpoint;state='ACTIVE';void persistVerified(k,head);return status('INIT_ENCRYPTED_READBACK_VERIFIED',{revision:0});
   }));
  }
  /** First receipt by an EMPTY, separately isolated device. The authenticated
@@ -476,9 +503,10 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    const entry=await seal(cryptoProvider,k,'wal',0,'genesis',{kind:'initial',id:'synthetic',snapshot,checkpoint:cp});
    const meta={version:VERSION,purpose:PURPOSE,kdf:'PBKDF2-SHA256',iterations:V408_ITERATIONS,salt:base64(salt),revision:0,headDigest:await digest(cryptoProvider,entry),escrowDigest:await digest(cryptoProvider,escrow)};
    if(!await transactionCheckAndPut(idb,'initialize',null,{meta,escrow,'entry:0':entry}))fail('INIT_CAS_REJECTED');
-   const rows=await readRecords(idb),result=await validateAll(cryptoProvider,k,rows,cacheBox,onValidationStats);
+   const rows=await readRecords(idb),result=await validateAll(cryptoProvider,k,rows,cacheBox,validationStats);
    if(result.revision!==0||!eq(result.snapshot,snapshot)||!eq(result.checkpoint,cp))fail('INITIAL_RECEIVE_READBACK_FAILED');
    key=k;head=rows.meta;current=result.snapshot;checkpoint=result.checkpoint;state='ACTIVE';
+   void persistVerified(k,head);
    return status('CONFIRMED_FIRST_RECEIVE_ATOMIC_GENESIS_VERIFIED',{revision:0,serverRevision:expectedRevision,records:Object.keys(snapshot.records).length,tombstones:Object.keys(snapshot.tombstones).length});
   }));
  }
@@ -487,7 +515,18 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
   return runGuarded(async()=>{
    const rows=await readRecords(idb);if(verifyInventory(rows)!=='PRESENT')fail('NOT_INITIALIZED');
    const k=await derive(cryptoProvider,passphrase,from64(rows.meta.salt,16));
-   const result=await validateAll(cryptoProvider,k,rows,cacheBox,onValidationStats);key=k;head=rows.meta;current=result.snapshot;checkpoint=result.checkpoint;state='ACTIVE';return status('F5_ENCRYPTED_READBACK_VERIFIED',{revision:result.revision});
+   let loaded=null;
+   if(persistent){
+    try{loaded=checkedReceipt(await persistent.load(k,persistentIdentity(rows.meta)));cacheBox.current=Object.freeze({...loaded,keyRef:k})}
+    catch{cacheBox.current=null;loaded=null}
+   }
+   const result=await validateAll(cryptoProvider,k,rows,cacheBox,validationStats);
+   // Keep latest-state format/round-trip validation before making it readable.
+   if(persistent)reviewedSnapshot(result.snapshot);
+   if(loaded&&validationMode==='cache-hit')persistedStamp=stamp(loaded);
+   key=k;head=rows.meta;current=result.snapshot;checkpoint=result.checkpoint;state='ACTIVE';
+   void persistVerified(k,rows.meta);
+   return status('F5_ENCRYPTED_READBACK_VERIFIED',{revision:result.revision});
   });
  }
  function readCurrent(){if(state!=='ACTIVE'){cacheBox.current=null;fail('LOCKED')}return clone(current)}
@@ -507,7 +546,7 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    validateSnapshot(expectedSyncedSnapshot);
    const rows=await readRecords(idb);
    if(!eq(rows.meta,head)||head.revision!==expectedVaultRevision)fail('STALE_LOCAL_HEAD');
-   const verified=await validateAll(cryptoProvider,key,rows,cacheBox,onValidationStats);
+   const verified=await validateAll(cryptoProvider,key,rows,cacheBox,validationStats);
    if(!eq(verified.snapshot,current)||!eq(verified.checkpoint,checkpoint))fail('LOCAL_CHANGED');
    if(checkpoint&&ackRevision<=checkpoint.serverRevision)fail('STALE_SERVER_REVISION');
    const remote=await readBack();
@@ -530,9 +569,10 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    const env=await seal(cryptoProvider,key,'wal',revision,head.headDigest,{kind:'sync-commit',id:'sync',snapshot:next,checkpoint:nextCp});
    const nextMeta={...head,revision,headDigest:await digest(cryptoProvider,env)};
    if(!await transactionCheckAndPut(idb,'append',head,{['entry:'+revision]:env,meta:nextMeta}))fail('ATOMIC_CAS_REJECTED');
-   const fresh=await readRecords(idb),result=await validateAll(cryptoProvider,key,fresh,cacheBox,onValidationStats);
+   const fresh=await readRecords(idb),result=await validateAll(cryptoProvider,key,fresh,cacheBox,validationStats);
    if(!eq(result.snapshot,next)||!eq(result.checkpoint,nextCp)||result.revision!==revision)fail('SYNC_COMMIT_READBACK_FAILED');
    current=next;head=nextMeta;checkpoint=nextCp;undoReceipt=null;state='ACTIVE';
+   void persistVerified(key,head);
    return status('CONFIRMED_SYNC_ATOMIC_WAL_READBACK_VERIFIED',{revision,serverRevision:ackRevision});
   }));
  }
@@ -540,7 +580,7 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
   if(state!=='ACTIVE'){cacheBox.current=null;fail('LOCKED')}state='STOP_NO_RETRY';
   return runGuarded(()=>exclusive(async()=>{
    const rows=await readRecords(idb);if(!eq(rows.meta,head))fail('STALE_HEAD');
-   const verified=await validateAll(cryptoProvider,key,rows,cacheBox,onValidationStats);if(!eq(verified.snapshot,current))fail('STALE_STATE');
+   const verified=await validateAll(cryptoProvider,key,rows,cacheBox,validationStats);if(!eq(verified.snapshot,current))fail('STALE_STATE');
    const next=clone(current),special=['rank-stage','rank-direction','rank-drop','manual-create','record-delete','undo-delete'].includes(kind);
    const r=next.records[id];if(!KINDS.has(kind)||(!special&&(!r||r.id!==id||current.tombstones[id])))fail('INVALID_HANDLER_TARGET');
    const ts=new Date().toISOString();
@@ -599,11 +639,11 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    const env=await seal(cryptoProvider,key,'wal',revision,head.headDigest,{kind,id,snapshot:next});
    const nextMeta={...head,revision,headDigest:await digest(cryptoProvider,env)};
    if(!await transactionCheckAndPut(idb,'append',head,{['entry:'+revision]:env,meta:nextMeta}))fail('ATOMIC_CAS_REJECTED');
-   const fresh=await readRecords(idb),checked=await validateAll(cryptoProvider,key,fresh,cacheBox,onValidationStats);
+   const fresh=await readRecords(idb),checked=await validateAll(cryptoProvider,key,fresh,cacheBox,validationStats);
    if(!eq(checked.snapshot,next)||checked.revision!==revision)fail('AFTER_WRITE_READBACK_FAILED');
    if(kind==='record-delete')undoReceipt={id,previous:clone(r),tombstone:clone(next.tombstones[id]),revision,snapshotBefore:clone(current)};
    else undoReceipt=null;
-   current=next;head=nextMeta;state='ACTIVE';return status('TYPED_ENCRYPTED_WAL_VERIFIED',{revision,kind});
+   current=next;head=nextMeta;state='ACTIVE';void persistVerified(key,head);return status('TYPED_ENCRYPTED_WAL_VERIFIED',{revision,kind});
   }));
  }
  async function commitApp({candidate,expectedRevision}={}){
@@ -618,24 +658,25 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    return exclusive(async()=>{
     const rows=await readRecords(idb);
     if(expectedRevision!==head.revision||!eq(rows.meta,head))fail('STALE_FORMAL_HEAD');
-    const verified=await validateAll(cryptoProvider,key,rows,cacheBox,onValidationStats);
+    const verified=await validateAll(cryptoProvider,key,rows,cacheBox,validationStats);
     if(!eq(verified.snapshot,current)||!eq(verified.checkpoint,checkpoint))fail('LOCAL_CHANGED');
     const revision=head.revision+1;if(revision>maxRevision)fail('REVISION_LIMIT');
     const env=await seal(cryptoProvider,key,'wal',revision,head.headDigest,{kind:'formal-commit',id:'app',snapshot:clone(candidate)});
     const meta={...head,revision,headDigest:await digest(cryptoProvider,env)};
     if(!await transactionCheckAndPut(idb,'append',head,{['entry:'+revision]:env,meta}))fail('ATOMIC_CAS_REJECTED');
-    const fresh=await readRecords(idb),result=await validateAll(cryptoProvider,key,fresh,cacheBox,onValidationStats);
+    const fresh=await readRecords(idb),result=await validateAll(cryptoProvider,key,fresh,cacheBox,validationStats);
     if(result.revision!==revision||!eq(result.snapshot,candidate)||!eq(result.checkpoint,checkpoint))fail('FORMAL_READBACK_FAILED');
-    current=clone(candidate);head=meta;state='ACTIVE';return status('FORMAL_COMMIT_READBACK_VERIFIED',{revision});
+    current=clone(candidate);head=meta;state='ACTIVE';void persistVerified(key,head);return status('FORMAL_COMMIT_READBACK_VERIFIED',{revision});
    });
   });
  }
  async function refresh(){
   if(!formal||state!=='ACTIVE'){cacheBox.current=null;fail('FORMAL_UNLOCKED_REQUIRED')}
   return runGuarded(()=>exclusive(async()=>{
-   const rows=await readRecords(idb),result=await validateAll(cryptoProvider,key,rows,cacheBox,onValidationStats);
+   const rows=await readRecords(idb),result=await validateAll(cryptoProvider,key,rows,cacheBox,validationStats);
    if(result.revision<head.revision)fail('HEAD_ROLLBACK');
    current=result.snapshot;checkpoint=result.checkpoint;head=rows.meta;
+   void persistVerified(key,head);
    return readCurrent();
   }));
  }
