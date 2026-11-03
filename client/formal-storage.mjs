@@ -61,14 +61,52 @@ export function decodeFormalBackup(raw){
  app.weeklyOptions.__migration={history:'unknown',legacyBackup:cp(dump)};
  return app;
 }
-export function createFormalStorage({vault,independentVault,now=()=>new Date().toISOString(),onCommitted=()=>{}}={}){
- let active=false,busy=false,undo=null,refreshPending=null;
+// Phase 4N, private opt-in: a single-realm foreground/maintenance gate.
+// A reservation is synchronous (no await between checking and reserving).
+// This is NOT a cross-tab lock, and must not be used alone as proof of
+// remote-sync safety or as production authorization.
+export function createPrivateQuiescentOperationGate(){
+ let foreground=0,waiting=0,maintenance=null;
+ function tryReserveMaintenance(){
+  if(maintenance||foreground||waiting)return null;
+  let releaseSignal;
+  const done=new Promise(resolve=>{releaseSignal=resolve});
+  const ticket={done};maintenance=ticket;
+  let released=false;
+  return Object.freeze({
+   hasForegroundWaiters:()=>waiting>0,
+   release(){if(released)return;released=true;if(maintenance===ticket)maintenance=null;releaseSignal()}
+  });
+ }
+ async function withForeground(fn){
+  if(typeof fn!=='function')throw Error('OPERATION_REQUIRED');
+  // Include arrivals during the anchor staging window in the waiters count.
+  waiting++;
+  let reserved=false;
+  try{
+   while(maintenance)await maintenance.done;
+   waiting--;reserved=true;foreground++;
+   try{return await fn()}finally{foreground--}
+  }finally{if(!reserved)waiting--}
+ }
+ return Object.freeze({tryReserveMaintenance,withForeground,
+  inspect:()=>Object.freeze({foreground,waiting,maintenance:!!maintenance})});
+}
+export function createFormalStorage({vault,independentVault,now=()=>new Date().toISOString(),onCommitted=()=>{},
+ testOnlyMaintenanceGate=false,uiIsIdle=()=>false,syncIsIdle=()=>false,operationGate=null,privateMaintenanceAuthorization=null,productMaintenanceEnabled=false,productMaintenanceAuthorization=null,undoIsIdle=()=>false}={}){
+ let active=false,busy=false,undo=null,refreshPending=null,privateMaintenanceSnapshot=null;
  const guard=()=>{if(!active||vault.getState()!=='ACTIVE')stop('UNLOCK_REQUIRED')};
  const transaction=async fn=>{guard();if(busy)stop('BUSY');busy=true;try{return await fn()}finally{busy=false}};
  // A pending network acknowledgement is not a reason to disable local saves.
  // The immutable lineage still prevents connecting these edits to another box.
  const editable=()=>guard();
- const read=()=>{guard();return cp(vault.readCurrent())};
+ const read=()=>{
+  // Only the private same-realm maintenance reservation may expose a frozen
+  // memory snapshot while the engine marks its cutover internally STOP.
+  // It is never used as authority for writes; those wait for the gate.
+  if(privateMaintenanceSnapshot!==null&&active&&operationGate)return cp(privateMaintenanceSnapshot);
+  guard();return cp(vault.readCurrent())
+ };
  const commit=async candidate=>{
   validateFormalApp(candidate);const revision=vault.readRevision();
   try{
@@ -80,14 +118,72 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
   try{onCommitted()}catch{}
   return result;
  };
+ async function maintainIfQuiescent({threshold=64,injectAbort=false,onAfterAnchorStageForTest=null,onBeforePrimaryCASForTest=null}={},product=false){
+   if(product?(productMaintenanceEnabled!==true||typeof vault.maintainProductWal!=='function'):(!testOnlyMaintenanceGate||typeof vault.testOnlyCompactSameSalt!=='function'))return Object.freeze({rebased:false,reason:'OFF'});
+   // Private product-entry authorization is an additional gate, not a proof
+   // that non-cooperative old tabs are absent. Check at entry and before CAS.
+   const permitted=()=>{
+    if(product){try{return typeof productMaintenanceAuthorization==='function'&&productMaintenanceAuthorization()===true}catch{return false}}
+    if(privateMaintenanceAuthorization===null)return true; // legacy test fixtures only
+    try{return privateMaintenanceAuthorization()===true}catch{return false}
+   };
+   if(!permitted())return Object.freeze({rebased:false,reason:'UPGRADE_CONFIRMATION_REQUIRED'});
+   if(product&&(!operationGate||typeof operationGate.tryReserveMaintenance!=='function'||typeof operationGate.withForeground!=='function'))return Object.freeze({rebased:false,reason:'OPERATION_GATE_REQUIRED'});
+   // A missing, malformed or throwing signal is never proof of quietness.
+   const safelyIdle=read=>{try{return read()===true}catch{return false}};
+   if(product&&undo&&safelyIdle(uiIsIdle)&&safelyIdle(undoIsIdle)&&undo.revision===vault.readRevision())undo=null;
+   if(!active||vault.getState()!=='ACTIVE'||busy||undo||!safelyIdle(uiIsIdle)||!safelyIdle(syncIsIdle))return Object.freeze({rebased:false,reason:'NOT_QUIESCENT'});
+   const reservation=operationGate?.tryReserveMaintenance?.()??(operationGate?null:{release(){},hasForegroundWaiters:()=>false});
+   if(!reservation)return Object.freeze({rebased:false,reason:'FOREGROUND_RESERVED'});
+   busy=true;
+   try{
+    // Recheck after the busy fence is acquired; external tab writes are still
+    // protected by the WAL CAS. External sync must expose its own in-flight gate.
+    if(!permitted())return Object.freeze({rebased:false,reason:'UPGRADE_CONFIRMATION_REQUIRED'});
+   if(product&&(!operationGate||typeof operationGate.tryReserveMaintenance!=='function'||typeof operationGate.withForeground!=='function'))return Object.freeze({rebased:false,reason:'OPERATION_GATE_REQUIRED'});
+    if(undo||!safelyIdle(uiIsIdle)||!safelyIdle(syncIsIdle))return Object.freeze({rebased:false,reason:'NOT_QUIESCENT'});
+    const before=read();const beforeCheckpoint=vault.readSyncCheckpoint();
+    privateMaintenanceSnapshot=cp(before);
+    // The anchor is staged asynchronously. Foreground activity, a new draft,
+    // or a sync can begin while it is being sealed or saved. Recheck ALL idle
+    // signals at the final pre-cutover yield boundary, never just waiters.
+    // Unknown/throwing observers fail closed. This is PRIVATE-ONLY and is NOT
+    // a cross-tab membership proof or production auto-prune authorization.
+    const shouldYieldBeforeCutover=()=>!permitted()||reservation.hasForegroundWaiters()||
+      !!undo||!safelyIdle(uiIsIdle)||!safelyIdle(syncIsIdle);
+    const result=product?await vault.maintainProductWal({shouldYieldBeforeCutover}):await vault.testOnlyCompactSameSalt({threshold,injectAbort,onAfterAnchorStageForTest,shouldYieldBeforeCutover,onBeforePrimaryCASForTest});
+    if(vault.getState()!=='ACTIVE')stop('MAINTENANCE_ENGINE_STOPPED');
+    if(!same(read(),before)||!same(vault.readSyncCheckpoint(),beforeCheckpoint))stop('MAINTENANCE_PARITY');
+    if(result.phase==='REBASE_BELOW_THRESHOLD')return Object.freeze({rebased:false,reason:'BELOW_THRESHOLD'});
+    if(result.phase==='REBASE_YIELDED_FOREGROUND')return Object.freeze({rebased:false,reason:'YIELDED_TO_FOREGROUND'});
+    if(result.phase==='REBASE_PRECOMMIT_UNVERIFIED')return Object.freeze({rebased:false,reason:'CAS_GUARD_UNVERIFIED'});
+    if(result.phase!==(product?'PRODUCT_WAL_REBASE_READBACK':'TEST_ONLY_SAME_SALT_REBASE_READBACK'))stop('MAINTENANCE_UNVERIFIED_RESULT');
+    return Object.freeze({rebased:true,revision:vault.readRevision()});
+   }catch(err){
+    // NEVER swallow a sticky STOP_NO_RETRY as a harmless skipped optimization.
+    if(vault.getState()!=='ACTIVE')active=false;
+    throw err;
+   }finally{privateMaintenanceSnapshot=null;busy=false;reservation.release()}
+ }
  return Object.freeze({
-  get ready(){return active&&vault.getState()==='ACTIVE'},read,
+  get ready(){return active&&(vault.getState()==='ACTIVE'||privateMaintenanceSnapshot!==null&&!!operationGate)},read,
+  // PRIVATE opt-in contract probe only. No timer, product hook or automatic
+  // pruning. Caller must prove *both* UI and sync are quiescent independently.
+  testOnlyUndoReceiptRevision(){if(!testOnlyMaintenanceGate)return null;return undo?.revision??null},
+  testOnlyExpireUndo(expectedRevision){
+   if(!testOnlyMaintenanceGate||!active||busy||vault.getState()!=='ACTIVE'||!Number.isSafeInteger(expectedRevision))return false;
+   if(!undo||undo.revision!==expectedRevision)return false;
+   undo=null;return true;
+  },
+  testOnlyMaintainIfQuiescent:args=>maintainIfQuiescent(args,false),
+  // No threshold, abort flag or test callback is accepted by the product facade.
+  maintainProductWal:()=>maintainIfQuiescent({},true),
   // Browsers can emit visibilitychange and focus for the same foreground
   // transition. Share that read instead of reporting our own read as BUSY.
   // Writes still use the existing exclusive transaction and failure guard.
   refresh(){
    if(refreshPending)return refreshPending;
-   refreshPending=transaction(async()=>{const revision=vault.readRevision(),result=await vault.refresh();if(vault.readRevision()!==revision)undo=null;return result})
+   refreshPending=transaction(async()=>{const identity=typeof vault.readHeadIdentity==='function'?vault.readHeadIdentity():{revision:vault.readRevision()};const result=await vault.refresh();const latest=typeof vault.readHeadIdentity==='function'?vault.readHeadIdentity():{revision:vault.readRevision()};if(!same(latest,identity))undo=null;return result})
     .finally(()=>{refreshPending=null});
    return refreshPending;
   },

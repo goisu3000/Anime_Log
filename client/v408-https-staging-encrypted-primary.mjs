@@ -22,6 +22,24 @@ export function createFormalProductionANIPrimary(options={}){
  return createProfiledPrimary(true,options,true);
 }
 function createProfiledPrimary(formal,options,production=false){
+// Explicit disposable-localhost integration probe. Never turn this on from
+// metadata, URL search/hash, localStorage, or ordinary product auto-mount.
+// In particular, production origins cannot access the destructive test API.
+// Gate C is a separate, explicitly mounted QA build. No query/storage toggle.
+const gateCHttps=options.enableGateCPrivateMaintenance===true&&
+ V408_ORIGIN==='https://anilog-qa-gateb-20261031-site.pages.dev'&&
+ globalThis.location?.origin===V408_ORIGIN&&
+ globalThis.document?.querySelector?.('meta[name="ani-log-gate-c-approval"]')?.content==='approved-isolated-gate-c';
+const privateProdRebase=production&&options.enableTestOnlyProductMaintenance===true&&
+ (/^http:\/\/127\.0\.0\.1(?::\d+)?$/.test(V408_ORIGIN??'')||gateCHttps)&&
+ options.enableTestOnlySameSaltRebase===true&&options.enableTestOnlyAnchorRing===true&&
+ options.enableTestOnlyAnchorRefresh===true;
+const privateSameSaltAllowed=privateProdRebase||(!production&&formal&&
+ (V408_ORIGIN==='https://formal-development.example.invalid'||/^http:\/\/127\.0\.0\.1(?::\d+)?$/.test(V408_ORIGIN??''))&&
+ options.enableTestOnlySameSaltRebase===true);
+const productMaintenance=production&&options.enableProductWalMaintenance===true;
+const productAuthorization=()=>{try{return productMaintenance&&typeof options.productMaintenanceAuthorization==='function'&&options.productMaintenanceAuthorization()===true}catch{return false}};
+const anchorRefreshAllowed=productMaintenance||(privateSameSaltAllowed&&options.enableTestOnlyAnchorRing===true&&options.enableTestOnlyAnchorRefresh===true);
 const profileId=options.profileId??'legacy';
 if(production&&!/^(?:legacy|p[1-9][0-9]?)$/.test(profileId))throw Error('FORMAL_PROFILE_INVALID');
 const databaseName=production?'anilog-FORMAL-PRODUCTION-ENCRYPTED-PRIMARY'+(profileId==='legacy'?'':'-'+profileId):formal?'anilog-FORMAL-DEVELOPMENT-ENCRYPTED-PRIMARY':V408_DB;
@@ -115,6 +133,55 @@ async function transactionCheckAndPut(idb,mode,expectedHead,values){
   };
   tx.onerror=()=>no(tx.error??Error('IDB_WRITE_ERROR'));tx.onabort=()=>no(Error('IDB_WRITE_ABORT'));
   tx.oncomplete=()=>ok(permitted);
+ })}finally{db.close()}
+}
+
+
+// Shared atomic replacement core. Only the separately authorized product
+// entry or the isolated test entry may call this function. Test hooks are never
+// forwarded by the product entry. A single existing vault transaction compares every source key and value
+// before writing a fully authenticated same-salt replacement. No crypto awaits
+// are performed within an IndexedDB transaction.
+async function replaceSameSaltCAS(idb, expected, replacement, injectAbort=false, {precommitYield=null,onBeforePrecommitForTest=null}={}){
+ const db=await openDB(idb);
+ try{return await new Promise((ok,no)=>{
+  const tx=db.transaction('vault','readwrite'),s=tx.objectStore('vault');
+  let outcome='CAS_REJECTED';
+  const sourceKeys=expected.keys.slice().sort();
+  const targetKeys=replacement.keys.slice().sort();
+  const q=s.getAllKeys();
+  q.onsuccess=()=>{
+   if(!eq(q.result.slice().sort(),sourceKeys))return;
+   let pending=sourceKeys.length,matched=true;
+   for(const k of sourceKeys){
+    const r=s.get(k);
+    r.onsuccess=()=>{
+     if(!eq(r.result,k==='meta'?expected.meta:k==='escrow'?expected.escrow:expected.entries[Number(k.slice(6))]))matched=false;
+     if(--pending!==0)return;
+     if(!matched)return;
+     // PRIVATE ONLY: re-evaluate live same-realm UI/sync signals in the
+     // *same IDB success callback* immediately before the first write. There
+     // are no awaits or event-loop turns between this guard and the puts.
+     // Unknown values and throwing observers fail closed, preserving the WAL.
+     // Other tabs' unsaved DOM state is NOT covered by this local guard.
+     try{
+      if(typeof onBeforePrecommitForTest==='function')onBeforePrecommitForTest();
+      if(precommitYield!==null&&precommitYield()!==false){outcome='CAS_PREFLIGHT_YIELDED';return}
+     }catch{outcome='CAS_PREFLIGHT_UNVERIFIED';return}
+     for(const oldKey of sourceKeys)if(!targetKeys.includes(oldKey))s.delete(oldKey);
+     for(const k of targetKeys){
+      s.put(clone(k==='meta'?replacement.meta:k==='escrow'?replacement.escrow:replacement.entries[Number(k.slice(6))]),k);
+      if(injectAbort){outcome='INJECTED_ABORT';tx.abort();return}
+     }
+     outcome='COMMITTED';
+    };
+    r.onerror=()=>{matched=false};
+   }
+  };
+  q.onerror=()=>no(q.error??Error('TEST_REBASE_SCAN_FAILED'));
+  tx.onerror=()=>{};
+  tx.onabort=()=>outcome==='INJECTED_ABORT'?ok('INJECTED_ABORT'):no(tx.error??Error('TEST_REBASE_TX_ABORT'));
+  tx.oncomplete=()=>ok(outcome);
  })}finally{db.close()}
 }
 
@@ -430,7 +497,11 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
  const pendingReceipts=new Set();
  const validationStats=x=>{validationMode=x.mode;if(typeof onValidationStats==='function')onValidationStats(x)};
  const persistent=formal?createVerifiedWalCache({idb,cryptoProvider,databaseName,onStats:onPersistentCacheStats}):null;
- const persistentIdentity=meta=>({origin:V408_ORIGIN,profileId,databaseName,walVersion:VERSION,walPurpose:PURPOSE,kdf:meta.kdf,iterations:meta.iterations,salt:meta.salt,validationRules:PERSISTENT_VALIDATOR_VERSION});
+ // A same-salt rebase creates a NEW WAL chain at revision zero. The
+ // authenticated genesis entry digest, not salt/revision alone, identifies
+ // which disposable receipt belongs to the current chain. The primary WAL
+ // remains authoritative and its schema/key material are unchanged.
+ const persistentIdentity=(meta,genesisDigest)=>({origin:V408_ORIGIN,profileId,databaseName,walVersion:VERSION,walPurpose:PURPOSE,kdf:meta.kdf,iterations:meta.iterations,salt:meta.salt,genesisDigest,validationRules:PERSISTENT_VALIDATOR_VERSION});
  const stamp=cache=>cache.revision+':'+cache.headDigest;
  function checkedReceipt(x){
   if(!shape(x,['validatorVersion','escrowDigest','revision','entryDigests','last','beforeLast','checkpoint','headDigest'])||x.validatorVersion!==VALIDATOR_CACHE_VERSION||!Number.isSafeInteger(x.revision)||x.revision<0||x.revision>maxRevision||!/^[a-f0-9]{64}$/.test(x.escrowDigest)||!/^[a-f0-9]{64}$/.test(x.headDigest)||!Array.isArray(x.entryDigests)||x.entryDigests.length!==x.revision+1||x.entryDigests.some(d=>typeof d!=='string'||!/^[a-f0-9]{64}$/.test(d))||x.entryDigests[x.revision]!==x.headDigest||(x.revision===0?x.beforeLast!==null:!object(x.beforeLast)))throw Error('INVALID_AUXILIARY_RECEIPT');
@@ -447,7 +518,7 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
   pendingReceipts.add(token);
   try{
    const receipt={};for(const name of ['validatorVersion','escrowDigest','revision','entryDigests','last','beforeLast','checkpoint','headDigest'])receipt[name]=c[name];
-   if(await persistent.save(k,persistentIdentity(meta),receipt)&&cacheBox.current&&stamp(cacheBox.current)===token)persistedStamp=token;
+   if(await persistent.save(k,persistentIdentity(meta,c.entryDigests[0]),receipt)&&cacheBox.current&&stamp(cacheBox.current)===token)persistedStamp=token;
   }catch{}finally{pendingReceipts.delete(token)} // Optional cache failure never changes a successful vault result.
  }
 
@@ -458,6 +529,116 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
  /* === [2-A DIFF END] === */
  const exclusive=fn=>locks.request(databaseName+'-exclusive',{mode:'exclusive'},fn);
  const status=(phase,details={})=>Object.freeze({phase,...details,encryptedOriginal:true,walEncrypted:true,plaintextAppPartsWritten:false,mode:'SYNC_OFF',syntheticOnly:!formal,productionReady:false,syncAllowed:false});
+// Phase 4I: isolated two-slot read-only recovery evidence. Not in product.
+// The anchor is NEVER restored automatically, and has no delete/prune authority.
+const testOnlyAnchorDatabase=databaseName+(productMaintenance?'-RECOVERY-ANCHORS-v1':'-PHASE4I-RECOVERY-PRIVATE-ONLY');
+async function openRecoveryAnchorDB(){return new Promise((ok,no)=>{
+ const q=idb.open(testOnlyAnchorDatabase,1);
+ q.onupgradeneeded=()=>q.result.createObjectStore('anchors');
+ q.onerror=()=>no(q.error??Error('ANCHOR_DB_ERROR'));
+ q.onblocked=()=>no(Error('ANCHOR_DB_BLOCKED'));
+ q.onsuccess=()=>ok(q.result);
+})}
+async function readRecoveryAnchors(){
+ const db=await openRecoveryAnchorDB();
+ try{return await new Promise((ok,no)=>{
+  const tx=db.transaction('anchors','readonly'),store=tx.objectStore('anchors'),result={};
+  const q=store.getAllKeys();let error=null;
+  q.onsuccess=()=>{
+   const keys=q.result;
+   if(!Array.isArray(keys)||keys.some(k=>!['slot:0','slot:1'].includes(k))){error=Error('ANCHOR_UNKNOWN_KEY');tx.abort();return}
+   for(const k of keys){const r=store.get(k);r.onsuccess=()=>result[k]=r.result;r.onerror=()=>{error=r.error??Error('ANCHOR_GET_FAILED');tx.abort()}}
+  };
+  q.onerror=()=>{error=q.error??Error('ANCHOR_KEYS_FAILED');tx.abort()};
+  tx.oncomplete=()=>ok(result);tx.onabort=()=>no(error??tx.error??Error('ANCHOR_READ_ABORT'));
+ })}finally{db.close()}
+}
+async function validateRecoveryAnchorRecord(record){
+ if(!shape(record,['version','sourceRevision','sourceHeadDigest','targetEntry0Digest','ciphertext'])||
+   record.version!==1||!Number.isSafeInteger(record.sourceRevision)||record.sourceRevision<0||
+   !/^[0-9a-f]{64}$/.test(record.sourceHeadDigest)||!/^[0-9a-f]{64}$/.test(record.targetEntry0Digest))fail('ANCHOR_INVALID_HEADER');
+ const body=await open(cryptoProvider,key,record.ciphertext,'recovery-anchor',record.sourceRevision,record.sourceHeadDigest);
+ if(!shape(body,['sourceMeta','targetMeta','sourceEntry0Digest','targetEntry0Digest','current','checkpoint'])||
+   !eq(body.sourceMeta.revision,record.sourceRevision)||
+   body.sourceMeta.headDigest!==record.sourceHeadDigest||
+   body.targetEntry0Digest!==record.targetEntry0Digest||
+   !/^[0-9a-f]{64}$/.test(body.sourceEntry0Digest))fail('ANCHOR_SOURCE_TARGET_MISMATCH');
+ validateMeta(body.sourceMeta);validateMeta(body.targetMeta);reviewedSnapshot(body.current);
+ if(body.sourceMeta.salt!==body.targetMeta.salt||body.sourceMeta.salt!==head.salt)fail('ANCHOR_DIFFERENT_SALT');
+ if(body.checkpoint!==null){
+  if(!shape(body.checkpoint,['serverRevision','snapshot'])||!Number.isSafeInteger(body.checkpoint.serverRevision)||body.checkpoint.serverRevision<1)fail('ANCHOR_INVALID_CHECKPOINT');
+  validateSnapshot(body.checkpoint.snapshot);
+ }
+ return body;
+}
+async function stageRecoveryAnchor(source,candidate,{injectAnchorAbort=false}={}){
+ // Authenticated source and candidate must already have been validated by caller.
+ const prior=await readRecoveryAnchors(),valid={};
+ for(const [slot,record] of Object.entries(prior))valid[slot]=await validateRecoveryAnchorRecord(record);
+ const primaryEntry0=await digest(cryptoProvider,source.entries[0]);
+ let target;
+ if(!Object.keys(prior).length)target='slot:0';
+ else{
+  const confirmed=Object.keys(prior).filter(s=>prior[s].targetEntry0Digest===primaryEntry0);
+  // An orphan record is not proof of a committed cutover. Never overwrite the
+  // only possible last-good anchor unless an active source-prefix proves it.
+  if(confirmed.length===1){
+   target=confirmed[0]==='slot:0'?'slot:1':'slot:0';
+  }else if(confirmed.length===0&&Object.keys(prior).length===1){
+   // A first-ever staged cutover may have failed before primary CAS. It is
+   // safe to replace that orphan ONLY if the FULLY VALIDATED live primary
+   // still contains the authenticated old source head as an append-only
+   // prefix. This establishes a failed cutover, not epoch freshness.
+   const staleSlot=Object.keys(prior)[0],old=valid[staleSlot];
+   const sourceRev=old.sourceMeta.revision;
+   const sameSourceIdentity=eq({...source.meta,revision:sourceRev,headDigest:old.sourceMeta.headDigest},old.sourceMeta);
+   const firstDigest=await digest(cryptoProvider,source.entries[0]);
+   const oldHeadEnvelope=sourceRev<=source.meta.revision?source.entries[sourceRev]:null;
+   const oldHeadDigest=oldHeadEnvelope?await digest(cryptoProvider,oldHeadEnvelope):null;
+   if(!sameSourceIdentity||firstDigest!==old.sourceEntry0Digest||
+      oldHeadDigest!==old.sourceMeta.headDigest)fail('ANCHOR_PREDECESSOR_UNCONFIRMED');
+   // The active vault is authoritative, including every edit appended after
+   // the orphan. No anchor content is restored into it.
+   target=staleSlot;
+  }else fail('ANCHOR_PREDECESSOR_UNCONFIRMED');
+ }
+ const candidateEntry0=await digest(cryptoProvider,candidate.entries[0]);
+ const payload={sourceMeta:clone(source.meta),targetMeta:clone(candidate.meta),
+  sourceEntry0Digest:primaryEntry0,targetEntry0Digest:candidateEntry0,
+  current:clone(current),checkpoint:checkpoint?clone(checkpoint):null};
+ const ciphertext=await seal(cryptoProvider,key,'recovery-anchor',source.meta.revision,source.meta.headDigest,payload);
+ const record={version:1,sourceRevision:source.meta.revision,sourceHeadDigest:source.meta.headDigest,targetEntry0Digest:candidateEntry0,ciphertext};
+ await validateRecoveryAnchorRecord(record);
+ const db=await openRecoveryAnchorDB();
+ try{return await new Promise((ok,no)=>{
+  const tx=db.transaction('anchors','readwrite'),store=tx.objectStore('anchors');let outcome='ANCHOR_STAGE_RACE';let error=null;
+  const q=store.getAllKeys();
+  q.onsuccess=()=>{
+   if(!eq(q.result.slice().sort(),Object.keys(prior).sort()))return;
+   const seen={};let pending=q.result.length;
+   const finish=()=>{
+    if(!eq(seen,prior))return;
+    store.put(clone(record),target);
+    outcome=injectAnchorAbort?'ANCHOR_INJECTED_ABORT':'ANCHOR_STAGED';
+    if(injectAnchorAbort)tx.abort();
+   };
+   if(pending===0){finish();return}
+   for(const k of q.result){const r=store.get(k);r.onsuccess=()=>{seen[k]=r.result;if(--pending===0)finish()};r.onerror=()=>{error=r.error??Error('ANCHOR_SLOT_GET_FAILED');tx.abort()}}
+  };
+  q.onerror=()=>{error=q.error??Error('ANCHOR_STAGE_KEYS_FAILED');tx.abort()};
+  tx.oncomplete=()=>ok(outcome);
+  tx.onabort=()=>outcome==='ANCHOR_INJECTED_ABORT'?ok(outcome):no(error??tx.error??Error('ANCHOR_STAGE_ABORT'));
+ })}finally{db.close()}
+}
+async function testOnlyInspectAnchors(){
+ if(!privateSameSaltAllowed||!options.enableTestOnlyAnchorRing||state!=='ACTIVE')fail('ANCHOR_TEST_ONLY_FORBIDDEN');
+ return runGuarded(()=>exclusive(async()=>{
+  const slots=await readRecoveryAnchors(),verified={};
+  for(const [slot,record] of Object.entries(slots)){await validateRecoveryAnchorRecord(record);verified[slot]={sourceRevision:record.sourceRevision,targetEntry0Digest:record.targetEntry0Digest}}
+  return Object.freeze({slotCount:Object.keys(slots).length,slots:verified,restoreAuthorized:false,autoPruneAuthorized:false,rollbackFreshnessProven:false});
+ }));
+}
+
  async function inspectReadOnly(){
   if(state!=='LOCKED'||attempted)fail('INSPECT_NOT_ALLOWED');
   const rows=await readRecords(idb);
@@ -515,15 +696,25 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
   return runGuarded(async()=>{
    const rows=await readRecords(idb);if(verifyInventory(rows)!=='PRESENT')fail('NOT_INITIALIZED');
    const k=await derive(cryptoProvider,passphrase,from64(rows.meta.salt,16));
-   let loaded=null;
+   let loaded=null,legacyReceipt=false;
    if(persistent){
-    try{loaded=checkedReceipt(await persistent.load(k,persistentIdentity(rows.meta)));cacheBox.current=Object.freeze({...loaded,keyRef:k})}
-    catch{cacheBox.current=null;loaded=null}
+    try{
+     const genesisDigest=await digest(cryptoProvider,rows.entries[0]);
+     let receipt=await persistent.load(k,persistentIdentity(rows.meta,genesisDigest));
+     if(receipt===null){
+      // One-time migration: accept the pre-generation Stage 3 receipt ONLY
+      // after the normal authenticated WAL prefix comparison. A legacy
+      // receipt never blocks a verified new-generation rewrite.
+      receipt=await persistent.load(k,persistentIdentity(rows.meta,undefined));
+      legacyReceipt=receipt!==null;
+     }
+     loaded=checkedReceipt(receipt);cacheBox.current=Object.freeze({...loaded,keyRef:k});
+    }catch{cacheBox.current=null;loaded=null}
    }
    const result=await validateAll(cryptoProvider,k,rows,cacheBox,validationStats);
    // Keep latest-state format/round-trip validation before making it readable.
    if(persistent)reviewedSnapshot(result.snapshot);
-   if(loaded&&validationMode==='cache-hit')persistedStamp=stamp(loaded);
+   if(loaded&&validationMode==='cache-hit'&&!legacyReceipt)persistedStamp=stamp(loaded);
    key=k;head=rows.meta;current=result.snapshot;checkpoint=result.checkpoint;state='ACTIVE';
    void persistVerified(k,rows.meta);
    return status('F5_ENCRYPTED_READBACK_VERIFIED',{revision:result.revision});
@@ -532,6 +723,9 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
  function readCurrent(){if(state!=='ACTIVE'){cacheBox.current=null;fail('LOCKED')}return clone(current)}
  function readSyncCheckpoint(){if(state!=='ACTIVE'){cacheBox.current=null;fail('LOCKED')}return checkpoint?clone(checkpoint):null}
  function readRevision(){if(state!=='ACTIVE'){cacheBox.current=null;fail('LOCKED')}return head.revision}
+ // Read-only identity. Digest changes even when a maintenance cutover lowers
+ // the numeric revision, or a fresh series later reaches that same number.
+ function readHeadIdentity(){if(state!=='ACTIVE'){cacheBox.current=null;fail('LOCKED')}return Object.freeze({revision:head.revision,headDigest:head.headDigest,salt:head.salt,escrowDigest:head.escrowDigest})}
  /** One atomic encrypted WAL entry for both the full merged app snapshot and its
   * verified server baseline. Caller MUST provide a trusted authenticated server
   * read-after-ACK callback. Uncertain ACKs / stale heads MUST NOT commit.
@@ -572,7 +766,6 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    const fresh=await readRecords(idb),result=await validateAll(cryptoProvider,key,fresh,cacheBox,validationStats);
    if(!eq(result.snapshot,next)||!eq(result.checkpoint,nextCp)||result.revision!==revision)fail('SYNC_COMMIT_READBACK_FAILED');
    current=next;head=nextMeta;checkpoint=nextCp;undoReceipt=null;state='ACTIVE';
-   void persistVerified(key,head);
    return status('CONFIRMED_SYNC_ATOMIC_WAL_READBACK_VERIFIED',{revision,serverRevision:ackRevision});
   }));
  }
@@ -670,17 +863,141 @@ function instantiate({idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,
    });
   });
  }
+
+ // Shared generation-cutover core, with independent product/test authority.
+ // The product entry always stages and authenticates a durable recovery anchor.
+ // No new primary meta fields or schema changes; same PBKDF2 salt and key.
+ async function rebaseSameSalt({threshold=64,injectAbort=false,injectAnchorAbort=false,onAfterAnchorStageForTest=null,shouldYieldBeforeCutover=null,onBeforePrimaryCASForTest=null}={},product=false){
+  if((product?!productAuthorization():!privateSameSaltAllowed)||state!=='ACTIVE')fail('TEST_ONLY_REBASE_FORBIDDEN');
+  if(!Number.isSafeInteger(threshold)||threshold<2||threshold>maxRevision)fail('INVALID_TEST_REBASE_THRESHOLD');
+  if(undoReceipt)fail('REBASE_PENDING_UNDO');
+  state='STOP_NO_RETRY';
+  return runGuarded(()=>exclusive(async()=>{
+   const source=await readRecords(idb);
+   if(!eq(source.meta,head))fail('STALE_FORMAL_HEAD');
+   const verified=await validateAllFull(cryptoProvider,key,source);
+   if(!eq(verified.out.snapshot,current)||!eq(verified.out.checkpoint,checkpoint))fail('REBASE_SOURCE_CHANGED');
+   if(source.meta.revision<threshold){state='ACTIVE';return status('REBASE_BELOW_THRESHOLD',{revision:head.revision})}
+   const baseline=checkpoint?snapshotToApp(checkpoint.snapshot,{weeklyOptions:current.weeklyOptions}):clone(current);
+   reviewedSnapshot(baseline);
+   if(checkpoint&&!eq(appToSnapshot(baseline),checkpoint.snapshot))fail('REBASE_CHECKPOINT_NOT_LOSSLESS');
+   const newEscrow=await seal(cryptoProvider,key,'original',-1,'genesis',baseline);
+   const initial={kind:'initial',id:'synthetic',snapshot:baseline,...(checkpoint?{checkpoint:clone(checkpoint)}:{})};
+   const first=await seal(cryptoProvider,key,'wal',0,'genesis',initial);
+   const entries=[first];
+   let prev=await digest(cryptoProvider,first);
+   if(!eq(baseline,current)){
+    const last=await seal(cryptoProvider,key,'wal',1,prev,{kind:'formal-commit',id:'app',snapshot:clone(current)});
+    entries.push(last);prev=await digest(cryptoProvider,last);
+   }
+   const meta={...head,revision:entries.length-1,headDigest:prev,escrowDigest:await digest(cryptoProvider,newEscrow)};
+   if(meta.salt!==source.meta.salt||eq(meta,source.meta))fail('REBASE_SALT_OR_HEAD_UNSAFE');
+   const candidate={meta,escrow:newEscrow,entries:[...entries,null],keys:['meta','escrow',...entries.map((_,i)=>'entry:'+i)]};
+   const checked=await validateAllFull(cryptoProvider,key,candidate);
+   if(!eq(checked.out.snapshot,current)||!eq(checked.out.checkpoint,checkpoint))fail('REBASE_CANDIDATE_PARITY');
+   if(product||options.enableTestOnlyAnchorRing){
+    const stage=await stageRecoveryAnchor(source,candidate,{injectAnchorAbort});
+    if(stage==='ANCHOR_INJECTED_ABORT')return status('ANCHOR_STAGE_INJECTED_ABORT',{revision:head.revision,autoPruneAuthorized:false});
+    if(stage!=='ANCHOR_STAGED')fail('ANCHOR_STAGE_CAS_REJECTED');
+    if(product){
+     // A successful transaction is not sufficient: authenticate the durable
+     // exact source/target binding again before changing the authoritative WAL.
+     const staged=await readRecoveryAnchors();let matched=0;
+     for(const record of Object.values(staged)){
+      const body=await validateRecoveryAnchorRecord(record);
+      if(eq(body.sourceMeta,source.meta)&&eq(body.targetMeta,meta)&&eq(body.current,current)&&eq(body.checkpoint,checkpoint))matched++;
+     }
+     if(matched!==1)fail('ANCHOR_DURABLE_READBACK_REQUIRED');
+    }
+   }
+   if(typeof onAfterAnchorStageForTest==='function')await onAfterAnchorStageForTest();
+   // Yield to user saves/sync if they arrived during the independently committed anchor.
+   // The primary remains unchanged; the candidate anchor is passive evidence.
+   if(typeof shouldYieldBeforeCutover==='function'&&shouldYieldBeforeCutover()){
+    state='ACTIVE';return status('REBASE_YIELDED_FOREGROUND',{revision:head.revision,autoPruneAuthorized:false});
+   }
+   const outcome=await replaceSameSaltCAS(idb,source,candidate,injectAbort,{
+    precommitYield:typeof shouldYieldBeforeCutover==='function'?shouldYieldBeforeCutover:null,
+    onBeforePrecommitForTest:onBeforePrimaryCASForTest
+   });
+   if(outcome==='CAS_PREFLIGHT_YIELDED'){
+    state='ACTIVE';return status('REBASE_YIELDED_FOREGROUND',{revision:head.revision,autoPruneAuthorized:false});
+   }
+   if(outcome==='CAS_PREFLIGHT_UNVERIFIED'){
+    state='ACTIVE';return status('REBASE_PRECOMMIT_UNVERIFIED',{revision:head.revision,autoPruneAuthorized:false});
+   }
+   if(outcome==='INJECTED_ABORT')return status('REBASE_INJECTED_ABORT',{revision:head.revision});
+   if(outcome!=='COMMITTED')fail('REBASE_SOURCE_CAS_REJECTED');
+   const after=await readRecords(idb);
+   const checkAfter=await validateAllFull(cryptoProvider,key,after);
+   if(!eq(checkAfter.out.snapshot,current)||!eq(checkAfter.out.checkpoint,checkpoint)||!eq(after.meta,meta))fail('REBASE_READBACK_MISMATCH');
+   cacheBox.current=checkAfter.nextCache;
+   head=after.meta;undoReceipt=null;state='ACTIVE';
+   // Only a fully verified cutover may refresh the disposable receipt.
+   // Cache receipts never grant maintenance authority. Ordinary startup is OFF.
+   void persistVerified(key,head);
+   return status(product?'PRODUCT_WAL_REBASE_READBACK':'TEST_ONLY_SAME_SALT_REBASE_READBACK',{revision:head.revision,previousRevision:source.meta.revision,entries:entries.length,saltUnchanged:true,autoPruneAuthorized:product});
+  }));
+ }
+
+
+ // Product entry accepts only its foreground-yield observer. Authorization
+ // is constructor-bound, threshold is fixed, and test hooks cannot be forwarded.
+ async function maintainProductWal(args={}){
+  if(!productAuthorization())return Object.freeze({phase:'PRODUCT_WAL_MAINTENANCE_OFF'});
+  if(!shape(args,['shouldYieldBeforeCutover'])||typeof args.shouldYieldBeforeCutover!=='function')fail('PRODUCT_MAINTENANCE_OBSERVERS_REQUIRED');
+  const yieldNow=()=>{try{return !productAuthorization()||args.shouldYieldBeforeCutover()!==false}catch{return true}};
+  if(yieldNow())return status('REBASE_YIELDED_FOREGROUND',{revision:head?.revision});
+  return rebaseSameSalt({threshold:64,shouldYieldBeforeCutover:yieldNow},true);
+ }
+ const testOnlyCompactSameSalt=args=>rebaseSameSalt(args,false);
+ // Phase 4K: OFF-BY-DEFAULT / development-only. The exact old in-memory
+ // source head must be authenticated by a sealed anchor and its target must
+ // remain an authenticated prefix of the live vault. Never infer freshness
+ // from a lowered revision alone; never restore anything from the anchor.
+ async function isAnchoredForwardRefresh(rows){
+  if(!anchorRefreshAllowed)return false;
+  const slots=await readRecoveryAnchors();
+  let matches=0;
+  const entryZero=await digest(cryptoProvider,rows.entries[0]);
+  for(const record of Object.values(slots)){
+   const body=await validateRecoveryAnchorRecord(record);
+   if(!eq(body.sourceMeta,head))continue;
+   if(!eq(body.current,current)||!eq(body.checkpoint,checkpoint))continue;
+   if(record.targetEntry0Digest!==entryZero)continue;
+   const target=body.targetMeta,live=rows.meta;
+   if(target.revision>live.revision)continue;
+   if(target.version!==live.version||target.purpose!==live.purpose||
+      target.kdf!==live.kdf||target.iterations!==live.iterations||
+      target.salt!==live.salt||target.escrowDigest!==live.escrowDigest)continue;
+   const targetHead=rows.entries[target.revision];
+   if(!targetHead||await digest(cryptoProvider,targetHead)!==target.headDigest)continue;
+   matches++;
+  }
+  return matches===1;
+ }
  async function refresh(){
   if(!formal||state!=='ACTIVE'){cacheBox.current=null;fail('FORMAL_UNLOCKED_REQUIRED')}
   return runGuarded(()=>exclusive(async()=>{
    const rows=await readRecords(idb),result=await validateAll(cryptoProvider,key,rows,cacheBox,validationStats);
-   if(result.revision<head.revision)fail('HEAD_ROLLBACK');
+   const guarded=anchorRefreshAllowed;
+   // Revision numbers may be reused after a rebaseline. All tabs, including
+   // standard production tabs without maintenance opt-in, must prove their
+   // authenticated old head remains an append-only prefix of this vault.
+   const sameHistory=result.revision>=head.revision&&
+     rows.meta.salt===head.salt&&rows.meta.escrowDigest===head.escrowDigest&&
+     rows.entries[head.revision]&&
+     await digest(cryptoProvider,rows.entries[head.revision])===head.headDigest;
+   // Only the explicit PRIVATE maintenance mode may follow a rebaseline,
+   // and only with separately authenticated anchor evidence. Never infer
+   // lineage from a higher revision number or the same encryption salt.
+   if(!sameHistory&&(!guarded||!(await isAnchoredForwardRefresh(rows))))fail('HEAD_ROLLBACK');
    current=result.snapshot;checkpoint=result.checkpoint;head=rows.meta;
    void persistVerified(key,head);
    return readCurrent();
   }));
  }
- return Object.freeze({inspectReadOnly,initialize,initializeConfirmedReceive,unlock,readCurrent,readRevision,readSyncCheckpoint,append,commitConfirmedSync,...(formal?{commitApp,refresh}:{}),getState:()=>state});
+ return Object.freeze({inspectReadOnly,initialize,initializeConfirmedReceive,unlock,readCurrent,readRevision,readHeadIdentity,readSyncCheckpoint,append,commitConfirmedSync,...(formal?{commitApp,refresh}:{}),...(productMaintenance?{maintainProductWal}:{}),...(privateSameSaltAllowed?{testOnlyCompactSameSalt,...(options.enableTestOnlyAnchorRing?{testOnlyInspectAnchors}:{} )}:{}),getState:()=>state});
 }
 
 return instantiate(options);

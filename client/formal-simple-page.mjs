@@ -1,6 +1,6 @@
 import {installConflictRecovery} from './conflict-resolution-integration.mjs';
 import {createFormalProductionANIPrimary} from './v408-https-staging-encrypted-primary.mjs';
-import {createFormalStorage,decodeFormalBackup} from './formal-storage.mjs';
+import {createFormalStorage,decodeFormalBackup,createPrivateQuiescentOperationGate} from './formal-storage.mjs';
 import {createAutomaticDeviceKey} from './automatic-device-key.mjs';
 import {createFormalSetup,LOCAL_MODE} from './formal-setup.mjs';
 import {createRegistrationIntentStore} from './registration-intent.mjs';
@@ -15,6 +15,7 @@ import {appToSnapshot} from './app-bridge.mjs';
 import {parsePairingUrl} from './pairing-client.mjs';
 import {createSelfRevokeJournal,getOwnRole,listOwnerDevices,revokeSelectedMember,revokeThisMember,shortDeviceId} from './device-registration-management.mjs';
 import {canonical} from './formal-storage.mjs';
+import {createPrivateCrossTabMaintenanceFence,createProductWalTabCoordinator} from './private-wal-tab-fence.mjs';
 /* Per-device local connection profiles. The old encrypted original/credential
  * stores are NEVER deleted. A new box is joined in a separate encrypted WAL;
  * the active pointer changes only after an independently verified pairing.
@@ -53,6 +54,74 @@ export function createLocalDeviceNames(local,profileId){
   const raw=JSON.stringify(current);local.setItem(key,raw);
   if(local.getItem(key)!==raw)throw Error('DEVICE_NAME_SAVE_NOT_CONFIRMED');return name;
  }});
+}
+// One-time acknowledgement for a pre-existing encrypted WAL in THIS browser
+// profile. This is an operational migration acknowledgement, NEVER a proof
+// that every old tab has closed or that automatic compaction is safe by itself.
+export const WAL_FIRST_UPGRADE_PREFIX='anilog-wal-first-upgrade-v1:';
+export function createFirstWalUpgradeGate({local,profileId}={}){
+ if(!local?.getItem||!local?.setItem||! /^(?:legacy|p[1-9][0-9]?)$/.test(profileId))throw Error('WAL_UPGRADE_SCOPE_INVALID');
+ const key=WAL_FIRST_UPGRADE_PREFIX+profileId;
+ const read=()=>{
+  let value;try{value=local.getItem(key)}catch{return 'UNVERIFIED'}
+  if(value===null)return 'PENDING';
+  if(value==='created-on-this-release-v1')return 'NEW_INSTALL';
+  if(value==='user-confirmed-old-tabs-v1')return 'ACKNOWLEDGED';
+  return 'UNVERIFIED';
+ };
+ const write=(from,to)=>{
+  if(read()!==from)throw Error('WAL_UPGRADE_STATE_CHANGED');
+  try{local.setItem(key,to)}catch{throw Error('WAL_UPGRADE_CONFIRMATION_NOT_DURABLE')}
+  if(read()!==(to==='created-on-this-release-v1'?'NEW_INSTALL':'ACKNOWLEDGED'))throw Error('WAL_UPGRADE_CONFIRMATION_NOT_DURABLE');
+ };
+ return Object.freeze({read,
+  // Only after the existing formal setup has successfully created a new WAL.
+  markNewSetup(){const phase=read();if(phase==='PENDING')write('PENDING','created-on-this-release-v1');else if(!['NEW_INSTALL','ACKNOWLEDGED'].includes(phase))throw Error('WAL_UPGRADE_STATE_CHANGED')},
+  acknowledge({oldTabsClosed=false,unsavedWorkHandled=false}={}){
+   if(oldTabsClosed!==true||unsavedWorkHandled!==true)throw Error('WAL_UPGRADE_EXPLICIT_CONFIRMATION_REQUIRED');
+   write('PENDING','user-confirmed-old-tabs-v1');
+   return 'ACKNOWLEDGED';
+  },
+  // Acknowledgement is only ONE prerequisite. Other live writers, CAS,
+  // Undo, backup and restore gates remain independent and mandatory.
+  hasFirstUpgradeAcknowledgement(){return ['NEW_INSTALL','ACKNOWLEDGED'].includes(read())}
+ });
+}
+
+// A confirmation is never created by the presence of a checkbox or an older
+// localStorage marker alone. Only the real button handler can persist consent.
+export function showFirstWalUpgradeNotice({document,gate,onAcknowledged=()=>{}}={}){
+ if(gate?.read()!=='PENDING')return null;
+ if(!document?.createElement||!document?.body?.append)throw Error('WAL_UPGRADE_UI_UNAVAILABLE');
+ const dialog=document.createElement('dialog');
+ dialog.className='anilog-first-wal-upgrade';
+ dialog.setAttribute('aria-labelledby','anilog-first-wal-upgrade-title');
+ dialog.dataset.walUpgrade='first-confirmation';
+ const heading=document.createElement('h2');heading.id='anilog-first-wal-upgrade-title';heading.textContent='ANI:LOG 更新時の確認';
+ const description=document.createElement('p');description.textContent='既存の暗号化記録を保護するため、このブラウザでの初回更新時だけ確認します。';
+ const instruction=document.createElement('p');instruction.textContent='古いANI:LOGのタブがあれば、未保存のメモや評価を保存してください。保存できない場合は内容をコピーし、古いタブを閉じてください。PCとスマホはそれぞれ別の保存領域です。';
+ const checkLabel=document.createElement('label');const checkbox=document.createElement('input');checkbox.type='checkbox';checkbox.dataset.walUpgrade='verified';
+ const checkText=document.createElement('span');checkText.textContent='このブラウザの古いタブを閉じ、未保存の内容を保存・控えました';
+ checkLabel.append(checkbox,checkText);
+ const caveat=document.createElement('p');caveat.className='anilog-first-wal-upgrade-note';caveat.textContent='この確認だけで他のタブの不存在を技術的に証明できるわけではありません。確認を延期しても既存の視聴記録は変更されません。';
+ const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
+ const accept=document.createElement('button');accept.type='button';accept.textContent='確認して続ける';accept.disabled=true;
+ const later=document.createElement('button');later.type='button';later.textContent='後で確認する';
+ const error=document.createElement('p');error.setAttribute('role','alert');error.hidden=true;
+ actions.append(accept,later);dialog.append(heading,description,instruction,checkLabel,caveat,actions,error);
+ checkbox.addEventListener('change',()=>{accept.disabled=!checkbox.checked});
+ accept.addEventListener('click',()=>{
+  if(!checkbox.checked)return;
+  try{gate.acknowledge({oldTabsClosed:true,unsavedWorkHandled:true});dialog.close();dialog.remove();
+   // The marker was durably read back before any private idle probe is scheduled.
+   try{onAcknowledged()}catch{} }
+  catch{error.hidden=false;error.textContent='確認内容を端末に保存できませんでした。自動整理は無効のままです。保存データを消さないでください。';accept.disabled=true}
+ });
+ later.addEventListener('click',()=>{dialog.close();dialog.remove()});
+ dialog.addEventListener('cancel',()=>{dialog.remove()});
+ document.body.append(dialog);
+ try{dialog.showModal()}catch{dialog.remove();throw Error('WAL_UPGRADE_UI_UNAVAILABLE')}
+ return dialog;
 }
 export const CONNECTION_PROFILE_KEY='anilog-sync-connection-profile-v1';
 const VALID=/^(?:legacy|p[1-9][0-9]?)$/;
@@ -261,7 +330,7 @@ export async function compareScannedQrDestination({qrUrl,siteOrigin,apiOrigin,li
 // for its non-configurable, non-writable properties. Keep it untouched and
 // expose only the methods the legacy ANI UI actually uses through an
 // independent, frozen forwarding facade. Its ready getter remains live.
-export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false,canWrite=()=>true}={}){
+export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false,canWrite=()=>true,privateOperationGate=null,privateOnUndoExpired=null,exposePrivateMaintenance=false}={}){
  const beforeWrite=()=>{
   if(!canWrite())throw Error('CONFLICT_REVIEW_WRITE_FENCE');
   const now=profiles.read();
@@ -271,11 +340,20 @@ export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,s
  return Object.freeze({
   get ready(){return storage.ready},
   read:(...args)=>storage.read(...args),
-  refresh:(...args)=>storage.refresh(...args),
+  refresh:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>storage.refresh(...args)):storage.refresh(...args),
   exportBackup:(...args)=>storage.exportBackup(...args),
-  saveRecords:(...args)=>{beforeWrite();return storage.saveRecords(...args)},
-  saveWeekly:(...args)=>{beforeWrite();return storage.saveWeekly(...args)},
-  restoreBackup:(...args)=>{beforeWrite();return storage.restoreBackup(...args)}
+  saveRecords:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>{beforeWrite();return storage.saveRecords(...args)}):(beforeWrite(),storage.saveRecords(...args)),
+  saveWeekly:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>{beforeWrite();return storage.saveWeekly(...args)}):(beforeWrite(),storage.saveWeekly(...args)),
+  restoreBackup:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>{beforeWrite();return storage.restoreBackup(...args)}):(beforeWrite(),storage.restoreBackup(...args)),
+  ...(exposePrivateMaintenance&&privateOperationGate?{
+   testOnlyUndoReceiptRevision:()=>storage.testOnlyUndoReceiptRevision(),
+   testOnlyExpireUndo:revision=>{
+    const expired=storage.testOnlyExpireUndo(revision);
+    if(expired&&privateOnUndoExpired)privateOnUndoExpired();
+    return expired;
+   },
+   testOnlyMaintainIfQuiescent:options=>storage.testOnlyMaintainIfQuiescent(options)
+  }:{})
  });
 }
 
@@ -304,8 +382,20 @@ export function createEncryptedReceiverClaimStore({invitations,invitation,getPas
  };
 }
 
+// Exact QA origin + reviewed build marker + explicit entry opt-in are all required.
+export function isGateCHttpsContext({origin,apiOrigin,approval}={}){
+ return origin==='https://anilog-qa-gateb-20261031-site.pages.dev'&&
+  apiOrigin==='https://anilog-qa-gateb-20261031-api.neosuigo.workers.dev'&&
+  approval==='approved-isolated-gate-c';
+}
 export async function mountFormalSimpleSync({document=globalThis.document,window=globalThis.window,local=globalThis.localStorage,
- locks=globalThis.navigator?.locks,location=globalThis.location,idb=globalThis.indexedDB,browserFetch=globalThis.fetch}={}){
+ locks=globalThis.navigator?.locks,location=globalThis.location,idb=globalThis.indexedDB,browserFetch=globalThis.fetch,
+ privateOperationGate=null,privateProductMaintenanceExperiment=false,privateMaintenanceThreshold=64,gateCExperiment=false,productWalMaintenance=false}={}){
+ // Ordinary auto-mount cannot opt into QA maintenance. The dedicated entry
+ // performs the sole explicit mount after the real UI bootstrap.
+ if(!gateCExperiment&&isGateCHttpsContext({origin:location?.origin,
+  apiOrigin:document?.querySelector?.('meta[name="ani-log-production-api-origin"]')?.content,
+  approval:document?.querySelector?.('meta[name="ani-log-gate-c-approval"]')?.content}))return {phase:'GATE_C_EXPLICIT_ENTRY_REQUIRED'};
  const root=document.getElementById('formal-simple-sync');if(!root)return;
  const el=name=>root.querySelector('[data-simple="'+name+'"]'),status=el('status');
  const summary=root.querySelector('summary');
@@ -332,9 +422,101 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const profileState=profiles.read();
  const profileExclusive=fn=>locks.request('anilog-formal-connection-profile-cutover',{mode:'exclusive'},fn);
  const staging=profileState.phase==='ready',selectedProfile=getSelectedProfile(profileState);
- const factory=()=>createFormalProductionANIPrimary({idb,locks,profileId:selectedProfile}),vault=factory();
+ const walUpgradeGate=createFirstWalUpgradeGate({local,profileId:selectedProfile});
+ // This injection point is deliberately unreachable in the ordinary auto-mount.
+ // A test runner must explicitly inject BOTH a gate and the experiment consent.
+ const localTest=location.origin===globalThis.location?.origin&&
+  /^http:\/\/127\.0\.0\.1(?::\d+)?$/.test(location.origin)&&
+  privateProductMaintenanceExperiment===true&&!!privateOperationGate;
+ const gateCHttps=gateCExperiment===true&&location.origin===globalThis.location?.origin&&!!privateOperationGate&&
+  isGateCHttpsContext({origin:location.origin,apiOrigin:api.origin,approval:meta('ani-log-gate-c-approval')});
+ if(gateCExperiment&&!gateCHttps)throw Error('GATE_C_EXACT_QA_CONTEXT_REQUIRED');
+ if(privateProductMaintenanceExperiment&&!localTest&&!gateCHttps)throw Error('PRODUCT_MAINTENANCE_TEST_LOCALHOST_ONLY');
+ const maintenanceTest=localTest||gateCHttps;
+ // Source-level opt-in only. Ordinary auto-mount below passes no option: OFF.
+ // No URL, storage marker or QA experiment grants product authority.
+ if(productWalMaintenance===true&&(gateCExperiment||privateProductMaintenanceExperiment||privateOperationGate))throw Error('PRODUCT_MAINTENANCE_QA_OPTIONS_FORBIDDEN');
+ const productMaintenance=productWalMaintenance===true;
+ const rawProductGate=!maintenanceTest?createPrivateQuiescentOperationGate():null;
+ const productTabs=!maintenanceTest?createProductWalTabCoordinator({locks,events:window,
+  lockName:'anilog-private-wal-maintenance:'+selectedProfile,
+  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&window.__formalUI?.maintenanceIdle?.()===true
+ }):null;
+ if(productTabs)privateOperationGate=Object.freeze({
+  tryReserveMaintenance:()=>rawProductGate.tryReserveMaintenance(),
+  withForeground:fn=>rawProductGate.withForeground(()=>productTabs.withForeground(fn)),
+  inspect:()=>rawProductGate.inspect()
+ });
+ const productAuthorized=(requireReservation=true)=>productMaintenance&&!staging&&
+  profiles.read().active===selectedProfile&&profiles.read().phase==='connected'&&walUpgradeGate.hasFirstUpgradeAcknowledgement()&&
+  productTabs?.isExclusive()===true&&(!requireReservation||rawProductGate?.inspect().maintenance===true)&&
+  !busy&&!recoveryActive&&activeSyncs===0&&window.__formalUI?.maintenanceIdle?.()===true;
+
+ if(maintenanceTest&&(!Number.isSafeInteger(privateMaintenanceThreshold)||privateMaintenanceThreshold<2||privateMaintenanceThreshold>10000))throw Error('PRIVATE_MAINTENANCE_THRESHOLD_INVALID');
+ // QA-only cooperating-tab presence protocol. Enroll as early as possible,
+ // before setup.resume() or any idle maintenance may be scheduled. Every
+ // additional participating tab prevents a rebase, even when it is idle.
+ // Non-cooperative OLD tabs remain invisible; this does not authorize prune.
+ const qaTabFence=maintenanceTest?createPrivateCrossTabMaintenanceFence({
+  locks,lockName:'anilog-private-wal-maintenance:'+selectedProfile,
+  localIdle:()=>!busy&&!recoveryActive&&window.__formalUI?.testOnlyMaintenanceIdle?.()===true
+ }):null;
+ const qaTabReady=qaTabFence?qaTabFence.begin():Promise.resolve(false);
+ if(qaTabFence)window.addEventListener('pagehide',()=>{void qaTabFence.close()},{once:true});
+ const factory=()=>createFormalProductionANIPrimary({idb,locks,profileId:selectedProfile,
+  ...(productMaintenance?{enableProductWalMaintenance:true,productMaintenanceAuthorization:productAuthorized}:{}),
+  ...(maintenanceTest?{enableGateCPrivateMaintenance:gateCHttps,enableTestOnlyProductMaintenance:true,enableTestOnlySameSaltRebase:true,
+   enableTestOnlyAnchorRing:true,enableTestOnlyAnchorRefresh:true}:{})}),vault=factory();
  let automatic=null,running=null,busy=false,downloaded=null,recoveryActive=false,activeSyncs=0,repairRequested=false;
- const storage=createFormalStorage({vault,independentVault:factory,onCommitted:()=>automatic?.changed()});
+ let requestPrivateMaintenance=()=>{};
+ const storage=createFormalStorage({vault,independentVault:factory,onCommitted:()=>{
+  automatic?.changed();requestPrivateMaintenance();
+ },
+  // Strictly PRIVATE opt-in. Production and normal UI passes null and remains unchanged.
+  testOnlyMaintenanceGate:maintenanceTest,operationGate:privateOperationGate,
+  productMaintenanceEnabled:productMaintenance,productMaintenanceAuthorization:()=>productAuthorized(false),
+  undoIsIdle:()=>window.__formalUI?.maintenanceUndoIdle?.()===true,
+  uiIsIdle:()=>!busy&&!recoveryActive&&(!(maintenanceTest||productMaintenance)||(productMaintenance?window.__formalUI?.maintenanceIdle?.()===true:window.__formalUI?.testOnlyMaintenanceIdle?.()===true)),
+  syncIsIdle:()=>activeSyncs===0,
+  // This per-profile migration check is repeated inside the facade and
+  // again immediately before the private WAL cutover CAS.
+  privateMaintenanceAuthorization:maintenanceTest?()=>!staging&&walUpgradeGate.hasFirstUpgradeAcknowledgement():null});
+ // Explicitly injected localhost test only; no product scheduler is created.
+ // Undo expiry fires after the UI completes and schedules the same idle probe.
+ if(maintenanceTest||productMaintenance){
+  let timer=null;
+  requestPrivateMaintenance=()=>{
+   if(timer!==null)window.clearTimeout(timer);
+   timer=window.setTimeout(()=>{
+    timer=null;
+    // The facade, not this timer, owns the synchronous idle+reservation CAS.
+    if(!walUpgradeGate.hasFirstUpgradeAcknowledgement())return;
+    // Only a fully enrolled QA tab may request an exclusive generation cutover.
+    // `ifAvailable` skips rather than waiting for an idle or editing peer.
+    // The facade separately checks this tab's UI, Undo, sync and WAL CAS.
+    void (async()=>{
+     if(productMaintenance)return productTabs.withExclusiveIfNoPeers(()=>storage.maintainProductWal());
+     if(await qaTabReady!==true)return;
+     return qaTabFence.withExclusiveIfNoPeers(()=>
+      storage.testOnlyMaintainIfQuiescent({threshold:privateMaintenanceThreshold}));
+    })().catch(error=>{
+     // Fatal STOP must remain visible while preserving all open form DOM.
+     if(vault.getState()!=='ACTIVE'){
+      attention(true);
+      status.textContent='暗号化保存を安全のため停止しました。入力中の内容は閉じず、必要ならコピーしてください。'+String(error?.message??'').slice(0,120);
+     }
+    });
+   },5000);
+  };
+  window.addEventListener('pagehide',()=>{if(timer!==null){window.clearTimeout(timer);timer=null}});
+  if(productMaintenance){
+   window.addEventListener('pageshow',requestPrivateMaintenance);
+   window.addEventListener('focus',requestPrivateMaintenance);
+   document.addEventListener('close',requestPrivateMaintenance,true);
+   document.addEventListener('focusout',requestPrivateMaintenance);
+   document.addEventListener('anilog-undo-expired',requestPrivateMaintenance);
+  }
+ }
  const suffix=profileSuffix(selectedProfile);
  const keyDB='anilog-FORMAL-AUTOMATIC-DEVICE-KEY';
  const scopedIDB={open:(name,...args)=>idb.open(name===V408_CREDENTIAL_DB?'anilog-FORMAL-PRODUCTION-SEALED-CREDENTIALS'+suffix:
@@ -344,7 +526,14 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Stage uses the existing encrypted-mode receipt, without modifying the
  // origin-wide legacy cutover marker until a verified profile-pointer commit.
  const setupLocal=staging?createStagedSetupLocal({local,profileId:selectedProfile}):local;
- const setup=createFormalSetup({local:setupLocal,locks,storage,vault,independentVault:factory,deviceKeys:keys,origin:location.origin});
+ const setupCore=createFormalSetup({local:setupLocal,locks,storage,vault,independentVault:factory,deviceKeys:keys,origin:location.origin});
+ // Also enroll startup/setup writes before touching a WAL: a newly opened tab
+ // may be waiting behind another tab's exclusive generation cutover.
+ const setup=productTabs?Object.freeze({...setupCore,
+  begin:args=>privateOperationGate.withForeground(()=>setupCore.begin(args)),
+  resume:()=>privateOperationGate.withForeground(()=>setupCore.resume()),
+  confirmEnabled:args=>privateOperationGate.withForeground(()=>setupCore.confirmEnabled(args))
+ }):setupCore;
  const intents=createRegistrationIntentStore({idb:scopedIDB,locks:scopedLocks,origin:location.origin});
  const invitations=createRegistrationIntentStore({idb:{open:(name,...args)=>scopedIDB.open('receiver:'+name,...args)},locks:scopedLocks,origin:location.origin});
  const captured=window.__v407TakePairingURL?.();
@@ -404,7 +593,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「同期設定を最初からやり直す」から再確認してください。';
   if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';}
  async function action(fn){if(busy)return;busy=true;el('begin').disabled=true;el('retry').disabled=true;
-  try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=recoveryActive}}
+  try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=recoveryActive;if(productMaintenance)requestPrivateMaintenance()}}
  el('backup').addEventListener('click',()=>{
   // A previous checkbox confirmation is not proof that a NEW backup was saved.
   downloaded=null;el('confirmed').checked=false;el('begin').disabled=true;
@@ -426,6 +615,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(currentMode==='encrypted-local'){location.reload();return}
   if(currentMode!==null||!downloaded||!el('confirmed').checked)throw Error('BACKUP_CONFIRMATION_REQUIRED');
   const result=await setup.begin({backupRaw:downloaded,backupSaved:true,oldClientsClosed:true,role:receiving?'receiver':'owner'});
+  // New encrypted users do not need the old-WAL upgrade acknowledgement.
+  if(maintenanceTest||productMaintenance)walUpgradeGate.markNewSetup();
   if(receiving)await invitations.create(captured,result.passphrase);
   location.reload();
  }
@@ -467,7 +658,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Old browser tabs must not keep editing an obsolete profile. A pending
  // switch freezes UI writes; its internal authenticated registration may still
  // commit exclusively to the staging vault, never to the original WAL.
- const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive});
+ const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
  Object.defineProperty(window,'__formalStorage',{value:uiStorage});
  Object.defineProperty(window,'__formalDecodeBackup',{value:decodeFormalBackup});
  const ui=window.__formalUI;if(!ui)throw Error('FORMAL_ENCRYPTED_UI_REQUIRED');
@@ -492,6 +683,11 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }
  ui.hydrate(restored.app);
  status.textContent='端末内の記録を復元しました。';
+ // Existing encrypted users see this only on their first upgraded launch.
+ // Never infer old-tab absence from a checkbox: the production maintenance
+ // engine remains disabled until its separate safety and recovery gates PASS.
+ if((maintenanceTest||productMaintenance)&&!staging&&walUpgradeGate.read()==='PENDING')showFirstWalUpgradeNotice({document,gate:walUpgradeGate,onAcknowledged:requestPrivateMaintenance});
+ else if((maintenanceTest||productMaintenance)&&walUpgradeGate.read()==='UNVERIFIED'){attention(true);status.textContent='更新確認の状態を検証できません。保存記録は保持されています。自動整理は無効です。'}
  async function showDestination(){
   const output=el('connection-info');
   if(!output||staging||local.getItem(LOCAL_MODE)!=='sync-enabled')return;
@@ -906,7 +1102,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  function schedule(_session,fresh){
   automatic?.stop();automatic=null;
   if(pauseGuard.paused||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile){showPauseState();return;}
-  automatic=createAutomaticSync({syncOnce:async()=>{activeSyncs++;try{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return await s.syncOnce()}finally{activeSyncs--}},onState:s=>{
+  automatic=createAutomaticSync({syncOnce:async()=>{activeSyncs++;try{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return await s.syncOnce()}finally{activeSyncs--;if(productMaintenance)requestPrivateMaintenance()}},onState:s=>{
    if(pauseGuard.paused)return;
    const labels={syncing:'同期中',synced:'同期済み（この端末）',pending:'この端末に保存済み（未同期）',offline:'オフラインです。記録はこの端末に保存しています。',
     unavailable:'同期できませんでした。記録は保存済みです。',
@@ -978,7 +1174,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     await register({fromPairing:true});
     return {phase:'FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED',serverRevision:vault.readSyncCheckpoint().serverRevision,records:Object.keys(storage.read().records).length};
    }finally{masterKey.fill(0)}
-  },beforeSync:()=>{if(!staging&&revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+  },withSyncOperation:privateOperationGate?fn=>privateOperationGate.withForeground(fn).finally(()=>{if(productMaintenance)requestPrivateMaintenance()}):undefined,beforeSync:()=>{if(!staging&&revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
  if(!staging&&profiles.read().phase==='connected')installConflictRecovery({root,locks,scope:suffix,vault,isEligible:()=>local.getItem(LOCAL_MODE)==='sync-enabled',
   isPaused:()=>pauseGuard.paused,isQuiescent:()=>activeSyncs===0,
   assertContext:()=>{if(!recoveryActive||!pauseGuard.paused||activeSyncs||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile||local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('REVIEW_CONTEXT_CHANGED');const line=vault.readCurrent().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})},
@@ -1077,9 +1273,12 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   else showPauseState();
  }else if(!receiver||await intents.read(restored.passphrase))await action(register);
  else status.textContent=invitation?'この端末の記録を保持しています。招待を受け取り、6桁照合後に統合します。':'記録を保持しています。設定元の端末で新しい招待QRを作成し、もう一度読み取ってください。';
+ // Also examine a pre-existing WAL on first eligible mount. The private
+ // scheduler still waits for UI+Undo+sync idleness; production has no scheduler.
+ if((maintenanceTest||productMaintenance)&&walUpgradeGate.hasFirstUpgradeAcknowledgement())requestPrivateMaintenance();
  return {phase:'FORMAL_OPT_IN_MOUNTED',storage,vault,setup};
 }
-if(typeof document!=='undefined')void mountFormalSimpleSync().catch(()=>{
+if(typeof document!=='undefined')void mountFormalSimpleSync({productWalMaintenance:true}).catch(()=>{
  const panel=document.getElementById?.('formal-sync-controls');
  // Prevent uninitialized developer placeholder controls from looking like a
  // meaningful network error or a working QR retry. No data is modified.

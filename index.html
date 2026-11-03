@@ -53,7 +53,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.84">
+<meta name="ani-log-version" content="2.4.85">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -1479,6 +1479,19 @@ select:not([data-status-id]){
 .detail-profile .detail-heading-badges .detail-chip.accent{color:var(--accent)}
 .detail-profile .detail-head-info>h1{margin-top:0}
 
+/* One-time encrypted WAL upgrade; shown only for existing encrypted profiles. */
+.anilog-first-wal-upgrade{width:min(480px,calc(100% - 32px));max-height:calc(100dvh - 48px);padding:24px;overflow:auto;background:var(--bg-side);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius);box-shadow:0 24px 80px rgba(0,0,0,.65)}
+.anilog-first-wal-upgrade::backdrop{background:rgba(5,7,10,.82);backdrop-filter:blur(4px)}
+.anilog-first-wal-upgrade h2{font-size:var(--fs-xl);margin:0 0 14px}
+.anilog-first-wal-upgrade p{font-size:var(--fs-sm);line-height:1.75;margin:0 0 14px}
+.anilog-first-wal-upgrade label{display:flex;gap:9px;align-items:flex-start;margin:18px 0;color:var(--ink);font-size:var(--fs-sm);line-height:1.65}
+.anilog-first-wal-upgrade input{width:17px;height:17px;flex-shrink:0;accent-color:var(--accent);margin-top:3px}
+.anilog-first-wal-upgrade .anilog-first-wal-upgrade-note{color:var(--muted);font-size:var(--fs-xs)}
+.anilog-first-wal-upgrade-actions{display:flex;gap:10px;flex-wrap:wrap}
+.anilog-first-wal-upgrade-actions button{min-height:40px;padding:9px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font:inherit;font-size:var(--fs-sm);cursor:pointer}
+.anilog-first-wal-upgrade-actions button:first-child{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.anilog-first-wal-upgrade-actions button:disabled{opacity:.45;cursor:default}
+
 /* ANI:LOG sync settings shell: presentation only. Engine, ids, state and actions are unchanged. */
 .anilog-sync-sidebar{margin-top:8px}
 .anilog-sync-sidebar .anilog-sync-entry{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);text-align:left;font-size:var(--fs-md);font-weight:var(--fw-semi)}
@@ -2625,7 +2638,7 @@ function offerUndo(id,oldItem,afterItem,label,offerRating=false,undoDuration=950
   node.append(rate);
  }
  centerToastOnContent();node.classList.add('show');clearTimeout(toastTimer);
- undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show')},undoDuration);
+ undoTimer=setTimeout(()=>{pendingUndo=null;node.classList.remove('show');document.dispatchEvent(new Event('anilog-undo-expired'))},undoDuration);
 }
 
 let savedBaseline=structuredClone(saved),recordWriteQueue=Promise.resolve(),recordWrites=0;
@@ -2663,15 +2676,34 @@ async function persist(replace=false,recordDraft=null,kind='edit'){
   saved=structuredClone(savedBaseline); // No optimistic records while AEAD/IDB is pending.
   const result=await window.__formalStorage.saveRecords({base,draft,kind});
   saved=result.records;savedBaseline=structuredClone(result.records);weeklyOptions=result.weeklyOptions;return true;
- }catch(error){toast('保存を停止しました。データは消去せず再解錠してください。 '+String(error.message),'error');return false}
+ }catch(error){toast('保存できませんでした。未保存の入力は画面に残しています。再読み込み・再解錠する前に、メモはコピーし、評価などの入力内容は控えてください。 '+String(error.message),'error');return false}
 }
+// The encrypted UI must not hydrate over an active draft. A focus/visibility
+// refresh can begin before a modal opens, so check both before and AFTER the
+// asynchronous vault refresh. Never persist draft text to localStorage.
+const formalRefreshBlocked=()=>recordWrites>0||!!document.querySelector('dialog[open]')||
+ !!document.activeElement?.matches('#detailContent input, #detailContent select, [data-progress-input]');
+let formalRefreshRunning=false,formalRefreshRequest=0;
 async function refreshStoredRecords(){
- if(recordWrites||document.activeElement?.matches('#detailContent input, #detailContent select, [data-progress-input]')){pendingStorageRefresh=true;return}
+ const request=++formalRefreshRequest;
+ if(formalRefreshRunning||formalRefreshBlocked()){pendingStorageRefresh=true;return}
  if(!window.__formalStorage?.ready)return;
- try{const app=await window.__formalStorage.refresh();pendingStorageRefresh=false;
+ pendingStorageRefresh=false;
+ formalRefreshRunning=true;
+ try{
+  const app=await window.__formalStorage.refresh();
+  if(formalRefreshBlocked()||request!==formalRefreshRequest){pendingStorageRefresh=true;return}
+  pendingStorageRefresh=false;
   saved=app.records;savedBaseline=structuredClone(app.records);weeklyOptions=app.weeklyOptions;updateCounts();render();
   if(detailActiveItem)renderDetailParts(detailNonce);
- }catch{toast('保存内容の再読み込みを停止しました。表示を保持しています。','error')}
+ }catch{toast('保存内容の再読み込みを停止しました。表示と入力欄は保持しています。再読み込みの前に未保存の入力をコピーしてください。','error')}
+ finally{
+  formalRefreshRunning=false;
+  // Coalesce multiple focus/visibility requests; only retry after the last
+  // operation has exited and the local editor is no longer active.
+  if(pendingStorageRefresh&&!formalRefreshBlocked()&&window.__formalStorage?.ready)
+   queueMicrotask(refreshStoredRecords);
+ }
 }
 function queueRecordWrite(task){
  recordWrites++;
@@ -2686,6 +2718,11 @@ function queueRecordWrite(task){
 window.addEventListener('focus',refreshStoredRecords);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshStoredRecords()});
 document.addEventListener('focusout',()=>{if(pendingStorageRefresh)setTimeout(refreshStoredRecords,0)});
+// 'close' does not bubble: capture it to resume a deferred encrypted refresh
+// after a note, review, weekly, stream or other modal editor is dismissed.
+document.addEventListener('close',event=>{
+ if(event.target?.matches?.('dialog')&&pendingStorageRefresh)setTimeout(refreshStoredRecords,0);
+},true);
 
 function updateBackupDate(){const el=$('#backupDate');if(!el)return;
  try{const last=Number(localStorage.getItem(BACKUP_AT_KEY)||0);el.textContent=last?'最終書き出し：'+new Date(last).toLocaleDateString('ja-JP'):'最終書き出し：未作成';}catch{el.textContent='最終書き出し：確認不可';}}
@@ -6821,9 +6858,28 @@ aniHistoryReady=true;
 // Direct share hashes take priority. Do not replace valid history state on reload.
 if(!aniInitialHistoryState){try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}}
 
+// Read-only idle signals; old, non-cooperative tabs are not observable.
+const maintenanceUIIdle=()=>{
+  try{
+   if(recordWrites!==0||addingCustom||pendingUndo!==null||pendingStorageRefresh||formalRefreshRunning)return false;
+   if(document.querySelector('dialog[open]'))return false;
+   if(document.activeElement?.matches('input,textarea,select,[contenteditable="true"]'))return false;
+   // A progress or completed-on input can remain dirty AFTER losing focus.
+   // Treat unknown field shapes as busy; never serialize their values.
+   for(const field of document.querySelectorAll('[data-progress-input],#completionYear,#completionMonth,#completionDay')){
+    if(field.tagName==='SELECT'){
+     if(!field.options?.length||Array.from(field.options).some(o=>o.selected!==o.defaultSelected))return false;
+    }else if(typeof field.value!=='string'||typeof field.defaultValue!=='string'||field.value!==field.defaultValue)return false;
+   }
+   return true;
+  }catch{return false}
+ };
 window.__formalUI=Object.freeze({
  readSaved:()=>structuredClone(saved),readWeeklyOptions:()=>structuredClone(weeklyOptions),
  whenWritesIdle:()=>recordWriteQueue,
+ maintenanceIdle:maintenanceUIIdle,
+ maintenanceUndoIdle:()=>pendingUndo===null&&recordWrites===0,
+ testOnlyMaintenanceIdle:maintenanceUIIdle,
  hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage;saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);mode='saved';updateCounts();render()},
  commitSaved(records,weekly){if(!window.__formalStorage?.ready&&!window.__formalPairing?.bridge?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage?.ready?window.__formalStorage:null;saved=structuredClone(records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(weekly);render()}
 });

@@ -22,9 +22,18 @@ export function validateV411StagingContext({siteOrigin,apiOrigin,pageOrigin=glob
  if(site.origin!==pageOrigin||site.origin===api.origin||(!approved&&(site.hostname==='anime-log-rouge.vercel.app'||site.hostname==='www.anime-log-rouge.vercel.app'))||api.hostname==='anime-log-rouge.vercel.app')fail('PRODUCTION_OR_WRONG_ORIGIN');
  return {siteOrigin:site.origin,apiOrigin:api.origin};
 }
+// The same wrapper is used for both the automatic session and manual panel.
+// The optional operation gate is private and must be provided explicitly.
+export function wrapSyncSessionWithPrivateGate(session,{beforeSync,withSyncOperation}={}){
+ if(!beforeSync&&!withSyncOperation)return session;
+ return Object.freeze({get stopped(){return session.stopped},async syncOnce(){
+  const perform=async()=>{if(beforeSync)await beforeSync();return session.syncOnce()};
+  return withSyncOperation?withSyncOperation(perform):perform();
+ }});
+}
 export function prepareV411StagingPanel({root,ui,siteOrigin,apiOrigin,location=globalThis.location,history=globalThis.history,
  idb=globalThis.indexedDB,cryptoProvider=globalThis.crypto,locks=globalThis.navigator?.locks,browserFetch=globalThis.fetch,
- createVault=createV408HTTPSStagingANIPrimary,createCredentials=createV408StagingSealedDeviceCredentials,beforeSync,
+ createVault=createV408HTTPSStagingANIPrimary,createCredentials=createV408StagingSealedDeviceCredentials,beforeSync,withSyncOperation,
  provisionOwner=provisionV409BrowserOwner,onSession,getPassphrase,getInitialLocalApp,formalProduction=false,autoClaimReceiver=false,receiveIntoLocal,claimStore}={}){
  validateV411StagingContext({siteOrigin,apiOrigin,pageOrigin:globalThis.location?.origin,formalProduction});
  if(!root?.querySelector||!ui?.commitSaved||!ui?.readSaved||!history?.replaceState)fail('VALID_BROWSER_UI_REQUIRED');
@@ -34,7 +43,7 @@ export function prepareV411StagingPanel({root,ui,siteOrigin,apiOrigin,location=g
  const flow=createV406BrowserApprovedPairingFlow({apiOrigin,siteOrigin,pageOrigin:siteOrigin,browserFetch,claimStore});
  const pairing=location.hash?.startsWith('#anilog-pair=')?parsePairingUrl(location.href,{allowedOrigin:siteOrigin}):null;
  let ownerHandoff=location.hash?.startsWith('#anilog-owner=')?location.href:null;
- const wrap=session=>beforeSync?Object.freeze({get stopped(){return session.stopped},async syncOnce(){await beforeSync();return session.syncOnce()}}):session;
+ const wrap=session=>wrapSyncSessionWithPrivateGate(session,{beforeSync,withSyncOperation});
  const fresh=async({boxId,passphrase})=>wrap(await createV405BrowserExplicitSyncSession({vault,uiBridge:bridge,sealedCredentials,passphrase,
    apiOrigin,siteOrigin,pageOrigin:siteOrigin,boxId,browserFetch}));
  const guardedSession=(session,scope)=>{const guarded=wrap(session);
