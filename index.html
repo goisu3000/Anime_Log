@@ -2269,6 +2269,13 @@ select:not([data-status-id]){
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note:hover .note-preview-edit-ico{color:var(--accent)}
 }
 
+/* PC single-column: keep an 8px gap between an unset service and a memo. */
+@media(min-width:1251px){
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.stream-inline:has(>.stream-inline-empty)+.note-preview.has-note{
+  margin-left:calc(var(--sp-2) - 5px);
+ }
+}
+
 /* Episode display experiment (My List cards only, both desktop and phone):
    Keep the original status/action columns and fixed-size +/- buttons.
    Show an editable current/total話 in the centre instead of a duplicate caption. */
