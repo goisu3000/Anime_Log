@@ -2245,6 +2245,30 @@ select:not([data-status-id]){
  }
 }
 
+/* PC single-column: show saved memo text using the mobile memo treatment. */
+@media(min-width:1251px){
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.grid-self-rating{flex-shrink:0}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note{
+  flex:0 1 36ch;min-width:0;width:36ch;max-width:50%;height:30px;min-height:30px;
+  justify-content:space-between;gap:10px;padding:2px 8px 2px 11px;
+  border:0;border-left:2px solid var(--accent);border-radius:0 6px 6px 0;
+  background:rgba(255,255,255,.03);color:var(--ink);text-align:left;overflow:hidden;
+  font-size:var(--fs-sm);
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note .note-preview-quote{
+  display:block;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  -webkit-line-clamp:unset;overflow-wrap:normal;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note .note-preview-edit-ico{
+  flex:0 0 14px;width:14px;height:14px;color:var(--muted);
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note .note-preview-edit-ico .ui-icon{
+  width:14px;height:14px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note:hover{background:var(--accent-soft)}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.note-preview.has-note:hover .note-preview-edit-ico{color:var(--accent)}
+}
+
 /* Episode display experiment (My List cards only, both desktop and phone):
    Keep the original status/action columns and fixed-size +/- buttons.
    Show an editable current/total話 in the centre instead of a duplicate caption. */
