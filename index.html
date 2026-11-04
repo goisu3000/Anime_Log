@@ -2210,7 +2210,7 @@ select:not([data-status-id]){
 /* PC single-column: reserve the genre row, including records without genres. */
 @media(min-width:1251px){
  body.saved-mode.saved-list-view .pattern-a-card .record-main{
-  grid-template-rows:minmax(23px,auto) 21px 28px var(--sp-2) 32px;
+  grid-template-rows:minmax(23px,auto) max-content var(--sp-2) 26px var(--sp-2) 30px;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy{display:contents}
  body.saved-mode.saved-list-view .pattern-a-card .card-title{
@@ -2220,15 +2220,15 @@ select:not([data-status-id]){
   grid-column:1/-1;grid-row:2;margin:0;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tags{
-  grid-column:1;grid-row:3;display:flex;align-items:center;
-  margin:0;min-height:24px;max-height:28px;overflow:hidden;
+  grid-column:1;grid-row:4;display:flex;align-items:center;
+  margin:0;height:26px;min-height:26px;max-height:26px;overflow:hidden;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tags-empty{
   display:block;visibility:hidden;pointer-events:none;
  }
- body.saved-mode.saved-list-view .pattern-a-card .pattern-a-score-aside{grid-column:2;grid-row:3}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-score-aside{grid-column:2;grid-row:4}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{
-  grid-column:1/-1;grid-row:5;width:100%;max-width:100%;margin:0;flex-wrap:nowrap;
+  grid-column:1/-1;grid-row:6;width:100%;max-width:100%;margin:0;flex-wrap:nowrap;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress.pattern-a-progress{
   transform:translateY(var(--episode-bottom-offset,0px));
