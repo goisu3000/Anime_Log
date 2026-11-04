@@ -1574,7 +1574,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:8px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:flex-start;gap:5px}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions [data-simple="unlink-sync"]{border-color:var(--border-ctrl);color:var(--danger)}
 /* Advanced controls are not needed when engine has no advanced action to show. */
-.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-conflict-details:not([hidden]))){display:none}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-conflict-details:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-own-device-info:not([hidden]))){display:none}
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="begin"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="resume-sync"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="relink-sync"],
@@ -1731,6 +1731,8 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>p{margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:12px;gap:12px}
 /* Read-only conflict diagnostics live under advanced recovery, not at the dialog root. */
+/* The registration ID is read-only information, not an action. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-own-device-info:not([hidden]){display:block;max-width:100%;font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-conflict-details{box-sizing:border-box;align-self:stretch;width:100%;max-width:100%;margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-conflict-details>pre{box-sizing:border-box;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
 .anilog-sync-dialog #formal-sync-controls{padding:0!important;border:0!important;margin:0}
@@ -2395,6 +2397,12 @@ select:not([data-status-id]){
  }
 }
 
+/* Successful sync settles into a quiet state after a short verified
+   confirmation. Errors and paused states retain the original status panel. */
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"].anilog-sync-status-quiet{
+ padding:0;border:0;border-radius:0;background:transparent;color:var(--muted);line-height:1.6;
+}
+
 /* Sync settings connected-layout proposal (2026-11-04).
    No sync/registration state changes: only grouping and presentation. */
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"][data-sync-phase="connected"]{gap:12px}
@@ -2470,8 +2478,7 @@ select:not([data-status-id]){
    
    <button type="button" data-simple="unlink-sync" hidden aria-hidden="true" tabindex="-1">旧解除操作（無効）</button>
    <button type="button" data-simple="relink-sync" hidden>以前の同期先に戻す</button>
-   <button type="button" data-simple="own-device-button" hidden>この端末の登録IDを確認</button>
-   <p data-simple="own-device-info" hidden></p>
+   <div class="anilog-sync-own-device-info" data-simple="own-device-info" hidden>この端末の登録ID：<span data-simple="own-device-id-value" aria-live="polite">確認中…</span></div>
    <details class="anilog-sync-help anilog-sync-conflict-details" data-simple="conflict-details" hidden>
     <summary>同期エラー項目の詳細</summary>
     <p>これは原因を調べるための情報です。表示するだけでは記録は変更されません。</p>

@@ -41,7 +41,7 @@ export function installConflictRecovery({root,locks,scope,begin,end,complete,ass
      finish();
      if(status)status.textContent=resumed?.automaticRestored===false
       ?'今回の変更はこの端末と同期先に保存しました。ただし自動同期の再開に失敗しています。記録を消さずに「再同期」で接続を確認してください。'
-      :'競合を解決し、この端末と同期先への保存を確認しました。ほかの端末には受信後に反映されます。';
+      :'不一致を解消しました。同期の再開を確認しています。';
     }catch{
      // The commit already passed local and remote readback. Do not offer a
      // second commit of the same choice or describe it as an unsaved change.
