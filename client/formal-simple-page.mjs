@@ -635,7 +635,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(failed){nextQrStep('接続状態を確認してください','記録はそのままです。下の案内に沿って進めてください。',{force:true,step:owner?2:2,device:owner?'PC側：確認・復旧':'新しい端末：確認・復旧',state:'needs-attention'});return;}
   if(owner){
    if(phase==='OWNER_OPEN'&&!hasQr)nextQrStep('新しいQRを発行してください','以前のQR画像は再読み込み後に復元できません。接続申請がまだ届いていないことを確認し、「登録済み端末を管理」を開き、「新しい端末を追加する」から発行してください。',{force:true,step:1,device:'この端末で操作'});
-   else if(phase==='OWNER_INVITED'||phase==='OWNER_OPEN'||phase==='OWNER_CLAIMED')nextQrStep(phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力':'新しい端末でQRを読み取ってください',phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力して承認します。':'新しい端末でQRを読み取ってください。6桁コードが表示されたら、この端末で承認します。',{force:true,step:phase==='OWNER_CLAIMED'?2:1,device:phase==='OWNER_CLAIMED'?'この端末で操作':'新しい端末で操作'});
+   else if(phase==='OWNER_INVITED'||phase==='OWNER_OPEN'||phase==='OWNER_CLAIMED')nextQrStep(phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力':'新しい端末でQRを読み取ってください',phase==='OWNER_CLAIMED'?'新しい端末の6桁コードを入力して承認します。':'新しい端末で表示された6桁コードを入力してください。',{force:true,step:phase==='OWNER_CLAIMED'?2:1,device:phase==='OWNER_CLAIMED'?'この端末で操作':'新しい端末で操作'});
    else if(phase==='OWNER_APPROVED')nextQrStep('この端末での承認が完了しました','新しい端末で承認を確認し、「接続を完了」を押してください。',{force:true,step:3,device:'新しい端末で操作'});
    else if(['OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase))nextQrStep('このQRは使えません','この端末で新しいQRを発行してください。記録はそのままです。',{force:true,step:1,device:'この端末で操作',state:'needs-attention'});
   }else{
@@ -1046,7 +1046,10 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    primaryActions.append(manageDevices);
    primaryActions.after(deviceManagement);
    // The QR flow is the original form: reopening retains its in-flight state.
-   deviceList.after(panelRoot);
+   // Keep the reassurance note above the add-device action.
+   // The note uses the same right edge as the registered-device count.
+   const revokeNote=deviceManagement.querySelector('.anilog-device-revoke-note');
+   deviceList.after(revokeNote,panelRoot);
    // Device-list inspection must not expose QR troubleshooting before an
    // add-device journey. V407 can render/restore invitation state at any time,
    // so gate the disclosure independently of its own `hidden` assignment.

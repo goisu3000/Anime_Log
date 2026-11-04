@@ -2103,7 +2103,7 @@ select:not([data-status-id]){
    with the management grid gap, and keep wrapped mobile lines compact. */
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-invite-status"],
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-management-status"],
-.anilog-sync-dialog #formal-simple-sync .anilog-device-management > .anilog-device-revoke-note{margin:0;line-height:1.55}
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management > .anilog-device-revoke-note{margin:0;line-height:1.55;text-align:right;justify-self:stretch}
 /* Idle device-list status is intentionally blank; active feedback remains visible. */
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-management-status"]:empty{display:none}
 .anilog-sync-dialog #formal-simple-sync [data-simple="device-list"]{display:grid;gap:12px}
@@ -2414,9 +2414,13 @@ select:not([data-status-id]){
 }
 
 /* Status-only visual markers. No icons when sync is OFF/unconfigured.
-   Yellow matches the existing episode-start notice (#e5b64c), NOT a new palette color. */
+   Yellow matches the existing episode-start notice (#e5b64c), NOT a new palette color.
+   The sync state is a primary piece of information, unlike the secondary target ID. */
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual]{
+ font-size:18px;font-weight:var(--fw-bold);line-height:1.45;color:var(--ink);
+}
 .anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual]::before{
- content:"";display:inline-block;width:17px;height:17px;margin-right:8px;vertical-align:-3px;
+ content:"";display:inline-block;width:20px;height:20px;margin-right:8px;vertical-align:-4px;
  background:var(--sync-icon-color);-webkit-mask:var(--sync-icon-shape) center/contain no-repeat;mask:var(--sync-icon-shape) center/contain no-repeat;
 }
 .anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual="healthy"]{
