@@ -2207,6 +2207,34 @@ select:not([data-status-id]){
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{width:calc(100% + 99px)}
 }
 
+/* PC single-column: reserve the genre row, including records without genres. */
+@media(min-width:1251px){
+ body.saved-mode.saved-list-view .pattern-a-card .record-main{
+  grid-template-rows:minmax(23px,auto) 21px 28px 32px;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy{display:contents}
+ body.saved-mode.saved-list-view .pattern-a-card .card-title{
+  grid-column:1/-1;grid-row:1;margin:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-meta{
+  grid-column:1/-1;grid-row:2;margin:0;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tags{
+  grid-column:1;grid-row:3;display:flex;align-items:center;
+  margin:0;min-height:24px;max-height:28px;overflow:hidden;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tags-empty{
+  display:block;visibility:hidden;pointer-events:none;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-score-aside{grid-column:2;grid-row:3}
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{
+  grid-column:1/-1;grid-row:4;width:100%;max-width:100%;margin:0;flex-wrap:nowrap;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions{
+  transform:translateY(var(--episode-bottom-offset,2px));align-items:end;
+ }
+}
+
 /* Episode display experiment (My List cards only, both desktop and phone):
    Keep the original status/action columns and fixed-size +/- buttons.
    Show an editable current/total話 in the centre instead of a duplicate caption. */
@@ -11500,13 +11528,13 @@ document.addEventListener('click',function(e){
 });
 </script>
 <script>
-/* Align only desktop two-column episode controls to the memo border. */
+/* Align desktop episode controls to the fixed memo row. */
 (()=>{
  const cards=document.getElementById('cards');if(!cards)return;
  let scheduled=false;
  function align(){
   scheduled=false;
-  const enabled=innerWidth>=1251&&document.body.classList.contains('saved-mode')&&!document.body.classList.contains('saved-list-view');
+  const enabled=innerWidth>=1251&&document.body.classList.contains('saved-mode');
   for(const card of cards.querySelectorAll('.pattern-a-card')){
    const row=card.querySelector('.pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions');
    if(!row)continue;
