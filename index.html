@@ -2293,6 +2293,15 @@ select:not([data-status-id]){
  .pattern-a-card .pattern-a-progress .watch-progress-entry.is-condensed input,
  .pattern-a-card .pattern-a-progress .watch-progress-entry.is-condensed .watch-progress-total{font-size:9.5px;}
 }
+
+/* Desktop two-column card: align the bottom of the whole episode-control row
+   with the memo icon's bottom edge. Keep progress track and column layout
+   unchanged; mobile and desktop single-column views are unaffected. */
+@media (min-width:1251px){
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions{
+  transform:translateY(2px);
+ }
+}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
