@@ -2299,7 +2299,8 @@ select:not([data-status-id]){
    unchanged; mobile and desktop single-column views are unaffected. */
 @media (min-width:1251px){
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions{
-  transform:translateY(2px);
+  transform:translateY(var(--episode-bottom-offset,2px));
+  align-items:end;
  }
 }
 </style>
@@ -11484,6 +11485,35 @@ document.addEventListener('click',function(e){
  document.body.classList.toggle('saved-list-view',layout==='list');
  document.querySelectorAll('button[data-saved-layout]').forEach(b=>b.setAttribute('aria-pressed',String(b===btn)));
 });
+</script>
+<script>
+/* Align only desktop two-column episode controls to the memo border. */
+(()=>{
+ const cards=document.getElementById('cards');if(!cards)return;
+ let scheduled=false;
+ function align(){
+  scheduled=false;
+  const enabled=innerWidth>=1251&&document.body.classList.contains('saved-mode')&&!document.body.classList.contains('saved-list-view');
+  for(const card of cards.querySelectorAll('.pattern-a-card')){
+   const row=card.querySelector('.pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions');
+   if(!row)continue;
+   const memo=card.querySelector('.pattern-a-tools [data-note-id]');
+   if(!enabled||!memo||!memo.getClientRects().length){row.style.removeProperty('--episode-bottom-offset');continue;}
+   const applied=parseFloat(getComputedStyle(row).getPropertyValue('--episode-bottom-offset'));
+   const current=Number.isFinite(applied)?applied:2;
+   const bottom=Math.max(...Array.from(row.children,e=>e.getBoundingClientRect().bottom));
+   const offset=current+memo.getBoundingClientRect().bottom-bottom;
+   row.style.setProperty('--episode-bottom-offset',`${offset}px`);
+  }
+ }
+ function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(align)}}
+ new MutationObserver(schedule).observe(cards,{childList:true,subtree:true});
+ new ResizeObserver(schedule).observe(cards);
+ addEventListener('resize',schedule);
+ document.addEventListener('click',schedule);
+ document.fonts?.ready.then(schedule);
+ schedule();
+})();
 </script>
 <script type="module" src="/client/formal-page-entry.mjs"></script>
 </body>
