@@ -3,7 +3,7 @@ import {mountConflictResolutionView} from './conflict-resolution-view.mjs';
 // Existing dialog and existing connection only. No credentials leave this closure.
 export function installConflictRecovery({root,locks,scope,begin,end,complete,assertContext,getTransport,vault,isPaused,isQuiescent,isEligible=()=>true}={}){
  const doc=root.ownerDocument,dialog=root.closest('dialog'),entry=doc.createElement('button'),panel=doc.createElement('section');
- entry.type='button';entry.textContent='変更内容を選んで解決する';entry.dataset.simple='resolve-conflict';entry.hidden=!isPaused()||!isEligible();panel.hidden=true;
+ entry.type='button';entry.textContent='食い違う記録を確認';entry.dataset.simple='resolve-conflict';entry.hidden=true;panel.hidden=true;
  root.querySelector('[data-simple="retry"]').after(entry,panel);
  let view,release,original=[],visibility=[],active=false,starting=false,held=false;
  const restore=()=>{for(const [element,disabled] of original)element.disabled=disabled;original=[];for(const [element,hidden] of visibility)element.hidden=hidden;visibility=[];delete dialog.dataset.conflictBusy;const close=doc.getElementById('anilogSyncDialogClose');if(close)close.disabled=false};

@@ -1752,7 +1752,8 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>.anilog-sync-help{margin:0}
 .anilog-sync-dialog #formal-simple-sync [data-simple="relink-qr-actions"]>button{justify-self:start;max-width:100%}
 /* Conflict recovery: quiet single-column steps, in the existing ANI:LOG palette. */
-.anilog-sync-dialog #formal-simple-sync .anilog-sync-review{display:grid;gap:16px;min-width:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review[hidden]{display:none}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-review:not([hidden]){display:grid;gap:16px;min-width:0}
 .anilog-sync-dialog .anilog-sync-review>h3{margin:0;font-size:var(--fs-lg);line-height:1.5}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-review>p{margin:0;color:var(--muted);line-height:1.7}
 .anilog-sync-dialog .anilog-sync-review-groups{display:grid;gap:12px;min-width:0}
@@ -2085,6 +2086,10 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing [data-v407="approve"],.anilog-sync-dialog #v407-pairing [data-v407="receive"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* Device management: shown only on explicit owner action. */
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management:not([hidden]){display:grid;gap:12px;padding:14px;margin:0;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+/* Only these two management notes: prevent paragraph bottom margins stacking
+   with the management grid gap, and keep wrapped mobile lines compact. */
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-management-status"],
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management > .anilog-device-revoke-note{margin:0;line-height:1.55}
 .anilog-sync-dialog #formal-simple-sync [data-simple="device-list"]{display:grid;gap:12px}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-row span{font-size:12px;overflow-wrap:anywhere}
@@ -2385,6 +2390,23 @@ select:not([data-status-id]){
   align-items:end;
  }
 }
+
+/* Sync settings connected-layout proposal (2026-11-04).
+   No sync/registration state changes: only grouping and presentation. */
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"][data-sync-phase="connected"]{gap:12px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding-top:2px}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>button:not([hidden]){min-height:44px;padding:10px 16px;margin:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>[data-simple="manage-devices"][aria-expanded="true"]{border-color:var(--accent-border);background:var(--surface-hover)}
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]:not([hidden]){color:var(--muted);font-size:var(--fs-xs);line-height:1.6;margin:12px 0 4px}
+/* A connection reset is a recovery choice, not a second green primary CTA. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>[data-simple="restart-sync"]:not([hidden]){background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink);margin:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-restart-confirm:not([hidden]){width:100%}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>button:not([hidden]){margin:0}
+@media(max-width:480px){
+ .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+ .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>button:not([hidden]){justify-self:stretch;width:100%;min-height:44px}
+}
+
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -2409,7 +2431,7 @@ select:not([data-status-id]){
 <div data-simple="connection-actions" hidden>
  <button type="button" data-simple="resume-sync" hidden>同期を再開する</button>
  <button type="button" data-simple="restart-sync" hidden>同期設定を最初からやり直す</button>
- <button type="button" data-simple="manage-devices" hidden>登録済み端末を管理</button>
+ <button type="button" data-simple="manage-devices" hidden aria-expanded="false" aria-controls="anilog-device-management">登録済み端末を管理</button>
  <div class="anilog-sync-restart-confirm" data-simple="restart-confirm" hidden>
   <p>この端末の登録を解除し、空き枠を1台増やします。<strong>元の接続には戻れません。</strong> 再接続には新しいQRが必要です。記録は消えません。</p>
   <p data-simple="revoke-warning">未送信の変更がある場合は、先に同期またはバックアップで保護してください。</p>
@@ -2419,7 +2441,7 @@ select:not([data-status-id]){
  </div>
  <div class="anilog-sync-restart-guide" data-simple="restart-guide" hidden>
   <p><strong>この端末の再接続手順</strong></p>
-  <p>1．同期できているPCまたはスマホで「新しい端末を追加する」を押し、QRコードを表示します。</p>
+  <p>1．同期できているPCまたはスマホで「登録済み端末を管理」を開き、「新しい端末を追加する」を押してQRコードを表示します。</p>
   <p>2．この端末でそのQRコードを読み取り、ANI:LOGを開きます。</p>
   <p>3．同期先IDを確認し、バックアップを保存して接続します。</p>
   <p>以前の記録は残ります。新しい同期先には送信しません。</p>
@@ -2458,7 +2480,7 @@ select:not([data-status-id]){
       <label><input type="checkbox" data-simple="device-confirm-check">この登録を解除します。再接続には新しいQRが必要です。</label>
       <div class="anilog-sync-restart-buttons"><button type="button" data-simple="device-revoke" disabled>選んだ端末の登録を解除</button><button type="button" data-simple="device-cancel">キャンセル</button></div>
     </div>
-    <p class="anilog-sync-note">登録解除しても記録は消えません。</p>
+    <p class="anilog-sync-note anilog-device-revoke-note">登録解除しても記録は消えません。</p>
     <button type="button" data-simple="device-management-close">閉じる</button>
   </div>
 </div>
