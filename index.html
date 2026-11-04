@@ -2194,6 +2194,19 @@ select:not([data-status-id]){
 }
 
 
+/* PC single-column only: place the personal rating below MAL, on the same icon row. */
+@media(min-width:1251px){
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{
+  width:calc(100% + 118px);max-width:none;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools>.grid-self-rating{
+  order:5;margin-left:auto;
+ }
+}
+@media(min-width:1251px) and (max-width:1440px){
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{width:calc(100% + 99px)}
+}
+
 /* Episode display experiment (My List cards only, both desktop and phone):
    Keep the original status/action columns and fixed-size +/- buttons.
    Show an editable current/total話 in the centre instead of a duplicate caption. */
