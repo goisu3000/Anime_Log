@@ -118,6 +118,28 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
   try{onCommitted()}catch{}
   return result;
  };
+ // An Undo remains tied to one exact post-edit app and WAL generation.
+ // Only a single authenticated checkpoint-only append may advance its head.
+ const undoContext=app=>({tombstones:cp(app.tombstones),weeklyOptions:cp(app.weeklyOptions)});
+ const headIdentity=()=>typeof vault.readHeadIdentity==='function'?vault.readHeadIdentity():null;
+ const stampUndo=(receipt,app)=>({...receipt,revision:vault.readRevision(),head:cp(headIdentity()),
+  checkpoint:cp(vault.readSyncCheckpoint()),context:undoContext(app)});
+ function reconcileUndo(app){
+  if(!undo)return;
+  if(!same(undo.after,app.records)||!same(undo.context,undoContext(app))){undo=null;return}
+  const head=headIdentity();
+  if(undo.revision===vault.readRevision()){
+   if(undo.head&&(!head||!same(undo.head,head)))undo=null;
+   return;
+  }
+  const checkpoint=vault.readSyncCheckpoint();
+  const checkpointOnly=undo.head&&head&&head.revision===undo.revision+1&&
+   head.salt===undo.head.salt&&head.escrowDigest===undo.head.escrowDigest&&
+   checkpoint&&Number.isSafeInteger(checkpoint.serverRevision)&&
+   checkpoint.serverRevision>(undo.checkpoint?.serverRevision??0)&&
+   same(checkpoint.snapshot,appToSnapshot(app));
+  undo=checkpointOnly?stampUndo(undo,app):null;
+ }
  async function maintainIfQuiescent({threshold=64,injectAbort=false,onAfterAnchorStageForTest=null,onBeforePrimaryCASForTest=null}={},product=false){
    if(product?(productMaintenanceEnabled!==true||typeof vault.maintainProductWal!=='function'):(!testOnlyMaintenanceGate||typeof vault.testOnlyCompactSameSalt!=='function'))return Object.freeze({rebased:false,reason:'OFF'});
    // Private product-entry authorization is an additional gate, not a proof
@@ -131,6 +153,7 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
    if(product&&(!operationGate||typeof operationGate.tryReserveMaintenance!=='function'||typeof operationGate.withForeground!=='function'))return Object.freeze({rebased:false,reason:'OPERATION_GATE_REQUIRED'});
    // A missing, malformed or throwing signal is never proof of quietness.
    const safelyIdle=read=>{try{return read()===true}catch{return false}};
+   if(product&&undo&&active&&vault.getState()==='ACTIVE')reconcileUndo(read());
    if(product&&undo&&safelyIdle(uiIsIdle)&&safelyIdle(undoIsIdle)&&undo.revision===vault.readRevision())undo=null;
    if(!active||vault.getState()!=='ACTIVE'||busy||undo||!safelyIdle(uiIsIdle)||!safelyIdle(syncIsIdle))return Object.freeze({rebased:false,reason:'NOT_QUIESCENT'});
    const reservation=operationGate?.tryReserveMaintenance?.()??(operationGate?null:{release(){},hasForegroundWaiters:()=>false});
@@ -183,7 +206,7 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
   // Writes still use the existing exclusive transaction and failure guard.
   refresh(){
    if(refreshPending)return refreshPending;
-   refreshPending=transaction(async()=>{const identity=typeof vault.readHeadIdentity==='function'?vault.readHeadIdentity():{revision:vault.readRevision()};const result=await vault.refresh();const latest=typeof vault.readHeadIdentity==='function'?vault.readHeadIdentity():{revision:vault.readRevision()};if(!same(latest,identity))undo=null;return result})
+   refreshPending=transaction(async()=>{const result=await vault.refresh();reconcileUndo(result);return result})
     .finally(()=>{refreshPending=null});
    return refreshPending;
   },
@@ -211,6 +234,7 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
    const current=read();if(!same(base,current.records))stop('STALE_UI');assertMixedMap(draft);
    if(same(draft,current.records))return current;
    const candidate=cp(current);candidate.records=cp(draft);
+   reconcileUndo(current);
    const isUndo=kind==='undo'&&undo&&undo.revision===vault.readRevision()&&same(undo.after,current.records)&&same(undo.before,draft);
    if(kind==='undo'&&!isUndo)stop('STALE_UNDO');
    for(const id of Object.keys(current.records))if(!draft[id])candidate.tombstones[id]={id,deletedAt:now()};
@@ -218,14 +242,20 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
     if(!isUndo)stop('TOMBSTONE_RESURRECTION');delete candidate.tombstones[id];
    }
    const result=await commit(candidate);
-   undo=isUndo?null:{before:cp(current.records),after:cp(result.records),revision:vault.readRevision()};
+   undo=isUndo?null:stampUndo({before:cp(current.records),after:cp(result.records)},result);
    return result;
   })},
   saveWeekly(next){return transaction(async()=>{
    editable();
    const current=read(),candidate=cp(current);candidate.weeklyOptions={...candidate.weeklyOptions,...cp(next)};
    if(same(candidate,current))return current;
-   const result=await commit(candidate);undo=null;return result;
+   reconcileUndo(current);
+   const receipt=undo;
+   const result=await commit(candidate);
+   const securitySettings=weekly=>Object.fromEntries(Object.entries(weekly).filter(([key])=>!['open','statuses'].includes(key)));
+   undo=receipt&&same(result.records,current.records)&&same(result.tombstones,current.tombstones)&&
+    same(securitySettings(result.weeklyOptions),securitySettings(current.weeklyOptions))?stampUndo(receipt,result):null;
+   return result;
   })},
   exportBackup(){
    const state=read();

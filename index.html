@@ -2801,6 +2801,13 @@ function toast(msg,kind='info'){
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
 }
 let pendingUndo=null,undoTimer=null;
+// Validated saved records are JSON; object key order is not an edit.
+function sameUndoRecord(a,b){
+ if(a===b)return true;
+ if(a===null||b===null||typeof a!=='object'||typeof b!=='object'||Array.isArray(a)!==Array.isArray(b))return false;
+ const keys=Object.keys(a);
+ return keys.length===Object.keys(b).length&&keys.every(key=>Object.hasOwn(b,key)&&sameUndoRecord(a[key],b[key]));
+}
 function offerUndo(id,oldItem,afterItem,label,offerRating=false,undoDuration=9500){
  clearTimeout(undoTimer);
  pendingUndo={id,oldItem:oldItem?structuredClone(oldItem):null,afterItem:afterItem?structuredClone(afterItem):null};
@@ -2812,7 +2819,7 @@ function offerUndo(id,oldItem,afterItem,label,offerRating=false,undoDuration=950
  const btn=document.createElement('button');btn.type='button';btn.className='toast-undo';btn.textContent='元に戻す';btn.onclick=()=>queueRecordWrite(async()=>{
   if(!pendingUndo||pendingUndo.id!==id)return;
   const expected=pendingUndo.afterItem,current=saved[id];
-  if(JSON.stringify(current??null)!==JSON.stringify(expected??null)){pendingUndo=null;toast('ほかの変更があるため、復元を中止しました。','error');return}
+  if(!sameUndoRecord(current??null,expected??null)){pendingUndo=null;toast('ほかの変更があるため、復元を中止しました。','error');return}
   const before=current?structuredClone(current):null;
   if(pendingUndo.oldItem)saved[id]=pendingUndo.oldItem;else delete saved[id];
   if(!await persist(false,null,'undo')){if(before)saved[id]=before;else delete saved[id];return}
