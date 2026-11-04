@@ -1739,10 +1739,13 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:12px;margin:0;padding:16px 0 0;border-top:1px solid var(--border)}
 .anilog-sync-dialog #v407-pairing>*{grid-column:1/-1;min-width:0}
 .anilog-sync-dialog #v407-pairing button{justify-self:start}
+/* Follow the actual pairing journey: invite, scan QR, then enter the six digits. */
 .anilog-sync-dialog #v407-pairing [data-v407="invite"]{grid-column:1;grid-row:1}
-.anilog-sync-dialog #v407-pairing [data-v407="code"]{grid-column:2;grid-row:1;width:100%;max-width:300px;align-self:center}
-.anilog-sync-dialog #v407-pairing [data-v407="approve"]{grid-column:1;grid-row:2}
-.anilog-sync-dialog #v407-pairing [data-v407="copy"]{grid-column:2;grid-row:2}
+.anilog-sync-dialog #v407-pairing .anilog-sync-owner-approval-row{display:grid;grid-template-columns:minmax(0,1fr) max-content;align-items:center;gap:10px;width:min(100%,420px);min-width:0}
+.anilog-sync-dialog #v407-pairing .anilog-sync-owner-approval-row:not(:has(> [data-v407="code"]:not([hidden]))){display:none}
+.anilog-sync-dialog #v407-pairing .anilog-sync-owner-approval-row [data-v407="code"]{width:100%;max-width:none;min-width:0;align-self:center}
+.anilog-sync-dialog #v407-pairing .anilog-sync-owner-approval-row [data-v407="code"]::placeholder{letter-spacing:0;font-size:var(--fs-sm)}
+.anilog-sync-dialog #v407-pairing .anilog-sync-owner-approval-row [data-v407="approve"]{min-height:42px;white-space:nowrap}
 .anilog-sync-dialog #v407-pairing [data-v407="status"],
 .anilog-sync-dialog #v407-pairing [data-v407="qr"]{margin:0}
 .anilog-sync-dialog #v407-pairing [data-v407="qr"]:empty,
@@ -1792,10 +1795,8 @@ select:not([data-status-id]){
 @media(max-width:740px){
  .anilog-sync-dialog-head,.anilog-sync-dialog #formal-simple-sync{padding:16px}
  .anilog-sync-dialog #v407-pairing{grid-template-columns:minmax(0,1fr)}
- .anilog-sync-dialog #v407-pairing [data-v407="invite"],
- .anilog-sync-dialog #v407-pairing [data-v407="code"],
- .anilog-sync-dialog #v407-pairing [data-v407="approve"],
- .anilog-sync-dialog #v407-pairing [data-v407="copy"]{grid-column:1;grid-row:auto}
+ .anilog-sync-dialog #v407-pairing [data-v407="invite"]{grid-column:1;grid-row:auto}
+ .anilog-sync-dialog #v407-pairing .anilog-sync-owner-approval-row{grid-template-columns:minmax(0,1fr) max-content;gap:8px;width:100%}
  .anilog-sync-dialog .anilog-sync-bulk-actions{display:grid;grid-template-columns:minmax(0,1fr)}
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-bulk-actions>button{width:100%;justify-content:center}
  /* The retry and conflict-review actions must never touch or share a row. */
@@ -2086,16 +2087,25 @@ select:not([data-status-id]){
 .anilog-sync-dialog #v407-pairing [data-v407="receiver-code"]:not(:empty){display:block;max-width:260px;margin:12px auto;padding:12px 8px;background:var(--surface);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);font-size:clamp(24px,7vw,30px);font-weight:var(--fw-bold);letter-spacing:.17em;text-align:center;font-variant-numeric:tabular-nums}
 .anilog-sync-dialog #v407-pairing [data-v407="status"]{font-size:var(--fs-sm);color:var(--muted);line-height:1.6}
 .anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tools{margin:10px 0 0}
+/* Owner UI: show QR recovery tools only after an add-device flow starts.
+   V407 still owns its finer invitation/authorization visibility rules. */
+.anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tools.anilog-sync-tools-before-add{display:none!important}
 .anilog-sync-dialog #v407-pairing .anilog-sync-tool-note{font-size:var(--fs-xs);color:var(--muted);line-height:1.55;margin:12px 12px 8px}
 .anilog-sync-dialog #v407-pairing .anilog-sync-pairing-tool-buttons{display:flex;flex-wrap:wrap;gap:12px;padding:0 12px 12px}
 .anilog-sync-dialog #v407-pairing [data-v407="approve"],.anilog-sync-dialog #v407-pairing [data-v407="receive"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 /* Device management: shown only on explicit owner action. */
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management:not([hidden]){display:grid;gap:12px;padding:14px;margin:0;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
+/* Registered devices title and count share one line; the count stays secondary. */
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management-heading strong{min-width:0;white-space:nowrap}
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management-heading [data-simple="device-count"]{margin:0;color:var(--muted);font-size:var(--fs-sm);line-height:1.5;text-align:right;white-space:nowrap}
 /* Only these two management notes: prevent paragraph bottom margins stacking
    with the management grid gap, and keep wrapped mobile lines compact. */
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-invite-status"],
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-management-status"],
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > .anilog-device-revoke-note{margin:0;line-height:1.55}
+/* Idle device-list status is intentionally blank; active feedback remains visible. */
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-management-status"]:empty{display:none}
 .anilog-sync-dialog #formal-simple-sync [data-simple="device-list"]{display:grid;gap:12px}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-row{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm)}
 .anilog-sync-dialog #formal-simple-sync .anilog-device-row span{font-size:12px;overflow-wrap:anywhere}
@@ -2403,6 +2413,29 @@ select:not([data-status-id]){
  padding:0;border:0;border-radius:0;background:transparent;color:var(--muted);line-height:1.6;
 }
 
+/* Status-only visual markers. No icons when sync is OFF/unconfigured.
+   Yellow matches the existing episode-start notice (#e5b64c), NOT a new palette color. */
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual]::before{
+ content:"";display:inline-block;width:17px;height:17px;margin-right:8px;vertical-align:-3px;
+ background:var(--sync-icon-color);-webkit-mask:var(--sync-icon-shape) center/contain no-repeat;mask:var(--sync-icon-shape) center/contain no-repeat;
+}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual="healthy"]{
+ --sync-icon-color:var(--accent);
+ --sync-icon-shape:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m8 12 3 3 5-6'/%3E%3C/svg%3E");
+}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual="warning"]{
+ --sync-icon-color:#e5b64c;
+ --sync-icon-shape:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10.3 3.9a2 2 0 0 1 3.4 0L22 18.1a2 2 0 0 1-1.7 3H3.7a2 2 0 0 1-1.7-3z'/%3E%3Cpath d='M12 9v4m0 4h.01'/%3E%3C/svg%3E");
+}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual="error"]{
+ --sync-icon-color:var(--danger);
+ --sync-icon-shape:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='m9 9 6 6m0-6-6 6'/%3E%3C/svg%3E");
+}
+.anilog-sync-dialog #formal-simple-sync>p[data-simple="status"][data-sync-visual="working"]{
+ --sync-icon-color:var(--muted);
+ --sync-icon-shape:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M20 12a8 8 0 1 1-8-8'/%3E%3C/svg%3E");
+}
+
 /* Sync settings connected-layout proposal (2026-11-04).
    No sync/registration state changes: only grouping and presentation. */
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"][data-sync-phase="connected"]{gap:12px}
@@ -2487,10 +2520,11 @@ select:not([data-status-id]){
   </div>
  </details>
   <div id="anilog-device-management" data-simple="device-management" class="anilog-device-management" hidden>
-    <strong>登録済み端末</strong>
-    <p data-simple="device-count">登録数を確認しています</p>
+    <div class="anilog-device-management-heading">
+      <strong>登録済み端末</strong>
+      <p data-simple="device-count">登録数を確認しています</p>
+    </div>
     <p class="anilog-device-invite-status" data-simple="device-invite-status" role="status" aria-live="polite" hidden></p>
-    <p class="anilog-sync-note">端末名は自分で付けられます。解除前にIDを確認してください。</p>
     <div data-simple="device-list"></div>
     <p data-simple="device-management-status" role="status" aria-live="polite"></p>
     <div data-simple="device-confirm" class="anilog-device-confirm" hidden>
@@ -2529,8 +2563,8 @@ select:not([data-status-id]){
 </details>
 <div id="v407-pairing">
 <input data-v408="box-id" placeholder="接続ID（省略可）"><button type="button" data-v408="unlock-owner" disabled>承認済み端末を解錠</button><button type="button" data-v409="first-owner" disabled>所有者初回設定</button>
-<button type="button" data-v407="invite" disabled>招待QRを作成</button><input data-v407="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" aria-label="新端末の6桁コード" placeholder="新端末の6桁コード">
-<button type="button" data-v407="approve" disabled>番号を確認して承認</button><div data-v407="qr"></div>
+<button type="button" data-v407="invite" disabled>招待QRを作成</button><div data-v407="qr"></div>
+<div class="anilog-sync-owner-approval-row"><input data-v407="code" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" aria-label="新端末の6桁コード" placeholder="新端末の6桁コード"><button type="button" data-v407="approve" disabled>番号を確認して承認</button></div>
 <details class="anilog-sync-help anilog-sync-pairing-tools" data-v407="tools"><summary>接続が進まない場合・補助操作</summary><p class="anilog-sync-tool-note">QRの読取後に申請が届いたかを確認します。確認するだけでは接続されません。</p><div class="anilog-sync-pairing-tool-buttons"><button type="button" data-v407="refresh" disabled>QRの申請状況を確認</button><button type="button" data-v407="copy" disabled>リンクをコピー</button></div></details>
 <button type="button" data-v407="claim" disabled>招待を受け取る</button><span data-v407="receiver-code"></span><button type="button" data-v407="check" disabled>承認を確認</button><button type="button" data-v407="receive" disabled>初回受信</button><button type="button" data-v407="repair" disabled>認証のみ再登録</button><button type="button" data-v407="sync" disabled>同期する</button><p data-v407="status">接続処理を確認しています。</p>
 </div></section>

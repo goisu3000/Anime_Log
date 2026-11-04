@@ -35,6 +35,15 @@ export function summarizeSyncConflictPaths(conflicts){
   return Object.freeze({path,reason:reasons.has(c?.reason)?c.reason:'unknown-conflict'});
  });
 }
+// Visual-only classification from the scheduler's actual state. No message parsing.
+export function classifySyncVisualPhase(phase,status){
+ if(phase==='synced')return 'healthy';
+ if(phase==='syncing')return 'working';
+ if(phase==='conflict'||phase==='offline'||phase==='pending')return 'warning';
+ if(phase==='unavailable')return 'error';
+ return null;
+}
+
 // Sync success is a momentary confirmation, not a permanent screen state.
 // The caller supplies a live verified-session gate; only the durable sync
 // callback can invoke show(). A later failure or pause cancels the notice.
@@ -414,6 +423,27 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   approval:document?.querySelector?.('meta[name="ani-log-gate-c-approval"]')?.content}))return {phase:'GATE_C_EXPLICIT_ENTRY_REQUIRED'};
  const root=document.getElementById('formal-simple-sync');if(!root)return;
  const el=name=>root.querySelector('[data-simple="'+name+'"]'),status=el('status');
+ // Purely visual: only a currently enabled sync session may show a status icon.
+ // A non-engine message automatically clears any previously authorized icon.
+ let iconForText=null;
+ const showSyncVisual=kind=>{
+  let active=false;
+  try{active=local.getItem(LOCAL_MODE)==='sync-enabled'}catch{/* Unavailable local storage is not an enabled session. */}
+  if(active&&['healthy','working','warning','error'].includes(kind)){
+   status.dataset.syncVisual=kind;
+   iconForText=status.textContent;
+  }else{
+   status.removeAttribute('data-sync-visual');
+   iconForText=null;
+  }
+ };
+ const SyncIconObserver=window?.MutationObserver??globalThis.MutationObserver;
+ if(typeof SyncIconObserver==='function'){
+  const observer=new SyncIconObserver(()=>{
+   if(status.hasAttribute('data-sync-visual')&&iconForText!==status.textContent)showSyncVisual(null);
+  });
+  observer.observe(status,{childList:true,subtree:true,characterData:true});
+ }
  const summary=root.querySelector('summary');
  const attention=required=>{if(summary)summary.textContent=required?'端末間同期（要確認）':'端末間同期'};
  const meta=name=>document.querySelector('meta[name="'+name+'"]')?.content;
@@ -489,7 +519,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // just show the quiet current state; no repeating success banners.
  let successNoticeArmed=false;
  const successNotice=createSyncSuccessNotice({
-  getText:()=>status.textContent,setText:value=>{status.textContent=value;status.classList.toggle('anilog-sync-status-quiet',value==='同期は有効です。')},
+  getText:()=>status.textContent,setText:value=>{status.textContent=value;status.classList.toggle('anilog-sync-status-quiet',value==='同期は有効です。');showSyncVisual(value==='同期が完了しました。'||value==='同期は有効です。'?'healthy':null)},
   isCurrent:()=>local.getItem(LOCAL_MODE)==='sync-enabled'&&!pauseGuard.paused&&
    profiles.read().phase==='connected'&&profiles.read().active===selectedProfile&&
    !recoveryActive&&!confirmedConflict&&!!automatic,
@@ -531,7 +561,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
      // Fatal STOP must remain visible while preserving all open form DOM.
      if(vault.getState()!=='ACTIVE'){
       attention(true);
-      status.textContent='暗号化保存を安全のため停止しました。入力中の内容は閉じず、必要ならコピーしてください。'+String(error?.message??'').slice(0,120);
+      status.textContent='暗号化保存を安全のため停止しました。入力中の内容は閉じず、必要ならコピーしてください。'+String(error?.message??'').slice(0,120);showSyncVisual('error');
      }
     });
    },5000);
@@ -619,7 +649,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(qrFlow)nextQrStep('接続を停止しました','以前の記録は残しています。下の状態表示と案内を確認し、必要ならPC側で新しいQRを作成してください。初期化や削除はしないでください。');
   // No exception object, credentials, QR URL or source records enter logs/DOM.
   if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「同期設定を最初からやり直す」から再確認してください。';
-  if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';}
+  if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';
+  showSyncVisual('error');}
  async function action(fn){if(busy)return;busy=true;el('begin').disabled=true;el('retry').disabled=true;
   try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=recoveryActive||syncRunning;if(productMaintenance)requestPrivateMaintenance()}}
  el('backup').addEventListener('click',()=>{
@@ -922,7 +953,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const recoveryEntry=el('resolve-conflict');
   if(recoveryEntry)recoveryEntry.hidden=!canRepair||!confirmedConflict||recoveryActive;
   showConnectionActions();
-  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を確認」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');}
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を確認」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
  }
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
@@ -1015,8 +1046,28 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    primaryActions.append(manageDevices);
    primaryActions.after(deviceManagement);
    // The QR flow is the original form: reopening retains its in-flight state.
-   deviceCount.after(panelRoot);
-   inviteButton.addEventListener('click',()=>{ownerJourneyActive=true;const v=panelUI.querySelector('[data-v407="status"]');if(v)v.hidden=false;nextQrStep('QRを準備しています','QRが表示されたら、新しい端末で読み取ってください。',{force:true,step:1,device:'新しい端末で操作'});});
+   deviceList.after(panelRoot);
+   // Device-list inspection must not expose QR troubleshooting before an
+   // add-device journey. V407 can render/restore invitation state at any time,
+   // so gate the disclosure independently of its own `hidden` assignment.
+   const ownerQrTools=panelUI.querySelector('[data-v407="tools"]');
+   const beforeAddClass='anilog-sync-tools-before-add';
+   ownerQrTools.classList.add(beforeAddClass);
+   // A previously started claim may be restored after a reload. Keep its
+   // read-only status inspection accessible even if fresh invitation is blocked.
+   root.addEventListener('anilog-pairing-visual-state',event=>{
+    const {role,phase,hasQr}=event.detail??{};
+    if(role==='owner'&&((phase==='OWNER_INVITED'&&hasQr)||phase==='OWNER_CLAIMED'))ownerQrTools.classList.remove(beforeAddClass);
+   });
+   inviteButton.addEventListener('click',()=>{
+    ownerQrTools.classList.remove(beforeAddClass);
+    ownerJourneyActive=true;const v=panelUI.querySelector('[data-v407="status"]');if(v)v.hidden=false;
+    nextQrStep('QRを準備しています','QRが表示されたら、新しい端末で読み取ってください。',{force:true,step:1,device:'新しい端末で操作'});
+   });
+   root.closest('dialog')?.addEventListener('close',()=>{
+    // If the QR session is still live, do not hide its recovery-only controls.
+    if(!['OWNER_INVITED','OWNER_CLAIMED','OWNER_APPROVAL_BLOCKED'].includes(running?.panel?.state?.phase))ownerQrTools.classList.add(beforeAddClass);
+   });
   }
  }
  // A QR scan plus a confirmed local cutover is sufficient to submit the
@@ -1159,7 +1210,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     deviceList.append(row);
    }
    el('device-confirm').hidden=true;
-   deviceManagementStatus.textContent='端末名が分からない場合は、各端末でIDを確認してください。';
+   deviceManagementStatus.textContent='';
   }
   function closeDeviceManagement(){
    deviceManagement.hidden=true;
@@ -1235,6 +1286,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    if(s.phase==='pending'&&s.status!==undefined){
     status.textContent='同期は完了していません。記録はこの端末に保持されています。接続状態と同期できなかった項目を確認してください。';
    }
+   // Use the scheduler's real state, never inferred keywords or timer expiry.
+   showSyncVisual(classifySyncVisualPhase(s.phase,s.status));
    if(s.phase==='synced'){
     if(successNoticeArmed){successNoticeArmed=false;successNotice.show()}
     else successNotice.settled();
@@ -1301,7 +1354,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  if(!staging&&profiles.read().phase==='connected')installConflictRecovery({root,locks,scope:suffix,vault,isEligible:()=>local.getItem(LOCAL_MODE)==='sync-enabled'&&confirmedConflict,
   isPaused:()=>pauseGuard.paused,isQuiescent:()=>activeSyncs===0,
   assertContext:()=>{if(!recoveryActive||!pauseGuard.paused||activeSyncs||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile||local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('REVIEW_CONTEXT_CHANGED');const line=vault.readCurrent().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})},
-  begin:async()=>{recoveryActive=true;pauseGuard.pause();automatic?.stop();automatic=null;status.textContent='不一致のある記録を安全に確認しています。保存内容はまだ変更していません。';await ui.whenWritesIdle();if(activeSyncs)throw Error('WAIT_FOR_SYNC_COMPLETION');await vault.refresh();ui.hydrate(vault.readCurrent());},
+  begin:async()=>{recoveryActive=true;pauseGuard.pause();automatic?.stop();automatic=null;status.textContent='不一致のある記録を安全に確認しています。保存内容はまだ変更していません。';showSyncVisual('warning');await ui.whenWritesIdle();if(activeSyncs)throw Error('WAIT_FOR_SYNC_COMPLETION');await vault.refresh();ui.hydrate(vault.readCurrent());},
   end:()=>{recoveryActive=false;showPauseState();},
   getTransport:async()=>running.sealedCredentials.resume({vault,passphrase:await keys.read(),fetcher:createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch}),expectedApiRoot:api.origin,expectedOrigin:location.origin,expectedBoxId:vault.readCurrent().weeklyOptions.__syncLineage.boxId}),
   complete:async()=>{await storage.refresh();ui.hydrate(storage.read());recoveryActive=false;confirmedConflict=false;pauseGuard.resume({verified:true});showPauseState();successNoticeArmed=true;try{await running.resumeAutomatic({passphrase:await keys.read()});return {automaticRestored:true}}catch{successNoticeArmed=false;pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();return {automaticRestored:false}} }
@@ -1368,9 +1421,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    if(revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');
    inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
    if(window.navigator?.onLine===false){
-    status.textContent='オフラインのため再同期を開始できません。記録と接続情報は保持されています。通信が戻ったらもう一度「再同期」を押してください。';return;
+    status.textContent='オフラインのため再同期を開始できません。記録と接続情報は保持されています。通信が戻ったらもう一度「再同期」を押してください。';showSyncVisual('warning');return;
    }
-   status.textContent='再同期を準備しています。同期先との照合が終わるまで完了ではありません。';
+   status.textContent='再同期を準備しています。同期先との照合が終わるまで完了ではありません。';showSyncVisual('working');
    successNoticeArmed=true;
    pauseGuard.resume({verified:true});
    try{await running.resumeAutomatic({passphrase:await keys.read()})}
@@ -1378,15 +1431,15 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    showPauseState();return;
   }
   if(automatic){
-   if(window.navigator?.onLine===false){status.textContent='オフラインのため同期できません。記録は保持されています。通信が戻ってから再同期してください。';return;}
-   status.textContent='同期先との照合を再試行します。結果を確認しています。';
+   if(window.navigator?.onLine===false){status.textContent='オフラインのため同期できません。記録は保持されています。通信が戻ってから再同期してください。';showSyncVisual('warning');return;}
+   status.textContent='同期先との照合を再試行します。結果を確認しています。';showSyncVisual('working');
    successNoticeArmed=true;
    automatic.resumeAfterConflict();return;
   }
   if(currentMode==='sync-enabled'){
    // Restart only the established, unchanged connection.
-   if(window.navigator?.onLine===false){status.textContent='オフラインのため同期できません。記録は保持されています。通信が戻ってから再同期してください。';return;}
-   status.textContent='同期先との接続を準備しています。同期が完了したか確認しています。';
+   if(window.navigator?.onLine===false){status.textContent='オフラインのため同期できません。記録は保持されています。通信が戻ってから再同期してください。';showSyncVisual('warning');return;}
+   status.textContent='同期先との接続を準備しています。同期が完了したか確認しています。';showSyncVisual('working');
    successNoticeArmed=true;
    try{await running.resumeAutomatic({passphrase:await keys.read()})}catch(error){successNoticeArmed=false;throw error}return;
   }
