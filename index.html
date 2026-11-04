@@ -3565,7 +3565,7 @@ async function setWatchedProgressImpl(id,requested,fromPlusOne=false){const item
    $$('#cards .pattern-a-card').filter(card=>card.querySelector('[data-status-id]')?.dataset.statusId===id).forEach(card=>card.querySelector('.episode-new-badge')?.remove());
    $$('[data-notice-ack]').filter(el=>el.dataset.noticeAck===id).forEach(el=>{
     const done=document.createElement('span');done.className='episode-notice';
-    done.textContent=`第${notice.through}話まで公開`;el.replaceWith(done);
+    done.textContent=episodeBroadcastLabel(id,notice.through);el.replaceWith(done);
    });
   }
  }
@@ -3939,10 +3939,12 @@ let NOTICE_REVIEWED_THROUGH=Object.freeze({});
 let NOTICE_ESTIMATED_THROUGH=Object.freeze({});
 let NOTICE_AUTO_THROUGH=Object.freeze({});
 let NOTICE_AUTO_STATUS=Object.freeze({});
+let NOTICE_BROADCAST_STATUS=Object.freeze({});
+let noticeBroadcastClock=null;
 // Compile-time kill switch: disables only public polling/estimates, never sync.
 const NOTICE_AUTO_ENABLED=true;
 let noticeRequestPool=null,noticeAutomatic=null,noticeAutoLoading=null,noticeAutoRetryAt=0,noticeHydratedStorage=null;
-function refreshAutomaticNoticeLabels(){
+function refreshAutomaticNoticeLabels({initializeBaseline=true}={}){
  if(mode!=='saved'||noticeHydratedStorage!==window.__formalStorage||!window.__formalStorage?.ready)return;
  for(const card of $$('#cards .pattern-a-card')){
   const id=card.querySelector('[data-status-id]')?.dataset.statusId;
@@ -3953,7 +3955,7 @@ function refreshAutomaticNoticeLabels(){
   const poster=card.querySelector('.record-poster');
   if(poster){poster.querySelector('.episode-new-badge')?.remove();poster.insertAdjacentHTML('beforeend',episodeNewBadgeMarkup(saved[id]));}
  }
- scheduleNoticeBaselines();
+ if(initializeBaseline)scheduleNoticeBaselines();
 }
 function noticeCalendarSchedule(id){
  if(saved[id]?.weeklySchedule?.mode==='manual'||!weeklyEpisodeCache)return null;
@@ -3963,10 +3965,15 @@ function noticeCalendarSchedule(id){
 }
 function ensureAutomaticEpisodeNotices(){
  if(!NOTICE_AUTO_ENABLED||noticeHydratedStorage!==window.__formalStorage||!window.__formalStorage?.ready||document.hidden)return;
- if(noticeAutomatic){void ensureWeeklyEpisodes({noticeOnly:true});void noticeAutomatic.tick();return;}
+ if(noticeAutomatic){void noticeBroadcastClock?.tick();void ensureWeeklyEpisodes({noticeOnly:true});void noticeAutomatic.tick();return;}
  if(noticeAutoLoading||Date.now()<noticeAutoRetryAt)return;
- noticeAutoLoading=import('./notice/episode-auto.mjs').then(({createPublicAnimeRequests,createAutomaticEpisodeNotices,targetsFromRecords})=>{
+ noticeAutoLoading=import('./notice/episode-auto.mjs').then(async({createPublicAnimeRequests,createAutomaticEpisodeNotices,targetsFromRecords})=>{
   let publicStorage=null;try{publicStorage=localStorage}catch{}
+  const {createBroadcastClock}=await import('./notice/broadcast-clock.mjs');
+  noticeBroadcastClock=createBroadcastClock({storage:publicStorage,locks:navigator.locks,getTargets:()=>targetsFromRecords(saved),
+   visible:()=>!document.hidden&&noticeHydratedStorage===window.__formalStorage&&window.__formalStorage?.ready===true,online:()=>navigator.onLine!==false,
+   onChange:next=>{NOTICE_BROADCAST_STATUS=next;refreshAutomaticNoticeLabels({initializeBaseline:false})}});
+  void noticeBroadcastClock.tick();
   noticeRequestPool=createPublicAnimeRequests({fetcher:(...args)=>fetch(...args),storage:publicStorage,locks:navigator.locks});
   noticeAutomatic=createAutomaticEpisodeNotices({requests:noticeRequestPool,
    getTargets:()=>targetsFromRecords(saved),
@@ -4038,6 +4045,8 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)loadReview
 const NOTICE_ACK_KEY='episodeNoticeAckThrough';
 const noticeValidCount=n=>Number.isSafeInteger(n)&&n>=0&&n<=9999;
 function reviewedEpisodeThrough(id){
+ const broadcast=NOTICE_BROADCAST_STATUS[id];
+ if(['started','aired'].includes(broadcast?.kind)&&noticeValidCount(broadcast.through)&&broadcast.through>0)return broadcast.through;
  const approved=NOTICE_REVIEWED_THROUGH[id],automatic=NOTICE_AUTO_THROUGH[id];
  const n=Math.max(Number.isSafeInteger(approved)?approved:0,Number.isSafeInteger(automatic)?automatic:0);
  return n>0&&n<=9999?n:null;
@@ -4046,21 +4055,26 @@ function noticeEligible(record){return record&&record.status==='watching'}
 function episodeNoticeState(record){
  if(!noticeEligible(record))return null;
  const through=reviewedEpisodeThrough(record.id);
- if(through===null||!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY])||record[NOTICE_ACK_KEY]>through)return null;
+ const scheduled=['started','aired'].includes(NOTICE_BROADCAST_STATUS[record.id]?.kind);
+ if(through===null||(!scheduled&&(!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY])))||(noticeValidCount(record[NOTICE_ACK_KEY])&&record[NOTICE_ACK_KEY]>through))return null;
  const watched=noticeValidCount(record.watchedEpisodes)?record.watchedEpisodes:0;
- const effective=Math.max(record[NOTICE_ACK_KEY],Math.min(watched,through));
+ const effective=Math.max(noticeValidCount(record[NOTICE_ACK_KEY])?record[NOTICE_ACK_KEY]:0,Math.min(watched,through));
  return {through,unread:effective<through,estimated:NOTICE_REVIEWED_THROUGH[record.id]===through?NOTICE_ESTIMATED_THROUGH[record.id]===through:NOTICE_AUTO_THROUGH[record.id]===through};
 }
 function episodeNewBadgeMarkup(record){
  return episodeNoticeState(record)?.unread?'<span class="episode-new-badge" aria-hidden="true">新着</span>':'';
 }
+function episodeBroadcastLabel(id,through){
+ const current=NOTICE_BROADCAST_STATUS[id];
+ return current?.kind==='started'&&current.through===through?`第${through}話 放送開始`:`第${through}話まで放送済み`;
+}
 function episodeNoticeMarkup(record){
  if(!noticeEligible(record)||!/^jikan:[1-9]\d{0,8}$/.test(record.id))return '';
- const pending=NOTICE_AUTO_ENABLED?NOTICE_AUTO_STATUS[record.id]:null;
- if(pending?.kind==='possible'&&noticeValidCount(pending.through)&&pending.through>(reviewedEpisodeThrough(record.id)||0))return `<span class="episode-notice">第${pending.through}話まで公開</span>`;
+ const pending=NOTICE_AUTO_ENABLED?(NOTICE_BROADCAST_STATUS[record.id]||NOTICE_AUTO_STATUS[record.id]):null;
+ if(pending?.kind==='possible'&&noticeValidCount(pending.through)&&pending.through>(reviewedEpisodeThrough(record.id)||0))return `<span class="episode-notice">第${pending.through}話まで放送済み</span>`;
  const state=episodeNoticeState(record);
  if(state){
-  const label=`第${state.through}話まで公開`;
+  const label=episodeBroadcastLabel(record.id,state.through);
   if(!state.unread)return `<span class="episode-notice">${label}</span>`;
   // The exact same permitted viewing link is used by the existing card.
   // Native anchor navigation retains normal browser/tab/app-link behavior.
@@ -4074,15 +4088,15 @@ function episodeNoticeMarkup(record){
  // existing asynchronous baseline write is pending. It is not yet clickable.
  const through=reviewedEpisodeThrough(record.id);
  if(through!==null&&(!Object.hasOwn(record,NOTICE_ACK_KEY)||!noticeValidCount(record[NOTICE_ACK_KEY]))){
-  const label=`第${through}話まで公開`;
+  const label=episodeBroadcastLabel(record.id,through);
   return `<span class="episode-notice" title="${safeText(label)}">${label}</span>`;
  }
  // First-time users see a loading state until the first usable observation.
  // The possible count is deliberately non-interactive and never writes ACK.
  if(!NOTICE_AUTO_ENABLED)return '';
- const current=NOTICE_AUTO_STATUS[record.id];
+ const current=NOTICE_BROADCAST_STATUS[record.id]||NOTICE_AUTO_STATUS[record.id];
  let label='公開話数を確認中';
- if(current?.kind==='possible')label=`第${current.through}話まで公開`;
+ if(['possible','started','aired'].includes(current?.kind))label=episodeBroadcastLabel(record.id,current.through);
  else if(current?.kind==='finished')label=`全${current.through}話 放送終了`;
  else if(current?.kind==='upcoming')label='放送開始前';
  else if(current?.kind==='unavailable')label='公開状況を確認できません';
@@ -4092,13 +4106,13 @@ function episodeNoticeMarkup(record){
 let noticeInitQueued=false;
 function scheduleNoticeBaselines(){
  if(noticeInitQueued||!window.__formalStorage?.ready||mode!=='saved')return;
- if(!Object.values(saved).some(r=>noticeEligible(r)&&reviewedEpisodeThrough(r.id)!==null&&!Object.hasOwn(r,NOTICE_ACK_KEY)))return;
+ if(!Object.values(saved).some(r=>noticeEligible(r)&&!NOTICE_BROADCAST_STATUS[r.id]&&reviewedEpisodeThrough(r.id)!==null&&!Object.hasOwn(r,NOTICE_ACK_KEY)))return;
  noticeInitQueued=true;
  void queueRecordWrite(async()=>{
   try{
    const draft=structuredClone(saved);let changed=false;
    for(const r of Object.values(draft)){
-    if(!noticeEligible(r)||Object.hasOwn(r,NOTICE_ACK_KEY))continue;
+    if(!noticeEligible(r)||NOTICE_BROADCAST_STATUS[r.id]||Object.hasOwn(r,NOTICE_ACK_KEY))continue;
     const through=reviewedEpisodeThrough(r.id);if(through===null)continue;
     r[NOTICE_ACK_KEY]=through;changed=true;
    }
