@@ -2210,7 +2210,7 @@ select:not([data-status-id]){
 /* PC single-column: reserve the genre row, including records without genres. */
 @media(min-width:1251px){
  body.saved-mode.saved-list-view .pattern-a-card .record-main{
-  grid-template-rows:minmax(23px,auto) 21px 28px 32px;
+  grid-template-rows:minmax(23px,auto) 21px 28px var(--sp-2) 32px;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-main-copy{display:contents}
  body.saved-mode.saved-list-view .pattern-a-card .card-title{
@@ -2228,10 +2228,13 @@ select:not([data-status-id]){
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-score-aside{grid-column:2;grid-row:3}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-tools{
-  grid-column:1/-1;grid-row:4;width:100%;max-width:100%;margin:0;flex-wrap:nowrap;
+  grid-column:1/-1;grid-row:5;width:100%;max-width:100%;margin:0;flex-wrap:nowrap;
+ }
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress.pattern-a-progress{
+  transform:translateY(var(--episode-bottom-offset,0px));
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions{
-  transform:translateY(var(--episode-bottom-offset,2px));align-items:end;
+  transform:none;align-items:end;
  }
 }
 
@@ -11539,12 +11542,15 @@ document.addEventListener('click',function(e){
    const row=card.querySelector('.pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions');
    if(!row)continue;
    const memo=card.querySelector('.pattern-a-tools [data-note-id]');
-   if(!enabled||!memo||!memo.getClientRects().length){row.style.removeProperty('--episode-bottom-offset');continue;}
-   const applied=parseFloat(getComputedStyle(row).getPropertyValue('--episode-bottom-offset'));
-   const current=Number.isFinite(applied)?applied:2;
+   const list=document.body.classList.contains('saved-list-view');
+   const target=list?row.parentElement:row;
+   (list?row:row.parentElement).style.removeProperty('--episode-bottom-offset');
+   if(!enabled||!memo||!memo.getClientRects().length){target.style.removeProperty('--episode-bottom-offset');continue;}
+   const applied=parseFloat(getComputedStyle(target).getPropertyValue('--episode-bottom-offset'));
+   const current=Number.isFinite(applied)?applied:(list?0:2);
    const bottom=Math.max(...Array.from(row.children,e=>e.getBoundingClientRect().bottom));
    const offset=current+memo.getBoundingClientRect().bottom-bottom;
-   row.style.setProperty('--episode-bottom-offset',`${offset}px`);
+   target.style.setProperty('--episode-bottom-offset',`${offset}px`);
   }
  }
  function schedule(){if(!scheduled){scheduled=true;requestAnimationFrame(align)}}
