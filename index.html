@@ -1574,7 +1574,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:8px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:flex-start;gap:5px}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions [data-simple="unlink-sync"]{border-color:var(--border-ctrl);color:var(--danger)}
 /* Advanced controls are not needed when engine has no advanced action to show. */
-.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))){display:none}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-conflict-details:not([hidden]))){display:none}
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="begin"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="resume-sync"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="relink-sync"],
@@ -1730,6 +1730,9 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>*,
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>p{margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:12px;gap:12px}
+/* Read-only conflict diagnostics live under advanced recovery, not at the dialog root. */
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-conflict-details{box-sizing:border-box;align-self:stretch;width:100%;max-width:100%;margin:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-conflict-details>pre{box-sizing:border-box;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
 .anilog-sync-dialog #formal-sync-controls{padding:0!important;border:0!important;margin:0}
 .anilog-sync-dialog #v407-pairing{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:12px;margin:0;padding:16px 0 0;border-top:1px solid var(--border)}
 .anilog-sync-dialog #v407-pairing>*{grid-column:1/-1;min-width:0}
@@ -2088,6 +2091,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management:not([hidden]){display:grid;gap:12px;padding:14px;margin:0;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface)}
 /* Only these two management notes: prevent paragraph bottom margins stacking
    with the management grid gap, and keep wrapped mobile lines compact. */
+.anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-invite-status"],
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > [data-simple="device-management-status"],
 .anilog-sync-dialog #formal-simple-sync .anilog-device-management > .anilog-device-revoke-note{margin:0;line-height:1.55}
 .anilog-sync-dialog #formal-simple-sync [data-simple="device-list"]{display:grid;gap:12px}
@@ -2468,11 +2472,17 @@ select:not([data-status-id]){
    <button type="button" data-simple="relink-sync" hidden>以前の同期先に戻す</button>
    <button type="button" data-simple="own-device-button" hidden>この端末の登録IDを確認</button>
    <p data-simple="own-device-info" hidden></p>
+   <details class="anilog-sync-help anilog-sync-conflict-details" data-simple="conflict-details" hidden>
+    <summary>同期エラー項目の詳細</summary>
+    <p>これは原因を調べるための情報です。表示するだけでは記録は変更されません。</p>
+    <pre data-simple="conflicts" hidden></pre>
+   </details>
   </div>
  </details>
   <div id="anilog-device-management" data-simple="device-management" class="anilog-device-management" hidden>
     <strong>登録済み端末</strong>
     <p data-simple="device-count">登録数を確認しています</p>
+    <p class="anilog-device-invite-status" data-simple="device-invite-status" role="status" aria-live="polite" hidden></p>
     <p class="anilog-sync-note">端末名は自分で付けられます。解除前にIDを確認してください。</p>
     <div data-simple="device-list"></div>
     <p data-simple="device-management-status" role="status" aria-live="polite"></p>
@@ -2494,11 +2504,6 @@ select:not([data-status-id]){
 </details>
 <button type="button" data-simple="begin" disabled>端末間同期を始める</button></div>
 <div data-simple="challenge"></div>
-<details class="anilog-sync-help anilog-sync-conflict-details" data-simple="conflict-details" hidden>
- <summary>同期できなかった項目の詳細</summary>
- <p>これは原因を調べるための情報です。表示するだけでは記録は変更されません。</p>
- <pre data-simple="conflicts" hidden></pre>
-</details>
 </details>
 </dialog>
 <section id="formal-sync-controls" hidden aria-label="同期の開発用保存" style="padding:16px;border:1px solid currentColor">

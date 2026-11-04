@@ -3,8 +3,13 @@ import {mountConflictResolutionView} from './conflict-resolution-view.mjs';
 // Existing dialog and existing connection only. No credentials leave this closure.
 export function installConflictRecovery({root,locks,scope,begin,end,complete,assertContext,getTransport,vault,isPaused,isQuiescent,isEligible=()=>true}={}){
  const doc=root.ownerDocument,dialog=root.closest('dialog'),entry=doc.createElement('button'),panel=doc.createElement('section');
- entry.type='button';entry.textContent='食い違う記録を確認';entry.dataset.simple='resolve-conflict';entry.hidden=true;panel.hidden=true;
- root.querySelector('[data-simple="retry"]').after(entry,panel);
+ entry.type='button';entry.textContent='不一致を確認';entry.dataset.simple='resolve-conflict';entry.hidden=true;panel.hidden=true;
+ // The retry button may have been moved into the primary-action row.
+ // Keep the trigger beside it, but mount the review as a DIRECT child of the
+ // sync dialog body. Otherwise hiding the ordinary action row also hides the
+ // review itself, leaving only the "checking" notice on screen.
+ root.querySelector('[data-simple="retry"]').after(entry);
+ root.append(panel);
  let view,release,original=[],visibility=[],active=false,starting=false,held=false;
  const restore=()=>{for(const [element,disabled] of original)element.disabled=disabled;original=[];for(const [element,hidden] of visibility)element.hidden=hidden;visibility=[];delete dialog.dataset.conflictBusy;const close=doc.getElementById('anilogSyncDialogClose');if(close)close.disabled=false};
  const finish=()=>{restore();active=false;panel.hidden=true;release?.();release=null};
@@ -44,6 +49,10 @@ export function installConflictRecovery({root,locks,scope,begin,end,complete,ass
      if(status)status.textContent='今回の変更はこの端末と同期先に保存しました。画面の更新・自動同期の復帰を確認できなかったため、記録を消さずにページを再読み込みしてください。';
     }
    },onExit:()=>{finish();end()}});
+   // The opening phase has finished. Do not leave the top-level notice
+   // claiming an endless background check while the review is on screen.
+   const notice=root.querySelector('[data-simple="status"]');
+   if(notice)notice.textContent='不一致のある記録の確認画面を開きました。下の案内に従って内容を確認してください。記録はまだ変更していません。';
   }catch{finish();end();const status=root.querySelector('[data-simple="status"]');if(status)status.textContent='記録を保持して一時停止しています。ほかのタブを閉じ、同期画面からもう一度確認してください。';}
   finally{starting=false}
  });

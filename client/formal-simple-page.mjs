@@ -893,7 +893,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const recoveryEntry=el('resolve-conflict');
   if(recoveryEntry)recoveryEntry.hidden=!canRepair||!confirmedConflict||recoveryActive;
   showConnectionActions();
-  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に食い違いがあるため同期を一時停止しています。記録は保護されています。「食い違う記録を確認」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');}
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を確認」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');}
  }
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
@@ -1010,9 +1010,56 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const localNames=createLocalDeviceNames(local,selectedProfile);
   let selectedRemoval=null;
   async function updateDeviceList(){
+   // A newly opened panel may have a cached Owner session; keep fresh QR
+   // issuance disabled until the current server-side device list is verified.
+   running.panel.setInviteSlotAvailable(false);
    deviceManagementStatus.textContent='登録端末を確認中…';
-   const t=await getRegisteredTransport();
-   const list=await listOwnerDevices(t);
+   const inviteHint=el('device-invite-status');
+   inviteHint.hidden=true;inviteHint.textContent='';
+   let t,list;
+   try{
+    t=await getRegisteredTransport();
+    // The authenticated GET /devices proves that this exact device is the
+    // registered Owner. It also works while automatic record sync is paused.
+    // Reuse that proof to unlock the EXISTING QR panel without resuming sync.
+    list=await listOwnerDevices(t);
+    const state=profiles.read();
+    const safe=state.phase==='connected'&&state.active===selectedProfile&&
+     !staging&&!ignoredExistingQR&&!recoveryActive&&!revokeJournal.read()&&
+     local.getItem(LOCAL_MODE)==='sync-enabled'&&pauseGuard.read()!=='invalid'&&
+     !deviceManagement.hidden;
+    const pairingState=running.panel.state;
+    if(safe&&!pairingState.ownerAttached&&!pairingState.stopped&&!pairingState.busy){
+     running.panel.attachOwner({flow:running.flow,owner:{...t.device},vault,
+      boxId:t.boxId,masterKey:new Uint8Array(t.masterKey)});
+    }
+    // Disabling at the verified server limit is presentation only; the
+    // Worker remains the authority on enrollment and its race conditions.
+    running.panel.setInviteSlotAvailable(safe&&list.activeDevices<list.maxDevices);
+    // An inaccessible action must explain itself, but never bypass a
+    // revocation fence, corrupt pause flag, or the pairing panel's STOP.
+    if(!safe){
+     inviteHint.textContent='端末追加は現在の接続状態では実行できません。接続設定と同期状態を確認してください。';
+    }else if(running.panel.state.stopped){
+     inviteHint.textContent='接続操作が安全停止中です。QRの状態を確認し、記録を消さずに再読み込みしてください。';
+    }else if(running.panel.state.busy){
+     inviteHint.textContent='端末の接続処理を実行中です。完了後に状態を確認してください。';
+    }else if(list.activeDevices>=list.maxDevices){
+     inviteHint.textContent='登録上限の4台に達しています。不要な端末の登録を解除してから追加してください。';
+    }else if(!running.panel.state.ownerAttached){
+     inviteHint.textContent='端末追加の管理者権限を確認できませんでした。通信状態をご確認ください。';
+    }
+    inviteHint.hidden=!inviteHint.textContent;
+   }catch(error){
+    inviteHint.textContent='端末追加の管理者権限または通信を確認できません。記録は保持されています。';
+    inviteHint.hidden=false;
+    deviceManagementStatus.textContent='登録端末を取得できませんでした。通信状態を確認し、管理画面を開き直してください。';
+    throw error;
+   }finally{
+    // This throwaway read-only transport is not used by the invitation.
+    // The panel owns its separately copied key after successful validation.
+    if(t?.masterKey instanceof Uint8Array)t.masterKey.fill(0);
+   }
    deviceCount.textContent='登録数：'+list.activeDevices+' / '+list.maxDevices+'台';
    deviceList.replaceChildren();selectedRemoval=null;
    for(const item of list.devices){
@@ -1130,7 +1177,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     pending:'記録はこの端末に保存されています。同期結果はまだ確認できていません。',
     offline:'オフラインのため同期できません。記録はこの端末に保存されています。通信が戻ったら「再同期」で確認してください。',
     unavailable:'同期先との通信または保存を確認できませんでした。記録は保持されています。通信状態を確認し「再同期」を押してください。',
-    conflict:'端末間で食い違う記録があります。自動では上書きしません。「食い違う記録を確認」から残す内容を選んでください。'
+    conflict:'端末間で不一致のある記録があります。自動では上書きしません。「不一致を確認」から残す内容を選んでください。'
    };
    status.textContent=labels[s.phase]??'端末に記録を保存しました。同期の確認が必要です。';
    if(s.phase==='pending'&&s.status!==undefined){
@@ -1197,7 +1244,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  if(!staging&&profiles.read().phase==='connected')installConflictRecovery({root,locks,scope:suffix,vault,isEligible:()=>local.getItem(LOCAL_MODE)==='sync-enabled'&&confirmedConflict,
   isPaused:()=>pauseGuard.paused,isQuiescent:()=>activeSyncs===0,
   assertContext:()=>{if(!recoveryActive||!pauseGuard.paused||activeSyncs||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile||local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('REVIEW_CONTEXT_CHANGED');const line=vault.readCurrent().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})},
-  begin:async()=>{recoveryActive=true;pauseGuard.pause();automatic?.stop();automatic=null;status.textContent='食い違う記録を安全に確認しています。保存内容はまだ変更していません。';await ui.whenWritesIdle();if(activeSyncs)throw Error('WAIT_FOR_SYNC_COMPLETION');await vault.refresh();ui.hydrate(vault.readCurrent());},
+  begin:async()=>{recoveryActive=true;pauseGuard.pause();automatic?.stop();automatic=null;status.textContent='不一致のある記録を安全に確認しています。保存内容はまだ変更していません。';await ui.whenWritesIdle();if(activeSyncs)throw Error('WAIT_FOR_SYNC_COMPLETION');await vault.refresh();ui.hydrate(vault.readCurrent());},
   end:()=>{recoveryActive=false;showPauseState();},
   getTransport:async()=>running.sealedCredentials.resume({vault,passphrase:await keys.read(),fetcher:createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch}),expectedApiRoot:api.origin,expectedOrigin:location.origin,expectedBoxId:vault.readCurrent().weeklyOptions.__syncLineage.boxId}),
   complete:async()=>{await storage.refresh();ui.hydrate(storage.read());recoveryActive=false;confirmedConflict=false;pauseGuard.resume({verified:true});showPauseState();try{await running.resumeAutomatic({passphrase:await keys.read()});return {automaticRestored:true}}catch{pauseGuard.pause();automatic?.stop();automatic=null;showPauseState();return {automaticRestored:false}} }

@@ -10,7 +10,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  if(!root?.querySelector||typeof syncFactory!=='function')fail('CONTEXT_REQUIRED');
  const status=by(root,'status'),pass=by(root,'passphrase'),qr=by(root,'qr'),invite=by(root,'invite'),refresh=by(root,'refresh'),approve=by(root,'approve'),code=by(root,'code'),claim=by(root,'claim'),check=by(root,'check'),receive=by(root,'receive'),repair=by(root,'repair'),sync=by(root,'sync'),copy=by(root,'copy'),newCode=by(root,'receiver-code');
  const controls=[invite,refresh,approve,claim,check,receive,repair,sync,copy],tools=root.querySelector('[data-v407="tools"]');
- let owner=null,receiver=null,invitation=null,inviteUrl=null,serverCode=null,receiverStatus=null,session=null,ready=false,busy=false,stopped=false,phase='IDLE',lastIssue=null;
+ let owner=null,receiver=null,invitation=null,inviteUrl=null,serverCode=null,receiverStatus=null,session=null,ready=false,busy=false,stopped=false,phase='IDLE',lastIssue=null,inviteSlotAvailable=true;
  // This tab-only reference is untrusted UI intent, NOT a credential. No QR,
  // invitation secret, six digits, token, key or records are persisted here.
  const referenceKey=()=> 'anilog-pairing-owner-reference-v1:'+owner.boxId;
@@ -55,7 +55,7 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
    root.dispatchEvent(new CustomEvent('anilog-pairing-visual-state',{bubbles:true,detail:{phase,role:owner?'owner':receiver?'receiver':null,stopped,busy,issue:lastIssue,hasQr:inviteUrl!==null}}));
   }
   if(busy||stopped)return;
-  invite.disabled=owner===null||(automaticMode&&invitation!==null&&!(phase==='OWNER_OPEN'&&inviteUrl===null)&&!['OWNER_APPROVED','OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase));
+  invite.disabled=owner===null||!inviteSlotAvailable||(automaticMode&&invitation!==null&&!(phase==='OWNER_OPEN'&&inviteUrl===null)&&!['OWNER_APPROVED','OWNER_EXPIRED','OWNER_DENIED','OWNER_USED','OWNER_UNAVAILABLE'].includes(phase));
   refresh.disabled=owner===null||invitation===null;
   copy.disabled=inviteUrl===null;
   approve.disabled=owner===null||invitation===null||['OWNER_APPROVED','OWNER_APPROVAL_BLOCKED'].includes(phase)||(automaticMode?!/^[0-9]{6}$/.test(code.value):serverCode===null);
@@ -220,7 +220,10 @@ export function mountV407PairingPanel({root,syncFactory,getPassphrase,automaticM
  }));
  render();show('接続待ち。招待は所有者の端末認証が確認された後にだけ作成できます。');
  return Object.freeze({
-  get state(){return Object.freeze({phase,ready,stopped,busy})},
+  get state(){return Object.freeze({phase,ready,stopped,busy,ownerAttached:owner!==null})},
+  // A read-only Owner device-list response can cap invitations at the real
+  // server limit. This never grants authority; attachOwner is still required.
+  setInviteSlotAvailable(available){if(typeof available!=='boolean')fail('INVALID_CAPACITY');inviteSlotAvailable=available;render()},
   // These functions are called only from an authenticated staging bootstrap.
   attachOwner(context){if(owner||busy||stopped||!context?.flow?.inviteOwner||!context?.flow?.inspectOwner||!context?.flow?.approveOwner)fail('OWNER_CONTEXT_INVALID');owner=context;invitation=recall();render();
    if(invitation)setTimeout(()=>{void action(inspectOwner)},0);
