@@ -229,7 +229,7 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
   },
   // Pairing/first receive already performed the authenticated encrypted readback.
   attachVerified(){validateFormalApp(vault.readCurrent());if(!vault.readSyncCheckpoint())stop('CHECKPOINT_REQUIRED');active=true;return read()},
-  saveRecords({base,draft,kind='edit'}={}){return transaction(async()=>{
+  saveRecords({base,draft,kind='edit',reAddId=null}={}){return transaction(async()=>{
    editable();
    const current=read();if(!same(base,current.records))stop('STALE_UI');assertMixedMap(draft);
    if(same(draft,current.records))return current;
@@ -237,9 +237,19 @@ export function createFormalStorage({vault,independentVault,now=()=>new Date().t
    reconcileUndo(current);
    const isUndo=kind==='undo'&&undo&&undo.revision===vault.readRevision()&&same(undo.after,current.records)&&same(undo.before,draft);
    if(kind==='undo'&&!isUndo)stop('STALE_UNDO');
+   // Only a single, explicit UI re-registration may supersede its own tombstone.
+   // Generic saves, stale tabs, imports and remote merges do not get this authority.
+   const userReAdd=kind==='user-readd';
+   if(userReAdd){
+    const changedIds=new Set([...Object.keys(base),...Object.keys(draft)].filter(id=>!same(base[id],draft[id])));
+    if(typeof reAddId!=='string'||!Object.hasOwn(current.tombstones,reAddId)||
+       Object.hasOwn(base,reAddId)||!Object.hasOwn(draft,reAddId)||draft[reAddId]?.id!==reAddId||
+       changedIds.size!==1||!changedIds.has(reAddId))stop('INVALID_USER_READD');
+   }else if(reAddId!==null)stop('INVALID_USER_READD');
    for(const id of Object.keys(current.records))if(!draft[id])candidate.tombstones[id]={id,deletedAt:now()};
    for(const id of Object.keys(draft))if(current.tombstones[id]){
-    if(!isUndo)stop('TOMBSTONE_RESURRECTION');delete candidate.tombstones[id];
+    if(!isUndo&&!(userReAdd&&id===reAddId))stop('TOMBSTONE_RESURRECTION');
+    delete candidate.tombstones[id];
    }
    const result=await commit(candidate);
    undo=isUndo?null:stampUndo({before:cp(current.records),after:cp(result.records)},result);

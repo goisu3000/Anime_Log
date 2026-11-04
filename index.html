@@ -2901,12 +2901,12 @@ function mergeRecordChanges(base,draft,latest,replace=false){
 /* v1.5: a caller may supply an isolated draft so committed UI state stays
    untouched until the existing locked legacy write succeeds. This does not
    enable device sync, WAL or any background writes. */
-async function persist(replace=false,recordDraft=null,kind='edit'){
+async function persist(replace=false,recordDraft=null,kind='edit',reAddId=null){
  try{
   if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');
   const base=structuredClone(savedBaseline),draft=structuredClone(recordDraft??saved);
   saved=structuredClone(savedBaseline); // No optimistic records while AEAD/IDB is pending.
-  const result=await window.__formalStorage.saveRecords({base,draft,kind});
+  const result=await window.__formalStorage.saveRecords({base,draft,kind,reAddId});
   saved=result.records;savedBaseline=structuredClone(result.records);weeklyOptions=result.weeklyOptions;return true;
  }catch(error){toast('保存できませんでした。未保存の入力は画面に残しています。再読み込み・再解錠する前に、メモはコピーし、評価などの入力内容は控えてください。 '+String(error.message),'error');return false}
 }
@@ -3471,11 +3471,27 @@ async function toggleNextWatchImpl(id){
 document.addEventListener('click',e=>{const pin=e.target.closest('[data-next-watch-id]');if(pin)toggleNextWatch(pin.dataset.nextWatchId)});
 async function setStatusImpl(id,status,options={}){const candidate=saved[id]||(detailActiveItem?.id===id?detailActiveItem:null)||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id);if(!candidate)return;
  const before=saved[id]?structuredClone(saved[id]):null;
+ // A deliberate re-add must not carry old user fields from an open detail view.
+ // The detail model may still reference the record deleted moments earlier.
+ let userReAdd=false;
+ if(!before&&validStatuses.has(status)){
+  try{userReAdd=Object.hasOwn(window.__formalStorage?.read()?.tombstones??{},id)}catch{}
+ }
  const fromFinalPlusOne=options.fromFinalPlusOne===true&&status==='watched'&&before?.status==='watching';
  recentFinalPlusOne.delete(id);
  if(!validStatuses.has(status))delete saved[id];
  else {
-  saved[id]={...candidate,...(saved[id]||{}),status,updatedAt:new Date().toISOString()};
+  // For a previously deleted work, begin with catalog metadata only. Do not
+  // revive memo, rating, progress, ranking, dates, or preferences by copying
+  // detailActiveItem, which can outlive the deletion in the current view.
+  let recordSeed=candidate;
+  if(userReAdd){
+   recordSeed={id};
+   for(const key of ['startDate','title','english','synonyms','image','year','season','type','episodes','score','members','scoredBy','analysisMeta']){
+    if(Object.hasOwn(candidate,key))recordSeed[key]=structuredClone(candidate[key]);
+   }
+  }
+  saved[id]={...recordSeed,...(saved[id]||{}),status,updatedAt:new Date().toISOString()};
   if(fromFinalPlusOne&&!before.completedOn){
    const [y,m,d]=localTodayParts();saved[id].completedOn=[y,m,d].map((v,i)=>i?String(v).padStart(2,'0'):String(v)).join('-');
   }
@@ -3486,7 +3502,10 @@ async function setStatusImpl(id,status,options={}){const candidate=saved[id]||(d
   }
  }
  const intended=saved[id]?structuredClone(saved[id]):null;
- if(!await persist()){if(before)saved[id]=before;else delete saved[id];render();return}
+ // Only this status selector passes an explicit user re-add authority.
+ if(!await persist(false,null,userReAdd?'user-readd':'edit',userReAdd?id:null)){
+  if(before)saved[id]=before;else delete saved[id];render();if(detailActiveItem?.id===id)renderDetailParts(detailNonce);return;
+ }
  let undoBefore=before;
  if(before&&intended){
   undoBefore=structuredClone(saved[id]);
