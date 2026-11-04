@@ -2239,6 +2239,12 @@ select:not([data-status-id]){
  }
 }
 
+@media(min-width:1251px){
+ body.saved-mode.saved-list-view .pattern-a-card .pattern-a-date-watch{
+  transform:translateY(var(--completed-date-offset,0px));
+ }
+}
+
 /* Episode display experiment (My List cards only, both desktop and phone):
    Keep the original status/action columns and fixed-size +/- buttons.
    Show an editable current/total話 in the centre instead of a duplicate caption. */
@@ -11540,6 +11546,15 @@ document.addEventListener('click',function(e){
   scheduled=false;
   const enabled=innerWidth>=1251&&document.body.classList.contains('saved-mode');
   for(const card of cards.querySelectorAll('.pattern-a-card')){
+   const date=card.querySelector('.pattern-a-date-watch');
+   const rating=card.querySelector('.pattern-a-tools .grid-self-rating');
+   if(date){
+    if(enabled&&document.body.classList.contains('saved-list-view')&&rating?.getClientRects().length){
+     const current=parseFloat(date.style.getPropertyValue('--completed-date-offset'))||0;
+     const a=rating.getBoundingClientRect(),b=date.getBoundingClientRect();
+     date.style.setProperty('--completed-date-offset',`${current+(a.top+a.bottom-b.top-b.bottom)/2}px`);
+    }else date.style.removeProperty('--completed-date-offset');
+   }
    const row=card.querySelector('.pattern-a-watch-column>.watch-progress.pattern-a-progress .watch-progress-actions');
    if(!row)continue;
    const memo=card.querySelector('.pattern-a-tools [data-note-id]');
