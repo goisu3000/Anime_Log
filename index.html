@@ -2253,6 +2253,46 @@ select:not([data-status-id]){
  }
 }
 
+
+/* Episode-controller alignment trial: progress track and the outer edges of
+   +/- share the same full-width column. Only the middle entry may stretch.
+   Keep all existing +/- widths, heights and event handlers unchanged. */
+.pattern-a-card .pattern-a-progress .watch-progress-actions{
+ display:grid;
+ grid-template-columns:max-content minmax(0,1fr) max-content;
+ width:100%;max-width:100%;column-gap:5px;
+ justify-content:normal;
+}
+.pattern-a-card .pattern-a-progress .watch-progress-entry{
+ width:100%;max-width:100%;min-width:0;
+ padding-inline:3px;
+}
+/* The compact desktop column has a more specific legacy 2px-gap rule.
+   Override only its spacing, not the +/- button dimensions. */
+@media(min-width:1251px){
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions{
+  gap:5px;justify-content:normal;
+ }
+ /* Extremely large 4-digit episode totals keep a small but nonzero gap. */
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-actions:has(.watch-progress-entry.is-condensed){
+  gap:2px;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-entry.is-condensed{
+  padding-inline:1px;
+ }
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-entry.is-condensed input,
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-entry.is-condensed .watch-progress-total{
+  font-size:8.5px;
+ }
+}
+
+/* At <=374px, the mobile progress area is only 140px wide. */
+@media(max-width:374px){
+ .pattern-a-card .pattern-a-progress .watch-progress-actions:has(.watch-progress-entry.is-condensed){column-gap:3px;}
+ .pattern-a-card .pattern-a-progress .watch-progress-entry.is-condensed{padding-inline:2px;}
+ .pattern-a-card .pattern-a-progress .watch-progress-entry.is-condensed input,
+ .pattern-a-card .pattern-a-progress .watch-progress-entry.is-condensed .watch-progress-total{font-size:9.5px;}
+}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
