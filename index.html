@@ -873,11 +873,19 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .review-dialog-sub{font-size:var(--fs-sm);color:var(--muted);margin:0 0 16px}
 .review-overall{border:1px solid var(--border);background:var(--surface2);border-radius:var(--radius);padding:16px;margin-bottom:16px}
 .review-section-label{font-size:var(--fs-sm);font-weight:var(--fw-bold);display:block;margin-bottom:10px}
-.review-overall-stars{display:flex;gap:6px;align-items:center}
+.review-overall-measure{display:flex;align-items:center;gap:10px;min-width:0}
+.review-overall-stars{display:flex;gap:6px;align-items:center;flex:0 0 auto}
 .review-star{background:transparent;border:0;color:var(--subtle);padding:2px 4px;transition:transform .12s,color .12s}
 .review-star .ui-icon{width:32px;height:32px;fill:none;stroke:currentColor}
 .review-star.selected{color:var(--gold)}.review-star.selected .ui-icon{fill:currentColor}
-.review-overall-word{font-size:var(--fs-sm);color:var(--accent);font-weight:var(--fw-semi);margin-top:8px}
+.review-overall-word{display:inline-flex;align-items:center;margin-top:10px}
+@media(max-width:430px){
+  .review-overall-measure{gap:8px}
+  .review-overall-stars{gap:3px}
+  .review-overall-stars .review-star{padding:2px 1px}
+  .review-overall-stars .review-star .ui-icon{width:22px;height:22px}
+  .review-overall-measure .detail-rating-number{font-size:var(--fs-2xl)}
+}
 .review-optional{border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;margin-top:12px}
 .review-optional summary{padding:12px 14px;color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;list-style:none}
 .review-optional summary::after{content:"＋";float:right;color:var(--accent)}.review-optional[open] summary::after{content:"−"}
@@ -885,6 +893,10 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .review-date-option{border-top:1px solid var(--border);padding:0 14px 12px;margin-top:4px}
 .review-date-heading{margin:0;padding:12px 0 6px;font-size:var(--fs-xs);font-weight:var(--fw-bold)}
 .review-date-editor .watch-date{padding-top:4px}
+/* Keep the hint next to the controls in the rating dialog only. */
+.review-date-editor .watch-date-fields{margin-bottom:2px}
+.review-date-editor .watch-date-hint{margin-top:0;margin-bottom:0}
+#ratingDialog .watch-date-fields select + .anilog-mobile-select-trigger{margin-bottom:0}
 .watch-date-field input[hidden]{display:none!important}
 .review-aspect{padding:10px 0;border-top:1px solid var(--border)}
 .review-aspect-name{display:block;font-size:var(--fs-sm);font-weight:var(--fw-semi);margin-bottom:8px}
@@ -2780,15 +2792,18 @@ select:not([data-status-id]){
     <div class="review-dialog-eyebrow">MY REVIEW · ブラウザに保存</div>
     <h2 id="ratingTitle">作品を評価</h2>
     <div class="review-overall">
-      <span class="review-section-label" id="ratingOverallLabel">総合評価 <span aria-hidden="true">*</span></span>
-      <div class="review-overall-stars" role="group" aria-labelledby="ratingOverallLabel">
+      <span class="review-section-label" id="ratingOverallLabel">総合評価</span>
+      <div class="review-overall-measure">
+        <div class="review-overall-stars" role="group" aria-labelledby="ratingOverallLabel">
         <button type="button" class="review-star" data-rating-star="1" aria-label="星1つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
         <button type="button" class="review-star" data-rating-star="2" aria-label="星2つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
         <button type="button" class="review-star" data-rating-star="3" aria-label="星3つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
         <button type="button" class="review-star" data-rating-star="4" aria-label="星4つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
         <button type="button" class="review-star" data-rating-star="5" aria-label="星5つ" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg></button>
+        </div>
+        <span id="ratingOverallScore" class="detail-rating-number" hidden><span id="ratingOverallNumber">0</span><small> / 5</small></span>
       </div>
-      <div id="ratingOverallWord" class="review-overall-word" aria-live="polite">未評価</div>
+      <span id="ratingOverallWord" class="review-overall-word detail-rating-no-score" aria-live="polite">未評価</span>
     </div>
     <details class="review-optional" id="ratingOptional">
       <summary>さらに詳しく評価する（任意）</summary>
@@ -3674,7 +3689,13 @@ function publicReviewMarkup(a,compact=false){
 }
 function updateRatingUI(){
  $$('#ratingDialog [data-rating-star]').forEach(b=>{const selected=Number(b.dataset.ratingStar)<=ratingDraft.overall;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected))});
- $('#ratingOverallWord').textContent=REVIEW_LABELS[ratingDraft.overall]||'未評価';
+ const selectedRating=ratingDraft.overall;
+ const score=$('#ratingOverallScore'),word=$('#ratingOverallWord');
+ score.hidden=!selectedRating;
+ $('#ratingOverallNumber').textContent=String(selectedRating||0);
+ word.textContent=REVIEW_LABELS[selectedRating]||'未評価';
+ word.classList.toggle('detail-rating-word',!!selectedRating);
+ word.classList.toggle('detail-rating-no-score',!selectedRating);
  $('#ratingSave').disabled=!ratingDraft.overall;
  $$('#ratingAspects [data-rating-aspect]').forEach(b=>b.setAttribute('aria-pressed',String(ratingDraft.aspects[b.dataset.ratingAspect]===Number(b.dataset.ratingGrade))));
 
@@ -8308,7 +8329,13 @@ function publicReviewMarkup(a,compact=false){
 }
 function updateRatingUI(){
  $$('#ratingDialog [data-rating-star]').forEach(b=>{const selected=Number(b.dataset.ratingStar)<=ratingDraft.overall;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected))});
- $('#ratingOverallWord').textContent=REVIEW_LABELS[ratingDraft.overall]||'未評価';
+ const selectedRating=ratingDraft.overall;
+ const score=$('#ratingOverallScore'),word=$('#ratingOverallWord');
+ score.hidden=!selectedRating;
+ $('#ratingOverallNumber').textContent=String(selectedRating||0);
+ word.textContent=REVIEW_LABELS[selectedRating]||'未評価';
+ word.classList.toggle('detail-rating-word',!!selectedRating);
+ word.classList.toggle('detail-rating-no-score',!selectedRating);
  $('#ratingSave').disabled=!ratingDraft.overall;
  $$('#ratingAspects [data-rating-aspect]').forEach(b=>b.setAttribute('aria-pressed',String(ratingDraft.aspects[b.dataset.ratingAspect]===Number(b.dataset.ratingGrade))));
 
