@@ -1,0 +1,19 @@
+﻿セレクタ,出現回数,HTML行番号(目安),重複しているCSSプロパティ,変更されている値,判断
+:root,2,"89, 1322",,,変更せず要文脈確認
+.pattern-a-card .record-poster,2,"311, 2065",,,変更せず要文脈確認
+.weekly-item-title,2,"1070, 1609","justify-self, max-width, overflow-wrap","justify-self, overflow-wrap",変更せず要文脈確認
+.weekly-item-meta .weekly-catchup,2,"1075, 1610","align-items, color, display, flex-basis, font-size, gap, line-height, order","flex-basis, font-size, gap, line-height, order",変更せず要文脈確認
+.anilog-sync-dialog-head,3,"1519, 1733, 1827",padding,padding,変更せず要文脈確認
+.anilog-sync-dialog #formal-simple-sync,2,"1523, 1734","display, padding",padding,変更せず要文脈確認
+".anilog-sync-dialog #formal-simple-sync>p[data-simple=""status""]",3,"1525, 1738, 1824",margin,margin,変更せず要文脈確認
+.anilog-sync-dialog #formal-sync-controls,2,"1542, 1752",,,変更せず要文脈確認
+.anilog-sync-dialog #v407-pairing,2,"1543, 1753",border-top,,変更せず要文脈確認
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions,2,"1588, 1746","gap, padding","gap, padding",変更せず要文脈確認
+".anilog-sync-dialog #formal-simple-sync [data-simple=""connection-info""]:not([hidden])",2,"1601, 2463","color, font-size",color,変更せず要文脈確認
+.pattern-a-tools,2,"1836, 1959",display,display,変更せず要文脈確認
+.episode-notice.is-unread,2,"2062, 2068",,,変更せず要文脈確認
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next:not([hidden]),2,"2083, 2090","background, border, border-radius, display, gap, padding","gap, padding",変更せず要文脈確認
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next strong,2,"2084, 2097","color, font-size, font-weight","font-size, font-weight",変更せず要文脈確認
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-qr-next p,2,"2085, 2098","color, font-size, line-height, margin",line-height,変更せず要文脈確認
+.pattern-a-card .pattern-a-progress .watch-progress-actions,2,"2324, 2377",max-width,,変更せず要文脈確認
+.pattern-a-card .pattern-a-progress .watch-progress-entry,2,"2328, 2383","max-width, min-width",,変更せず要文脈確認

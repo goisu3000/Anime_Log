@@ -1,0 +1,5 @@
+# Development guidance and maintenance assets only. Product modules are not matched.
+/AGENTS.md
+/docs/
+/tests/
+/.vercelignore
