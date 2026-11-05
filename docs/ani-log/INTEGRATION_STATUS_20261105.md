@@ -1,6 +1,6 @@
 # 保守ルール導入候補の照合記録
 
-担当：Codex。2026-11-05（日本時間）。本資料はローカル別ブランチの準備記録であり、push・mainへのマージ・Vercel配備の承認ではありません。
+担当：Codex。2026-11-05（日本時間）。本資料は別ブランチの導入準備記録です。今回のユーザー指示は作業ブランチのpushとPreview検証までを承認しています。mainへのマージ・Production配備は対象外です。本資料自体は将来の変更への承認ではありません。
 
 ## 正本と変更範囲
 
@@ -14,14 +14,16 @@
 ## 資料だけの補正
 
 - STARTUP_AND_RELEASE_CHECKLIST.mdの旧ファイル名2件を、実在するDESIGN_GUIDELINES.mdとMAINTENANCE_AND_RELEASE.mdへ修正。
-- DESIGN_GUIDELINES.mdの旧表記「不一致を解消」を、現行formal-simple-page.mjsの文言「不一致を確認」に修正。実製品のUI文言は変更していません。
+- DESIGN_GUIDELINES.mdでは、承認済みの目標文言「不一致を解消」と、現行製品の入口表示・案内文「不一致を確認」を別欄に記録。以前の単純置換を訂正し、現行表示だけを理由に承認済み仕様と同一視しません。製品への目標文言反映は今回の対象外です。
 - 原則の追加・包括的な作業許可はしていません。現在のユーザー指示、正規権限、システム制約を優先します。
 
 ## Codexの参照
 
 AGENTS.mdをGitルートへ配置し、この作業で読み取りました。文書サイズ3569 bytes、参照先7ファイルは全件実在・可読です。ルートにAGENTS.override.mdはありません。
 
-公式の探索方式では、セッション開始時にGitルートから作業ディレクトリまでのAGENTS.mdを読み込みます。次回はこのworktree（または正式導入後のリポジトリ）を作業フォルダとして開いてください。既に開始済みの別フォルダのチャットへ自動で追加済みとは扱いません。別のCodexプロセスを起動した読込み試験は実施していません。
+このworktreeを作業ディレクトリに指定した新規Codex CLIセッション（read-only、ephemeral）で自動読み込みを確認しました。確認プロンプトには個別ルール・資料名を与えず、ツールやファイル読取りを禁止した状態で、AGENTS.mdの重要ルール3件を原文どおり回答し、参照先7件を列挙しました。参照先の実在・可読性は別途確認しています。
+
+公式の探索方式では、セッション開始時にGitルートから作業ディレクトリまでのAGENTS.mdを読み込みます。次回はこのworktree（または正式導入後のリポジトリ）を作業フォルダとして開いてください。既に開始済みの別フォルダのチャットへ自動で追加済みとは扱いません。
 
 参考：https://learn.chatgpt.com/docs/agent-configuration/agents-md
 
@@ -37,10 +39,10 @@ PRODUCT_RELEASE_ALLOWLIST.jsonには基準コミットの製品66ファイルと
 
 ## 正式導入前の操作
 
-1. この文書差分と.vercelignoreを承認する。
-2. ブランチpushを別途承認する。VercelのGit連携によりPreviewが生成される可能性も含めて扱う。
+1. この文書差分と.vercelignoreを確認する。
+2. 承認済みの作業ブランチだけをpushする。VercelのGit連携によりPreviewが生成される可能性も含めて扱う。
 3. Previewの配信物が製品許可リストと一致し、/AGENTS.md、/docs/ani-log/MAINTENANCE_AND_RELEASE.md等が404になり、/client/と/notice/と既存Rewriteが正常であることを確認する。除外されなければマージをSTOPする。
 4. mainへのマージと、自動Production配備の承認を得る。merge直前にmainの追加変更を再確認する。
 5. 配備後にも資料非公開と製品内容の不変を読み戻す。
 
-今回の準備ではpush・merge・deploy・Cloudflare変更・個人データ操作を行いません。
+Previewの実測結果はpush後の外部検証記録で報告します。mainへのマージ・Production配備・Cloudflare変更・個人データ操作は行いません。
