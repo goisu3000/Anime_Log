@@ -555,6 +555,11 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .view-detail .stats,.view-detail #libraryView,.view-detail #shareView,.view-detail .site-slogan{display:none!important}
 .detail-navigation{display:flex;justify-content:space-between;align-items:center;gap:16px;margin:0 0 20px}
 .detail-back{background:var(--surface);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);font-weight:var(--fw-semi);padding:10px 16px;font-size:var(--fs-sm);display:inline-flex;align-items:center;gap:8px}
+.route-copy{background:var(--surface);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);font-weight:var(--fw-semi);font-size:var(--fs-sm);padding:10px 12px;white-space:nowrap}
+.route-copy:hover{border-color:var(--accent)}
+.route-copy:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.detail-navigation #detailBreadcrumb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:740px){.detail-navigation{gap:8px}.route-copy{padding:9px 10px}.detail-navigation #detailBreadcrumb{display:none}}
 #detailBreadcrumb{font-size:var(--fs-sm);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
 .detail-profile{display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr);gap:32px;align-items:start;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
 .detail-cover{width:100%;aspect-ratio:2/3;border-radius:var(--radius-sm);background:var(--surface-input);overflow:hidden;display:grid;place-items:center}
@@ -2665,7 +2670,7 @@ select:not([data-status-id]){
       <p class="annual-foot">すべてこの端末に保存された記録から集計しています。視聴完了日が未入力の作品を、自動で今年の作品として扱うことはありません。</p>
     </section>
     <section id="rankingView" class="hidden" aria-label="アニメランキング">
-      <div class="section-header"><div><div class="rank-eyebrow">ANIME RANKINGS</div><h2 id="rankingTitle">ランキング</h2><p id="rankingDescription">世間の評価と、自分の記録を見比べよう。</p></div></div>
+      <div class="section-header"><div><div class="rank-eyebrow">ANIME RANKINGS</div><h2 id="rankingTitle">ランキング</h2><p id="rankingDescription">世間の評価と、自分の記録を見比べよう。</p></div><button type="button" id="rankingCopyLink" class="route-copy">リンクをコピー</button></div>
       <div class="rank-view-tabs" role="group" aria-label="ランキングの種類">
         <button type="button" data-rank-tab="period">年代・シーズン別</button><button type="button" data-rank-tab="top">歴代</button><button type="button" data-rank-tab="mine">マイランキング</button>
       </div>
@@ -2701,7 +2706,7 @@ select:not([data-status-id]){
       <div class="load-wrap"><button type="button" id="rankLoadMore" class="loadmore hidden">さらに作品を読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
     </section>
     <section id="detailView" class="hidden" aria-label="アニメ作品の詳細">
-      <div class="detail-navigation"><button type="button" class="detail-back" id="detailBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-back"/></svg> 作品一覧に戻る</button><span id="detailBreadcrumb">作品詳細</span></div>
+      <div class="detail-navigation"><button type="button" class="detail-back" id="detailBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-back"/></svg> 作品一覧に戻る</button><span id="detailBreadcrumb">作品詳細</span><button type="button" id="detailCopyLink" class="route-copy" hidden aria-label="この作品のリンクをコピー">リンクをコピー</button></div>
       <div id="detailContent" aria-live="polite"></div>
       <p class="detail-credit">作品情報は <a href="https://tenrai.org/" target="_blank" rel="noopener noreferrer">Tenrai API</a> から取得しています。未登録の項目は表示しません。作品概要は日本語版Wikipediaの公開情報を補完に利用することがあります。PVの公開状況や日本国内の配信状況は保証されません。</p>
     </section>
@@ -2792,6 +2797,64 @@ select:not([data-status-id]){
 (()=>{let mode=null;try{mode=localStorage.getItem('anilog-sync-local-mode-v1')}catch{}
 window.__aniFormalEncrypted=document.querySelector('meta[name="ani-log-storage-mode"]')?.content==='encrypted-development'||
 (document.querySelector('meta[name="ani-log-formal-production-approval"]')?.content==='approved-private-production'&&['preparing','encrypted-local','sync-enabled'].includes(mode));})();
+</script>
+<script>
+// Public page URLs are display/navigation state only. Never serialize private records.
+// Both the encrypted and the regular screen engines use this same policy.
+window.__aniPublicRoutes=Object.freeze((()=>{
+ const seasons=new Set(['winter','spring','summer','fall']);
+ const tabs=new Set(['period','top','mine']);
+ const sorts=new Set(['score','members']);
+ const animeId=id=>{const m=/^jikan:([1-9][0-9]{0,9})$/.exec(String(id||''));return m?m[1]:null};
+ const read=(pathname,search='')=>{
+  if(pathname==='/mylist'||pathname==='/mylist/')return {kind:'saved'};
+  if(pathname==='/ranking'||pathname==='/ranking/'){
+   const p=new URLSearchParams(search);
+   const tab=tabs.has(p.get('tab'))?p.get('tab'):'period';
+   const year=Number(p.get('year'));const maxYear=new Date().getFullYear()+1;
+   const rating=Number(p.get('rating'));
+   return {kind:'ranking',rank:{tab,sort:sorts.has(p.get('sort'))?p.get('sort'):'score',
+    ...(Number.isInteger(year)&&year>=1970&&year<=maxYear?{year}:{}),
+    ...(seasons.has(p.get('season'))?{season:p.get('season')}:{}),
+    minVotes:p.get('minVotes')==='1',rating:tab==='mine'&&Number.isInteger(rating)&&rating>=1&&rating<=5?rating:0}};
+  }
+  const m=/^\/anime\/([1-9][0-9]{0,9})\/?$/.exec(pathname);
+  if(m)return {kind:'anime',id:'jikan:'+m[1]};
+  if(/^\/anime(?:\/|$)/.test(pathname))return {kind:'invalid'};
+  return null;
+ };
+ const path=(state,hash='')=>{
+  // Shared snapshots always have root-based URLs and retain their original hash.
+  if(hash.startsWith('#share=')||state?.view==='share')return '/'+(hash.startsWith('#share=')?hash:'');
+  const id=!state?.studio&&state?.detail?animeId(state.detail.id):null;
+  if(id)return '/anime/'+id;
+  if(state?.view==='saved')return '/mylist';
+  if(state?.view==='ranking'){
+   const r=state.rank||{},tab=tabs.has(r.tab)?r.tab:'period';
+   const p=new URLSearchParams();p.set('tab',tab);
+   if(tab==='period'){
+    const year=Number(r.year),maxYear=new Date().getFullYear()+1;
+    if(Number.isInteger(year)&&year>=1970&&year<=maxYear)p.set('year',String(year));
+    if(seasons.has(r.season))p.set('season',r.season);
+   }
+   if(tab!=='mine'){
+    p.set('sort',sorts.has(r.sort)?r.sort:'score');
+    if(r.minVotes===true)p.set('minVotes','1');
+   }else if(Number.isInteger(r.rating)&&r.rating>=1&&r.rating<=5)p.set('rating',String(r.rating));
+   return '/ranking?'+p.toString();
+  }
+  return '/';
+ };
+ const matches=(state,route)=>{
+  if(!route||!state)return false;
+  if(route.kind==='anime')return animeId(state.detail?.id)===animeId(route.id)&&!state.studio;
+  if(route.kind==='saved')return state.view==='saved'&&!state.detail&&!state.studio;
+  if(route.kind==='ranking')return state.view==='ranking'&&!state.detail&&!state.studio&&
+   path(state).replace(/\/$/,'')===path({view:'ranking',rank:{...state.rank,...route.rank}}).replace(/\/$/,'');
+  return false;
+ };
+ return {read,path,matches,animeId};
+})());
 </script>
 <script>
 // ANI:LOG additive search rescue.  Pure matching only: no writes, network or timers.
@@ -3908,7 +3971,7 @@ function streamServiceIconMarkup(service){
  // Enable only after the rights review and byte validation are complete.
  const approvedBrandSlugs=[];
  if(!approvedBrandSlugs.includes(icon[0]))return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${safeText(icon[1])}</span>`;
- const img=`<img class="stream-brand-logo" src="./assets/streaming/${icon[0]}.png" alt="" width="24" height="24" decoding="async" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`;
+ const img=`<img class="stream-brand-logo" src="/assets/streaming/${icon[0]}.png" alt="" width="24" height="24" decoding="async" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`;
  return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${img}<span class="stream-brand-fallback stream-brand-${icon[0]}" hidden aria-hidden="true">${safeText(icon[1])}</span></span>`;
 }
 function gridStreamRowMarkup(a){
@@ -4224,9 +4287,9 @@ function ensureAutomaticEpisodeNotices(){
  if(!NOTICE_AUTO_ENABLED||noticeHydratedStorage!==window.__formalStorage||!window.__formalStorage?.ready||document.hidden)return;
  if(noticeAutomatic){void noticeBroadcastClock?.tick();void ensureWeeklyEpisodes({noticeOnly:true});void noticeAutomatic.tick();return;}
  if(noticeAutoLoading||Date.now()<noticeAutoRetryAt)return;
- noticeAutoLoading=import('./notice/episode-auto.mjs').then(async({createPublicAnimeRequests,createAutomaticEpisodeNotices,targetsFromRecords})=>{
+ noticeAutoLoading=import('/notice/episode-auto.mjs').then(async({createPublicAnimeRequests,createAutomaticEpisodeNotices,targetsFromRecords})=>{
   let publicStorage=null;try{publicStorage=localStorage}catch{}
-  const {createBroadcastClock}=await import('./notice/broadcast-clock.mjs');
+  const {createBroadcastClock}=await import('/notice/broadcast-clock.mjs');
   noticeBroadcastClock=createBroadcastClock({storage:publicStorage,locks:navigator.locks,getTargets:()=>targetsFromRecords(saved),
    visible:()=>!document.hidden&&noticeHydratedStorage===window.__formalStorage&&window.__formalStorage?.ready===true,online:()=>navigator.onLine!==false,
    onChange:next=>{NOTICE_BROADCAST_STATUS=next;refreshAutomaticNoticeLabels({initializeBaseline:false})}});
@@ -5473,11 +5536,11 @@ $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>{
  showRanking(b.dataset.rankOpen);
 }));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
-$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();scheduleMalMetricEnrichment()});
-$('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;loadRanking(true)});
-$('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);loadRanking(true)});
-$('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;loadRanking(true)});
-$('#rankMinVotes').addEventListener('change',renderRanking);
+$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();aniHistorySave();scheduleMalMetricEnrichment()});
+$('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;aniHistorySave();loadRanking(true)});
+$('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);aniHistorySave();loadRanking(true)});
+$('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;aniHistorySave();loadRanking(true)});
+$('#rankMinVotes').addEventListener('change',()=>{renderRanking();aniHistorySave()});
 $('#rankLoadMore').addEventListener('click',()=>loadRanking(false));
 $('#rankResults').addEventListener('click',e=>{const add=e.target.closest('[data-rank-add]');if(add){const id=add.dataset.rankAdd;setStatus(id,saved[id]?.status==='planned'?'':'planned');return}const move=e.target.closest('[data-rank-move]');if(move){moveRank(move.dataset.rankId,move.dataset.rankMove==='up'?-1:1);return}
  const rate=e.target.closest('[data-rate-id]');if(rate){openRating(rate.dataset.rateId);return}
@@ -5660,7 +5723,7 @@ async function readShareFromHash(){
  finally{if(shareLoadingHash===requestHash)shareLoadingHash='';}
 }
 function exitSharedView(){
- if(mode==='share'){++shareNonce;if(!aniHistoryTransition&&!aniHistoryRestoring)history.replaceState(history.state,'',location.href.split('#')[0]);document.body.classList.remove('view-sharing');$('#shareView').classList.add('hidden')}
+ if(mode==='share'){++shareNonce;if(!aniHistoryTransition&&!aniHistoryRestoring)history.replaceState(history.state,'','/');document.body.classList.remove('view-sharing');$('#shareView').classList.add('hidden')}
 }
 function showShareDialog(){
  if(mode==='share'){toast('自分のリストに戻ってから共有してください');return}
@@ -5698,7 +5761,7 @@ async function generateShare(){
   const shareYear=scope==='season'?Number($('#shareYear').value):curYear;
   const shareSeason=scope==='season'?$('#shareSeason').value:curSeason;
   const signature=short?JSON.stringify([scope,shareYear,shareSeason,options,items]):'';
-  let href=new URL(window.location.href);
+  let href=new URL(location.protocol==='file:'?window.location.href:window.location.origin+'/');
   if(short&&lastShortSignature===signature&&lastShortLink){href=new URL(lastShortLink);}
   else{
    const data={v:SHARE_VERSION,scope,created:Date.now(),year:shareYear,season:shareSeason,options,items};
@@ -7130,7 +7193,7 @@ $('#studioCards').addEventListener('click',e=>{
  const work=studioItemRefs.get(card.dataset.studioWork);if(work)openDetail(detailSource(work.id)||work,true);
 });
 function detailSource(id){return mode==='share'?(sharedSnapshot?.items||[]).find(a=>a.id===id):saved[id]||(detailActiveItem?.id===id?detailActiveItem:null)||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id)}
-function detailShowScreen(){if(document.body.classList.contains('view-studio'))studioCloseUi();document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#breadcrumb').textContent='作品詳細'}
+function detailShowScreen(){if(document.body.classList.contains('view-studio'))studioCloseUi();document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#detailCopyLink').hidden=!window.__aniPublicRoutes.animeId(detailActiveItem?.id);$('#breadcrumb').textContent='作品詳細'}
 let detailHistorySteps=0;
 function openDetail(item,related=false){
  if(!item)return;
@@ -7184,7 +7247,27 @@ async function detailMoreEpisodes(){const a=detailActiveItem;if(!a||detailEpisod
  finally{if(token===detailNonce){detailEpisodeBusy=false;renderDetailParts(token)}}
 }
 function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;if(document.body.classList.contains('view-studio'))studioCloseUi();seriesExploreGeneration++;detailNonce++;detailActiveItem=null;detailHistorySteps=0;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';if(restoreScroll&&pendingViewRender)render();else pendingViewRender=false;$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
-$('#detailBack').addEventListener('click',()=>{if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){const steps=Math.min(aniHistoryDepth,Math.max(1,detailHistorySteps||1));history.go(-steps)}else{closeDetail()}});
+$('#detailBack').addEventListener('click',()=>{
+ if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){const steps=Math.min(aniHistoryDepth,Math.max(1,detailHistorySteps||1));history.go(-steps);return}
+ if(aniPathRoute?.kind==='anime'&&aniHistoryDepth===0){
+  // A friend's direct link has no previous list. Close into Discover, not their empty My List.
+  aniHistoryRestoring=true;try{showSeason()}finally{aniHistoryRestoring=false}
+  aniHistorySave();window.scrollTo({top:0,behavior:'instant'});
+ }else{closeDetail();aniHistorySave()}
+});
+async function aniCopyPublicLink(path){
+ if(!path||!['http:','https:'].includes(location.protocol)){toast('公開サイトのURLからコピーしてください','error');return}
+ const link=location.origin+path;
+ try{await navigator.clipboard.writeText(link);toast('リンクをコピーしました')}
+ catch{toast('コピーできませんでした。ブラウザのURLをコピーしてください','error')}
+}
+$('#detailCopyLink').addEventListener('click',()=>{
+ const id=window.__aniPublicRoutes.animeId(detailActiveItem?.id);
+ if(id)void aniCopyPublicLink('/anime/'+id);
+});
+$('#rankingCopyLink').addEventListener('click',()=>{
+ if(mode==='ranking')void aniCopyPublicLink(window.__aniPublicRoutes.path(aniHistorySnapshot()));
+});
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#sharedItems').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#detailContent').addEventListener('change',e=>{if(e.target.id==='detailStatus'&&detailActiveItem){setStatus(detailActiveItem.id,e.target.value)}});
@@ -7238,6 +7321,7 @@ $('#detailContent').addEventListener('click',e=>{
 // Browser history bridge. Screen history is UI-only: no changes to saved records,
 // ranking order, shared URL encoding, or the app's CSS design system.
 const ANI_ROUTE='__aniLogRouteV1';
+const ANI_PUBLIC=window.__aniPublicRoutes;
 let aniHistoryReady=false,aniHistoryRestoring=false,aniHistoryTransition=false,aniHistoryDepth=0;
 let aniHistoryRestoreTicket=0;
 function aniHistoryDetailRef(item){
@@ -7263,7 +7347,7 @@ function aniHistorySnapshot(){
 function aniHistoryKey(s){return s.studio?'studio:'+(s.studio.kind||'studio')+':'+s.studio.id:s.detail?'detail:'+s.view+':'+s.detail.id:s.view==='saved'?'saved:'+s.saved.filter:s.view==='ranking'?'ranking:'+s.rank.tab:s.view==='season'?'season:'+(s.season?.exploreStatus||'all')+':'+(s.season?.query?(s.season.yearValue||'all')+':'+(s.season.seasonValue||'all')+':'+s.season.query:''):s.view;}
 function aniHistorySave(){
  if(!aniHistoryReady||aniHistoryRestoring)return;
- try{history.replaceState({...aniHistorySnapshot(),depth:aniHistoryDepth},'',location.href)}catch{/* Browsers may restrict file URL history */}
+ try{const state={...aniHistorySnapshot(),depth:aniHistoryDepth};history.replaceState(state,'',ANI_PUBLIC.path(state,location.hash))}catch{/* Browsers may restrict file URL history */}
 }
 function aniHistoryEnter(){
  if(!aniHistoryReady||aniHistoryRestoring)return null;
@@ -7279,7 +7363,7 @@ function aniHistoryLeave(before){
  }
  try{
   aniHistoryDepth++;
-  history.pushState({...next,depth:aniHistoryDepth},'',location.hash.startsWith(SHARE_PREFIX)&&next.view!=='share'?location.href.split('#')[0]:location.href);
+  history.pushState({...next,depth:aniHistoryDepth},'',ANI_PUBLIC.path(next,next.view==='share'?location.hash:''));
  }catch{aniHistoryDepth--;}
 }
 function aniHistoryWrap(original){
@@ -7382,14 +7466,35 @@ window.addEventListener('popstate',e=>{
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 // Preserve the current entry's screen before initialization overwrites history.state.
 // Reloading a detail page must keep that detail, not silently reset to Discover.
-const aniInitialHistoryState=history.state?.[ANI_ROUTE]===1&&
+const aniPathRoute=ANI_PUBLIC.read(location.pathname,location.search);
+const aniStoredHistoryState=history.state?.[ANI_ROUTE]===1&&
  ['season','saved','ranking','annual'].includes(history.state.view)&&
  (!history.state.studio||(validStudioId(history.state.studio.id)&&(!history.state.studio.kind||validRelatedKind(history.state.studio.kind))))&&
  (!history.state.detail||(typeof history.state.detail.id==='string'&&history.state.detail.id.length<=150))
  ?history.state:null;
+// The URL is authoritative on direct entry; a matching browser entry can retain
+// its existing list/filter context and scroll position. Never restore a stale ID.
+let aniInitialHistoryState=aniStoredHistoryState&&(!aniPathRoute||ANI_PUBLIC.matches(aniStoredHistoryState,aniPathRoute))?aniStoredHistoryState:null;
+if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryState){
+ const base=aniHistorySnapshot();
+ if(aniPathRoute.kind==='anime'){
+  aniInitialHistoryState={...base,depth:0,view:'saved',detail:{id:aniPathRoute.id,title:'作品情報を読み込み中…'},detailSteps:1,scrollY:0};
+ }else if(aniPathRoute.kind==='ranking'){
+  aniInitialHistoryState={...base,depth:0,view:'ranking',detail:null,rank:{...base.rank,...aniPathRoute.rank},scrollY:0};
+ }else if(aniPathRoute.kind==='saved'){
+  aniInitialHistoryState={...base,depth:0,view:'saved',detail:null,scrollY:0};
+ }
+}
 aniHistoryReady=true;
-// Direct share hashes take priority. Do not replace valid history state on reload.
-if(!aniInitialHistoryState){try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}}
+// QR and existing shared-list links always take precedence over public routes.
+if(location.hash.startsWith(SHARE_PREFIX)){
+ try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}
+}else if(aniInitialHistoryState){
+ try{history.replaceState(aniInitialHistoryState,'',ANI_PUBLIC.path(aniInitialHistoryState))}catch{}
+}else{
+ aniHistorySave();
+ if(aniPathRoute?.kind==='invalid')toast('作品URLが正しくありません。作品一覧を表示します。','error');
+}
 
 // Read-only idle signals; old, non-cooperative tabs are not observable.
 const maintenanceUIIdle=()=>{
@@ -7413,7 +7518,7 @@ window.__formalUI=Object.freeze({
  maintenanceIdle:maintenanceUIIdle,
  maintenanceUndoIdle:()=>pendingUndo===null&&recordWrites===0,
  testOnlyMaintenanceIdle:maintenanceUIIdle,
- hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage;saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);mode='saved';updateCounts();render()},
+ hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage;saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);if(!location.hash.startsWith(SHARE_PREFIX)&&mode!=='share'&&(!ANI_PUBLIC.read(location.pathname,location.search)||(!document.body.classList.contains('view-detail')&&mode!=='ranking')))mode='saved';updateCounts();render()},
  commitSaved(records,weekly){if(!window.__formalStorage?.ready&&!window.__formalPairing?.bridge?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage?.ready?window.__formalStorage:null;saved=structuredClone(records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(weekly);render()}
 });
 updateCounts();
@@ -8385,7 +8490,7 @@ function streamServiceIconMarkup(service){
  // Enable only after the rights review and byte validation are complete.
  const approvedBrandSlugs=[];
  if(!approvedBrandSlugs.includes(icon[0]))return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${safeText(icon[1])}</span>`;
- const img=`<img class="stream-brand-logo" src="./assets/streaming/${icon[0]}.png" alt="" width="24" height="24" decoding="async" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`;
+ const img=`<img class="stream-brand-logo" src="/assets/streaming/${icon[0]}.png" alt="" width="24" height="24" decoding="async" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false">`;
  return `<span class="stream-brand-icon stream-brand-${icon[0]}" aria-hidden="true">${img}<span class="stream-brand-fallback stream-brand-${icon[0]}" hidden aria-hidden="true">${safeText(icon[1])}</span></span>`;
 }
 function gridStreamRowMarkup(a){
@@ -9729,11 +9834,11 @@ $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>{
  showRanking(b.dataset.rankOpen);
 }));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
-$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();scheduleMalMetricEnrichment()});
-$('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;loadRanking(true)});
-$('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);loadRanking(true)});
-$('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;loadRanking(true)});
-$('#rankMinVotes').addEventListener('change',renderRanking);
+$('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();aniHistorySave();scheduleMalMetricEnrichment()});
+$('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;aniHistorySave();loadRanking(true)});
+$('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);aniHistorySave();loadRanking(true)});
+$('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;aniHistorySave();loadRanking(true)});
+$('#rankMinVotes').addEventListener('change',()=>{renderRanking();aniHistorySave()});
 $('#rankLoadMore').addEventListener('click',()=>loadRanking(false));
 $('#rankResults').addEventListener('click',e=>{const add=e.target.closest('[data-rank-add]');if(add){const id=add.dataset.rankAdd;setStatus(id,saved[id]?.status==='planned'?'':'planned');return}const move=e.target.closest('[data-rank-move]');if(move){moveRank(move.dataset.rankId,move.dataset.rankMove==='up'?-1:1);return}
  const rate=e.target.closest('[data-rate-id]');if(rate){openRating(rate.dataset.rateId);return}
@@ -9916,7 +10021,7 @@ async function readShareFromHash(){
  finally{if(shareLoadingHash===requestHash)shareLoadingHash='';}
 }
 function exitSharedView(){
- if(mode==='share'){++shareNonce;if(!aniHistoryTransition&&!aniHistoryRestoring)history.replaceState(history.state,'',location.href.split('#')[0]);document.body.classList.remove('view-sharing');$('#shareView').classList.add('hidden')}
+ if(mode==='share'){++shareNonce;if(!aniHistoryTransition&&!aniHistoryRestoring)history.replaceState(history.state,'','/');document.body.classList.remove('view-sharing');$('#shareView').classList.add('hidden')}
 }
 function showShareDialog(){
  if(mode==='share'){toast('自分のリストに戻ってから共有してください');return}
@@ -9954,7 +10059,7 @@ async function generateShare(){
   const shareYear=scope==='season'?Number($('#shareYear').value):curYear;
   const shareSeason=scope==='season'?$('#shareSeason').value:curSeason;
   const signature=short?JSON.stringify([scope,shareYear,shareSeason,options,items]):'';
-  let href=new URL(window.location.href);
+  let href=new URL(location.protocol==='file:'?window.location.href:window.location.origin+'/');
   if(short&&lastShortSignature===signature&&lastShortLink){href=new URL(lastShortLink);}
   else{
    const data={v:SHARE_VERSION,scope,created:Date.now(),year:shareYear,season:shareSeason,options,items};
@@ -11394,7 +11499,7 @@ $('#studioCards').addEventListener('click',e=>{
  const work=studioItemRefs.get(card.dataset.studioWork);if(work)openDetail(detailSource(work.id)||work,true);
 });
 function detailSource(id){return mode==='share'?(sharedSnapshot?.items||[]).find(a=>a.id===id):saved[id]||(detailActiveItem?.id===id?detailActiveItem:null)||items.find(a=>a.id===id)||rankingData.find(a=>a.id===id)}
-function detailShowScreen(){if(document.body.classList.contains('view-studio'))studioCloseUi();document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#breadcrumb').textContent='作品詳細'}
+function detailShowScreen(){if(document.body.classList.contains('view-studio'))studioCloseUi();document.body.classList.add('view-detail');$('#detailView').classList.remove('hidden');$('#detailBreadcrumb').textContent=detailActiveItem?.title||'作品詳細';$('#detailCopyLink').hidden=!window.__aniPublicRoutes.animeId(detailActiveItem?.id);$('#breadcrumb').textContent='作品詳細'}
 let detailHistorySteps=0;
 function openDetail(item,related=false){
  if(!item)return;
@@ -11448,7 +11553,27 @@ async function detailMoreEpisodes(){const a=detailActiveItem;if(!a||detailEpisod
  finally{if(token===detailNonce){detailEpisodeBusy=false;renderDetailParts(token)}}
 }
 function closeDetail(restoreScroll=true){if(!document.body.classList.contains('view-detail'))return;if(document.body.classList.contains('view-studio'))studioCloseUi();seriesExploreGeneration++;detailNonce++;detailActiveItem=null;detailHistorySteps=0;document.body.classList.remove('view-detail');$('#detailView').classList.add('hidden');$('#detailContent').innerHTML='';if(restoreScroll&&pendingViewRender)render();else pendingViewRender=false;$('#breadcrumb').textContent=mode==='saved'?'マイリスト':mode==='share'?'共有リスト':mode==='ranking'?'ランキング':mode==='annual'?'年間まとめ':'アニメを探す';if(restoreScroll)window.scrollTo({top:detailReturnScroll,behavior:'instant'})}
-$('#detailBack').addEventListener('click',()=>{if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){const steps=Math.min(aniHistoryDepth,Math.max(1,detailHistorySteps||1));history.go(-steps)}else{closeDetail()}});
+$('#detailBack').addEventListener('click',()=>{
+ if(aniHistoryReady&&aniHistoryDepth>0&&history.state?.__aniLogRouteV1){const steps=Math.min(aniHistoryDepth,Math.max(1,detailHistorySteps||1));history.go(-steps);return}
+ if(aniPathRoute?.kind==='anime'&&aniHistoryDepth===0){
+  // A friend's direct link has no previous list. Close into Discover, not their empty My List.
+  aniHistoryRestoring=true;try{showSeason()}finally{aniHistoryRestoring=false}
+  aniHistorySave();window.scrollTo({top:0,behavior:'instant'});
+ }else{closeDetail();aniHistorySave()}
+});
+async function aniCopyPublicLink(path){
+ if(!path||!['http:','https:'].includes(location.protocol)){toast('公開サイトのURLからコピーしてください','error');return}
+ const link=location.origin+path;
+ try{await navigator.clipboard.writeText(link);toast('リンクをコピーしました')}
+ catch{toast('コピーできませんでした。ブラウザのURLをコピーしてください','error')}
+}
+$('#detailCopyLink').addEventListener('click',()=>{
+ const id=window.__aniPublicRoutes.animeId(detailActiveItem?.id);
+ if(id)void aniCopyPublicLink('/anime/'+id);
+});
+$('#rankingCopyLink').addEventListener('click',()=>{
+ if(mode==='ranking')void aniCopyPublicLink(window.__aniPublicRoutes.path(aniHistorySnapshot()));
+});
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#sharedItems').addEventListener('click',e=>{const b=e.target.closest('[data-detail-id]');if(b)openDetail(detailSource(b.dataset.detailId))});
 $('#detailContent').addEventListener('change',e=>{if(e.target.id==='detailStatus'&&detailActiveItem){setStatus(detailActiveItem.id,e.target.value)}});
@@ -11502,6 +11627,7 @@ $('#detailContent').addEventListener('click',e=>{
 // Browser history bridge. Screen history is UI-only: no changes to saved records,
 // ranking order, shared URL encoding, or the app's CSS design system.
 const ANI_ROUTE='__aniLogRouteV1';
+const ANI_PUBLIC=window.__aniPublicRoutes;
 let aniHistoryReady=false,aniHistoryRestoring=false,aniHistoryTransition=false,aniHistoryDepth=0;
 let aniHistoryRestoreTicket=0;
 function aniHistoryDetailRef(item){
@@ -11527,7 +11653,7 @@ function aniHistorySnapshot(){
 function aniHistoryKey(s){return s.studio?'studio:'+(s.studio.kind||'studio')+':'+s.studio.id:s.detail?'detail:'+s.view+':'+s.detail.id:s.view==='saved'?'saved:'+s.saved.filter:s.view==='ranking'?'ranking:'+s.rank.tab:s.view==='season'?'season:'+(s.season?.exploreStatus||'all')+':'+(s.season?.query?(s.season.yearValue||'all')+':'+(s.season.seasonValue||'all')+':'+s.season.query:''):s.view;}
 function aniHistorySave(){
  if(!aniHistoryReady||aniHistoryRestoring)return;
- try{history.replaceState({...aniHistorySnapshot(),depth:aniHistoryDepth},'',location.href)}catch{/* Browsers may restrict file URL history */}
+ try{const state={...aniHistorySnapshot(),depth:aniHistoryDepth};history.replaceState(state,'',ANI_PUBLIC.path(state,location.hash))}catch{/* Browsers may restrict file URL history */}
 }
 function aniHistoryEnter(){
  if(!aniHistoryReady||aniHistoryRestoring)return null;
@@ -11543,7 +11669,7 @@ function aniHistoryLeave(before){
  }
  try{
   aniHistoryDepth++;
-  history.pushState({...next,depth:aniHistoryDepth},'',location.hash.startsWith(SHARE_PREFIX)&&next.view!=='share'?location.href.split('#')[0]:location.href);
+  history.pushState({...next,depth:aniHistoryDepth},'',ANI_PUBLIC.path(next,next.view==='share'?location.hash:''));
  }catch{aniHistoryDepth--;}
 }
 function aniHistoryWrap(original){
@@ -11646,14 +11772,35 @@ window.addEventListener('popstate',e=>{
 if('scrollRestoration' in history)history.scrollRestoration='manual';
 // Preserve the current entry's screen before initialization overwrites history.state.
 // Reloading a detail page must keep that detail, not silently reset to Discover.
-const aniInitialHistoryState=history.state?.[ANI_ROUTE]===1&&
+const aniPathRoute=ANI_PUBLIC.read(location.pathname,location.search);
+const aniStoredHistoryState=history.state?.[ANI_ROUTE]===1&&
  ['season','saved','ranking','annual'].includes(history.state.view)&&
  (!history.state.studio||(validStudioId(history.state.studio.id)&&(!history.state.studio.kind||validRelatedKind(history.state.studio.kind))))&&
  (!history.state.detail||(typeof history.state.detail.id==='string'&&history.state.detail.id.length<=150))
  ?history.state:null;
+// The URL is authoritative on direct entry; a matching browser entry can retain
+// its existing list/filter context and scroll position. Never restore a stale ID.
+let aniInitialHistoryState=aniStoredHistoryState&&(!aniPathRoute||ANI_PUBLIC.matches(aniStoredHistoryState,aniPathRoute))?aniStoredHistoryState:null;
+if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryState){
+ const base=aniHistorySnapshot();
+ if(aniPathRoute.kind==='anime'){
+  aniInitialHistoryState={...base,depth:0,view:'saved',detail:{id:aniPathRoute.id,title:'作品情報を読み込み中…'},detailSteps:1,scrollY:0};
+ }else if(aniPathRoute.kind==='ranking'){
+  aniInitialHistoryState={...base,depth:0,view:'ranking',detail:null,rank:{...base.rank,...aniPathRoute.rank},scrollY:0};
+ }else if(aniPathRoute.kind==='saved'){
+  aniInitialHistoryState={...base,depth:0,view:'saved',detail:null,scrollY:0};
+ }
+}
 aniHistoryReady=true;
-// Direct share hashes take priority. Do not replace valid history state on reload.
-if(!aniInitialHistoryState){try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}}
+// QR and existing shared-list links always take precedence over public routes.
+if(location.hash.startsWith(SHARE_PREFIX)){
+ try{history.replaceState(aniHistorySnapshot(),'',location.href)}catch{}
+}else if(aniInitialHistoryState){
+ try{history.replaceState(aniInitialHistoryState,'',ANI_PUBLIC.path(aniInitialHistoryState))}catch{}
+}else{
+ aniHistorySave();
+ if(aniPathRoute?.kind==='invalid')toast('作品URLが正しくありません。作品一覧を表示します。','error');
+}
 
 updateCounts();
 if(location.hash.startsWith(SHARE_PREFIX)){readShareFromHash()}

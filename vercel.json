@@ -1,0 +1,16 @@
+{
+  "rewrites": [
+    {
+      "source": "/anime/:id",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mylist",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ranking",
+      "destination": "/index.html"
+    }
+  ]
+}
