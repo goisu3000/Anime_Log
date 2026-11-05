@@ -53,7 +53,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@700&display=swap" rel="stylesheet">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2036%2036%22%20width%3D%2236%22%20height%3D%2236%22%3E%0A%3Crect%20width%3D%2236%22%20height%3D%2236%22%20rx%3D%228%22%20fill%3D%22%23c4e995%22%2F%3E%0A%3Cpath%20d%3D%22M9.8263671875%2026.4H13.446484375L14.6388671875%2022.683203125H20.321484375L21.5568359375%2026.4H25.1984375L19.591015625%2010.394140624999999H15.294140625ZM15.4552734375%2020.1158203125%2015.9171875%2018.6763671875C16.4005859375%2017.0650390625%2016.8732421875%2015.163671874999999%2017.4103515625%2012.961523437499999C17.9689453125%2015.142187499999999%2018.473828125%2017.0328125%2018.989453125%2018.6763671875L19.4728515625%2020.1158203125Z%22%20fill%3D%22%23182414%22%2F%3E%0A%3C%2Fsvg%3E">
 <!-- Single source of truth: update only the content below when releasing a new version. -->
-<meta name="ani-log-version" content="2.4.85">
+<meta name="ani-log-version" content="2.4.86">
 <meta name="ani-log-sync-integration" content="formal-development;sync-off">
 <meta name="ani-log-stage-api-origin" content="">
 <meta name="ani-log-formal-stage-approval" content="none">
@@ -3933,7 +3933,7 @@ function patternAMalMetric(a){const m=malMetricData(a);if(m.score===null)return 
 // Single source of truth for Japanese viewing-service choices, display priority,
 // API name matching, authorized URL hosts and search links. Array order is UI order.
 const STREAM_SERVICES=[
- {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','primevideo']},
+ {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','amazonvideo','amazonprime','primevideo','プライムビデオ','アマゾンプライムビデオ','amazonプライムビデオ','amazonプライム','アマプラ']},
  {name:'Netflix',domain:'netflix.com',searchDomain:'netflix.com/jp',hosts:['netflix.com'],aliases:['netflix']},
  {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp'],aliases:['dアニメストア','danimestore']},
  {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv'],aliases:['abema']},
@@ -3947,7 +3947,7 @@ const STREAM_SERVICE_PRIORITY=new Map(STREAM_SERVICES.map((service,index)=>[serv
 // Legacy-only validation keeps existing Lemino records/backups usable; no new selection.
 const LEGACY_STREAM_SERVICE={name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']};
 function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||(name==='Lemino'?LEGACY_STREAM_SERVICE:null)}
-function streamNameKey(source){return String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')}
+function streamNameKey(source){return String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+・･.（）()]/g,'')}
 function streamCanonicalName(source){const key=streamNameKey(source);return STREAM_SERVICES.find(s=>s.aliases.some(a=>streamNameKey(a)===key))?.name||''}
 function streamAllowedUrl(name,value){
  const site=streamService(name);if(!site||typeof value!=='string'||value.length>4096)return '';
@@ -3969,6 +3969,59 @@ function streamAllowedUrl(name,value){
   if(!site.hosts.some(allowed=>host===allowed||host.endsWith('.'+allowed)))return '';
   return url.href;
  }catch{return ''}
+}
+// A public API label is not proof of a provider. Resolve a *direct* title URL
+// against an allow-listed service host; URL-based rescue is intentionally stricter.
+// No requests, scraping, persistence changes or Japanese availability assumptions.
+function streamLooksLikeTitleUrl(service,value,requireStrongPath=false){
+ try{
+  const u=new URL(value),path=u.pathname.toLowerCase();
+  if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(path))return false;
+  // Disney+ uses /browse/entity-<UUID> for actual title pages. Only this
+  // exact title form bypasses the generic browse/catalog exclusion.
+  if(service==='Disney Plus'&&/^(?:www\.)?disneyplus\.com$/i.test(u.hostname)&&/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?browse\/entity-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\/?$/i.test(path))return true;
+  // Never promote any other Disney+ browse/catalog path to a title link.
+  if(service==='Disney Plus'&&(/(?:^|\/)browse(?:\/|$)/i.test(path)||/%(?:2f|5c)/i.test(path)))return false;
+  if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:search|browse|category|categories|genre|genres|home|help|login|signup|register|store|storefront|ranking|rankings)(?:\/|$)/i.test(path))return false;
+  if(service==='Amazon Prime Video'){
+   if(u.hostname.toLowerCase().endsWith('amazon.co.jp'))return /^\/(?:gp\/video\/(?:detail|watch|series|episode)\/|dp\/|detail\/)[a-z0-9]/i.test(path);
+   return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:detail|watch|title|dp)\/[a-z0-9]/i.test(path);
+  }
+  if(!requireStrongPath)return true;
+  switch(service){
+   case 'Netflix':return /^\/(?:[a-z]{2}\/)?(?:title|watch)\/[a-z0-9]/i.test(path);
+   case 'dアニメストア':return /^\/animestore\/(?:ci_pc|ci)(?:\/|$)/i.test(path)&&u.searchParams.has('workId');
+   case 'ABEMA':return /^\/video\/(?:title|episode)\/[a-z0-9]/i.test(path);
+   case 'U-NEXT':return /^\/(?:title|play|series|episode)\/[a-z0-9]/i.test(path);
+   case 'Hulu':return /^\/(?:watch|series|movies|movie|episodes|detail)\/[a-z0-9]/i.test(path);
+   case 'DMM TV':return /^\/(?:vod\/(?:detail|episode)|digital\/video[^/]*\/-\/detail)\//i.test(path);
+   case 'FOD':return /^\/(?:title|episode|series|video)\/[a-z0-9]/i.test(path);
+   case 'Disney Plus':return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:series|movies|movie|video)\/[a-z0-9]/i.test(path);
+   default:return false;
+  }
+ }catch{return false}
+}
+function streamResolveRegisteredLink(entry){
+ if(!entry||typeof entry.url!=='string')return null;
+ const declared=streamCanonicalName(entry.name);
+ if(declared){
+  const url=streamAllowedUrl(declared,entry.url);
+  if(url&&streamLooksLikeTitleUrl(declared,url))return {name:declared,url};
+ }
+ // Name missing, inconsistent or unrecognized: URL and title-shaped path must agree.
+ for(const provider of STREAM_SERVICES){
+  const url=streamAllowedUrl(provider.name,entry.url);
+  if(url&&streamLooksLikeTitleUrl(provider.name,url,true))return {name:provider.name,url};
+ }
+ return null;
+}
+function streamResolvedLinks(entries){
+ const found=new Map();
+ for(const raw of entries){
+  const match=streamResolveRegisteredLink(raw);
+  if(match&&!found.has(match.name))found.set(match.name,match);
+ }
+ return [...found.values()].sort((a,b)=>STREAM_SERVICE_PRIORITY.get(a.name)-STREAM_SERVICE_PRIORITY.get(b.name));
 }
 function cleanStreamPreference(x){
  if(!x||typeof x!=='object'||typeof x.updatedAt!=='string'||!Number.isFinite(Date.parse(x.updatedAt)))return null;
@@ -4003,20 +4056,14 @@ function streamKnownLinks(id){
  // Both routes expose streaming links. An empty response from one route must
  // never hide a valid link already present in the other route.
  const fullLinks=Array.isArray(entry?.full?.streaming)?entry.full.streaming:null;
+ const externalLinks=Array.isArray(entry?.full?.external)?entry.full.external:null;
  const directLinks=Array.isArray(entry?.streamLinks)?entry.streamLinks:null;
- if(fullLinks===null&&directLinks===null)return null;
- return [...(fullLinks||[]),...(directLinks||[])];
+ if(fullLinks===null&&externalLinks===null&&directLinks===null)return null;
+ return [...(fullLinks||[]),...(externalLinks||[]),...(directLinks||[])];
 }
 function streamNameMatches(source,selected){return streamCanonicalName(source)===selected}
 function streamMatchingUrl(links,service){
- const valid=(Array.isArray(links)?links:[]).map(x=>({name:x?.name,url:streamAllowedUrl(service,x?.url)})).filter(x=>x.url);
- // Match the registered streaming provider name first, just like detail view.
- const named=valid.find(x=>streamNameMatches(x.name,service));
- if(named)return named.url;
- // A provider may be labeled differently in API responses. Accept an explicit
- // title/watch/series URL at the selected provider's own domain, never a homepage.
- const byAddress=valid.find(x=>/^\/(?:[a-z]{2}\/)?(?:title|watch|series|detail|video|contents|play)\//i.test(new URL(x.url).pathname));
- return byAddress?byAddress.url:'';
+ return streamResolvedLinks(Array.isArray(links)?links:[]).find(link=>link.name===service)?.url||'';
 }
 async function streamFetchLinks(id,service){
  const cached=streamKnownLinks(id),entry=detailCache.get(id);
@@ -6576,7 +6623,7 @@ function detailVideos(full,videos){
 }
 function detailEpisodes(data){const list=data?.data||[];if(!Array.isArray(list)||!list.length)return '';const body=list.map((ep,i)=>{const num=Number.isInteger(ep.mal_id)?ep.mal_id:i+1;const title=ep.title_japanese||ep.title||`第${num}話`;const alt=ep.title_japanese&&ep.title&&ep.title!==ep.title_japanese?ep.title:'';return `<div class="detail-episode"><span class="detail-episode-num">第${safeText(num)}話</span><div><div class="detail-episode-title">${safeText(title)}</div>${alt?`<div class="detail-episode-sub">${safeText(alt)}</div>`:''}${ep.aired?`<div class="detail-episode-sub">${safeText(String(ep.aired).slice(0,10))}</div>`:''}</div>${ep.synopsis?`<details><summary>この話のあらすじ（ネタバレ注意）</summary>${safeText(ep.synopsis)}</details>`:''}</div>`}).join('');return body}
 function detailRelations(full){const relations=Array.isArray(full.relations)?full.relations:[];const entries=[];for(const group of relations){for(const e of group.entry||[]){if(String(e.type).toLowerCase()!=='anime'||!Number.isInteger(e.mal_id))continue;const im=safeImage(e.images?.jpg?.image_url||e.images?.jpg?.large_image_url||'');entries.push({...e,relationship:group.relation,image:im})}}return entries.length?detailHeading('関連作品',`<div class="detail-related-grid">${entries.slice(0,24).map(e=>`<button type="button" class="detail-related-item" data-related-id="jikan:${e.mal_id}" data-related-title="${safeText(e.name)}">${e.image?`<img loading="lazy" src="${safeText(e.image)}" alt="" referrerpolicy="no-referrer">`:''}<span class="detail-related-label">${safeText(e.relationship||'関連作品')}</span><span class="detail-related-name">${safeText(e.name)}</span>${mode!=='share'&&validStatuses.has(saved[`jikan:${e.mal_id}`]?.status)?`<span class="detail-related-status">${savedStatusIcons[saved[`jikan:${e.mal_id}`].status]}<span>${safeText(statusLabels[saved[`jikan:${e.mal_id}`].status])}</span></span>`:''}</button>`).join('')}</div>`):''}
-function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
+function detailLinks(full){const result=[];for(const p of full.external||[])if(!streamResolveRegisteredLink(p))result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
 const JP_STREAM_SITES=STREAM_SERVICES;
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
@@ -6584,8 +6631,7 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
- const links=(full?.streaming||[]).map(p=>{const name=streamCanonicalName(p?.name);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
- const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true}).sort((a,b)=>STREAM_SERVICE_PRIORITY.get(a.name)-STREAM_SERVICE_PRIORITY.get(b.name));
+ const unique=streamResolvedLinks([...(Array.isArray(full?.streaming)?full.streaming:[]),...(Array.isArray(full?.external)?full.external:[])]);
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
@@ -8358,7 +8404,7 @@ function patternAMalMetric(a){const m=malMetricData(a);if(m.score===null)return 
 // Single source of truth for Japanese viewing-service choices, display priority,
 // API name matching, authorized URL hosts and search links. Array order is UI order.
 const STREAM_SERVICES=[
- {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','primevideo']},
+ {name:'Amazon Prime Video',domain:'amazon.co.jp/gp/video',hosts:['amazon.co.jp','primevideo.com'],aliases:['amazonprimevideo','amazonvideo','amazonprime','primevideo','プライムビデオ','アマゾンプライムビデオ','amazonプライムビデオ','amazonプライム','アマプラ']},
  {name:'Netflix',domain:'netflix.com',searchDomain:'netflix.com/jp',hosts:['netflix.com'],aliases:['netflix']},
  {name:'dアニメストア',domain:'animestore.docomo.ne.jp',hosts:['animestore.docomo.ne.jp'],aliases:['dアニメストア','danimestore']},
  {name:'ABEMA',domain:'abema.tv',hosts:['abema.tv'],aliases:['abema']},
@@ -8372,7 +8418,7 @@ const STREAM_SERVICE_PRIORITY=new Map(STREAM_SERVICES.map((service,index)=>[serv
 // Legacy-only validation keeps existing Lemino records/backups usable; no new selection.
 const LEGACY_STREAM_SERVICE={name:'Lemino',domain:'lemino.docomo.ne.jp',hosts:['lemino.docomo.ne.jp']};
 function streamService(name){return STREAM_SERVICES.find(x=>x.name===name)||(name==='Lemino'?LEGACY_STREAM_SERVICE:null)}
-function streamNameKey(source){return String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+]/g,'')}
+function streamNameKey(source){return String(source||'').normalize('NFKC').toLowerCase().replace(/[\s\-‐‑‒–—―_+・･.（）()]/g,'')}
 function streamCanonicalName(source){const key=streamNameKey(source);return STREAM_SERVICES.find(s=>s.aliases.some(a=>streamNameKey(a)===key))?.name||''}
 function streamAllowedUrl(name,value){
  const site=streamService(name);if(!site||typeof value!=='string'||value.length>4096)return '';
@@ -8394,6 +8440,59 @@ function streamAllowedUrl(name,value){
   if(!site.hosts.some(allowed=>host===allowed||host.endsWith('.'+allowed)))return '';
   return url.href;
  }catch{return ''}
+}
+// A public API label is not proof of a provider. Resolve a *direct* title URL
+// against an allow-listed service host; URL-based rescue is intentionally stricter.
+// No requests, scraping, persistence changes or Japanese availability assumptions.
+function streamLooksLikeTitleUrl(service,value,requireStrongPath=false){
+ try{
+  const u=new URL(value),path=u.pathname.toLowerCase();
+  if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/?)?$/i.test(path))return false;
+  // Disney+ uses /browse/entity-<UUID> for actual title pages. Only this
+  // exact title form bypasses the generic browse/catalog exclusion.
+  if(service==='Disney Plus'&&/^(?:www\.)?disneyplus\.com$/i.test(u.hostname)&&/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?browse\/entity-[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}\/?$/i.test(path))return true;
+  // Never promote any other Disney+ browse/catalog path to a title link.
+  if(service==='Disney Plus'&&(/(?:^|\/)browse(?:\/|$)/i.test(path)||/%(?:2f|5c)/i.test(path)))return false;
+  if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:search|browse|category|categories|genre|genres|home|help|login|signup|register|store|storefront|ranking|rankings)(?:\/|$)/i.test(path))return false;
+  if(service==='Amazon Prime Video'){
+   if(u.hostname.toLowerCase().endsWith('amazon.co.jp'))return /^\/(?:gp\/video\/(?:detail|watch|series|episode)\/|dp\/|detail\/)[a-z0-9]/i.test(path);
+   return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:detail|watch|title|dp)\/[a-z0-9]/i.test(path);
+  }
+  if(!requireStrongPath)return true;
+  switch(service){
+   case 'Netflix':return /^\/(?:[a-z]{2}\/)?(?:title|watch)\/[a-z0-9]/i.test(path);
+   case 'dアニメストア':return /^\/animestore\/(?:ci_pc|ci)(?:\/|$)/i.test(path)&&u.searchParams.has('workId');
+   case 'ABEMA':return /^\/video\/(?:title|episode)\/[a-z0-9]/i.test(path);
+   case 'U-NEXT':return /^\/(?:title|play|series|episode)\/[a-z0-9]/i.test(path);
+   case 'Hulu':return /^\/(?:watch|series|movies|movie|episodes|detail)\/[a-z0-9]/i.test(path);
+   case 'DMM TV':return /^\/(?:vod\/(?:detail|episode)|digital\/video[^/]*\/-\/detail)\//i.test(path);
+   case 'FOD':return /^\/(?:title|episode|series|video)\/[a-z0-9]/i.test(path);
+   case 'Disney Plus':return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:series|movies|movie|video)\/[a-z0-9]/i.test(path);
+   default:return false;
+  }
+ }catch{return false}
+}
+function streamResolveRegisteredLink(entry){
+ if(!entry||typeof entry.url!=='string')return null;
+ const declared=streamCanonicalName(entry.name);
+ if(declared){
+  const url=streamAllowedUrl(declared,entry.url);
+  if(url&&streamLooksLikeTitleUrl(declared,url))return {name:declared,url};
+ }
+ // Name missing, inconsistent or unrecognized: URL and title-shaped path must agree.
+ for(const provider of STREAM_SERVICES){
+  const url=streamAllowedUrl(provider.name,entry.url);
+  if(url&&streamLooksLikeTitleUrl(provider.name,url,true))return {name:provider.name,url};
+ }
+ return null;
+}
+function streamResolvedLinks(entries){
+ const found=new Map();
+ for(const raw of entries){
+  const match=streamResolveRegisteredLink(raw);
+  if(match&&!found.has(match.name))found.set(match.name,match);
+ }
+ return [...found.values()].sort((a,b)=>STREAM_SERVICE_PRIORITY.get(a.name)-STREAM_SERVICE_PRIORITY.get(b.name));
 }
 function cleanStreamPreference(x){
  if(!x||typeof x!=='object'||typeof x.updatedAt!=='string'||!Number.isFinite(Date.parse(x.updatedAt)))return null;
@@ -8428,20 +8527,14 @@ function streamKnownLinks(id){
  // Both routes expose streaming links. An empty response from one route must
  // never hide a valid link already present in the other route.
  const fullLinks=Array.isArray(entry?.full?.streaming)?entry.full.streaming:null;
+ const externalLinks=Array.isArray(entry?.full?.external)?entry.full.external:null;
  const directLinks=Array.isArray(entry?.streamLinks)?entry.streamLinks:null;
- if(fullLinks===null&&directLinks===null)return null;
- return [...(fullLinks||[]),...(directLinks||[])];
+ if(fullLinks===null&&externalLinks===null&&directLinks===null)return null;
+ return [...(fullLinks||[]),...(externalLinks||[]),...(directLinks||[])];
 }
 function streamNameMatches(source,selected){return streamCanonicalName(source)===selected}
 function streamMatchingUrl(links,service){
- const valid=(Array.isArray(links)?links:[]).map(x=>({name:x?.name,url:streamAllowedUrl(service,x?.url)})).filter(x=>x.url);
- // Match the registered streaming provider name first, just like detail view.
- const named=valid.find(x=>streamNameMatches(x.name,service));
- if(named)return named.url;
- // A provider may be labeled differently in API responses. Accept an explicit
- // title/watch/series URL at the selected provider's own domain, never a homepage.
- const byAddress=valid.find(x=>/^\/(?:[a-z]{2}\/)?(?:title|watch|series|detail|video|contents|play)\//i.test(new URL(x.url).pathname));
- return byAddress?byAddress.url:'';
+ return streamResolvedLinks(Array.isArray(links)?links:[]).find(link=>link.name===service)?.url||'';
 }
 async function streamFetchLinks(id,service){
  const cached=streamKnownLinks(id),entry=detailCache.get(id);
@@ -10789,7 +10882,7 @@ function detailVideos(full,videos){
 }
 function detailEpisodes(data){const list=data?.data||[];if(!Array.isArray(list)||!list.length)return '';const body=list.map((ep,i)=>{const num=Number.isInteger(ep.mal_id)?ep.mal_id:i+1;const title=ep.title_japanese||ep.title||`第${num}話`;const alt=ep.title_japanese&&ep.title&&ep.title!==ep.title_japanese?ep.title:'';return `<div class="detail-episode"><span class="detail-episode-num">第${safeText(num)}話</span><div><div class="detail-episode-title">${safeText(title)}</div>${alt?`<div class="detail-episode-sub">${safeText(alt)}</div>`:''}${ep.aired?`<div class="detail-episode-sub">${safeText(String(ep.aired).slice(0,10))}</div>`:''}</div>${ep.synopsis?`<details><summary>この話のあらすじ（ネタバレ注意）</summary>${safeText(ep.synopsis)}</details>`:''}</div>`}).join('');return body}
 function detailRelations(full){const relations=Array.isArray(full.relations)?full.relations:[];const entries=[];for(const group of relations){for(const e of group.entry||[]){if(String(e.type).toLowerCase()!=='anime'||!Number.isInteger(e.mal_id))continue;const im=safeImage(e.images?.jpg?.image_url||e.images?.jpg?.large_image_url||'');entries.push({...e,relationship:group.relation,image:im})}}return entries.length?detailHeading('関連作品',`<div class="detail-related-grid">${entries.slice(0,24).map(e=>`<button type="button" class="detail-related-item" data-related-id="jikan:${e.mal_id}" data-related-title="${safeText(e.name)}">${e.image?`<img loading="lazy" src="${safeText(e.image)}" alt="" referrerpolicy="no-referrer">`:''}<span class="detail-related-label">${safeText(e.relationship||'関連作品')}</span><span class="detail-related-name">${safeText(e.name)}</span>${mode!=='share'&&validStatuses.has(saved[`jikan:${e.mal_id}`]?.status)?`<span class="detail-related-status">${savedStatusIcons[saved[`jikan:${e.mal_id}`].status]}<span>${safeText(statusLabels[saved[`jikan:${e.mal_id}`].status])}</span></span>`:''}</button>`).join('')}</div>`):''}
-function detailLinks(full){const result=[];for(const p of full.external||[])result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
+function detailLinks(full){const result=[];for(const p of full.external||[])if(!streamResolveRegisteredLink(p))result.push({...p,category:'公式・外部リンク'});const seen=new Set();const links=result.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(u))return false;seen.add(u);return true});if(!links.length)return '';return detailHeading('公式・外部リンク',`<div class="detail-links">${links.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`)}
 const JP_STREAM_SITES=STREAM_SERVICES;
 function jpStreamSearchUrl(domain,title){return `https://www.google.com/search?q=${encodeURIComponent('site:'+domain+' '+title)}`}
 function jpStreamingSearchLinks(title,linkedNames=new Set()){
@@ -10797,8 +10890,7 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}</a>`).join('')}</div></div>`;
 }
 function detailStreamingLinks(full,title){
- const links=(full?.streaming||[]).map(p=>{const name=streamCanonicalName(p?.name);return name?{...p,name,category:'配信先リンク'}:null}).filter(Boolean);const seen=new Set();
- const unique=links.filter(p=>{const u=safeLink(p.url);if(!u||seen.has(p.name))return false;seen.add(p.name);return true}).sort((a,b)=>STREAM_SERVICE_PRIORITY.get(a.name)-STREAM_SERVICE_PRIORITY.get(b.name));
+ const unique=streamResolvedLinks([...(Array.isArray(full?.streaming)?full.streaming:[]),...(Array.isArray(full?.external)?full.external:[])]);
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
  return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
