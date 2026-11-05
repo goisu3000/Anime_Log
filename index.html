@@ -880,6 +880,10 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .review-optional summary{padding:12px 14px;color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold);cursor:pointer;list-style:none}
 .review-optional summary::after{content:"＋";float:right;color:var(--accent)}.review-optional[open] summary::after{content:"−"}
 .review-optional-body{padding:4px 14px 14px}
+.review-date-option{border-top:1px solid var(--border);padding:0 14px 12px;margin-top:4px}
+.review-date-option>summary{padding:12px 0 6px;font-size:var(--fs-xs)}
+.review-date-editor .watch-date{padding-top:4px}
+.watch-date-field input[hidden]{display:none!important}
 .review-aspect{padding:10px 0;border-top:1px solid var(--border)}
 .review-aspect-name{display:block;font-size:var(--fs-sm);font-weight:var(--fw-semi);margin-bottom:8px}
 .review-aspect-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
@@ -2788,6 +2792,10 @@ select:not([data-status-id]){
     <details class="review-optional" id="ratingOptional">
       <summary>さらに詳しく評価する（任意）</summary>
       <div class="review-optional-body" id="ratingAspects"></div>
+      <details class="review-date-option" id="ratingDateOption" hidden>
+        <summary>時期を編集する</summary>
+        <div id="ratingDateEditor" class="review-date-editor"></div>
+      </details>
     </details>
     <div class="review-dialog-actions">
       <button type="button" id="ratingClear" class="review-clear" hidden>評価を削除</button>
@@ -2811,6 +2819,11 @@ window.__aniPublicRoutes=Object.freeze((()=>{
  const animeId=id=>{const m=/^jikan:([1-9][0-9]{0,9})$/.exec(String(id||''));return m?m[1]:null};
  const read=(pathname,search='')=>{
   if(pathname==='/mylist'||pathname==='/mylist/')return {kind:'saved'};
+  if(pathname==='/annual'||pathname==='/annual/'){
+    const p=new URLSearchParams(search),raw=p.get('year'),year=Number(raw);
+    const current=new Date().getFullYear();
+    return {kind:'annual',year:raw&&/^\d{4}$/.test(raw)&&Number.isInteger(year)&&year>=1900&&year<=current?year:current};
+   }
   if(pathname==='/ranking'||pathname==='/ranking/'){
    const p=new URLSearchParams(search);
    const tab=tabs.has(p.get('tab'))?p.get('tab'):'period';
@@ -2832,6 +2845,10 @@ window.__aniPublicRoutes=Object.freeze((()=>{
   const id=!state?.studio&&state?.detail?animeId(state.detail.id):null;
   if(id)return '/anime/'+id;
   if(state?.view==='saved')return '/mylist';
+  if(state?.view==='annual'){
+    const year=Number(state.annualYear),current=new Date().getFullYear();
+    return Number.isInteger(year)&&year>=1900&&year<current?'/annual?year='+year:'/annual';
+   }
   if(state?.view==='ranking'){
    const r=state.rank||{},tab=tabs.has(r.tab)?r.tab:'period';
    const p=new URLSearchParams();p.set('tab',tab);
@@ -2852,6 +2869,7 @@ window.__aniPublicRoutes=Object.freeze((()=>{
   if(!route||!state)return false;
   if(route.kind==='anime')return animeId(state.detail?.id)===animeId(route.id)&&!state.studio;
   if(route.kind==='saved')return state.view==='saved'&&!state.detail&&!state.studio;
+  if(route.kind==='annual')return state.view==='annual'&&!state.detail&&!state.studio&&Number(state.annualYear)===route.year;
   if(route.kind==='ranking')return state.view==='ranking'&&!state.detail&&!state.studio&&
    path(state).replace(/\/$/,'')===path({view:'ranking',rank:{...state.rank,...route.rank}}).replace(/\/$/,'');
   return false;
@@ -3568,27 +3586,48 @@ function completionDayOptions(year,month,selected=''){
  const days=Number.isInteger(year)&&year>=1900&&year<=2100&&Number.isInteger(month)&&month>=1&&month<=12?new Date(year,month,0).getDate():31;
  return '<option value="">不明</option>'+Array.from({length:days},(_,i)=>{const d=String(i+1).padStart(2,'0');return `<option value="${d}" ${d===selected?'selected':''}>${i+1}日</option>`}).join('');
 }
-function completionDateMarkup(a){
+function completionYearOptions(year){
+ const current=localTodayParts()[0];
+ const presets=Array.from({length:Math.max(0,current-2000+1)},(_,i)=>current-i);
+ const chosen=year&&presets.includes(Number(year))?year:year?'other':'';
+ const options='<option value="">年を選択</option>'+presets.map(y=>`<option value="${y}" ${String(y)===chosen?'selected':''}>${y}年</option>`).join('')+`<option value="other" ${chosen==='other'?'selected':''}>その他の年を入力</option>`;
+ return {options,chosen};
+}
+function completionDateMarkup(a,scope='detail'){
  if(mode==='share'||saved[a.id]?.status!=='watched')return '';
+ const prefix=scope==='rating'?'ratingCompletion':'completion';
  const savedDate=validCompletedOn(saved[a.id]?.completedOn)?saved[a.id].completedOn:'';
  const [year='',month='',day='']=savedDate.split('-');
+ const years=completionYearOptions(year);
  const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
- return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="completionYear"><span>年</span><input id="completionYear" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：2025" value="${safeText(year)}" aria-label="見終わった年"></label><label class="watch-date-field" for="completionMonth"><span>月（任意）</span><select id="completionMonth" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="completionDay"><span>日（任意）</span><select id="completionDay" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}">保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}">記録を消す</button>`:''}</div><p class="watch-date-hint">例：2025年／2025年8月／2025年8月23日。入力していない月日を自動で補完することはありません。</p></div>`;
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div><p class="watch-date-hint">2000年以降は一覧から選択できます。1995年などは「その他の年を入力」から登録できます。</p></div>`;
 }
-function refreshCompletionDay(){
- const yearInput=$('#completionYear'),monthInput=$('#completionMonth'),dayInput=$('#completionDay');
- if(!yearInput||!monthInput||!dayInput)return;
- const selected=dayInput.value,year=Number(yearInput.value),month=Number(monthInput.value);
- dayInput.innerHTML=completionDayOptions(year,month,selected);
- dayInput.disabled=!monthInput.value;
+function completionFields(scope='detail'){
+ const prefix=scope==='rating'?'ratingCompletion':'completion';
+ return {preset:document.getElementById(prefix+'YearPreset'),input:document.getElementById(prefix+'Year'),month:document.getElementById(prefix+'Month'),day:document.getElementById(prefix+'Day')};
+}
+function completionYearValue(scope='detail'){
+ const {preset,input}=completionFields(scope);return String(preset?.value==='other'?input?.value||'':preset?.value||'').trim();
+}
+function refreshCompletionDay(scope='detail'){
+ const {preset,input,month,day}=completionFields(scope);
+ if(!preset||!input||!month||!day)return;
+ const other=preset.value==='other';input.hidden=!other;input.disabled=!other;
+ const selected=day.value,year=Number(completionYearValue(scope)),m=Number(month.value);
+ day.innerHTML=completionDayOptions(year,m,selected);
+ day.disabled=!month.value;
 }
 function saveCompletionDate(...args){return queueRecordWrite(()=>saveCompletionDateImpl(...args))}
-async function saveCompletionDateImpl(id,clear=false){
+async function saveCompletionDateImpl(id,clear=false,scope='detail'){
  const item=saved[id];if(!item||item.status!=='watched'||mode==='share')return;
+ // A rating dialog may contain unsaved star changes. Only the completion date is persisted here.
+ if(scope==='rating'&&ratingItemId!==id)return;
  let value='';
  if(!clear){
-  const y=String($('#completionYear')?.value||'').trim(),m=String($('#completionMonth')?.value||''),d=String($('#completionDay')?.value||'');
-  if(!y){toast('見終わった年を入力してください。記録の削除は「記録を消す」を使えます。','error');return}
+  const fields=completionFields(scope);
+  if(!fields.preset||!fields.month||!fields.day)return;
+  const y=completionYearValue(scope),m=String(fields.month.value||''),d=String(fields.day.value||'');
+  if(!y){toast('見終わった年を選択してください。記録の削除は「記録を消す」を使えます。','error');return}
   if(!/^\d{4}$/.test(y)){toast('年を4桁で入力してください','error');return}
   value=y+(m?'-'+m:'')+(m&&d?'-'+d:'');
   if(!validCompletedOn(value)){toast('未来の日付や存在しない日付は保存できません','error');return}
@@ -3597,7 +3636,10 @@ async function saveCompletionDateImpl(id,clear=false){
  if(value)item.completedOn=value;else delete item.completedOn;
  item.updatedAt=new Date().toISOString();
  if(!await persist()){saved[id]=old;return}
- renderDetailParts(detailNonce);toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
+ if(scope==='rating'&&ratingItemId===id&&$('#ratingDialog').open)$('#ratingDateEditor').innerHTML=completionDateMarkup(item,'rating');
+ if(detailActiveItem?.id===id)renderDetailParts(detailNonce);
+ if(mode==='annual'||mode==='saved')render();
+ toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
 }
 
 function reviewAspectStarMarkup(value){
@@ -3639,6 +3681,9 @@ function openRating(id){
  ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})}};
  $('#ratingTitle').textContent=item.title;
  $('#ratingAspects').innerHTML=ratingAspectHTML();
+  $('#ratingDateOption').hidden=item.status!=='watched';
+  $('#ratingDateOption').open=false;
+  $('#ratingDateEditor').innerHTML=item.status==='watched'?completionDateMarkup(item,'rating'):'';
  $('#ratingOptional').open=false; // The quick rating path stays compact, even when editing a detailed review.
  $('#ratingClear').hidden=!previous;
  $$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));
@@ -5163,7 +5208,7 @@ function annualValidEntries(){return Object.values(saved).filter(a=>a?.status===
 function annualDatedEntries(){return annualValidEntries().filter(a=>validCompletedOn(a.completedOn));}
 function annualYears(){
  const current=new Date().getFullYear();
- return [...new Set([current,...annualDatedEntries().map(a=>Number(a.completedOn.slice(0,4)))])].sort((a,b)=>b-a);
+ return [...new Set([current,...(Number.isInteger(annualYear)&&annualYear>=1900&&annualYear<=current?[annualYear]:[]),...annualDatedEntries().map(a=>Number(a.completedOn.slice(0,4)))])].sort((a,b)=>b-a);
 }
 function annualData(year){
  const all=annualValidEntries();
@@ -5225,7 +5270,7 @@ function showAnnual(){
 }
 $$('[data-annual-open]').forEach(b=>b.addEventListener('click',()=>showAnnual()));
 $('#annualBack').addEventListener('click',()=>showSaved());
-$('#annualYear').addEventListener('change',e=>{const y=Number(e.target.value);if(annualYears().includes(y)){annualYear=y;renderAnnual()}});
+$('#annualYear').addEventListener('change',e=>{const y=Number(e.target.value);if(annualYears().includes(y)){annualYear=y;renderAnnual();aniHistorySave()}});
 $('#annualView').addEventListener('click',e=>{
  const b=e.target.closest('[data-detail-id]');if(b){openDetail(detailSource(b.dataset.detailId));return}
  if(e.target.closest('[data-annual-missing]')){finishedYearFilter='unknown';showSaved('watched');return}
@@ -5829,6 +5874,17 @@ $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
 $('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
 $('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
 $('#ratingDialog').addEventListener('close',()=>{ratingItemId=null});
+$('#ratingDialog').addEventListener('change',e=>{
+ if(e.target.matches('#ratingCompletionYearPreset,#ratingCompletionYear,#ratingCompletionMonth'))refreshCompletionDay('rating');
+});
+$('#ratingDialog').addEventListener('input',e=>{if(e.target.matches('#ratingCompletionYear'))refreshCompletionDay('rating')});
+$('#ratingDateEditor').addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();if(ratingItemId)saveCompletionDate(ratingItemId,false,'rating')}
+});
+$('#ratingDialog').addEventListener('click',e=>{
+ const save=e.target.closest('[data-completion-save][data-completion-scope="rating"]');if(save){saveCompletionDate(save.dataset.completionSave,false,'rating');return}
+ const clear=e.target.closest('[data-completion-clear][data-completion-scope="rating"]');if(clear)saveCompletionDate(clear.dataset.completionClear,true,'rating');
+});
 $('#ratingDialog').addEventListener('click',e=>{const star=e.target.closest('[data-rating-star]');if(star){const next=Number(star.dataset.ratingStar),changed=ratingDraft.overall!==next;
   ratingDraft.overall=next;updateRatingUI();
   if(changed){$$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));star.classList.add('motion-rating')}
@@ -5928,7 +5984,7 @@ $('#searchInput').addEventListener('keydown',e=>{const options=$$('#searchSugges
 document.addEventListener('click',e=>{if(!e.target.closest('.searchbox-shell'))closeSuggestions()});
 $('#cards').addEventListener('click',e=>{const fold=e.target.closest('[data-fold-status]');if(fold)toggleFold(fold.dataset.foldStatus,fold.dataset.foldPeriod);
  const progress=e.target.closest('[data-progress-id]');if(progress)changeProgress(progress.dataset.progressId,Number(progress.dataset.progressStep));const finish=e.target.closest('[data-progress-complete]');if(finish)acceptProgressCompletion(finish);});
-$('#detailView').addEventListener('change',e=>{if(e.target.matches('#completionYear, #completionMonth'))refreshCompletionDay()});
+$('#detailView').addEventListener('change',e=>{if(e.target.matches('#completionYearPreset, #completionYear, #completionMonth'))refreshCompletionDay()});
 $('#detailView').addEventListener('input',e=>{if(e.target.matches('#completionYear'))refreshCompletionDay()});
 $('#detailView').addEventListener('click',e=>{const progress=e.target.closest('[data-progress-id]');if(progress)changeProgress(progress.dataset.progressId,Number(progress.dataset.progressStep));const finish=e.target.closest('[data-progress-complete]');if(finish)acceptProgressCompletion(finish);const save=e.target.closest('[data-completion-save]');if(save)saveCompletionDate(save.dataset.completionSave);const clear=e.target.closest('[data-completion-clear]');if(clear)saveCompletionDate(clear.dataset.completionClear,true)});
 for(const region of ['#cards','#detailView']){
@@ -7486,6 +7542,8 @@ if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryStat
   aniInitialHistoryState={...base,depth:0,view:'ranking',detail:null,rank:{...base.rank,...aniPathRoute.rank},scrollY:0};
  }else if(aniPathRoute.kind==='saved'){
   aniInitialHistoryState={...base,depth:0,view:'saved',detail:null,scrollY:0};
+ }else if(aniPathRoute.kind==='annual'){
+  aniInitialHistoryState={...base,depth:0,view:'annual',annualYear:aniPathRoute.year,detail:null,scrollY:0};
  }
 }
 aniHistoryReady=true;
@@ -8130,27 +8188,48 @@ function completionDayOptions(year,month,selected=''){
  const days=Number.isInteger(year)&&year>=1900&&year<=2100&&Number.isInteger(month)&&month>=1&&month<=12?new Date(year,month,0).getDate():31;
  return '<option value="">不明</option>'+Array.from({length:days},(_,i)=>{const d=String(i+1).padStart(2,'0');return `<option value="${d}" ${d===selected?'selected':''}>${i+1}日</option>`}).join('');
 }
-function completionDateMarkup(a){
+function completionYearOptions(year){
+ const current=localTodayParts()[0];
+ const presets=Array.from({length:Math.max(0,current-2000+1)},(_,i)=>current-i);
+ const chosen=year&&presets.includes(Number(year))?year:year?'other':'';
+ const options='<option value="">年を選択</option>'+presets.map(y=>`<option value="${y}" ${String(y)===chosen?'selected':''}>${y}年</option>`).join('')+`<option value="other" ${chosen==='other'?'selected':''}>その他の年を入力</option>`;
+ return {options,chosen};
+}
+function completionDateMarkup(a,scope='detail'){
  if(mode==='share'||saved[a.id]?.status!=='watched')return '';
+ const prefix=scope==='rating'?'ratingCompletion':'completion';
  const savedDate=validCompletedOn(saved[a.id]?.completedOn)?saved[a.id].completedOn:'';
  const [year='',month='',day='']=savedDate.split('-');
+ const years=completionYearOptions(year);
  const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
- return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="completionYear"><span>年</span><input id="completionYear" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：2025" value="${safeText(year)}" aria-label="見終わった年"></label><label class="watch-date-field" for="completionMonth"><span>月（任意）</span><select id="completionMonth" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="completionDay"><span>日（任意）</span><select id="completionDay" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}">保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}">記録を消す</button>`:''}</div><p class="watch-date-hint">例：2025年／2025年8月／2025年8月23日。入力していない月日を自動で補完することはありません。</p></div>`;
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div><p class="watch-date-hint">2000年以降は一覧から選択できます。1995年などは「その他の年を入力」から登録できます。</p></div>`;
 }
-function refreshCompletionDay(){
- const yearInput=$('#completionYear'),monthInput=$('#completionMonth'),dayInput=$('#completionDay');
- if(!yearInput||!monthInput||!dayInput)return;
- const selected=dayInput.value,year=Number(yearInput.value),month=Number(monthInput.value);
- dayInput.innerHTML=completionDayOptions(year,month,selected);
- dayInput.disabled=!monthInput.value;
+function completionFields(scope='detail'){
+ const prefix=scope==='rating'?'ratingCompletion':'completion';
+ return {preset:document.getElementById(prefix+'YearPreset'),input:document.getElementById(prefix+'Year'),month:document.getElementById(prefix+'Month'),day:document.getElementById(prefix+'Day')};
+}
+function completionYearValue(scope='detail'){
+ const {preset,input}=completionFields(scope);return String(preset?.value==='other'?input?.value||'':preset?.value||'').trim();
+}
+function refreshCompletionDay(scope='detail'){
+ const {preset,input,month,day}=completionFields(scope);
+ if(!preset||!input||!month||!day)return;
+ const other=preset.value==='other';input.hidden=!other;input.disabled=!other;
+ const selected=day.value,year=Number(completionYearValue(scope)),m=Number(month.value);
+ day.innerHTML=completionDayOptions(year,m,selected);
+ day.disabled=!month.value;
 }
 function saveCompletionDate(...args){return queueRecordWrite(()=>saveCompletionDateImpl(...args))}
-async function saveCompletionDateImpl(id,clear=false){
+async function saveCompletionDateImpl(id,clear=false,scope='detail'){
  const item=saved[id];if(!item||item.status!=='watched'||mode==='share')return;
+ // A rating dialog may contain unsaved star changes. Only the completion date is persisted here.
+ if(scope==='rating'&&ratingItemId!==id)return;
  let value='';
  if(!clear){
-  const y=String($('#completionYear')?.value||'').trim(),m=String($('#completionMonth')?.value||''),d=String($('#completionDay')?.value||'');
-  if(!y){toast('見終わった年を入力してください。記録の削除は「記録を消す」を使えます。','error');return}
+  const fields=completionFields(scope);
+  if(!fields.preset||!fields.month||!fields.day)return;
+  const y=completionYearValue(scope),m=String(fields.month.value||''),d=String(fields.day.value||'');
+  if(!y){toast('見終わった年を選択してください。記録の削除は「記録を消す」を使えます。','error');return}
   if(!/^\d{4}$/.test(y)){toast('年を4桁で入力してください','error');return}
   value=y+(m?'-'+m:'')+(m&&d?'-'+d:'');
   if(!validCompletedOn(value)){toast('未来の日付や存在しない日付は保存できません','error');return}
@@ -8159,7 +8238,10 @@ async function saveCompletionDateImpl(id,clear=false){
  if(value)item.completedOn=value;else delete item.completedOn;
  item.updatedAt=new Date().toISOString();
  if(!await persist()){saved[id]=old;return}
- renderDetailParts(detailNonce);toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
+ if(scope==='rating'&&ratingItemId===id&&$('#ratingDialog').open)$('#ratingDateEditor').innerHTML=completionDateMarkup(item,'rating');
+ if(detailActiveItem?.id===id)renderDetailParts(detailNonce);
+ if(mode==='annual'||mode==='saved')render();
+ toast(value?'見終わった時期を保存しました':'見終わった時期の記録を削除しました');
 }
 
 function reviewAspectStarMarkup(value){
@@ -8201,6 +8283,9 @@ function openRating(id){
  ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})}};
  $('#ratingTitle').textContent=item.title;
  $('#ratingAspects').innerHTML=ratingAspectHTML();
+  $('#ratingDateOption').hidden=item.status!=='watched';
+  $('#ratingDateOption').open=false;
+  $('#ratingDateEditor').innerHTML=item.status==='watched'?completionDateMarkup(item,'rating'):'';
  $('#ratingOptional').open=false; // The quick rating path stays compact, even when editing a detailed review.
  $('#ratingClear').hidden=!previous;
  $$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));
@@ -9461,7 +9546,7 @@ function annualValidEntries(){return Object.values(saved).filter(a=>a?.status===
 function annualDatedEntries(){return annualValidEntries().filter(a=>validCompletedOn(a.completedOn));}
 function annualYears(){
  const current=new Date().getFullYear();
- return [...new Set([current,...annualDatedEntries().map(a=>Number(a.completedOn.slice(0,4)))])].sort((a,b)=>b-a);
+ return [...new Set([current,...(Number.isInteger(annualYear)&&annualYear>=1900&&annualYear<=current?[annualYear]:[]),...annualDatedEntries().map(a=>Number(a.completedOn.slice(0,4)))])].sort((a,b)=>b-a);
 }
 function annualData(year){
  const all=annualValidEntries();
@@ -9523,7 +9608,7 @@ function showAnnual(){
 }
 $$('[data-annual-open]').forEach(b=>b.addEventListener('click',()=>showAnnual()));
 $('#annualBack').addEventListener('click',()=>showSaved());
-$('#annualYear').addEventListener('change',e=>{const y=Number(e.target.value);if(annualYears().includes(y)){annualYear=y;renderAnnual()}});
+$('#annualYear').addEventListener('change',e=>{const y=Number(e.target.value);if(annualYears().includes(y)){annualYear=y;renderAnnual();aniHistorySave()}});
 $('#annualView').addEventListener('click',e=>{
  const b=e.target.closest('[data-detail-id]');if(b){openDetail(detailSource(b.dataset.detailId));return}
  if(e.target.closest('[data-annual-missing]')){finishedYearFilter='unknown';showSaved('watched');return}
@@ -10127,6 +10212,17 @@ $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
 $('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
 $('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
 $('#ratingDialog').addEventListener('close',()=>{ratingItemId=null});
+$('#ratingDialog').addEventListener('change',e=>{
+ if(e.target.matches('#ratingCompletionYearPreset,#ratingCompletionYear,#ratingCompletionMonth'))refreshCompletionDay('rating');
+});
+$('#ratingDialog').addEventListener('input',e=>{if(e.target.matches('#ratingCompletionYear'))refreshCompletionDay('rating')});
+$('#ratingDateEditor').addEventListener('keydown',e=>{
+ if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();if(ratingItemId)saveCompletionDate(ratingItemId,false,'rating')}
+});
+$('#ratingDialog').addEventListener('click',e=>{
+ const save=e.target.closest('[data-completion-save][data-completion-scope="rating"]');if(save){saveCompletionDate(save.dataset.completionSave,false,'rating');return}
+ const clear=e.target.closest('[data-completion-clear][data-completion-scope="rating"]');if(clear)saveCompletionDate(clear.dataset.completionClear,true,'rating');
+});
 $('#ratingDialog').addEventListener('click',e=>{const star=e.target.closest('[data-rating-star]');if(star){const next=Number(star.dataset.ratingStar),changed=ratingDraft.overall!==next;
   ratingDraft.overall=next;updateRatingUI();
   if(changed){$$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));star.classList.add('motion-rating')}
@@ -10226,7 +10322,7 @@ $('#searchInput').addEventListener('keydown',e=>{const options=$$('#searchSugges
 document.addEventListener('click',e=>{if(!e.target.closest('.searchbox-shell'))closeSuggestions()});
 $('#cards').addEventListener('click',e=>{const fold=e.target.closest('[data-fold-status]');if(fold)toggleFold(fold.dataset.foldStatus,fold.dataset.foldPeriod);
  const progress=e.target.closest('[data-progress-id]');if(progress)changeProgress(progress.dataset.progressId,Number(progress.dataset.progressStep));const finish=e.target.closest('[data-progress-complete]');if(finish)acceptProgressCompletion(finish);});
-$('#detailView').addEventListener('change',e=>{if(e.target.matches('#completionYear, #completionMonth'))refreshCompletionDay()});
+$('#detailView').addEventListener('change',e=>{if(e.target.matches('#completionYearPreset, #completionYear, #completionMonth'))refreshCompletionDay()});
 $('#detailView').addEventListener('input',e=>{if(e.target.matches('#completionYear'))refreshCompletionDay()});
 $('#detailView').addEventListener('click',e=>{const progress=e.target.closest('[data-progress-id]');if(progress)changeProgress(progress.dataset.progressId,Number(progress.dataset.progressStep));const finish=e.target.closest('[data-progress-complete]');if(finish)acceptProgressCompletion(finish);const save=e.target.closest('[data-completion-save]');if(save)saveCompletionDate(save.dataset.completionSave);const clear=e.target.closest('[data-completion-clear]');if(clear)saveCompletionDate(clear.dataset.completionClear,true)});
 for(const region of ['#cards','#detailView']){
@@ -11792,6 +11888,8 @@ if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryStat
   aniInitialHistoryState={...base,depth:0,view:'ranking',detail:null,rank:{...base.rank,...aniPathRoute.rank},scrollY:0};
  }else if(aniPathRoute.kind==='saved'){
   aniInitialHistoryState={...base,depth:0,view:'saved',detail:null,scrollY:0};
+ }else if(aniPathRoute.kind==='annual'){
+  aniInitialHistoryState={...base,depth:0,view:'annual',annualYear:aniPathRoute.year,detail:null,scrollY:0};
  }
 }
 aniHistoryReady=true;
@@ -12158,7 +12256,7 @@ if(topBtn){
  function syncLabel(){
    const text=status?.textContent??'';
    const needs=summary?.textContent?.includes('要確認')||/失敗|できません|停止しました|確認してください|競合/.test(text);
-   const label=needs?'要確認':/一時停止/.test(text)?'一時停止中':/同期済み|同期は有効です。/.test(text)?'同期済み':/同期OFF/.test(text)?'同期OFF':'接続状態を確認';
+   const label=needs?'要確認':/一時停止/.test(text)?'一時停止中':/同期済み|同期は有効です。|同期が完了しました。/.test(text)?'同期済み':/同期OFF/.test(text)?'同期OFF':'接続状態を確認';
    const pcLabel=document.getElementById('anilogSyncSidebarStatus');
    const mobileLabel=document.getElementById('anilogSyncMobileStatus');
    if(pcLabel)pcLabel.textContent=label;

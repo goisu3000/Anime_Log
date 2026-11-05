@@ -11,6 +11,14 @@
     {
       "source": "/ranking",
       "destination": "/index.html"
+    },
+    {
+      "source": "/annual",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/annual/",
+      "destination": "/index.html"
     }
   ]
 }
