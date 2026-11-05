@@ -767,7 +767,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     lineage:storage.read().weeklyOptions.__syncLineage});
    notice.textContent=x.sameDestination?
     '読み取ったQRとこの端末は同じ同期先ID（'+x.currentID+'）です。新しい端末の承認は行っていません。この端末の元の同期を続けるには再読み込みしてください。':
-    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「詳細設定・復旧」から「この端末の同期を解除」を選び、バックアップを保存して安全に再接続してください。視聴記録は消えません。';
+    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「詳細設定・復旧」から「同期設定を最初からやり直す」を選び、バックアップを保存して安全に再接続してください。視聴記録は消えません。';
   }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
  }
  // The old profile's WAL/credentials remain independent from every new profile.
@@ -786,6 +786,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const oldPause=createSyncPauseGuard({local,key:oldConnectionKey});
  function showConnectionActions(){
   const state=profiles.read();connectionActions.hidden=false;connectionActions.dataset.syncPhase=state.phase;
+  el('own-device-info').hidden=staging||state.phase!=='connected';
   if(state.phase==='disconnected'||state.phase==='preparing'){
    const existingPanel=document.getElementById('formal-sync-controls');if(existingPanel)existingPanel.hidden=true;
   }
@@ -953,7 +954,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const recoveryEntry=el('resolve-conflict');
   if(recoveryEntry)recoveryEntry.hidden=!canRepair||!confirmedConflict||recoveryActive;
   showConnectionActions();
-  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を確認」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を解消」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
  }
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
@@ -1083,32 +1084,33 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    manageDevices.setAttribute('aria-expanded','false');
    manageDevices.textContent='登録済み端末を管理';
   });
-  // Registration ID is read-only. Fetch it on disclosure, without an extra
-  // button or a global sync-status error if local credentials are unavailable.
+  // Registration ID belongs under the destination ID. Resolve local sealed
+  // credentials only when the sync dialog is opened, not during page startup.
   const ownDeviceInfo=el('own-device-info');
   const ownDeviceIdValue=el('own-device-id-value');
-  const advancedPanel=connectionActions.querySelector('details.anilog-sync-advanced');
-  const ownDeviceIdAvailable=!staging&&profiles.read().phase==='connected';
-  ownDeviceInfo.hidden=!ownDeviceIdAvailable;
-  let ownDeviceIdRequest=0;
+  const syncDialog=root.closest('dialog');
+  ownDeviceInfo.hidden=staging||profiles.read().phase!=='connected';
+  let ownDeviceIdRequest=0,ownDeviceIdResolved=false;
   async function refreshOwnDeviceId(){
+   if(ownDeviceInfo.hidden||!syncDialog?.open||ownDeviceIdResolved)return;
    const request=++ownDeviceIdRequest;
-   if(!ownDeviceIdAvailable||!advancedPanel.open)return;
    ownDeviceIdValue.textContent='確認中…';
+   let transport;
    try{
-    const transport=await getRegisteredTransport();
-    if(request!==ownDeviceIdRequest||!advancedPanel.open)return;
+    transport=await getRegisteredTransport();
+    if(request!==ownDeviceIdRequest||!syncDialog.open)return;
     if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('DEVICE_PROFILE_CHANGED');
     ownDeviceIdValue.textContent=shortDeviceId(transport.device.deviceId);
+    ownDeviceIdResolved=true;
    }catch{
-    if(request===ownDeviceIdRequest&&advancedPanel.open)ownDeviceIdValue.textContent='登録IDを確認できません';
+    if(request===ownDeviceIdRequest&&syncDialog.open)ownDeviceIdValue.textContent='登録IDを確認できません';
+   }finally{
+    if(transport?.masterKey instanceof Uint8Array)transport.masterKey.fill(0);
    }
   }
-  advancedPanel.addEventListener('toggle',()=>{
-   if(advancedPanel.open)void refreshOwnDeviceId();
-   else ownDeviceIdRequest++;
-  });
-  if(advancedPanel.open)void refreshOwnDeviceId();
+  syncDialog.addEventListener('anilog-sync-dialog-open',()=>{void refreshOwnDeviceId()});
+  syncDialog.addEventListener('close',()=>{ownDeviceIdRequest++});
+  if(syncDialog.open)void refreshOwnDeviceId();
   manageDevices.hidden=receiver||staging||profiles.read().phase!=='connected';
   const localNames=createLocalDeviceNames(local,selectedProfile);
   let selectedRemoval=null;
@@ -1283,7 +1285,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     pending:'記録はこの端末に保存されています。同期結果はまだ確認できていません。',
     offline:'オフラインのため同期できません。記録はこの端末に保存されています。通信が戻ったら「再同期」で確認してください。',
     unavailable:'同期先との通信または保存を確認できませんでした。記録は保持されています。通信状態を確認し「再同期」を押してください。',
-    conflict:'端末間で不一致のある記録があります。自動では上書きしません。「不一致を確認」から残す内容を選んでください。'
+    conflict:'端末間で不一致のある記録があります。自動では上書きしません。「不一致を解消」から残す内容を選んでください。'
    };
    status.textContent=labels[s.phase]??'端末に記録を保存しました。同期の確認が必要です。';
    if(s.phase==='pending'&&s.status!==undefined){
@@ -1414,8 +1416,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(retryKind!=='NOT_APPLICABLE'&&retryKind!=='EXISTING_CONNECTION_ONLY'){
    automatic?.stop();automatic=null;el('retry').hidden=true;attention(true);showConnectionActions();
    status.textContent=retryKind==='QR_REQUIRES_EXPLICIT_SWITCH'
-    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「詳細設定・復旧」の「この端末の同期を解除」から進み、バックアップを保存してください。視聴記録は消えません。'
-    :'この端末は接続解除または再接続準備中です。通常の「接続を再試行」では古い同期先へ通信しません。画面に表示されたバックアップ・QR接続手順を進めてください。記録は保持されています。';
+    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「詳細設定・復旧」の「同期設定を最初からやり直す」から進み、バックアップを保存してください。視聴記録は消えません。'
+    :'この端末は接続解除または再接続準備中です。通常の「再同期」では古い同期先へ通信しません。画面に表示されたバックアップ・QR接続手順を進めてください。記録は保持されています。';
    return;
   }
   if(currentMode==='sync-enabled'&&profiles.read().phase==='connected'&&pauseGuard.paused){

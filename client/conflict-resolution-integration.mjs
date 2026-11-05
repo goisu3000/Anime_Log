@@ -3,7 +3,7 @@ import {mountConflictResolutionView} from './conflict-resolution-view.mjs';
 // Existing dialog and existing connection only. No credentials leave this closure.
 export function installConflictRecovery({root,locks,scope,begin,end,complete,assertContext,getTransport,vault,isPaused,isQuiescent,isEligible=()=>true}={}){
  const doc=root.ownerDocument,dialog=root.closest('dialog'),entry=doc.createElement('button'),panel=doc.createElement('section');
- entry.type='button';entry.textContent='不一致を確認';entry.dataset.simple='resolve-conflict';entry.hidden=true;panel.hidden=true;
+ entry.type='button';entry.textContent='不一致を解消';entry.dataset.simple='resolve-conflict';entry.hidden=true;panel.hidden=true;
  // The retry button may have been moved into the primary-action row.
  // Keep the trigger beside it, but mount the review as a DIRECT child of the
  // sync dialog body. Otherwise hiding the ordinary action row also hides the

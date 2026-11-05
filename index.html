@@ -1587,7 +1587,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:8px 12px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:flex-start;gap:5px}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions [data-simple="unlink-sync"]{border-color:var(--border-ctrl);color:var(--danger)}
 /* Advanced controls are not needed when engine has no advanced action to show. */
-.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-conflict-details:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-own-device-info:not([hidden]))){display:none}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced:not(:has(.anilog-sync-advanced-actions>button:not([hidden]))):not(:has(.anilog-sync-advanced-actions>.anilog-sync-conflict-details:not([hidden]))){display:none}
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="begin"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="resume-sync"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="relink-sync"],
@@ -1745,7 +1745,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:12px;gap:12px}
 /* Read-only conflict diagnostics live under advanced recovery, not at the dialog root. */
 /* The registration ID is read-only information, not an action. */
-.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-own-device-info:not([hidden]){display:block;max-width:100%;font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.6;color:var(--ink);overflow-wrap:anywhere}
+.anilog-sync-dialog #formal-simple-sync>[data-simple="own-device-info"]:not([hidden]){display:block;margin:4px 0 0;max-width:100%;font-size:var(--fs-xs);font-weight:var(--fw-semi);line-height:1.6;color:var(--muted);white-space:nowrap}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-conflict-details{box-sizing:border-box;align-self:stretch;width:100%;max-width:100%;margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-conflict-details>pre{box-sizing:border-box;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
 .anilog-sync-dialog #formal-sync-controls{padding:0!important;border:0!important;margin:0}
@@ -2488,6 +2488,7 @@ select:not([data-status-id]){
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
 <button type="button" data-simple="retry" hidden>再同期</button>
 <p data-simple="connection-info" hidden></p>
+<div class="anilog-sync-own-device-info" data-simple="own-device-info" hidden>この端末の登録ID：<span data-simple="own-device-id-value" aria-live="polite">確認中…</span></div>
 <p data-simple="pairing-notice" hidden></p>
 <div data-simple="connection-actions" hidden>
  <button type="button" data-simple="resume-sync" hidden>同期を再開する</button>
@@ -2527,7 +2528,6 @@ select:not([data-status-id]){
    
    <button type="button" data-simple="unlink-sync" hidden aria-hidden="true" tabindex="-1">旧解除操作（無効）</button>
    <button type="button" data-simple="relink-sync" hidden>以前の同期先に戻す</button>
-   <div class="anilog-sync-own-device-info" data-simple="own-device-info" hidden>この端末の登録ID：<span data-simple="own-device-id-value" aria-live="polite">確認中…</span></div>
    <details class="anilog-sync-help anilog-sync-conflict-details" data-simple="conflict-details" hidden>
     <summary>同期エラー項目の詳細</summary>
     <p>これは原因を調べるための情報です。表示するだけでは記録は変更されません。</p>
@@ -2654,7 +2654,7 @@ select:not([data-status-id]){
         <div class="filter-tabs" id="filters"><button class="active" data-type="all">すべて</button><button data-type="TV">TV</button><button data-type="Movie">映画</button><button data-type="OVA">OVA</button><button data-type="ONA">Web配信</button><label class="search-sort hidden" id="searchSortWrap" for="searchSort"><span>並び替え</span><select id="searchSort" aria-label="検索結果の並び替え"><option value="new">新しい順</option><option value="relevance">関連度順</option><option value="old">古い順</option></select></label></div>
       </div>
 </div></details></div><div class="list-caption"><span class="result-info" id="resultInfo"></span><span id="listOrderHint">放送時期の新しい順</span><div class="saved-layout-choice" role="group" aria-label="マイリストの表示方法"><button type="button" data-saved-layout="grid" aria-label="2列表示" aria-pressed="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-grid"/></svg></button><button type="button" data-saved-layout="list" aria-label="1列表示" aria-pressed="false"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-list"/></svg></button></div><select id="savedOrder" class="saved-order-select hidden" aria-label="マイリストの年内の並び順"><option value="broadcast">放送時期が新しい順</option><option value="updated">更新が新しい順</option><option value="title">作品名順</option></select></div>      <div id="offlineNotice" class="offline-note hidden" role="status"></div><div class="cards" id="cards" aria-live="polite"></div><div class="load-wrap"><button class="loadmore hidden" id="loadMore">もっと見る <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
-      <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はこのブラウザに保存され、別端末には自動同期されません。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
+      <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はブラウザに保存されます。端末間同期は任意で設定できます。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
     <section id="annualView" class="hidden" aria-label="年間アニメまとめ">
       <div class="annual-back-row"><button type="button" id="annualBack" class="detail-back"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-back"/></svg> マイリストに戻る</button><span>YOUR ANIME YEAR</span></div>
@@ -12148,6 +12148,7 @@ if(topBtn){
    // Existing <details> and ALL of its event listeners remain unchanged.
    root.open=true;
    dialog.showModal();
+   dialog.dispatchEvent(new Event('anilog-sync-dialog-open'));
  }
  const openFrom=event=>show(event.currentTarget);
  pc.addEventListener('click',openFrom);
@@ -12157,7 +12158,7 @@ if(topBtn){
  function syncLabel(){
    const text=status?.textContent??'';
    const needs=summary?.textContent?.includes('要確認')||/失敗|できません|停止しました|確認してください|競合/.test(text);
-   const label=needs?'要確認':/一時停止/.test(text)?'一時停止中':/同期済み/.test(text)?'同期済み':/同期OFF/.test(text)?'同期OFF':'接続状態を確認';
+   const label=needs?'要確認':/一時停止/.test(text)?'一時停止中':/同期済み|同期は有効です。/.test(text)?'同期済み':/同期OFF/.test(text)?'同期OFF':'接続状態を確認';
    const pcLabel=document.getElementById('anilogSyncSidebarStatus');
    const mobileLabel=document.getElementById('anilogSyncMobileStatus');
    if(pcLabel)pcLabel.textContent=label;
