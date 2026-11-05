@@ -881,7 +881,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .review-optional summary::after{content:"＋";float:right;color:var(--accent)}.review-optional[open] summary::after{content:"−"}
 .review-optional-body{padding:4px 14px 14px}
 .review-date-option{border-top:1px solid var(--border);padding:0 14px 12px;margin-top:4px}
-.review-date-option>summary{padding:12px 0 6px;font-size:var(--fs-xs)}
+.review-date-heading{margin:0;padding:12px 0 6px;font-size:var(--fs-xs);font-weight:var(--fw-bold)}
 .review-date-editor .watch-date{padding-top:4px}
 .watch-date-field input[hidden]{display:none!important}
 .review-aspect{padding:10px 0;border-top:1px solid var(--border)}
@@ -1341,6 +1341,7 @@ select:not([data-status-id]){
   border-radius:var(--radius-sm);box-shadow:0 16px 42px rgba(0,0,0,.52);
   color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-semi);
 }
+#ratingDialog .anilog-select-menu{scrollbar-width:auto}
 .anilog-select-option{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
   width:100%;min-height:44px;padding:10px 11px;text-align:left;
@@ -2792,10 +2793,10 @@ select:not([data-status-id]){
     <details class="review-optional" id="ratingOptional">
       <summary>さらに詳しく評価する（任意）</summary>
       <div class="review-optional-body" id="ratingAspects"></div>
-      <details class="review-date-option" id="ratingDateOption" hidden>
-        <summary>時期を編集する</summary>
+      <section class="review-date-option" id="ratingDateOption" hidden>
+        <h4 class="review-date-heading">時期を編集する</h4>
         <div id="ratingDateEditor" class="review-date-editor"></div>
-      </details>
+      </section>
     </details>
     <div class="review-dialog-actions">
       <button type="button" id="ratingClear" class="review-clear" hidden>評価を削除</button>
@@ -3056,7 +3057,11 @@ function toast(msg,kind='info'){
    const menu=active.querySelector('menu');if(menu)menu.before(notice);else active.append(notice);
   }
   notice.classList.toggle('error',kind==='error');notice.textContent=msg;notice.hidden=false;
-  return; // Keep the text visible until the dialog is closed or the user changes an option.
+   if(active.id==='ratingDialog'){
+    clearTimeout(active._ratingNoticeTimer);
+    active._ratingNoticeTimer=setTimeout(()=>{if(notice.textContent===msg)clearDialogNotice(active)},4100);
+   }
+   return; // Other dialogs keep safety notices until explicitly cleared.
  }
  el.classList.toggle('error',kind==='error');el.textContent=msg;centerToastOnContent();el.classList.add('show');
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
@@ -3525,7 +3530,7 @@ const REVIEW_GRADES=['良くない','普通','良い','とても良い'];
 const REVIEW_LABELS=['','合わなかった','もう一歩','普通','良い','最高！'];
 const REVIEWABLE_STATUSES=new Set(['watched','watching','paused','dropped']);
 function reviewStateLabel(status){return status==='dropped'?'中止時評価':status==='watched'?'自分の評価':'暫定評価'}
-let ratingOriginalReview=null;
+let ratingOriginalReview=null,ratingOriginalCompletedOn=null;
 let ratingItemId=null,ratingDraft={overall:0,aspects:{}},unratedOnly=false,finishedYearFilter='all';
 function readReview(value){
  if(!value||typeof value!=='object'||!Number.isInteger(value.overall)||value.overall<1||value.overall>5)return null;
@@ -3590,7 +3595,7 @@ function completionYearOptions(year){
  const current=localTodayParts()[0];
  const presets=Array.from({length:Math.max(0,current-2000+1)},(_,i)=>current-i);
  const chosen=year&&presets.includes(Number(year))?year:year?'other':'';
- const options='<option value="">年を選択</option>'+presets.map(y=>`<option value="${y}" ${String(y)===chosen?'selected':''}>${y}年</option>`).join('')+`<option value="other" ${chosen==='other'?'selected':''}>その他の年を入力</option>`;
+ const options='<option value="">年を選択</option>'+presets.map(y=>`<option value="${y}" ${String(y)===chosen?'selected':''}>${y}年</option>`).join('')+`<option value="other" ${chosen==='other'?'selected':''}>他の年を入力</option>`;
  return {options,chosen};
 }
 function completionDateMarkup(a,scope='detail'){
@@ -3600,7 +3605,7 @@ function completionDateMarkup(a,scope='detail'){
  const [year='',month='',day='']=savedDate.split('-');
  const years=completionYearOptions(year);
  const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
- return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div><p class="watch-date-hint">2000年以降は一覧から選択できます。1995年などは「その他の年を入力」から登録できます。</p></div>`;
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">「年」または「年月」だけでも保存できます。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div>${scope==='rating'?'':`<div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div>`}<p class="watch-date-hint">1999年以前は「他の年を入力」から登録できます。</p></div>`;
 }
 function completionFields(scope='detail'){
  const prefix=scope==='rating'?'ratingCompletion':'completion';
@@ -3613,6 +3618,7 @@ function refreshCompletionDay(scope='detail'){
  const {preset,input,month,day}=completionFields(scope);
  if(!preset||!input||!month||!day)return;
  const other=preset.value==='other';input.hidden=!other;input.disabled=!other;
+ if(scope==='rating'&&!completionYearValue(scope)&&preset.value===''){month.value='';day.value=''}
  const selected=day.value,year=Number(completionYearValue(scope)),m=Number(month.value);
  day.innerHTML=completionDayOptions(year,m,selected);
  day.disabled=!month.value;
@@ -3677,13 +3683,13 @@ function ratingAspectHTML(){return Object.entries(REVIEW_ASPECTS).map(([key,labe
 
 function openRating(id){
  const item=saved[id];if(!item||!REVIEWABLE_STATUSES.has(item.status)||mode==='share')return;
- ratingItemId=id;ratingOriginalReview=structuredClone(item.review??null);const previous=readReview(item.review);
+ ratingItemId=id;ratingOriginalReview=structuredClone(item.review??null);ratingOriginalCompletedOn=item.completedOn||'';const previous=readReview(item.review);
  ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})}};
  $('#ratingTitle').textContent=item.title;
  $('#ratingAspects').innerHTML=ratingAspectHTML();
   $('#ratingDateOption').hidden=item.status!=='watched';
-  $('#ratingDateOption').open=false;
   $('#ratingDateEditor').innerHTML=item.status==='watched'?completionDateMarkup(item,'rating'):'';
+  clearDialogNotice($('#ratingDialog'));
  $('#ratingOptional').open=false; // The quick rating path stays compact, even when editing a detailed review.
  $('#ratingClear').hidden=!previous;
  $$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));
@@ -3692,12 +3698,36 @@ function openRating(id){
  $('#ratingDialog').scrollTop=0;$('#ratingTitle').tabIndex=-1;$('#ratingTitle').focus({preventScroll:true});
 }
 function closeRating(){if($('#ratingDialog').open)$('#ratingDialog').close();ratingItemId=null}
+function ratingCompletionDateDraft(){
+ const {preset,month,day}=completionFields('rating');
+ if(!preset||!month||!day)return null;
+ const y=completionYearValue('rating');
+ if(!y){
+  if(preset.value==='other'){toast('見終わった年を入力してください','error');return null}
+  return ''; // Explicitly resetting the year clears the existing completion date.
+ }
+ if(!/^\d{4}$/.test(y)){toast('年を4桁で入力してください','error');return null}
+ const m=month.value,d=day.value;
+ const value=y+(m?'-'+m:'')+(m&&d?'-'+d:'');
+ if(!validCompletedOn(value)){toast('未来の日付や存在しない日付は保存できません','error');return null}
+ return value;
+}
 function saveRating(...args){return queueRecordWrite(()=>saveRatingImpl(...args))}
 async function saveRatingImpl(){
  if(!ratingItemId||!saved[ratingItemId]||!REVIEWABLE_STATUSES.has(saved[ratingItemId].status)||ratingDraft.overall<1)return;
  const current=saved[ratingItemId];
  if(!sameRecordValue(current.review??null,ratingOriginalReview)){toast('別のタブで評価が変更されました。入力中の評価はこの画面に残しています。閉じて最新の評価を確認してください。','error');return}
+ let completionDate;
+ if(current.status==='watched'){
+  if(!sameRecordValue(current.completedOn||'',ratingOriginalCompletedOn)){toast('別のタブで見終わった時期が変更されました。最新の記録を確認してください。','error');return}
+  completionDate=ratingCompletionDateDraft();
+  if(completionDate===null)return;
+ }
  const before=structuredClone(current);carryLegacyNote(current);delete current.reviewDeletedAt;current.review={overall:ratingDraft.overall,aspects:{...ratingDraft.aspects},updatedAt:new Date().toISOString()};
+ if(current.status==='watched'&&completionDate!==(before.completedOn||'')){
+  if(completionDate)current.completedOn=completionDate;else delete current.completedOn;
+  current.updatedAt=new Date().toISOString();
+ }
  if(!await persist()){saved[current.id]=before;return}
  closeRating();render();if(detailActiveItem?.id===current.id)renderDetailParts(detailNonce);toast('評価を保存しました');
 }
@@ -5873,18 +5903,11 @@ $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-rate-id
 $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
 $('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
 $('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
-$('#ratingDialog').addEventListener('close',()=>{ratingItemId=null});
+$('#ratingDialog').addEventListener('close',()=>{ratingItemId=null;clearTimeout($('#ratingDialog')._ratingNoticeTimer);clearDialogNotice($('#ratingDialog'))});
 $('#ratingDialog').addEventListener('change',e=>{
  if(e.target.matches('#ratingCompletionYearPreset,#ratingCompletionYear,#ratingCompletionMonth'))refreshCompletionDay('rating');
 });
 $('#ratingDialog').addEventListener('input',e=>{if(e.target.matches('#ratingCompletionYear'))refreshCompletionDay('rating')});
-$('#ratingDateEditor').addEventListener('keydown',e=>{
- if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();if(ratingItemId)saveCompletionDate(ratingItemId,false,'rating')}
-});
-$('#ratingDialog').addEventListener('click',e=>{
- const save=e.target.closest('[data-completion-save][data-completion-scope="rating"]');if(save){saveCompletionDate(save.dataset.completionSave,false,'rating');return}
- const clear=e.target.closest('[data-completion-clear][data-completion-scope="rating"]');if(clear)saveCompletionDate(clear.dataset.completionClear,true,'rating');
-});
 $('#ratingDialog').addEventListener('click',e=>{const star=e.target.closest('[data-rating-star]');if(star){const next=Number(star.dataset.ratingStar),changed=ratingDraft.overall!==next;
   ratingDraft.overall=next;updateRatingUI();
   if(changed){$$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));star.classList.add('motion-rating')}
@@ -6045,7 +6068,7 @@ $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEvent
 const ANI_DIALOG_BACKDROP_POLICY=Object.freeze({
  'anilog-sync-dialog':'always',backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
  weeklyEditDialog:'if-clean',addDialog:'add-when-idle',importModeDialog:'never',
- noteDialog:'never',ratingDialog:'never'
+ noteDialog:'never',ratingDialog:'rating-cancel'
 });
 function clickedDialogBackdrop(e,dialog){
  if(e.target!==dialog)return false;
@@ -6059,6 +6082,7 @@ for(const dialog of document.querySelectorAll('dialog')){
  dialog.addEventListener('click',e=>{
   if(!clickedDialogBackdrop(e,dialog))return;
   if(policy==='always'){if(dialog.dataset.conflictBusy==='true')return;dialog.close();return}
+  if(policy==='rating-cancel'){if(recordWrites>0)return;closeRating();return}
   if(policy==='add-when-idle'){if(!addingCustom)dialog.close();return}
   if(policy==='share-before-generated'){
    if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
@@ -7674,7 +7698,11 @@ function toast(msg,kind='info'){
    const menu=active.querySelector('menu');if(menu)menu.before(notice);else active.append(notice);
   }
   notice.classList.toggle('error',kind==='error');notice.textContent=msg;notice.hidden=false;
-  return; // Keep the text visible until the dialog is closed or the user changes an option.
+   if(active.id==='ratingDialog'){
+    clearTimeout(active._ratingNoticeTimer);
+    active._ratingNoticeTimer=setTimeout(()=>{if(notice.textContent===msg)clearDialogNotice(active)},4100);
+   }
+   return; // Other dialogs keep safety notices until explicitly cleared.
  }
  el.classList.toggle('error',kind==='error');el.textContent=msg;centerToastOnContent();el.classList.add('show');
  toastTimer=setTimeout(()=>el.classList.remove('show'),4100);
@@ -8127,7 +8155,7 @@ const REVIEW_GRADES=['良くない','普通','良い','とても良い'];
 const REVIEW_LABELS=['','合わなかった','もう一歩','普通','良い','最高！'];
 const REVIEWABLE_STATUSES=new Set(['watched','watching','paused','dropped']);
 function reviewStateLabel(status){return status==='dropped'?'中止時評価':status==='watched'?'自分の評価':'暫定評価'}
-let ratingOriginalReview=null;
+let ratingOriginalReview=null,ratingOriginalCompletedOn=null;
 let ratingItemId=null,ratingDraft={overall:0,aspects:{}},unratedOnly=false,finishedYearFilter='all';
 function readReview(value){
  if(!value||typeof value!=='object'||!Number.isInteger(value.overall)||value.overall<1||value.overall>5)return null;
@@ -8192,7 +8220,7 @@ function completionYearOptions(year){
  const current=localTodayParts()[0];
  const presets=Array.from({length:Math.max(0,current-2000+1)},(_,i)=>current-i);
  const chosen=year&&presets.includes(Number(year))?year:year?'other':'';
- const options='<option value="">年を選択</option>'+presets.map(y=>`<option value="${y}" ${String(y)===chosen?'selected':''}>${y}年</option>`).join('')+`<option value="other" ${chosen==='other'?'selected':''}>その他の年を入力</option>`;
+ const options='<option value="">年を選択</option>'+presets.map(y=>`<option value="${y}" ${String(y)===chosen?'selected':''}>${y}年</option>`).join('')+`<option value="other" ${chosen==='other'?'selected':''}>他の年を入力</option>`;
  return {options,chosen};
 }
 function completionDateMarkup(a,scope='detail'){
@@ -8202,7 +8230,7 @@ function completionDateMarkup(a,scope='detail'){
  const [year='',month='',day='']=savedDate.split('-');
  const years=completionYearOptions(year);
  const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
- return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">年だけ・年月だけでも保存できます。日まで覚えていなくても大丈夫です。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div><div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div><p class="watch-date-hint">2000年以降は一覧から選択できます。1995年などは「その他の年を入力」から登録できます。</p></div>`;
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">「年」または「年月」だけでも保存できます。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div>${scope==='rating'?'':`<div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div>`}<p class="watch-date-hint">1999年以前は「他の年を入力」から登録できます。</p></div>`;
 }
 function completionFields(scope='detail'){
  const prefix=scope==='rating'?'ratingCompletion':'completion';
@@ -8215,6 +8243,7 @@ function refreshCompletionDay(scope='detail'){
  const {preset,input,month,day}=completionFields(scope);
  if(!preset||!input||!month||!day)return;
  const other=preset.value==='other';input.hidden=!other;input.disabled=!other;
+ if(scope==='rating'&&!completionYearValue(scope)&&preset.value===''){month.value='';day.value=''}
  const selected=day.value,year=Number(completionYearValue(scope)),m=Number(month.value);
  day.innerHTML=completionDayOptions(year,m,selected);
  day.disabled=!month.value;
@@ -8279,13 +8308,13 @@ function ratingAspectHTML(){return Object.entries(REVIEW_ASPECTS).map(([key,labe
 
 function openRating(id){
  const item=saved[id];if(!item||!REVIEWABLE_STATUSES.has(item.status)||mode==='share')return;
- ratingItemId=id;ratingOriginalReview=structuredClone(item.review??null);const previous=readReview(item.review);
+ ratingItemId=id;ratingOriginalReview=structuredClone(item.review??null);ratingOriginalCompletedOn=item.completedOn||'';const previous=readReview(item.review);
  ratingDraft={overall:previous?.overall||0,aspects:{...(previous?.aspects||{})}};
  $('#ratingTitle').textContent=item.title;
  $('#ratingAspects').innerHTML=ratingAspectHTML();
   $('#ratingDateOption').hidden=item.status!=='watched';
-  $('#ratingDateOption').open=false;
   $('#ratingDateEditor').innerHTML=item.status==='watched'?completionDateMarkup(item,'rating'):'';
+  clearDialogNotice($('#ratingDialog'));
  $('#ratingOptional').open=false; // The quick rating path stays compact, even when editing a detailed review.
  $('#ratingClear').hidden=!previous;
  $$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));
@@ -8294,12 +8323,36 @@ function openRating(id){
  $('#ratingDialog').scrollTop=0;$('#ratingTitle').tabIndex=-1;$('#ratingTitle').focus({preventScroll:true});
 }
 function closeRating(){if($('#ratingDialog').open)$('#ratingDialog').close();ratingItemId=null}
+function ratingCompletionDateDraft(){
+ const {preset,month,day}=completionFields('rating');
+ if(!preset||!month||!day)return null;
+ const y=completionYearValue('rating');
+ if(!y){
+  if(preset.value==='other'){toast('見終わった年を入力してください','error');return null}
+  return ''; // Explicitly resetting the year clears the existing completion date.
+ }
+ if(!/^\d{4}$/.test(y)){toast('年を4桁で入力してください','error');return null}
+ const m=month.value,d=day.value;
+ const value=y+(m?'-'+m:'')+(m&&d?'-'+d:'');
+ if(!validCompletedOn(value)){toast('未来の日付や存在しない日付は保存できません','error');return null}
+ return value;
+}
 function saveRating(...args){return queueRecordWrite(()=>saveRatingImpl(...args))}
 async function saveRatingImpl(){
  if(!ratingItemId||!saved[ratingItemId]||!REVIEWABLE_STATUSES.has(saved[ratingItemId].status)||ratingDraft.overall<1)return;
  const current=saved[ratingItemId];
  if(!sameRecordValue(current.review??null,ratingOriginalReview)){toast('別のタブで評価が変更されました。入力中の評価はこの画面に残しています。閉じて最新の評価を確認してください。','error');return}
+ let completionDate;
+ if(current.status==='watched'){
+  if(!sameRecordValue(current.completedOn||'',ratingOriginalCompletedOn)){toast('別のタブで見終わった時期が変更されました。最新の記録を確認してください。','error');return}
+  completionDate=ratingCompletionDateDraft();
+  if(completionDate===null)return;
+ }
  const before=structuredClone(current);carryLegacyNote(current);delete current.reviewDeletedAt;current.review={overall:ratingDraft.overall,aspects:{...ratingDraft.aspects},updatedAt:new Date().toISOString()};
+ if(current.status==='watched'&&completionDate!==(before.completedOn||'')){
+  if(completionDate)current.completedOn=completionDate;else delete current.completedOn;
+  current.updatedAt=new Date().toISOString();
+ }
  if(!await persist()){saved[current.id]=before;return}
  closeRating();render();if(detailActiveItem?.id===current.id)renderDetailParts(detailNonce);toast('評価を保存しました');
 }
@@ -10211,18 +10264,11 @@ $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-rate-id
 $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
 $('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
 $('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
-$('#ratingDialog').addEventListener('close',()=>{ratingItemId=null});
+$('#ratingDialog').addEventListener('close',()=>{ratingItemId=null;clearTimeout($('#ratingDialog')._ratingNoticeTimer);clearDialogNotice($('#ratingDialog'))});
 $('#ratingDialog').addEventListener('change',e=>{
  if(e.target.matches('#ratingCompletionYearPreset,#ratingCompletionYear,#ratingCompletionMonth'))refreshCompletionDay('rating');
 });
 $('#ratingDialog').addEventListener('input',e=>{if(e.target.matches('#ratingCompletionYear'))refreshCompletionDay('rating')});
-$('#ratingDateEditor').addEventListener('keydown',e=>{
- if(e.key==='Enter'&&e.target.matches('input')){e.preventDefault();if(ratingItemId)saveCompletionDate(ratingItemId,false,'rating')}
-});
-$('#ratingDialog').addEventListener('click',e=>{
- const save=e.target.closest('[data-completion-save][data-completion-scope="rating"]');if(save){saveCompletionDate(save.dataset.completionSave,false,'rating');return}
- const clear=e.target.closest('[data-completion-clear][data-completion-scope="rating"]');if(clear)saveCompletionDate(clear.dataset.completionClear,true,'rating');
-});
 $('#ratingDialog').addEventListener('click',e=>{const star=e.target.closest('[data-rating-star]');if(star){const next=Number(star.dataset.ratingStar),changed=ratingDraft.overall!==next;
   ratingDraft.overall=next;updateRatingUI();
   if(changed){$$('#ratingDialog [data-rating-star]').forEach(b=>b.classList.remove('motion-rating'));star.classList.add('motion-rating')}
@@ -10377,7 +10423,7 @@ $('#exportBtn').addEventListener('click',exportData);$('#mobileExport').addEvent
 const ANI_DIALOG_BACKDROP_POLICY=Object.freeze({
  'anilog-sync-dialog':'always',backupDialog:'always',shareDialog:'share-before-generated',streamDialog:'if-clean',
  weeklyEditDialog:'if-clean',addDialog:'add-when-idle',importModeDialog:'never',
- noteDialog:'never',ratingDialog:'never'
+ noteDialog:'never',ratingDialog:'rating-cancel'
 });
 function clickedDialogBackdrop(e,dialog){
  if(e.target!==dialog)return false;
@@ -10391,6 +10437,7 @@ for(const dialog of document.querySelectorAll('dialog')){
  dialog.addEventListener('click',e=>{
   if(!clickedDialogBackdrop(e,dialog))return;
   if(policy==='always'){if(dialog.dataset.conflictBusy==='true')return;dialog.close();return}
+  if(policy==='rating-cancel'){if(recordWrites>0)return;closeRating();return}
   if(policy==='add-when-idle'){if(!addingCustom)dialog.close();return}
   if(policy==='share-before-generated'){
    if(!shareLinkBuilt&&!$('#generateShare').disabled)dialog.close();return;
@@ -12103,8 +12150,17 @@ if(topBtn){
   }
  }
  // Cancel pointer's native menu and surface the same custom menu on every select.
- document.addEventListener('pointerdown',e=>{
-  if(menu && !e.target.closest('.anilog-select-menu') && e.target!==owner && e.target!==visual(owner))dismiss();
+  let menuPointerActive=false;
+  const pointerOverMenu=e=>{if(!menu)return false;
+   if(e.target instanceof Node && menu.contains(e.target))return true;
+   const r=menu.getBoundingClientRect();
+   return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom;
+  };
+  document.addEventListener('pointerup',()=>{menuPointerActive=false},true);
+  document.addEventListener('pointercancel',()=>{menuPointerActive=false},true);
+  document.addEventListener('pointerdown',e=>{
+   menuPointerActive=pointerOverMenu(e);
+  if(menu && !menuPointerActive && e.target!==owner && e.target!==visual(owner))dismiss();
   const s=e.target.closest?.('select');
   if(useMobileProxy()||!s||!eligible(s)||!visible(s))return;
   if(e.button!==0)return;
@@ -12157,7 +12213,7 @@ if(topBtn){
   }
  },true);
  // Never leave a detached menu on another view, modal, or scroll position.
- document.addEventListener('focusin',e=>{if(menu&&e.target!==owner && e.target!==visual(owner) && !menu.contains(e.target))dismiss()},true);
+ document.addEventListener('focusin',e=>{if(menu&&!menuPointerActive&&e.target!==owner && e.target!==visual(owner) && !menu.contains(e.target))dismiss()},true);
  document.addEventListener('scroll',e=>{if(menu&&!menu.contains(e.target))requestAnimationFrame(()=>{if(menu)place()})},true);
  window.addEventListener('resize',()=>{if(menu)place();scheduleScan()},{passive:true});
  window.addEventListener('popstate',()=>dismiss());
