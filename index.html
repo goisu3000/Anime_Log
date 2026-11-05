@@ -895,7 +895,7 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
 .review-date-editor .watch-date{padding-top:4px}
 /* Keep the hint next to the controls in the rating dialog only. */
 .review-date-editor .watch-date-fields{margin-bottom:2px}
-.review-date-editor .watch-date-hint{margin-top:0;margin-bottom:0}
+.review-date-editor .watch-date-hint{margin-top:-10px;margin-bottom:0}
 #ratingDialog .watch-date-fields select + .anilog-mobile-select-trigger{margin-bottom:0}
 .watch-date-field input[hidden]{display:none!important}
 .review-aspect{padding:10px 0;border-top:1px solid var(--border)}
@@ -7584,9 +7584,9 @@ const aniStoredHistoryState=history.state?.[ANI_ROUTE]===1&&
 // its existing list/filter context and scroll position. Never restore a stale ID.
 let aniInitialHistoryState=aniStoredHistoryState&&(!aniPathRoute||ANI_PUBLIC.matches(aniStoredHistoryState,aniPathRoute))?aniStoredHistoryState:null;
 if(aniInitialHistoryState?.view==='saved'){
- // Reloading My List starts with the optional unrated filter OFF.
+ // Reloading My List starts with all completion years and the unrated filter OFF.
  // In-session back/forward still restores the explicit browser-history selection.
- aniInitialHistoryState={...aniInitialHistoryState,saved:{...aniInitialHistoryState.saved,unrated:false}};
+ aniInitialHistoryState={...aniInitialHistoryState,saved:{...aniInitialHistoryState.saved,unrated:false,finishedYear:'all'}};
 }
 if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryState){
  const base=aniHistorySnapshot();
@@ -11968,9 +11968,9 @@ const aniStoredHistoryState=history.state?.[ANI_ROUTE]===1&&
 // its existing list/filter context and scroll position. Never restore a stale ID.
 let aniInitialHistoryState=aniStoredHistoryState&&(!aniPathRoute||ANI_PUBLIC.matches(aniStoredHistoryState,aniPathRoute))?aniStoredHistoryState:null;
 if(aniInitialHistoryState?.view==='saved'){
- // Reloading My List starts with the optional unrated filter OFF.
+ // Reloading My List starts with all completion years and the unrated filter OFF.
  // In-session back/forward still restores the explicit browser-history selection.
- aniInitialHistoryState={...aniInitialHistoryState,saved:{...aniInitialHistoryState.saved,unrated:false}};
+ aniInitialHistoryState={...aniInitialHistoryState,saved:{...aniInitialHistoryState.saved,unrated:false,finishedYear:'all'}};
 }
 if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryState){
  const base=aniHistorySnapshot();
@@ -12173,7 +12173,7 @@ if(topBtn){
   (s.closest('dialog[open]')||document.body).appendChild(popup);
   // The long year list gains a scrollbar on some OSes; reserve about one extra glyph
   // so decade labels such as "2000年代" remain on one line without changing other menus.
-  preferredWidth=intrinsicWidth()+((s.id==='yearSelect'||(s.closest('.watch-date-field')&&s.id.endsWith('YearPreset')))?20:0);
+  preferredWidth=intrinsicWidth()+((s.id==='yearSelect'||s.id==='finishedYearFilter'||(s.closest('.watch-date-field')&&s.id.endsWith('YearPreset')))?20:0);
   const control=visual(s);control.classList.add('anilog-select-open');control.setAttribute('aria-expanded','true');control.setAttribute('aria-controls',popup.id);
   control.focus({preventScroll:true});
   const selected=options.findIndex(o=>o.selected&&!o.disabled&&!o.hidden);
