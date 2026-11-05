@@ -100,6 +100,11 @@
   --sp-1:4px;--sp-2:8px;--sp-3:12px;--sp-4:16px;--sp-5:20px;--sp-6:24px;--sp-8:32px;
 }
 *{box-sizing:border-box}html{scroll-behavior:smooth}
+/* Keep already-visible search cards stationary when appended results trigger a scrollbar.
+   Limit the reserved gutter to Discover, not My List, detail or other views. */
+html:has(>body:not(.saved-mode):not(.view-detail):not(.view-ranking):not(.view-annual):not(.view-sharing)){
+  scrollbar-gutter:stable;
+}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,system-ui,sans-serif;font-size:var(--fs-md);font-weight:var(--fw-normal);letter-spacing:var(--ls-body);-webkit-font-smoothing:antialiased}
 h1,h2,h3,h4,h5{letter-spacing:var(--ls-heading)}
 button,select,input,textarea{font:inherit;color:inherit;transition:background .16s,border-color .16s,color .16s,opacity .16s,filter .16s}
@@ -2788,6 +2793,108 @@ select:not([data-status-id]){
 window.__aniFormalEncrypted=document.querySelector('meta[name="ani-log-storage-mode"]')?.content==='encrypted-development'||
 (document.querySelector('meta[name="ani-log-formal-production-approval"]')?.content==='approved-private-production'&&['preparing','encrypted-local','sync-enabled'].includes(mode));})();
 </script>
+<script>
+// ANI:LOG additive search rescue.  Pure matching only: no writes, network or timers.
+const AniSearchRescue=(()=>{
+ const kanaMap={あ:'a',い:'i',う:'u',え:'e',お:'o',か:'ka',き:'ki',く:'ku',け:'ke',こ:'ko',さ:'sa',し:'shi',す:'su',せ:'se',そ:'so',た:'ta',ち:'chi',つ:'tsu',て:'te',と:'to',な:'na',に:'ni',ぬ:'nu',ね:'ne',の:'no',は:'ha',ひ:'hi',ふ:'fu',へ:'he',ほ:'ho',ま:'ma',み:'mi',む:'mu',め:'me',も:'mo',や:'ya',ゆ:'yu',よ:'yo',ら:'ra',り:'ri',る:'ru',れ:'re',ろ:'ro',わ:'wa',を:'wo',ん:'n',が:'ga',ぎ:'gi',ぐ:'gu',げ:'ge',ご:'go',ざ:'za',じ:'ji',ず:'zu',ぜ:'ze',ぞ:'zo',だ:'da',ぢ:'ji',づ:'zu',で:'de',ど:'do',ば:'ba',び:'bi',ぶ:'bu',べ:'be',ぼ:'bo',ぱ:'pa',ぴ:'pi',ぷ:'pu',ぺ:'pe',ぽ:'po',ゔ:'vu'};
+ const digraph={きゃ:'kya',きゅ:'kyu',きょ:'kyo',しゃ:'sha',しゅ:'shu',しょ:'sho',ちゃ:'cha',ちゅ:'chu',ちょ:'cho',にゃ:'nya',にゅ:'nyu',にょ:'nyo',ひゃ:'hya',ひゅ:'hyu',ひょ:'hyo',みゃ:'mya',みゅ:'myu',みょ:'myo',りゃ:'rya',りゅ:'ryu',りょ:'ryo',ぎゃ:'gya',ぎゅ:'gyu',ぎょ:'gyo',じゃ:'ja',じゅ:'ju',じょ:'jo',びゃ:'bya',びゅ:'byu',びょ:'byo',ぴゃ:'pya',ぴゅ:'pyu',ぴょ:'pyo',てぃ:'ti',でぃ:'di',ふぁ:'fa',ふぃ:'fi',ふぇ:'fe',ふぉ:'fo',しぇ:'she',じぇ:'je',ゔぁ:'va',ゔぃ:'vi',ゔぇ:'ve',ゔぉ:'vo'};
+ function romaji(raw){
+  const s=String(raw||'').normalize('NFKC').trim().replace(/[ァ-ヶ]/g,c=>String.fromCharCode(c.charCodeAt(0)-0x60));
+  if(!/^[ぁ-ゖー]+$/.test(s)||s.length<3||s.length>14)return '';
+  let out='';for(let i=0;i<s.length;i++){
+   const c=s[i];if(c==='っ'){
+    const next=digraph[s.slice(i+1,i+3)]||kanaMap[s[i+1]]||'';
+    if(next)out+=next[0];continue;
+   }
+   if(c==='ー'){
+    const v=out.match(/[aeiou]$/);if(v)out+=v[0];continue;
+   }
+   const pair=digraph[s.slice(i,i+2)];if(pair){out+=pair;i++;continue}
+   const unit=kanaMap[c];if(!unit)return '';out+=unit;
+  }
+  return out.length>=5?out:'';
+ }
+ function tokens(raw,normalize){
+  const parts=String(raw||'').trim().normalize('NFKC').split(/[\s\u3000]+/u);
+  if(parts.length<2||parts.length>4)return [];
+  const result=parts.map(normalize);
+  return result.every(t=>t&&t.length<=40)?result:[];
+ }
+ function phoneticKey(raw,normalize){return normalize(raw).replace(/ヴァ/g,'バ').replace(/ヴィ/g,'ビ').replace(/ヴェ/g,'ベ').replace(/ヴォ/g,'ボ').replace(/ヴ/g,'ブ').replace(/ティ/g,'テイ').replace(/ディ/g,'デイ').replace(/シェ/g,'シエ').replace(/ジェ/g,'ジエ')}
+ const seasonRoman={I:1,II:2,III:3,IV:4,V:5,VI:6,VII:7,VIII:8,IX:9,X:10};
+ const seasonKanji={一:1,二:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10};
+ const queryPlans=new Map();
+ function seasonPart(raw,normalize){
+  const s=String(raw||'').normalize('NFKC').trim();if(s.length>160)return null;
+  let m=s.match(/^(.*?)(?:[\s:：-]*第?\s*(\d{1,2}|[一二三四五六七八九十])\s*期)\s*$/iu);
+  if(!m)m=s.match(/^(.*?)(?:\s*season\s*(\d{1,2})|\s*(\d{1,2})(?:st|nd|rd|th)\s*season)\s*$/iu);
+  if(!m)m=s.match(/^(.*?)(?:\s+|(?<=[^\x00-\x7f]))(IV|VIII|VII|VI|III|II|IX|X|V|I)\s*$/iu);
+  if(!m)m=s.match(/^(.*?)\s+(\d{1,2})\s*$/u);
+  if(!m)return null;
+  const digit=m[2]||m[3],number=Number(digit)||seasonRoman[String(digit).toUpperCase()]||seasonKanji[digit];
+  const base=normalize(m[1]);return number>=1&&number<=10&&base.length>=3?{base,number}:null;
+ }
+ function fieldsOf(item){return [item?.title,item?.english,...(Array.isArray(item?.synonyms)?item.synonyms:[])].filter(s=>typeof s==='string'&&s.length>0&&s.length<=220)}
+ function queryPlan(raw,normalize){
+  const key=String(raw||'');if(queryPlans.has(key))return queryPlans.get(key);
+  const words=tokens(key,normalize),roman=romaji(key),plain=normalize(key);
+  const phoneticEligible=/[ヴバビブベボ]|ティ|ディ|シェ|ジェ/.test(plain);
+  const phonetic=phoneticEligible?phoneticKey(key,normalize):'';
+  const season=/(?:期|season|(?:\s+|[^\x00-\x7f])(?:iv|iii|ii|vi|vii|viii|ix|x|v|i)$|\s+\d{1,2}$)/iu.test(key)?seasonPart(key,normalize):null;
+  const plan={words,roman,plain,phonetic,season,enabled:Boolean(words.length||roman||phonetic||season)};
+  queryPlans.set(key,plan);if(queryPlans.size>20)queryPlans.delete(queryPlans.keys().next().value);
+  return plan;
+ }
+ function matches(item,raw,normalize){
+  if(!item||typeof raw!=='string'||raw.trim().length<3||raw.length>100)return false;
+  const plan=queryPlan(raw,normalize);if(!plan.enabled)return false;
+  const fields=fieldsOf(item);if(!fields.length)return false;
+  const keys=fields.map(normalize);
+  if(plan.words.length&&plan.words.every(word=>keys.some(key=>key.includes(word))))return true;
+  if(plan.roman&&keys.some(key=>/[a-z]/.test(key)&&key.includes(plan.roman)))return true;
+  if(plan.phonetic&&plan.phonetic.length>=4&&keys.some(k=>{
+   if(plan.phonetic!==plan.plain&&k.includes(plan.phonetic))return true;
+   if(!/ヴ|ティ|ディ|シェ|ジェ/.test(k))return false;
+   const folded=phoneticKey(k,normalize);
+   return folded.includes(plan.phonetic)&&folded!==k;
+  }))return true;
+  return Boolean(plan.season&&fields.some((value,i)=>{
+   // No season parsing when the base work name cannot match.
+   if(!keys[i].includes(plan.season.base)&&!plan.season.base.includes(keys[i]))return false;
+   const part=seasonPart(value,normalize);
+   return part&&part.number===plan.season.number&&
+    (part.base.includes(plan.season.base)||plan.season.base.includes(part.base)&&part.base.length>=4);
+  }));
+ }
+ function remoteCandidate(raw,candidates,normalize){
+  const original=String(raw||'').trim().normalize('NFKC');if(!original||original.length>60)return '';
+  const words=tokens(original,normalize);
+  if(words.length){
+   const rawWords=original.split(/[\s\u3000]+/u);
+   const eligible=rawWords.filter(w=>normalize(w).length>=2&&!/^\d{1,2}(?:期)?$/.test(w));
+   if(!eligible.length)return '';
+   const frequency=w=>(candidates||[]).reduce((n,a)=>n+(fieldsOf(a).some(f=>normalize(f).includes(normalize(w)))?1:0),0);
+   eligible.sort((a,b)=>frequency(a)-frequency(b)||rawWords.lastIndexOf(b)-rawWords.lastIndexOf(a));
+   return eligible[0];
+  }
+  // Orthography correction is preferred to Romanization for 'バ'/'ヴァ' searches.
+  if(/^[ァ-ヶー]{5,}$/.test(original)&&original.includes('バ'))return original.replace('バ','ヴァ');
+  const roman=romaji(original);if(roman)return roman;
+  const season=seasonPart(original,normalize);if(season){
+   const title=original.replace(/(?:\s*第?\s*(?:\d{1,2}|[一二三四五六七八九十])\s*期|\s*season\s*\d{1,2}|\s*\d{1,2}(?:st|nd|rd|th)\s*season|(?:\s+|(?<=[^\x00-\x7f]))(?:IV|VIII|VII|VI|III|II|IX|X|V|I)|\s+\d{1,2})\s*$/iu,'').trim();
+   if(title.length>=3)return title;
+  }
+  // Only one low-risk alternative; original kana string is retained and queried first.
+  if(/^[ァ-ヶー]{5,}$/.test(original)){
+   if(/[ヴ][ァィェォ]/.test(original))return original.replace(/ヴァ/g,'バ').replace(/ヴィ/g,'ビ').replace(/ヴェ/g,'ベ').replace(/ヴォ/g,'ボ');
+   if(original.includes('バ'))return original.replace('バ','ヴァ');
+  }
+  return '';
+ }
+ return Object.freeze({matches,remoteCandidate,romaji,tokens,seasonPart});
+})();
+
+</script>
 <script>(() => {
 'use strict';
 if(!(window.__aniFormalEncrypted===true))return;
@@ -3233,14 +3340,17 @@ function searchVariants(input){
  return [...new Map(candidates.map(t=>[normalizeSearch(t),t])).values()].slice(0,3);
 }
 function titleFields(item){return [item.title,item.english,...(Array.isArray(item.synonyms)?item.synonyms:[])].filter(Boolean).map(normalizeSearch)}
-function localTitleMatch(item,input){const needle=normalizeSearch(input);if(!needle)return true;
+function legacyLocalTitleMatch(item,input){const needle=normalizeSearch(input);if(!needle)return true;
  const fields=titleFields(item);
  if(fields.some(t=>t.includes(needle)))return true;
  const group=matchedAliasGroups(input)[0];
  return Boolean(group&&[group.term,...(group.queries||[])].some(term=>fields.some(t=>t.includes(normalizeSearch(term)))));
 }
+// Existing matches always win; the additive matcher is consulted only on a miss.
+function localTitleMatch(item,input){return legacyLocalTitleMatch(item,input)||AniSearchRescue.matches(item,input,normalizeSearch)}
 
 const searchMemory=new Map(),SEARCH_MEMORY_LIMIT=700;
+const rescuedSearchIds=new Set();
 
 const TITLE_CACHE_LIMIT=1200, SUGGESTION_DISPLAY_LIMIT=12;
 const suggestionCache=new Map();
@@ -3271,7 +3381,10 @@ function rememberedMatches(input){
  if(!input)return [];
  const result=new Map();
  for(const a of [...searchMemory.values(),...Object.values(saved)]){
-  if(a&&a.id&&localTitleMatch(a,input))result.set(a.id,a);
+  if(a&&a.id&&localTitleMatch(a,input)){
+   result.set(a.id,a);
+   if(!legacyLocalTitleMatch(a,input))rescuedSearchIds.add(a.id);
+  }
  }
  return [...result.values()];
 }
@@ -3313,7 +3426,9 @@ function premiereCompare(a,b,oldFirst=false){
  return 0;
 }
 function sortSearchResults(){items.sort((a,b)=>{
- if(searchSort==='relevance'){
+  // Preserve every primary result's relative position and displayed order.
+  if(query&&rescuedSearchIds.has(a.id)!==rescuedSearchIds.has(b.id))return rescuedSearchIds.has(a.id)?1:-1;
+  if(searchSort==='relevance'){
   const diff=relevanceScore(b,query)-relevanceScore(a,query);if(diff)return diff;
  }
  const premiere=premiereCompare(a,b,searchSort==='old');
@@ -4640,7 +4755,11 @@ function render(){
  if(isSaved&&statusFilter!=='all')filtered=filtered.filter(a=>a.status===statusFilter);
  if(isSaved&&statusFilter==='watched'&&finishedYearFilter!=='all')filtered=filtered.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);
  if(isSaved&&statusFilter==='watched'&&unratedOnly)filtered=filtered.filter(a=>!readReview(a.review));
- if(isSaved||exploreRegistered){const q=$('#searchInput').value.trim();if(q)filtered=filtered.filter(a=>localTitleMatch(a,q))}
+ if(isSaved||exploreRegistered){const q=$('#searchInput').value.trim();if(q){
+  const primary=filtered.filter(a=>legacyLocalTitleMatch(a,q));
+  const originalIds=new Set(primary.map(a=>a.id));
+  filtered=[...primary,...filtered.filter(a=>!originalIds.has(a.id)&&AniSearchRescue.matches(a,q,normalizeSearch))];
+ }}
  $('#resultInfo').textContent=isSaved?`${filtered.length}作品`:(exploreRegistered?`登録済み ${filtered.length}作品`:(loading?'取得中…':`${filtered.length}作品を表示`));
  const grid=$('#cards');
  $('#reviewListTools')?.remove();
@@ -4685,13 +4804,14 @@ function currentSeasonFetchKey(){return [currentScope(),$('#seasonSelect').value
 function saveSeasonCache(key){
  if(!key||!items.length)return;
  seasonResultCache.delete(key);
- seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),browseCursor:structuredClone(browseCursor),at:Date.now()});
+ seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),browseCursor:structuredClone(browseCursor),rescuedIds:[...rescuedSearchIds],at:Date.now()});
  while(seasonResultCache.size>15)seasonResultCache.delete(seasonResultCache.keys().next().value);
 }
 function restoreSeasonCache(key){
  const hit=seasonResultCache.get(key);
  if(!hit||Date.now()-hit.at>SEASON_CACHE_TTL)return false;
  items=hit.items.slice();page=hit.page;hasNext=hit.hasNext;searchProgress=structuredClone(hit.searchProgress);browseCursor=structuredClone(hit.browseCursor||null);
+ rescuedSearchIds.clear();for(const id of hit.rescuedIds||[])rescuedSearchIds.add(id);
  fetchedSeasonKey=key;loading=false;$('#offlineNotice').classList.add('hidden');
  if(query)sortSearchResults();
  render();return true;
@@ -4706,14 +4826,21 @@ async function fetchPage(reset=true,force=false){
   if(!loading&&items.length>0&&fetchedSeasonKey===targetKey&&$('#offlineNotice').classList.contains('hidden')){
    if(query)sortSearchResults();render();return;
   }
-  if(restoreSeasonCache(targetKey))return;
  }
- if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
+ if(reset){
+  // Even a cached return switches search identity: cancel and invalidate older rescue work first.
+  activeController?.abort();requestCounter++;activeSeasonKey='';
+  if(!force&&restoreSeasonCache(targetKey))return;
+  $('#offlineNotice').classList.add('hidden');page=1;rescuedSearchIds.clear();items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
   searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
   browseCursor=!query&&currentScope()!=='all'&&$('#seasonSelect').value==='all'?makeBrowseCursor():null;
  }
- loading=true;activeSeasonKey=targetKey;requestCounter++;const thisRequest=requestCounter;
- const controller=new AbortController();activeController=controller;render();
+ loading=true;activeSeasonKey=targetKey;
+ if(!reset)requestCounter++;
+ const thisRequest=requestCounter;
+ const controller=new AbortController();activeController=controller;
+ const isCurrentSearch=()=>thisRequest===requestCounter&&!controller.signal.aborted&&mode==='season'&&currentSeasonFetchKey()===targetKey;
+ render();
  const scope=currentScope(),exact=/^\d{4}$/.test(scope),season=$('#seasonSelect').value;
  const seasonal=!query&&exact&&season!=='all';
  const baseParams=new URLSearchParams({limit:query?'50':'24'});
@@ -4734,22 +4861,31 @@ async function fetchPage(reset=true,force=false){
    else baseParams.set('sort','desc');
   }
  }
- let lastUrl='',successful=0;
- const getData=async(url)=>{
+ let lastUrl='',successful=0,postRenderRescue=null;
+ const getData=async(url,accept=null,requestSignal=controller.signal)=>{
   const wait=Math.max(0,420-(Date.now()-lastRequestAt));if(wait)await delay(wait);
-  if(thisRequest!==requestCounter)return null;
+  if(!isCurrentSearch()||requestSignal.aborted)return null;
   lastRequestAt=Date.now();lastUrl=url;
-  const resp=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+  const resp=await fetch(url,{signal:requestSignal,headers:{Accept:'application/json'}});
   if(!resp.ok)throw new Error(resp.status===429?'アクセスが集中しています（429）。時間をあけて再読み込みしてください。':resp.status===403?'APIからアクセスが制限されています（403）。時間をあけて試してください。':`API応答エラー（${resp.status}）`);
   const payload=await resp.json();
   if(!Array.isArray(payload.data))throw new Error('作品情報の形式が変更された可能性があります。');
-  if(thisRequest!==requestCounter)return null;
+  // No result/cache mutation may outlive its generation or belong to a different search key.
+  if(!isCurrentSearch()||requestSignal.aborted)return null;
   successful++;
   const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)&&publicAnimeAllowed(a)).map(a=>{
+   const m=model(a);
+   // Auxiliary API pages may contain dozens of unrelated works: never cache or show them.
+   if(accept&&!accept(m))return null;
    cacheMalMetric('jikan:'+a.mal_id,a,false);
-   const m=model(a);if(seasonal){m.seasonalKey=`${scope}:${season}`;m.year=Number(scope);m.season=season;if(!m.type&&apiType)m.type=typeFilter}return m;
-  });
-  for(const a of incoming)rememberAnime(a);
+   if(seasonal){m.seasonalKey=`${scope}:${season}`;m.year=Number(scope);m.season=season;if(!m.type&&apiType)m.type=typeFilter}return m;
+  }).filter(Boolean);
+  const priorIds=accept?new Set(items.map(a=>a.id)):null;
+  for(const a of incoming){
+   if(accept){if(!priorIds.has(a.id))rescuedSearchIds.add(a.id)}
+   else rescuedSearchIds.delete(a.id);
+   rememberAnime(a);
+  }
   items=[...new Map([...items,...incoming].map(a=>[a.id,a])).values()];
   return payload;
  };
@@ -4778,7 +4914,8 @@ async function fetchPage(reset=true,force=false){
     }
    }
 
-   const relevant=items.filter(a=>matchingPeriod(a)&&(localTitleMatch(a,query)||relevanceScore(a,query)>0));
+   // Only legacy matches may suppress the existing Wikipedia fallback; additive cached matches are not proof that legacy search succeeded.
+   const relevant=items.filter(a=>matchingPeriod(a)&&(legacyLocalTitleMatch(a,query)||relevanceScore(a,query)>0));
    const isExact=relevant.some(a=>titleFields(a).some(t=>t===normalizeSearch(query)));
 
    const knownAliasResolved=Boolean(matchedAliasGroups(query).length && relevant.length);
@@ -4799,6 +4936,45 @@ async function fetchPage(reset=true,force=false){
        cursor.hasNext=Boolean(payload.pagination?.has_next_page);cursor.page++;
       }catch(err){if(err.name==='AbortError'||thisRequest!==requestCounter)return;cursor.hasNext=false;break}
       if(scope==='all'||items.some(matchingPeriod))break;
+     }
+    }
+   }
+   // A single bounded, optional rescue request after the existing primary/wiki flow.
+   // Existing visible cards are committed before background rescue, never moved.
+   if(reset&&thisRequest===requestCounter&&!controller.signal.aborted&&!knownAliasResolved){
+    const visible=a=>matchingPeriod(a)&&(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase());
+    // A remembered-only rescue match must not suppress the bounded remote rescue.
+    const hasConfidentResult=items.some(a=>visible(a)&&relevanceScore(a,query)>=500);
+    if(!hasConfidentResult){
+     const extra=AniSearchRescue.remoteCandidate(query,items,normalizeSearch);
+     const extraKey=normalizeSearch(extra);
+     if(extraKey&&!searchProgress.some(c=>normalizeSearch(c.term)===extraKey)){
+      const params=new URLSearchParams(baseParams);params.set('q',extra);params.set('page','1');
+      const performRescue=async()=>{
+       if(!isCurrentSearch())return;
+       const before=new Set(items.map(a=>a.id));
+       const rescueController=new AbortController();
+       const stopRescue=()=>rescueController.abort();
+       controller.signal.addEventListener('abort',stopRescue,{once:true});
+       const timer=setTimeout(stopRescue,2600);
+       try{await getData(`${API}/anime?${params}`,
+        a=>visible(a)&&AniSearchRescue.matches(a,query,normalizeSearch),rescueController.signal);
+       }catch{/* Supplemental network failure must not overwrite primary search results. */}
+       finally{clearTimeout(timer);controller.signal.removeEventListener('abort',stopRescue)}
+       if(!isCurrentSearch())return;
+       sortSearchResults();saveSeasonCache(targetKey);
+       if(!postRenderRescue)return; // Zero primary matches: one final render follows the awaited rescue.
+       const added=items.filter(a=>rescuedSearchIds.has(a.id)&&!before.has(a.id)&&visible(a));
+       if(!added.length)return;
+       const grid=$('#cards');
+       if(typeof grid.insertAdjacentHTML==='function'){
+        grid.insertAdjacentHTML('beforeend',added.map(card).join(''));
+        $('#resultInfo').textContent=`${items.filter(visible).length}作品を表示`;
+        observeSavedPosters();
+       }else render();
+      };
+      if(items.some(visible))postRenderRescue=performRescue;
+      else await performRescue(); // No existing cards: avoid a false 0-result flash.
      }
     }
    }
@@ -4834,9 +5010,10 @@ async function fetchPage(reset=true,force=false){
     if(end&&payload.data.some(a=>{const d=premiereDate(a);return d&&d>end}))hasNext=false;
    }
   }
-  if(thisRequest!==requestCounter)return;fetchedSeasonKey=targetKey;loading=false;activeSeasonKey='';saveSeasonCache(targetKey);if(mode==='season'){$('#offlineNotice').classList.add('hidden');render();}
+  if(!isCurrentSearch())return;fetchedSeasonKey=targetKey;loading=false;activeSeasonKey='';saveSeasonCache(targetKey);$('#offlineNotice').classList.add('hidden');render();
+  if(postRenderRescue)void postRenderRescue();
  }catch(err){
-  if(thisRequest!==requestCounter||err.name==='AbortError')return;
+  if(!isCurrentSearch()||err.name==='AbortError')return;
   loading=false;activeSeasonKey='';hasNext=false;fetchedSeasonKey='';
   if(mode!=='season'||exploreStatusFilter!=='all')return;
   const blocked=err instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
@@ -5577,11 +5754,15 @@ function getSuggestions(term){
   byId.set(a.id,prev?{...prev,...a,synonyms:(a.synonyms?.length?a.synonyms:prev.synonyms)||[]}:a);
  }
  const results=[];
- for(const a of byId.values()){
-  if(!localTitleMatch(a,raw))continue;
+ const pushSuggestion=(a,auxiliary=false)=>{
   const exact=titleFields(a).some(t=>t===needle);
   const statusText=isSaved&&statusLabels[a.status]?statusLabels[a.status]:'取得済み';
-  results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年'+(seasonLabels[a.season]?' '+seasonLabels[a.season]:'')+' · ':'')+statusText,score:relevanceScore(a,raw)+(exact?100:40),year:a.year||0});
+  results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年'+(seasonLabels[a.season]?' '+seasonLabels[a.season]:'')+' · ':'')+statusText,score:relevanceScore(a,raw)+(exact?100:(auxiliary?20:40)),year:a.year||0});
+ };
+ for(const a of byId.values())if(legacyLocalTitleMatch(a,raw))pushSuggestion(a);
+ // The normal cache scan remains unchanged when sufficient suggestions already exist.
+ if(raw.length>=3&&results.length<5){
+  for(const a of byId.values())if(!legacyLocalTitleMatch(a,raw)&&AniSearchRescue.matches(a,raw,normalizeSearch))pushSuggestion(a,true);
  }
  if(!isSaved&&!exploreReg&&!scoped){
   for(const [alias,entry] of autoAliasCache){
@@ -7627,14 +7808,17 @@ function searchVariants(input){
  return [...new Map(candidates.map(t=>[normalizeSearch(t),t])).values()].slice(0,3);
 }
 function titleFields(item){return [item.title,item.english,...(Array.isArray(item.synonyms)?item.synonyms:[])].filter(Boolean).map(normalizeSearch)}
-function localTitleMatch(item,input){const needle=normalizeSearch(input);if(!needle)return true;
+function legacyLocalTitleMatch(item,input){const needle=normalizeSearch(input);if(!needle)return true;
  const fields=titleFields(item);
  if(fields.some(t=>t.includes(needle)))return true;
  const group=matchedAliasGroups(input)[0];
  return Boolean(group&&[group.term,...(group.queries||[])].some(term=>fields.some(t=>t.includes(normalizeSearch(term)))));
 }
+// Existing matches always win; the additive matcher is consulted only on a miss.
+function localTitleMatch(item,input){return legacyLocalTitleMatch(item,input)||AniSearchRescue.matches(item,input,normalizeSearch)}
 
 const searchMemory=new Map(),SEARCH_MEMORY_LIMIT=700;
+const rescuedSearchIds=new Set();
 
 const TITLE_CACHE_LIMIT=1200, SUGGESTION_DISPLAY_LIMIT=12;
 const suggestionCache=new Map();
@@ -7665,7 +7849,10 @@ function rememberedMatches(input){
  if(!input)return [];
  const result=new Map();
  for(const a of [...searchMemory.values(),...Object.values(saved)]){
-  if(a&&a.id&&localTitleMatch(a,input))result.set(a.id,a);
+  if(a&&a.id&&localTitleMatch(a,input)){
+   result.set(a.id,a);
+   if(!legacyLocalTitleMatch(a,input))rescuedSearchIds.add(a.id);
+  }
  }
  return [...result.values()];
 }
@@ -7707,7 +7894,9 @@ function premiereCompare(a,b,oldFirst=false){
  return 0;
 }
 function sortSearchResults(){items.sort((a,b)=>{
- if(searchSort==='relevance'){
+  // Preserve every primary result's relative position and displayed order.
+  if(query&&rescuedSearchIds.has(a.id)!==rescuedSearchIds.has(b.id))return rescuedSearchIds.has(a.id)?1:-1;
+  if(searchSort==='relevance'){
   const diff=relevanceScore(b,query)-relevanceScore(a,query);if(diff)return diff;
  }
  const premiere=premiereCompare(a,b,searchSort==='old');
@@ -8771,7 +8960,11 @@ function render(){
  if(isSaved&&statusFilter!=='all')filtered=filtered.filter(a=>a.status===statusFilter);
  if(isSaved&&statusFilter==='watched'&&finishedYearFilter!=='all')filtered=filtered.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);
  if(isSaved&&statusFilter==='watched'&&unratedOnly)filtered=filtered.filter(a=>!readReview(a.review));
- if(isSaved||exploreRegistered){const q=$('#searchInput').value.trim();if(q)filtered=filtered.filter(a=>localTitleMatch(a,q))}
+ if(isSaved||exploreRegistered){const q=$('#searchInput').value.trim();if(q){
+  const primary=filtered.filter(a=>legacyLocalTitleMatch(a,q));
+  const originalIds=new Set(primary.map(a=>a.id));
+  filtered=[...primary,...filtered.filter(a=>!originalIds.has(a.id)&&AniSearchRescue.matches(a,q,normalizeSearch))];
+ }}
  $('#resultInfo').textContent=isSaved?`${filtered.length}作品`:(exploreRegistered?`登録済み ${filtered.length}作品`:(loading?'取得中…':`${filtered.length}作品を表示`));
  const grid=$('#cards');
  $('#reviewListTools')?.remove();
@@ -8815,13 +9008,14 @@ function currentSeasonFetchKey(){return [currentScope(),$('#seasonSelect').value
 function saveSeasonCache(key){
  if(!key||!items.length)return;
  seasonResultCache.delete(key);
- seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),browseCursor:structuredClone(browseCursor),at:Date.now()});
+ seasonResultCache.set(key,{items:items.slice(),page,hasNext,searchProgress:structuredClone(searchProgress),browseCursor:structuredClone(browseCursor),rescuedIds:[...rescuedSearchIds],at:Date.now()});
  while(seasonResultCache.size>15)seasonResultCache.delete(seasonResultCache.keys().next().value);
 }
 function restoreSeasonCache(key){
  const hit=seasonResultCache.get(key);
  if(!hit||Date.now()-hit.at>SEASON_CACHE_TTL)return false;
  items=hit.items.slice();page=hit.page;hasNext=hit.hasNext;searchProgress=structuredClone(hit.searchProgress);browseCursor=structuredClone(hit.browseCursor||null);
+ rescuedSearchIds.clear();for(const id of hit.rescuedIds||[])rescuedSearchIds.add(id);
  fetchedSeasonKey=key;loading=false;$('#offlineNotice').classList.add('hidden');
  if(query)sortSearchResults();
  render();return true;
@@ -8836,14 +9030,21 @@ async function fetchPage(reset=true,force=false){
   if(!loading&&items.length>0&&fetchedSeasonKey===targetKey&&$('#offlineNotice').classList.contains('hidden')){
    if(query)sortSearchResults();render();return;
   }
-  if(restoreSeasonCache(targetKey))return;
  }
- if(reset){activeController?.abort();$('#offlineNotice').classList.add('hidden');page=1;items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
+ if(reset){
+  // Even a cached return switches search identity: cancel and invalidate older rescue work first.
+  activeController?.abort();requestCounter++;activeSeasonKey='';
+  if(!force&&restoreSeasonCache(targetKey))return;
+  $('#offlineNotice').classList.add('hidden');page=1;rescuedSearchIds.clear();items=query?rememberedMatches(query):[];hasNext=false;fetchedSeasonKey='';
   searchProgress=query?searchVariants(query).map(term=>({term,page:1,hasNext:true})):[];
   browseCursor=!query&&currentScope()!=='all'&&$('#seasonSelect').value==='all'?makeBrowseCursor():null;
  }
- loading=true;activeSeasonKey=targetKey;requestCounter++;const thisRequest=requestCounter;
- const controller=new AbortController();activeController=controller;render();
+ loading=true;activeSeasonKey=targetKey;
+ if(!reset)requestCounter++;
+ const thisRequest=requestCounter;
+ const controller=new AbortController();activeController=controller;
+ const isCurrentSearch=()=>thisRequest===requestCounter&&!controller.signal.aborted&&mode==='season'&&currentSeasonFetchKey()===targetKey;
+ render();
  const scope=currentScope(),exact=/^\d{4}$/.test(scope),season=$('#seasonSelect').value;
  const seasonal=!query&&exact&&season!=='all';
  const baseParams=new URLSearchParams({limit:query?'50':'24'});
@@ -8864,22 +9065,31 @@ async function fetchPage(reset=true,force=false){
    else baseParams.set('sort','desc');
   }
  }
- let lastUrl='',successful=0;
- const getData=async(url)=>{
+ let lastUrl='',successful=0,postRenderRescue=null;
+ const getData=async(url,accept=null,requestSignal=controller.signal)=>{
   const wait=Math.max(0,420-(Date.now()-lastRequestAt));if(wait)await delay(wait);
-  if(thisRequest!==requestCounter)return null;
+  if(!isCurrentSearch()||requestSignal.aborted)return null;
   lastRequestAt=Date.now();lastUrl=url;
-  const resp=await fetch(url,{signal:controller.signal,headers:{Accept:'application/json'}});
+  const resp=await fetch(url,{signal:requestSignal,headers:{Accept:'application/json'}});
   if(!resp.ok)throw new Error(resp.status===429?'アクセスが集中しています（429）。時間をあけて再読み込みしてください。':resp.status===403?'APIからアクセスが制限されています（403）。時間をあけて試してください。':`API応答エラー（${resp.status}）`);
   const payload=await resp.json();
   if(!Array.isArray(payload.data))throw new Error('作品情報の形式が変更された可能性があります。');
-  if(thisRequest!==requestCounter)return null;
+  // No result/cache mutation may outlive its generation or belong to a different search key.
+  if(!isCurrentSearch()||requestSignal.aborted)return null;
   successful++;
   const incoming=payload.data.filter(a=>a&&Number.isInteger(a.mal_id)&&publicAnimeAllowed(a)).map(a=>{
+   const m=model(a);
+   // Auxiliary API pages may contain dozens of unrelated works: never cache or show them.
+   if(accept&&!accept(m))return null;
    cacheMalMetric('jikan:'+a.mal_id,a,false);
-   const m=model(a);if(seasonal){m.seasonalKey=`${scope}:${season}`;m.year=Number(scope);m.season=season;if(!m.type&&apiType)m.type=typeFilter}return m;
-  });
-  for(const a of incoming)rememberAnime(a);
+   if(seasonal){m.seasonalKey=`${scope}:${season}`;m.year=Number(scope);m.season=season;if(!m.type&&apiType)m.type=typeFilter}return m;
+  }).filter(Boolean);
+  const priorIds=accept?new Set(items.map(a=>a.id)):null;
+  for(const a of incoming){
+   if(accept){if(!priorIds.has(a.id))rescuedSearchIds.add(a.id)}
+   else rescuedSearchIds.delete(a.id);
+   rememberAnime(a);
+  }
   items=[...new Map([...items,...incoming].map(a=>[a.id,a])).values()];
   return payload;
  };
@@ -8908,7 +9118,8 @@ async function fetchPage(reset=true,force=false){
     }
    }
 
-   const relevant=items.filter(a=>matchingPeriod(a)&&(localTitleMatch(a,query)||relevanceScore(a,query)>0));
+   // Only legacy matches may suppress the existing Wikipedia fallback; additive cached matches are not proof that legacy search succeeded.
+   const relevant=items.filter(a=>matchingPeriod(a)&&(legacyLocalTitleMatch(a,query)||relevanceScore(a,query)>0));
    const isExact=relevant.some(a=>titleFields(a).some(t=>t===normalizeSearch(query)));
 
    const knownAliasResolved=Boolean(matchedAliasGroups(query).length && relevant.length);
@@ -8929,6 +9140,45 @@ async function fetchPage(reset=true,force=false){
        cursor.hasNext=Boolean(payload.pagination?.has_next_page);cursor.page++;
       }catch(err){if(err.name==='AbortError'||thisRequest!==requestCounter)return;cursor.hasNext=false;break}
       if(scope==='all'||items.some(matchingPeriod))break;
+     }
+    }
+   }
+   // A single bounded, optional rescue request after the existing primary/wiki flow.
+   // Existing visible cards are committed before background rescue, never moved.
+   if(reset&&thisRequest===requestCounter&&!controller.signal.aborted&&!knownAliasResolved){
+    const visible=a=>matchingPeriod(a)&&(typeFilter==='all'||String(a.type||'').toLowerCase()===typeFilter.toLowerCase());
+    // A remembered-only rescue match must not suppress the bounded remote rescue.
+    const hasConfidentResult=items.some(a=>visible(a)&&relevanceScore(a,query)>=500);
+    if(!hasConfidentResult){
+     const extra=AniSearchRescue.remoteCandidate(query,items,normalizeSearch);
+     const extraKey=normalizeSearch(extra);
+     if(extraKey&&!searchProgress.some(c=>normalizeSearch(c.term)===extraKey)){
+      const params=new URLSearchParams(baseParams);params.set('q',extra);params.set('page','1');
+      const performRescue=async()=>{
+       if(!isCurrentSearch())return;
+       const before=new Set(items.map(a=>a.id));
+       const rescueController=new AbortController();
+       const stopRescue=()=>rescueController.abort();
+       controller.signal.addEventListener('abort',stopRescue,{once:true});
+       const timer=setTimeout(stopRescue,2600);
+       try{await getData(`${API}/anime?${params}`,
+        a=>visible(a)&&AniSearchRescue.matches(a,query,normalizeSearch),rescueController.signal);
+       }catch{/* Supplemental network failure must not overwrite primary search results. */}
+       finally{clearTimeout(timer);controller.signal.removeEventListener('abort',stopRescue)}
+       if(!isCurrentSearch())return;
+       sortSearchResults();saveSeasonCache(targetKey);
+       if(!postRenderRescue)return; // Zero primary matches: one final render follows the awaited rescue.
+       const added=items.filter(a=>rescuedSearchIds.has(a.id)&&!before.has(a.id)&&visible(a));
+       if(!added.length)return;
+       const grid=$('#cards');
+       if(typeof grid.insertAdjacentHTML==='function'){
+        grid.insertAdjacentHTML('beforeend',added.map(card).join(''));
+        $('#resultInfo').textContent=`${items.filter(visible).length}作品を表示`;
+        observeSavedPosters();
+       }else render();
+      };
+      if(items.some(visible))postRenderRescue=performRescue;
+      else await performRescue(); // No existing cards: avoid a false 0-result flash.
      }
     }
    }
@@ -8964,9 +9214,10 @@ async function fetchPage(reset=true,force=false){
     if(end&&payload.data.some(a=>{const d=premiereDate(a);return d&&d>end}))hasNext=false;
    }
   }
-  if(thisRequest!==requestCounter)return;fetchedSeasonKey=targetKey;loading=false;activeSeasonKey='';saveSeasonCache(targetKey);if(mode==='season'){$('#offlineNotice').classList.add('hidden');render();}
+  if(!isCurrentSearch())return;fetchedSeasonKey=targetKey;loading=false;activeSeasonKey='';saveSeasonCache(targetKey);$('#offlineNotice').classList.add('hidden');render();
+  if(postRenderRescue)void postRenderRescue();
  }catch(err){
-  if(thisRequest!==requestCounter||err.name==='AbortError')return;
+  if(!isCurrentSearch()||err.name==='AbortError')return;
   loading=false;activeSeasonKey='';hasNext=false;fetchedSeasonKey='';
   if(mode!=='season'||exploreStatusFilter!=='all')return;
   const blocked=err instanceof TypeError||/Failed to fetch|NetworkError|Load failed/i.test(String(err?.message||''));
@@ -9707,11 +9958,15 @@ function getSuggestions(term){
   byId.set(a.id,prev?{...prev,...a,synonyms:(a.synonyms?.length?a.synonyms:prev.synonyms)||[]}:a);
  }
  const results=[];
- for(const a of byId.values()){
-  if(!localTitleMatch(a,raw))continue;
+ const pushSuggestion=(a,auxiliary=false)=>{
   const exact=titleFields(a).some(t=>t===needle);
   const statusText=isSaved&&statusLabels[a.status]?statusLabels[a.status]:'取得済み';
-  results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年'+(seasonLabels[a.season]?' '+seasonLabels[a.season]:'')+' · ':'')+statusText,score:relevanceScore(a,raw)+(exact?100:40),year:a.year||0});
+  results.push({value:a.title,label:a.title,detail:(a.year?a.year+'年'+(seasonLabels[a.season]?' '+seasonLabels[a.season]:'')+' · ':'')+statusText,score:relevanceScore(a,raw)+(exact?100:(auxiliary?20:40)),year:a.year||0});
+ };
+ for(const a of byId.values())if(legacyLocalTitleMatch(a,raw))pushSuggestion(a);
+ // The normal cache scan remains unchanged when sufficient suggestions already exist.
+ if(raw.length>=3&&results.length<5){
+  for(const a of byId.values())if(!legacyLocalTitleMatch(a,raw)&&AniSearchRescue.matches(a,raw,normalizeSearch))pushSuggestion(a,true);
  }
  if(!isSaved&&!exploreReg&&!scoped){
   for(const [alias,entry] of autoAliasCache){
