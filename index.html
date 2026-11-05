@@ -123,7 +123,7 @@ select:focus-visible,input:focus-visible,textarea:focus-visible,
 .rank-register-control:focus-visible,.rank-view-tabs button:focus-visible,
 .rank-rating-filter-options button:focus-visible,.explore-status-buttons button:focus-visible,
 .filter-tabs button:focus-visible,.review-aspect-options button:focus-visible,
-.review-list-actions button:focus-visible,.detail-back:focus-visible,
+.review-unrated-checkbox input:focus-visible,.detail-back:focus-visible,
 .detail-date-disclosure>summary:focus-visible,.detail-rating-edit:focus-visible,
 .detail-note-edit:focus-visible,.watch-date-actions button:focus-visible,
 .detail-translate-btn:focus-visible,.detail-video-external:focus-visible,
@@ -255,9 +255,9 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .search-sort select{background:var(--surface);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);height:36px;padding:0 12px;font-size:var(--fs-sm);cursor:pointer}
 .review-list-actions{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0 0;padding:12px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius-sm)}
 .review-list-count{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:var(--fs-sm)}
-.review-list-actions #finishedYearFilter{background:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:6px;color:var(--ink);padding:6px 10px;font-size:var(--fs-sm);cursor:pointer}
-.review-list-actions button{border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);color:var(--ink);background:var(--surface2);font-size:var(--fs-sm);padding:8px 12px;font-weight:var(--fw-semi)}
-.review-list-actions button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.review-list-actions #finishedYearFilter{background-color:var(--surface-input);border:1px solid var(--border-ctrl);border-radius:6px;color:var(--ink);padding:6px 34px 6px 10px;font-size:var(--fs-sm);cursor:pointer}
+.review-unrated-checkbox{display:inline-flex;align-items:center;gap:8px;min-height:36px;color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap;cursor:pointer}
+.review-unrated-checkbox input{appearance:auto;-webkit-appearance:checkbox;accent-color:var(--accent);width:17px;height:17px;min-width:17px;margin:0;cursor:pointer}
 .list-caption{display:flex;justify-content:space-between;align-items:center;margin:0 0 16px;min-height:20px;color:var(--muted);font-size:var(--fs-sm)}
 .result-info{color:var(--muted);font-size:var(--fs-sm);white-space:nowrap}
 /* My List: count is supporting information below the controls, not between inputs. */
@@ -663,10 +663,12 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .watch-date{padding-top:12px}
 .watch-date-title{display:none}
 .watch-date-help,.watch-date-hint{font-size:var(--fs-xs);line-height:1.65;color:var(--muted);margin:0 0 8px}
-.watch-date-hint{margin-top:var(--sp-3)}
-.watch-date-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.watch-date-hint{margin-top:2px}
+.watch-date-fields{display:grid;grid-template-columns:minmax(0,1.14fr) minmax(0,.93fr) minmax(0,.93fr);gap:8px;margin:0 0 10px}
 .watch-date-field{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-xs);color:var(--muted)}
 .watch-date-fields input,.watch-date-fields select{width:100%;min-height:40px;padding:6px 8px;background:var(--surface-input);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:6px;font-size:var(--fs-md)}
+.watch-date-fields select{white-space:nowrap}
+.watch-date-fields select option{white-space:nowrap}
 .watch-date-actions{display:flex;gap:8px}
 .watch-date-actions button{font-size:var(--fs-sm);border:1px solid var(--border-ctrl);border-radius:6px;background:var(--surface);color:var(--ink);padding:8px 12px;font-weight:var(--fw-semi)}
 /* Switch by the actual card width rather than the browser viewport. */
@@ -935,7 +937,6 @@ dialog menu button,.review-dialog-actions button{border-radius:var(--radius-sm);
   .detail-links a:hover,
   .detail-more:not(:disabled):hover,
   .loadmore:hover,
-  .review-list-actions button[aria-pressed="false"]:hover,
   .secondary:hover,
   .review-cancel:hover,
   .back-to-top:hover,
@@ -1393,7 +1394,7 @@ select:not([data-status-id]){
   .search-sort select + .anilog-mobile-select-trigger{background-color:var(--surface);height:36px}
   .annual-year-control select + .anilog-mobile-select-trigger{background-color:var(--surface2);min-width:140px;height:44px;font-size:var(--fs-md);font-weight:var(--fw-bold)}
   .rank-controls select + .anilog-mobile-select-trigger{background-color:var(--surface);min-width:140px;height:42px}
-  dialog select + .anilog-mobile-select-trigger{width:100%;height:42px;margin-bottom:16px}
+  dialog select + .anilog-mobile-select-trigger{width:100%;height:42px;margin-bottom:16px;white-space:nowrap}
   .share-season-fields select + .anilog-mobile-select-trigger{margin-bottom:0}
   .weekly-dialog .weekly-fieldset>select + .anilog-mobile-select-trigger{display:flex;width:100%;height:44px;margin:0 0 14px;background-color:var(--surface2);font-size:var(--fs-md)}
   .weekly-time-controls select + .anilog-mobile-select-trigger{width:100%;height:44px;margin:0;background-color:var(--surface2);font-size:var(--fs-md)}
@@ -2778,7 +2779,6 @@ select:not([data-status-id]){
   <form id="ratingForm" class="review-dialog-inner">
     <div class="review-dialog-eyebrow">MY REVIEW · ブラウザに保存</div>
     <h2 id="ratingTitle">作品を評価</h2>
-    <p class="review-dialog-sub">まずは星をひとつ選ぶだけ。もっと残したいときだけ細かく評価できます。</p>
     <div class="review-overall">
       <span class="review-section-label" id="ratingOverallLabel">総合評価 <span aria-hidden="true">*</span></span>
       <div class="review-overall-stars" role="group" aria-labelledby="ratingOverallLabel">
@@ -3605,7 +3605,7 @@ function completionDateMarkup(a,scope='detail'){
  const [year='',month='',day='']=savedDate.split('-');
  const years=completionYearOptions(year);
  const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
- return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">「年」または「年月」だけでも保存できます。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div>${scope==='rating'?'':`<div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div>`}<p class="watch-date-hint">1999年以前は「他の年を入力」から登録できます。</p></div>`;
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div>${scope==='rating'?'':`<div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div>`}<p class="watch-date-hint">1999年以前は「他の年を入力」から登録できます。</p></div>`;
 }
 function completionFields(scope='detail'){
  const prefix=scope==='rating'?'ratingCompletion':'completion';
@@ -4961,7 +4961,7 @@ function render(){
   const allWatched=Object.values(saved).filter(a=>a?.status==='watched');const visibleWatched=finishedYearFilter==='all'?allWatched:allWatched.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);const unrated=visibleWatched.filter(a=>!readReview(a.review)).length;
   const years=[...new Set(allWatched.map(a=>String(a.completedOn||'').slice(0,4)).filter(x=>/^\d{4}$/.test(x)))].sort((a,b)=>Number(b)-Number(a));
   const tools=document.createElement('div');tools.className='review-list-actions';tools.id='reviewListTools';
-  tools.innerHTML=`<label class="review-list-count" for="finishedYearFilter">見終えた年 <select id="finishedYearFilter" aria-label="見終えた年で絞り込む"><option value="all">すべて</option>${years.map(y=>`<option value="${y}" ${finishedYearFilter===y?'selected':''}>${y}年</option>`).join('')}<option value="unknown" ${finishedYearFilter==='unknown'?'selected':''}>時期未登録</option></select></label><div class="review-list-count"><b>${visibleWatched.length-unrated} / ${visibleWatched.length}作品</b>を評価済み</div><button type="button" id="unratedToggle" aria-pressed="${unratedOnly}">${unratedOnly?uiIcon('check')+' 未評価のみ表示中':'未評価のみ表示（'+unrated+'）'}</button>`;
+  tools.innerHTML=`<label class="review-list-count" for="finishedYearFilter">見終えた年 <select id="finishedYearFilter" aria-label="見終えた年で絞り込む"><option value="all">すべて</option>${years.map(y=>`<option value="${y}" ${finishedYearFilter===y?'selected':''}>${y}年</option>`).join('')}<option value="unknown" ${finishedYearFilter==='unknown'?'selected':''}>時期未登録</option></select></label><div class="review-list-count"><b>${visibleWatched.length-unrated} / ${visibleWatched.length}作品</b>を評価済み</div><label class="review-unrated-checkbox" for="unratedOnlyCheckbox"><input type="checkbox" id="unratedOnlyCheckbox" ${unratedOnly?'checked':''}><span>未評価のみ表示（${unrated}）</span></label>`;
   $('#filterDisclosure .filter-panel').append(tools);
  }
  if(loading&&!isSaved&&!exploreRegistered&&page===1)grid.innerHTML=emptyCard('作品一覧を取得中…','公開アニメデータベースにアクセスしています。','loading');
@@ -5229,7 +5229,7 @@ async function fetchPage(reset=true,force=false){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all',preserveScroll=false){const scrollY=preserveScroll?window.scrollY:null;exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(preserveScroll)window.scrollTo({top:scrollY,behavior:'instant'});else if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all',preserveScroll=false){const scrollY=preserveScroll?window.scrollY:null;exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(preserveScroll)window.scrollTo({top:scrollY,behavior:'instant'});else if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;periodBeforeAutoAll=null;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){showSeason();}
 
@@ -5901,8 +5901,12 @@ $$('[data-status-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b
 $$('[data-stat-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statFilter,true)));
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-rate-id]');if(b)openRating(b.dataset.rateId)});
 $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
-$('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
-$('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
+$('#libraryView').addEventListener('change',e=>{
+ if(e.target.id==='unratedOnlyCheckbox'){
+  unratedOnly=e.target.checked;render();aniHistorySave();return;
+ }
+ if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}
+});
 $('#ratingDialog').addEventListener('close',()=>{ratingItemId=null;clearTimeout($('#ratingDialog')._ratingNoticeTimer);clearDialogNotice($('#ratingDialog'))});
 $('#ratingDialog').addEventListener('change',e=>{
  if(e.target.matches('#ratingCompletionYearPreset,#ratingCompletionYear,#ratingCompletionMonth'))refreshCompletionDay('rating');
@@ -7558,6 +7562,11 @@ const aniStoredHistoryState=history.state?.[ANI_ROUTE]===1&&
 // The URL is authoritative on direct entry; a matching browser entry can retain
 // its existing list/filter context and scroll position. Never restore a stale ID.
 let aniInitialHistoryState=aniStoredHistoryState&&(!aniPathRoute||ANI_PUBLIC.matches(aniStoredHistoryState,aniPathRoute))?aniStoredHistoryState:null;
+if(aniInitialHistoryState?.view==='saved'){
+ // Reloading My List starts with the optional unrated filter OFF.
+ // In-session back/forward still restores the explicit browser-history selection.
+ aniInitialHistoryState={...aniInitialHistoryState,saved:{...aniInitialHistoryState.saved,unrated:false}};
+}
 if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryState){
  const base=aniHistorySnapshot();
  if(aniPathRoute.kind==='anime'){
@@ -8230,7 +8239,7 @@ function completionDateMarkup(a,scope='detail'){
  const [year='',month='',day='']=savedDate.split('-');
  const years=completionYearOptions(year);
  const months=Array.from({length:12},(_,i)=>{const m=String(i+1).padStart(2,'0');return `<option value="${m}" ${m===month?'selected':''}>${i+1}月</option>`}).join('');
- return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><p class="watch-date-help">「年」または「年月」だけでも保存できます。</p><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div>${scope==='rating'?'':`<div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div>`}<p class="watch-date-hint">1999年以前は「他の年を入力」から登録できます。</p></div>`;
+ return `<div class="watch-date"><strong class="watch-date-title">見終わった時期（任意）</strong><div class="watch-date-fields" role="group" aria-label="見終わった時期"><label class="watch-date-field" for="${prefix}YearPreset"><span>年</span><select id="${prefix}YearPreset" aria-label="見終わった年">${years.options}</select><input id="${prefix}Year" type="number" inputmode="numeric" min="1900" max="${localTodayParts()[0]}" step="1" placeholder="例：1995" value="${safeText(year)}" aria-label="見終わった年を直接入力" ${years.chosen==='other'?'':'hidden disabled'}></label><label class="watch-date-field" for="${prefix}Month"><span>月（任意）</span><select id="${prefix}Month" aria-label="見終わった月"><option value="">不明</option>${months}</select></label><label class="watch-date-field" for="${prefix}Day"><span>日（任意）</span><select id="${prefix}Day" aria-label="見終わった日" ${!month?'disabled':''}>${completionDayOptions(Number(year),Number(month),day)}</select></label></div>${scope==='rating'?'':`<div class="watch-date-actions"><button type="button" data-completion-save="${safeText(a.id)}" data-completion-scope="${scope}">時期を保存</button>${savedDate?`<button type="button" data-completion-clear="${safeText(a.id)}" data-completion-scope="${scope}">記録を消す</button>`:''}</div>`}<p class="watch-date-hint">1999年以前は「他の年を入力」から登録できます。</p></div>`;
 }
 function completionFields(scope='detail'){
  const prefix=scope==='rating'?'ratingCompletion':'completion';
@@ -9323,7 +9332,7 @@ function render(){
   const allWatched=Object.values(saved).filter(a=>a?.status==='watched');const visibleWatched=finishedYearFilter==='all'?allWatched:allWatched.filter(a=>finishedYearFilter==='unknown'?!a.completedOn:String(a.completedOn||'').slice(0,4)===finishedYearFilter);const unrated=visibleWatched.filter(a=>!readReview(a.review)).length;
   const years=[...new Set(allWatched.map(a=>String(a.completedOn||'').slice(0,4)).filter(x=>/^\d{4}$/.test(x)))].sort((a,b)=>Number(b)-Number(a));
   const tools=document.createElement('div');tools.className='review-list-actions';tools.id='reviewListTools';
-  tools.innerHTML=`<label class="review-list-count" for="finishedYearFilter">見終えた年 <select id="finishedYearFilter" aria-label="見終えた年で絞り込む"><option value="all">すべて</option>${years.map(y=>`<option value="${y}" ${finishedYearFilter===y?'selected':''}>${y}年</option>`).join('')}<option value="unknown" ${finishedYearFilter==='unknown'?'selected':''}>時期未登録</option></select></label><div class="review-list-count"><b>${visibleWatched.length-unrated} / ${visibleWatched.length}作品</b>を評価済み</div><button type="button" id="unratedToggle" aria-pressed="${unratedOnly}">${unratedOnly?uiIcon('check')+' 未評価のみ表示中':'未評価のみ表示（'+unrated+'）'}</button>`;
+  tools.innerHTML=`<label class="review-list-count" for="finishedYearFilter">見終えた年 <select id="finishedYearFilter" aria-label="見終えた年で絞り込む"><option value="all">すべて</option>${years.map(y=>`<option value="${y}" ${finishedYearFilter===y?'selected':''}>${y}年</option>`).join('')}<option value="unknown" ${finishedYearFilter==='unknown'?'selected':''}>時期未登録</option></select></label><div class="review-list-count"><b>${visibleWatched.length-unrated} / ${visibleWatched.length}作品</b>を評価済み</div><label class="review-unrated-checkbox" for="unratedOnlyCheckbox"><input type="checkbox" id="unratedOnlyCheckbox" ${unratedOnly?'checked':''}><span>未評価のみ表示（${unrated}）</span></label>`;
   $('#filterDisclosure .filter-panel').append(tools);
  }
  if(loading&&!isSaved&&!exploreRegistered&&page===1)grid.innerHTML=emptyCard('作品一覧を取得中…','公開アニメデータベースにアクセスしています。','loading');
@@ -9590,7 +9599,7 @@ async function fetchPage(reset=true,force=false){
   $('#loadMore').classList.add('hidden');
  }
 }
-function showSaved(filter='all',preserveScroll=false){const scrollY=preserveScroll?window.scrollY:null;exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';if(filter!=='watched')unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(preserveScroll)window.scrollTo({top:scrollY,behavior:'instant'});else if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
+function showSaved(filter='all',preserveScroll=false){const scrollY=preserveScroll?window.scrollY:null;exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;$('#offlineNotice').classList.add('hidden');periodBeforeAutoAll=null;mode='saved';unratedOnly=false;statusFilter=filter;typeFilter='all';$('#searchInput').value='';query='';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));render();if(preserveScroll)window.scrollTo({top:scrollY,behavior:'instant'});else if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function showSeason(){exitAnnual();exitRanking();closeSuggestions();closeDetail(false);exitSharedView();const today=new Date();curYear=today.getFullYear();curSeason=['winter','spring','summer','fall'][Math.floor(today.getMonth()/3)];years.value=String(curYear);$('#seasonSelect').value=curSeason;syncPeriodUI();unratedOnly=false;periodTouched=false;periodBeforeAutoAll=null;mode='season';statusFilter='all';exploreStatusFilter='all';typeFilter='all';$$('[data-type]').forEach(b=>b.classList.toggle('active',b.dataset.type==='all'));query='';$('#searchInput').value='';fetchPage(true);if(!aniHistoryRestoring)window.scrollTo({top:0,behavior:'smooth'});}
 function goHome(){showSeason();}
 
@@ -10262,8 +10271,12 @@ $$('[data-status-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b
 $$('[data-stat-filter]').forEach(b=>b.addEventListener('click',()=>showSaved(b.dataset.statFilter,true)));
 $('#cards').addEventListener('click',e=>{const b=e.target.closest('[data-rate-id]');if(b)openRating(b.dataset.rateId)});
 $('#savedOrder').addEventListener('change',()=>{if(mode==='saved')render()});
-$('#libraryView').addEventListener('click',e=>{const b=e.target.closest('#unratedToggle');if(b){unratedOnly=!unratedOnly;render()}});
-$('#libraryView').addEventListener('change',e=>{if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}});
+$('#libraryView').addEventListener('change',e=>{
+ if(e.target.id==='unratedOnlyCheckbox'){
+  unratedOnly=e.target.checked;render();aniHistorySave();return;
+ }
+ if(e.target.id==='finishedYearFilter'){finishedYearFilter=e.target.value;render()}
+});
 $('#ratingDialog').addEventListener('close',()=>{ratingItemId=null;clearTimeout($('#ratingDialog')._ratingNoticeTimer);clearDialogNotice($('#ratingDialog'))});
 $('#ratingDialog').addEventListener('change',e=>{
  if(e.target.matches('#ratingCompletionYearPreset,#ratingCompletionYear,#ratingCompletionMonth'))refreshCompletionDay('rating');
@@ -11927,6 +11940,11 @@ const aniStoredHistoryState=history.state?.[ANI_ROUTE]===1&&
 // The URL is authoritative on direct entry; a matching browser entry can retain
 // its existing list/filter context and scroll position. Never restore a stale ID.
 let aniInitialHistoryState=aniStoredHistoryState&&(!aniPathRoute||ANI_PUBLIC.matches(aniStoredHistoryState,aniPathRoute))?aniStoredHistoryState:null;
+if(aniInitialHistoryState?.view==='saved'){
+ // Reloading My List starts with the optional unrated filter OFF.
+ // In-session back/forward still restores the explicit browser-history selection.
+ aniInitialHistoryState={...aniInitialHistoryState,saved:{...aniInitialHistoryState.saved,unrated:false}};
+}
 if(!location.hash.startsWith(SHARE_PREFIX)&&aniPathRoute&&!aniInitialHistoryState){
  const base=aniHistorySnapshot();
  if(aniPathRoute.kind==='anime'){
@@ -12128,7 +12146,7 @@ if(topBtn){
   (s.closest('dialog[open]')||document.body).appendChild(popup);
   // The long year list gains a scrollbar on some OSes; reserve about one extra glyph
   // so decade labels such as "2000年代" remain on one line without changing other menus.
-  preferredWidth=intrinsicWidth()+(s.id==='yearSelect'?20:0);
+  preferredWidth=intrinsicWidth()+((s.id==='yearSelect'||(s.closest('.watch-date-field')&&s.id.endsWith('YearPreset')))?20:0);
   const control=visual(s);control.classList.add('anilog-select-open');control.setAttribute('aria-expanded','true');control.setAttribute('aria-controls',popup.id);
   control.focus({preventScroll:true});
   const selected=options.findIndex(o=>o.selected&&!o.disabled&&!o.hidden);
