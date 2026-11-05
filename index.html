@@ -435,7 +435,15 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .rank-notice{color:var(--muted);font-size:var(--fs-sm);line-height:1.7;margin:0 0 16px}
 .rank-rating-filter{margin:0 0 16px}
 .rank-rating-filter-label{display:block;margin:0 0 8px;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-semi)}
-.rank-rating-filter-options{display:flex;gap:8px;max-width:100%;overflow-x:auto;padding:0 0 4px;scrollbar-width:thin;scrollbar-color:var(--border-ctrl) transparent}
+/* The jump is a separate navigation action placed next to, not inside, the star filters. */
+.rank-rating-filter-row{display:flex;flex-wrap:wrap;align-items:center;column-gap:18px;row-gap:10px;min-width:0}
+.rank-rating-filter-options{display:flex;gap:8px;flex:0 1 auto;min-width:0;max-width:100%;overflow-x:auto;padding:0 0 4px;scrollbar-width:thin;scrollbar-color:var(--border-ctrl) transparent}
+.rank-insights-jump{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-height:62px;padding:8px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap;cursor:pointer}
+.rank-insights-jump .ui-icon{width:16px;height:16px;flex:0 0 16px;fill:none;stroke:currentColor}
+.rank-insights-jump:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-color:var(--accent)}
+@media(hover:hover){.rank-insights-jump:hover{background:var(--surface2);border-color:var(--accent-border)}}
+@media(max-width:920px){.rank-rating-filter-options{flex-basis:100%}.rank-insights-jump{min-height:42px}}
+#myInsights{scroll-margin-top:24px}
 .rank-rating-filter-options button{display:flex;flex:0 0 96px;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:62px;padding:8px 10px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-semi);white-space:nowrap}
 .rank-rating-filter-options button[aria-pressed="true"]{border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
 .rank-rating-filter-options button:disabled{opacity:.45}
@@ -2702,15 +2710,18 @@ select:not([data-status-id]){
         <label class="rank-threshold"><input type="checkbox" id="rankMinVotes" checked> 評価人数100人以上</label>
       </div>
       <div id="rankNotice" class="rank-notice">世間の評価はMyAnimeList由来のデータです。日本国内だけのランキングではありません。</div>
-      <div id="rankRatingFilter" class="rank-rating-filter" role="group" aria-label="マイランキングを星評価で絞り込む" hidden>
-        <span class="rank-rating-filter-label">評価で絞り込む</span>
-        <div id="rankRatingFilterOptions" class="rank-rating-filter-options"></div>
+      <div id="rankRatingFilter" class="rank-rating-filter" hidden>
+        <span class="rank-rating-filter-label" id="rankRatingFilterLabel">評価で絞り込む</span>
+        <div class="rank-rating-filter-row">
+          <div id="rankRatingFilterOptions" class="rank-rating-filter-options" role="group" aria-labelledby="rankRatingFilterLabel"></div>
+          <button type="button" id="rankInsightsJump" class="rank-insights-jump" aria-controls="myInsights">あなたの視聴分析 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button>
+        </div>
         <div id="rankRatingFilterFeedback" class="rank-rating-filter-feedback" role="status" aria-live="polite" hidden></div>
       </div>
       <div id="rankResults" class="rank-results" aria-live="polite"></div>
 
       <section id="myInsights" class="insights-root hidden" aria-label="マイランキングの視聴分析">
-        <div class="insights-header"><h3>あなたの視聴分析</h3><p>「見た」作品を対象に、各シーズンを別作品として集計します。同じシリーズを複数期見ると、その分も加算されます。視聴本数は、好みの広がりと必ずしも一致しません。</p></div>
+        <div class="insights-header"><h3 id="myInsightsTitle" tabindex="-1">あなたの視聴分析</h3><p>「見た」作品を対象に、各シーズンを別作品として集計します。同じシリーズを複数期見ると、その分も加算されます。視聴本数は、好みの広がりと必ずしも一致しません。</p></div>
         <div id="insightsStatus" class="insights-status" role="status" aria-live="polite"></div>
         <article class="insights-card">
           <div class="insights-card-head"><div><h4>制作会社ランキング</h4><p class="insights-explain">複数社制作の作品は、それぞれの制作会社に1作品として集計します。</p></div><div class="insights-toggle" role="group" aria-label="制作会社の並び順"><button type="button" data-insight-studio-sort="count" class="active">視聴本数順</button><button type="button" data-insight-studio-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
@@ -5440,8 +5451,9 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
  const names={period:'年代・シーズン別ランキング',top:'歴代アニメランキング',mine:'マイランキング'};
  $('#rankingTitle').textContent=names[rankingTab];$('#breadcrumb').textContent=names[rankingTab];
- $('#rankingDescription').textContent=mine?'「見た」に登録し、自分で評価した作品を並べます。':'Tenrai API（MyAnimeList由来）の評価・登録者数に基づく作品の並びです。';
- $('#rankNotice').textContent=mine?'★5〜1の順です。同じ星の作品だけドラッグか↑↓で順番を変えられます。順位はブラウザとJSONバックアップに保存されます。':rankingSort==='members'?'人気順は作品をリストに登録した人数による順位です。評価点の高さとは別の指標です。':'スコアは海外ユーザーを含む評価です。新作は評価数が少なく順位が変動しやすいため、人数で絞り込めます。';
+ $('#rankingDescription').textContent=mine?'「見た」作品のうち、評価済みの作品を★評価の高い順に表示します。':'Tenrai API（MyAnimeList由来）の評価・登録者数に基づく作品の並びです。';
+ $('#rankNotice').classList.toggle('hidden',mine);
+ $('#rankNotice').textContent=mine?'':rankingSort==='members'?'人気順は作品をリストに登録した人数による順位です。評価点の高さとは別の指標です。':'スコアは海外ユーザーを含む評価です。新作は評価数が少なく順位が変動しやすいため、人数で絞り込めます。';
  $('#rankLoadMore').classList.toggle('hidden',mine||!rankingHasNext||rankingBusy);
  if(mine){renderInsights();const rows=myRatedItems();
   const ratingCounts=[0,0,0,0,0,0];rows.forEach(a=>ratingCounts[readReview(a.review).overall]++);
@@ -5636,6 +5648,7 @@ $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>{
 }));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
 $('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();aniHistorySave();scheduleMalMetricEnrichment()});
+$('#rankInsightsJump').addEventListener('click',()=>{if(mode!=='ranking'||rankingTab!=='mine')return;const section=$('#myInsights');if(section.classList.contains('hidden'))return;section.scrollIntoView({behavior:'auto',block:'start'});$('#myInsightsTitle').focus({preventScroll:true});});
 $('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;aniHistorySave();loadRanking(true)});
 $('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);aniHistorySave();loadRanking(true)});
 $('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;aniHistorySave();loadRanking(true)});
@@ -6692,7 +6705,7 @@ function detailHeader(a,full=null){
  const noteAction=saved[a.id]?`<button type="button" class="detail-note-edit" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${detailNote?.text?'編集':'追加'}">${uiIcon('edit')} ${detailNote?.text?'メモを編集する':'メモを書く'}</button>`:'';
  const noteContent=saved[a.id]?(detailNote?.text?`<p class="detail-note-text">${safeText(detailNote.text)}</p>`:'<p class="detail-note-empty">まだメモはありません</p>'):'<p class="detail-note-empty">作品を登録するとメモを残せます</p>';
  const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-note-heading"><div class="detail-journal-cell-heading">作品メモ</div></div>${noteAction}${noteContent}</div>`;
- const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2><span>${mode==='share'?'共有された情報を表示しています':'このブラウザに保存'}</span></div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}</div></section>`;
+ const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2>${mode==='share'?'<span>共有された情報を表示しています</span>':''}</div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}</div></section>`;
  return header+journal;
 }
 function detailGeneral(d){const facts=[];
@@ -9816,8 +9829,9 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
  const names={period:'年代・シーズン別ランキング',top:'歴代アニメランキング',mine:'マイランキング'};
  $('#rankingTitle').textContent=names[rankingTab];$('#breadcrumb').textContent=names[rankingTab];
- $('#rankingDescription').textContent=mine?'「見た」に登録し、自分で評価した作品を並べます。':'Tenrai API（MyAnimeList由来）の評価・登録者数に基づく作品の並びです。';
- $('#rankNotice').textContent=mine?'★5〜1の順です。同じ星の作品だけドラッグか↑↓で順番を変えられます。順位はブラウザとJSONバックアップに保存されます。':rankingSort==='members'?'人気順は作品をリストに登録した人数による順位です。評価点の高さとは別の指標です。':'スコアは海外ユーザーを含む評価です。新作は評価数が少なく順位が変動しやすいため、人数で絞り込めます。';
+ $('#rankingDescription').textContent=mine?'「見た」作品のうち、評価済みの作品を★評価の高い順に表示します。':'Tenrai API（MyAnimeList由来）の評価・登録者数に基づく作品の並びです。';
+ $('#rankNotice').classList.toggle('hidden',mine);
+ $('#rankNotice').textContent=mine?'':rankingSort==='members'?'人気順は作品をリストに登録した人数による順位です。評価点の高さとは別の指標です。':'スコアは海外ユーザーを含む評価です。新作は評価数が少なく順位が変動しやすいため、人数で絞り込めます。';
  $('#rankLoadMore').classList.toggle('hidden',mine||!rankingHasNext||rankingBusy);
  if(mine){renderInsights();const rows=myRatedItems();
   const ratingCounts=[0,0,0,0,0,0];rows.forEach(a=>ratingCounts[readReview(a.review).overall]++);
@@ -10012,6 +10026,7 @@ $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>{
 }));
 $$('[data-rank-tab]').forEach(b=>b.addEventListener('click',()=>showRanking(b.dataset.rankTab)));
 $('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();aniHistorySave();scheduleMalMetricEnrichment()});
+$('#rankInsightsJump').addEventListener('click',()=>{if(mode!=='ranking'||rankingTab!=='mine')return;const section=$('#myInsights');if(section.classList.contains('hidden'))return;section.scrollIntoView({behavior:'auto',block:'start'});$('#myInsightsTitle').focus({preventScroll:true});});
 $('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;aniHistorySave();loadRanking(true)});
 $('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);aniHistorySave();loadRanking(true)});
 $('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;aniHistorySave();loadRanking(true)});
@@ -11077,7 +11092,7 @@ function detailHeader(a,full=null){
  const noteAction=saved[a.id]?`<button type="button" class="detail-note-edit" data-note-id="${safeText(a.id)}" aria-label="${safeText(a.title)}のメモを${detailNote?.text?'編集':'追加'}">${uiIcon('edit')} ${detailNote?.text?'メモを編集する':'メモを書く'}</button>`:'';
  const noteContent=saved[a.id]?(detailNote?.text?`<p class="detail-note-text">${safeText(detailNote.text)}</p>`:'<p class="detail-note-empty">まだメモはありません</p>'):'<p class="detail-note-empty">作品を登録するとメモを残せます</p>';
  const notePanel=mode==='share'?'':`<div class="detail-journal-cell detail-journal-memo"><div class="detail-note-heading"><div class="detail-journal-cell-heading">作品メモ</div>${noteAction}</div>${noteContent}</div>`;
- const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2><span>${mode==='share'?'共有された情報を表示しています':'このブラウザに保存'}</span></div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}</div></section>`;
+ const journal=`<section class="detail-journal" aria-label="視聴記録"><div class="detail-journal-heading"><h2>${mode==='share'?'共有された記録':'自分の記録'}</h2>${mode==='share'?'<span>共有された情報を表示しています</span>':''}</div><div class="detail-journal-grid ${mode==='share'?'detail-journal-shared':''}">${watchPanel}${reviewPanel}${notePanel}</div></section>`;
  return header+journal;
 }
 function detailGeneral(d){const facts=[];
