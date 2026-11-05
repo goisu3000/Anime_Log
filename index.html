@@ -558,7 +558,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .route-copy{background:var(--surface);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);font-weight:var(--fw-semi);font-size:var(--fs-sm);padding:10px 12px;white-space:nowrap}
 .route-copy:hover{border-color:var(--accent)}
 .route-copy:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.detail-navigation #detailBreadcrumb{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.detail-navigation #detailBreadcrumb{display:none}
+.detail-navigation:has(#detailBack){flex-wrap:wrap}
+.detail-navigation #detailBack,.detail-navigation #detailCopyLink{width:13em;min-height:38px;justify-content:center;white-space:nowrap;flex-shrink:0}
 @media(max-width:740px){.detail-navigation{gap:8px}.route-copy{padding:9px 10px}.detail-navigation #detailBreadcrumb{display:none}}
 #detailBreadcrumb{font-size:var(--fs-sm);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:55%}
 .detail-profile{display:grid;grid-template-columns:minmax(220px,280px) minmax(0,1fr);gap:32px;align-items:start;padding:24px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius)}
@@ -2706,7 +2708,7 @@ select:not([data-status-id]){
       <div class="load-wrap"><button type="button" id="rankLoadMore" class="loadmore hidden">さらに作品を読み込む <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button></div>
     </section>
     <section id="detailView" class="hidden" aria-label="アニメ作品の詳細">
-      <div class="detail-navigation"><button type="button" class="detail-back" id="detailBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-back"/></svg> 作品一覧に戻る</button><span id="detailBreadcrumb">作品詳細</span><button type="button" id="detailCopyLink" class="route-copy" hidden aria-label="この作品のリンクをコピー">リンクをコピー</button></div>
+      <div class="detail-navigation"><button type="button" class="detail-back" id="detailBack"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-back"/></svg> 作品一覧に戻る</button><span id="detailBreadcrumb">作品詳細</span><button type="button" id="detailCopyLink" class="detail-back" hidden aria-label="この作品のリンクをコピー">リンクをコピー</button></div>
       <div id="detailContent" aria-live="polite"></div>
       <p class="detail-credit">作品情報は <a href="https://tenrai.org/" target="_blank" rel="noopener noreferrer">Tenrai API</a> から取得しています。未登録の項目は表示しません。作品概要は日本語版Wikipediaの公開情報を補完に利用することがあります。PVの公開状況や日本国内の配信状況は保証されません。</p>
     </section>
