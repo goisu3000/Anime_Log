@@ -3984,6 +3984,12 @@ function streamLooksLikeTitleUrl(service,value,requireStrongPath=false){
   if(service==='Disney Plus'&&(/(?:^|\/)browse(?:\/|$)/i.test(path)||/%(?:2f|5c)/i.test(path)))return false;
   if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:search|browse|category|categories|genre|genres|home|help|login|signup|register|store|storefront|ranking|rankings)(?:\/|$)/i.test(path))return false;
   if(service==='Amazon Prime Video'){
+   // Amazon JP title pages can identify a title through the `gti` query.
+   // Accept only that exact official host, title route and a single valid GTI.
+   if(u.hostname.toLowerCase()==='watch.amazon.co.jp'&&/^\/detail\/?$/i.test(path)){
+    const gti=u.searchParams.getAll('gti');
+    return gti.length===1&&/^amzn1\.dv\.gti\.[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(gti[0]);
+   }
    if(u.hostname.toLowerCase().endsWith('amazon.co.jp'))return /^\/(?:gp\/video\/(?:detail|watch|series|episode)\/|dp\/|detail\/)[a-z0-9]/i.test(path);
    return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:detail|watch|title|dp)\/[a-z0-9]/i.test(path);
   }
@@ -8455,6 +8461,12 @@ function streamLooksLikeTitleUrl(service,value,requireStrongPath=false){
   if(service==='Disney Plus'&&(/(?:^|\/)browse(?:\/|$)/i.test(path)||/%(?:2f|5c)/i.test(path)))return false;
   if(/^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:search|browse|category|categories|genre|genres|home|help|login|signup|register|store|storefront|ranking|rankings)(?:\/|$)/i.test(path))return false;
   if(service==='Amazon Prime Video'){
+   // Amazon JP title pages can identify a title through the `gti` query.
+   // Accept only that exact official host, title route and a single valid GTI.
+   if(u.hostname.toLowerCase()==='watch.amazon.co.jp'&&/^\/detail\/?$/i.test(path)){
+    const gti=u.searchParams.getAll('gti');
+    return gti.length===1&&/^amzn1\.dv\.gti\.[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(gti[0]);
+   }
    if(u.hostname.toLowerCase().endsWith('amazon.co.jp'))return /^\/(?:gp\/video\/(?:detail|watch|series|episode)\/|dp\/|detail\/)[a-z0-9]/i.test(path);
    return /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?(?:detail|watch|title|dp)\/[a-z0-9]/i.test(path);
   }
