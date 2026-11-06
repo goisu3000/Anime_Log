@@ -1147,6 +1147,28 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 @media(hover:hover){.weekly-calendar .weekly-preview-title:hover{color:var(--accent);text-decoration:underline;text-underline-offset:3px}}
 .weekly-calendar .weekly-preview .weekly-tag{flex:0 0 auto;max-width:none;overflow:visible}
 .weekly-calendar .weekly-summary .weekly-muted{font-size:var(--fs-xs);line-height:1.5}
+/* Compact today preview: poster, title, scheduled episode/time, mode and the
+   configured streaming-service icon stay on one line at desktop/mobile widths.
+   Only the title may shrink/ellipsis; metadata is never fabricated or fetched. */
+.weekly-calendar .weekly-preview-body{flex:1 1 auto;width:0;gap:7px;white-space:nowrap}
+.weekly-calendar .weekly-preview-title{flex:0 1 auto;min-width:0;max-width:100%}
+.weekly-calendar .weekly-preview-info{display:inline-flex;align-items:center;gap:7px;flex:0 0 auto;min-width:0;white-space:nowrap}
+.weekly-calendar .weekly-preview .weekly-preview-episode,
+.weekly-calendar .weekly-preview .weekly-preview-time{display:inline-block;max-width:none;overflow:visible;white-space:nowrap;color:var(--ink);font-weight:var(--fw-semi);font-variant-numeric:tabular-nums}
+.weekly-calendar .weekly-preview-stream{display:inline-flex;align-items:center;justify-content:center;flex:0 0 24px;width:24px;height:24px;min-width:24px;border-radius:4px;text-decoration:none}
+.weekly-calendar .weekly-preview-stream:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.weekly-calendar .weekly-preview-stream .stream-brand-icon{flex:0 0 24px}
+@media(max-width:420px){
+  .weekly-calendar .weekly-preview{gap:6px}
+  .weekly-calendar .weekly-preview-body{gap:5px}
+  .weekly-calendar .weekly-preview-info{gap:5px}
+  .weekly-calendar .weekly-preview .weekly-poster{width:24px;height:26px;flex-basis:24px}
+  .weekly-calendar .weekly-preview .weekly-preview-episode,
+  .weekly-calendar .weekly-preview .weekly-preview-time{font-size:11px}
+  .weekly-calendar .weekly-preview .weekly-tag{padding:2px 3px;font-size:10px}
+  .weekly-calendar .weekly-preview-stream,.weekly-calendar .weekly-preview-stream .stream-brand-icon{width:22px;min-width:22px;height:22px;flex-basis:22px}
+}
+
 @media(max-width:1100px){
   .weekly-calendar .weekly-head{flex-wrap:wrap;gap:12px}
   .weekly-calendar .weekly-heading{flex:1 0 100%}
@@ -2514,7 +2536,7 @@ select:not([data-status-id]){
 <p data-simple="status" role="status">同期OFF：この端末に自動保存します。</p>
 <button type="button" data-simple="retry" hidden>再同期</button>
 <p data-simple="connection-info" hidden></p>
-<div class="anilog-sync-own-device-info" data-simple="own-device-info" hidden>この端末の登録ID：<span data-simple="own-device-id-value" aria-live="polite">確認中…</span></div>
+<div class="anilog-sync-own-device-info" data-simple="own-device-info" hidden>端末ID：<span data-simple="own-device-id-value" aria-live="polite">確認中…</span></div>
 <p data-simple="pairing-notice" hidden></p>
 <div data-simple="connection-actions" hidden>
  <button type="button" data-simple="resume-sync" hidden>同期を再開する</button>
@@ -2765,7 +2787,7 @@ select:not([data-status-id]){
 <nav class="mobile-bottom" aria-label="モバイルメニュー"><button class="active" data-view="season"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-grid"/></svg><span class="nav-label">作品を探す</span></button><button data-view="saved"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 3h14v18l-7-4-7 4z"/></svg><span class="nav-label">マイリスト</span></button><button type="button" id="mobileRanking" data-rank-open="period"><span class="mobile-ranking-icon" aria-hidden="true"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-award"/></svg></span><span class="nav-label">ランキング</span></button><button id="mobileShare"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.7 10.7l6.6-4.4M8.7 13.3l6.6 4.4"/></svg><span class="nav-label">共有する</span></button><button id="mobileExport"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 3v13m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><span class="nav-label backup-label">バックアップ</span></button></nav>
 <dialog id="addDialog"><form method="dialog" id="addForm"><h3 tabindex="-1" autofocus>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
 <dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu class="backup-dialog-actions"><button type="button" class="primary" id="mobileDownloadBtn">書き出す</button><button type="button" class="secondary" id="mobileImportBtn">読み込む</button></menu><menu class="backup-dialog-close"><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
-<dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>作品情報と、選択した評価だけを共有します。短縮URL方式では共有データのコピーをCloudflareに365日間保存します。リンクを知っている人は誰でも閲覧できます。</p>
+<dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>選択した情報を共有します。URLを知っている人なら誰でも閲覧できます。</p>
   <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">年・シーズンを指定して見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
   <div class="share-season-fields" id="shareSeasonFields" hidden><label for="shareYear">年<select id="shareYear"></select></label><label for="shareSeason">シーズン<select id="shareSeason"><option value="winter">冬</option><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option></select></label></div>
   <div class="share-permissions" role="group" aria-labelledby="sharePermissionsTitle">
@@ -2773,8 +2795,8 @@ select:not([data-status-id]){
     <div class="share-required"><span class="mark"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-check"/></svg></span><span>作品名・視聴状況 <small>（必須・常に共有）</small></span></div>
     <label class="share-permission"><input type="checkbox" id="shareOverall" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg> 総合評価 <small class="share-description"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>1〜5の評価を共有</small></span></label>
     <label class="share-permission"><input type="checkbox" id="shareDetails" checked><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-list"/></svg> 詳細評価 <small class="share-description">ストーリー・映像・キャラクター・音楽を共有</small></span></label>
-    <label class="share-permission"><input type="checkbox" id="shareComment"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> メモ・感想 <small class="share-description">点数のない作品も含め、メモ本文を共有</small></span></label>
-    <p class="share-privacy-note">※ メモは点数のない作品も共有できます。共有リンクを開いた人に感想も読まれます。チェックを外した情報は共有データに含めません。</p>
+    <label class="share-permission"><input type="checkbox" id="shareComment"><span><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-edit"/></svg> メモ <small class="share-description">未評価の作品も含め、メモ本文を共有</small></span></label>
+    <p class="share-privacy-note">※ 共有したメモはリンクを知る人に公開されます。</p>
   </div>
   <div class="share-meta" id="shareCount" aria-live="polite"></div><div id="shareRisk" class="share-risk hidden"></div><menu><button class="primary" type="button" id="generateShare">共有URLを作成</button><button class="secondary" type="button" id="closeShare">閉じる</button></menu>
   <div id="shareOutput" class="hidden"><label for="shareLink" style="margin-top:22px">生成された共有URL</label><input class="share-link" type="text" readonly id="shareLink" aria-label="共有URL"><div class="share-dialog-actions"><button type="button" class="primary" id="copyShare">URLをコピー</button><button type="button" class="secondary" id="previewShare">表示を確認</button></div><p class="share-help" id="shareLocalHelp"></p></div>
@@ -4771,7 +4793,16 @@ function weeklyCompactTitle(title){
  return chars.length>30?chars.slice(0,30).join('')+'…':chars.join('');
 }
 function weeklyEntryMarkup(a,info,preview=false,scope=null){
- if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><button type="button" class="weekly-preview-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}">${safeText(a.title)}</button><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span></span>`;
+ if(preview){
+  // Keep the compact row in sync with the expanded calendar without new requests.
+  const episode=weeklyEpisodeFor(a,info);
+  const pref=cleanStreamPreference(saved[a.id]?.streamPreference);
+  const service=pref?.service?streamService(pref.service):null;
+  const streamIcon=service
+   ?`<a class="weekly-preview-stream" href="${safeText(pref.url||jpStreamSearchUrl(service.domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(service.name)}" aria-label="${safeText(a.title)}を${safeText(service.name)}で${pref.url?'見る':'探す'}">${streamServiceIconMarkup(service.name)}</a>`
+   :'';
+  return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><button type="button" class="weekly-preview-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}" aria-label="${safeText(a.title)}">${safeText(a.title)}</button><span class="weekly-preview-info">${episode?`<span class="weekly-preview-episode">第${episode}話</span>`:''}${info.time?`<span class="weekly-preview-time">${safeText(info.time)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span>${streamIcon}</span></span></span>`;
+ }
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
  const episode=weeklyEpisodeFor(a,info,scope);
@@ -5850,7 +5881,7 @@ function updateShareDialog(){
  clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value;$('#shareSeasonFields').hidden=scope!=='season';const list=selectedForShare(scope),count=list.length;
  const rated=list.filter(a=>readReview(a.review)).length;
  const withNotes=list.filter(a=>readNote(a)?.text).length;
- $('#shareCount').textContent=(scope==='season'?`${$('#shareYear').value}年 ${seasonLabels[$('#shareSeason').value]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（感想登録 ${withNotes}作品）`:''}`;
+ $('#shareCount').textContent=(scope==='season'?`${$('#shareYear').value}年 ${seasonLabels[$('#shareSeason').value]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（メモ登録 ${withNotes}作品）`:''}`;
  const chars=list.reduce((n,a)=>n+(($('#shareComment').checked?readNote(a)?.text:'')||'').length,0);
  const risk=$('#shareRisk');const localMode=!SHARE_SHORT_ENABLED||location.protocol==='file:';
  const risky=localMode?(count>60||chars>1800):(count>1000||chars>120000);
@@ -9150,7 +9181,16 @@ function weeklyCompactTitle(title){
  return chars.length>30?chars.slice(0,30).join('')+'…':chars.join('');
 }
 function weeklyEntryMarkup(a,info,preview=false,scope=null){
- if(preview)return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><button type="button" class="weekly-preview-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}">${safeText(a.title)}</button><span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span></span></span>`;
+ if(preview){
+  // Keep the compact row in sync with the expanded calendar without new requests.
+  const episode=weeklyEpisodeFor(a,info);
+  const pref=cleanStreamPreference(saved[a.id]?.streamPreference);
+  const service=pref?.service?streamService(pref.service):null;
+  const streamIcon=service
+   ?`<a class="weekly-preview-stream" href="${safeText(pref.url||jpStreamSearchUrl(service.domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(service.name)}" aria-label="${safeText(a.title)}を${safeText(service.name)}で${pref.url?'見る':'探す'}">${streamServiceIconMarkup(service.name)}</a>`
+   :'';
+  return `<span class="weekly-preview">${weeklyPoster(a)}<span class="weekly-preview-body"><button type="button" class="weekly-preview-title" data-detail-id="${safeText(a.id)}" title="${safeText(a.title)}" aria-label="${safeText(a.title)}">${safeText(a.title)}</button><span class="weekly-preview-info">${episode?`<span class="weekly-preview-episode">第${episode}話</span>`:''}${info.time?`<span class="weekly-preview-time">${safeText(info.time)}</span>`:''}<span class="weekly-tag ${info.source==='manual'?'manual':''}">${info.source==='manual'?'手動':'自動'}</span>${streamIcon}</span></span></span>`;
+ }
  // Station names must be explicit source data, never inferred from the title or production studio.
  const station=typeof info.station==='string'?info.station.trim():'';
  const episode=weeklyEpisodeFor(a,info,scope);
@@ -10228,7 +10268,7 @@ function updateShareDialog(){
  clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value;$('#shareSeasonFields').hidden=scope!=='season';const list=selectedForShare(scope),count=list.length;
  const rated=list.filter(a=>readReview(a.review)).length;
  const withNotes=list.filter(a=>readNote(a)?.text).length;
- $('#shareCount').textContent=(scope==='season'?`${$('#shareYear').value}年 ${seasonLabels[$('#shareSeason').value]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（感想登録 ${withNotes}作品）`:''}`;
+ $('#shareCount').textContent=(scope==='season'?`${$('#shareYear').value}年 ${seasonLabels[$('#shareSeason').value]}アニメの「見てる」：${count}作品（放送年・季節が未登録の作品は除外）`:`共有対象：${count}作品`)+` / 評価登録 ${rated}作品${$('#shareComment').checked?`（メモ登録 ${withNotes}作品）`:''}`;
  const chars=list.reduce((n,a)=>n+(($('#shareComment').checked?readNote(a)?.text:'')||'').length,0);
  const risk=$('#shareRisk');const localMode=!SHARE_SHORT_ENABLED||location.protocol==='file:';
  const risky=localMode?(count>60||chars>1800):(count>1000||chars>120000);
