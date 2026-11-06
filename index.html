@@ -2704,6 +2704,15 @@ select:not([data-status-id]){
  body.saved-mode #libraryView .saved-library-tools>.library-toolbar{flex:1 1 440px;min-width:0;margin:0}
  body.saved-mode #libraryView .saved-library-tools .searchbox-shell{min-width:140px}
 }
+/* My List: place layout controls on the Next Watch heading baseline. */
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #resultInfo{display:none}
+body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{display:none!important;margin:0 0 12px}
+@media(min-width:1251px){
+ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) #libraryView .list-caption:has(>.saved-layout-choice){display:flex!important;justify-content:flex-end;margin-top:0}
+ body.saved-mode #libraryView .next-watch-head{align-items:flex-end;min-height:34px;padding-top:0}
+ body.saved-mode #libraryView .next-watch-head>.ui-icon{margin-bottom:5px}
+ body.saved-mode #libraryView .next-watch-head .saved-layout-choice .ui-icon{width:16px;height:16px;color:inherit}
+}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -5224,6 +5233,7 @@ function render(){
  $('#listOrderHint').hidden=mode!=='saved';
  $('#savedOrder').classList.toggle('hidden',mode!=='saved');
  const ctrlRow=$('#libraryView .controls'),capRow=$('#libraryView .list-caption');
+ const layoutChoice=$('#libraryView .saved-layout-choice');if(layoutChoice&&layoutChoice.parentElement!==capRow)capRow.append(layoutChoice);
  if(mode==='saved'){if($('#savedOrder').parentElement!==ctrlRow)ctrlRow.append($('#savedOrder'))}else{if($('#savedOrder').parentElement!==capRow)capRow.append($('#savedOrder'))}
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
@@ -5272,6 +5282,7 @@ function render(){
    (query&&!hasNext&&currentScope()!=='all')?emptyCard(`「${fullPeriodLabel()}」に該当する作品がありません`,`選択中の期間（${fullPeriodLabel()}）では「${query}」に一致する作品が見つかりませんでした。全年代に切り替えて検索できます。`,'search',`全年代から「${query}」を検索`,'search-all-years'):
    emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
+ if(isSaved){const nextHead=grid.querySelector('.next-watch-head');if(nextHead&&layoutChoice)nextHead.append(layoutChoice);}
  observeSavedPosters();
  if(isSaved){scheduleNoticeBaselines();loadReviewedNoticeFeed();ensureAutomaticEpisodeNotices();}
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
@@ -9629,6 +9640,7 @@ function render(){
  $('#listOrderHint').hidden=mode!=='saved';
  $('#savedOrder').classList.toggle('hidden',mode!=='saved');
  const ctrlRow=$('#libraryView .controls'),capRow=$('#libraryView .list-caption');
+ const layoutChoice=$('#libraryView .saved-layout-choice');if(layoutChoice&&layoutChoice.parentElement!==capRow)capRow.append(layoutChoice);
  if(mode==='saved'){if($('#savedOrder').parentElement!==ctrlRow)ctrlRow.append($('#savedOrder'))}else{if($('#savedOrder').parentElement!==capRow)capRow.append($('#savedOrder'))}
  const activeFilters=[typeFilter!=='all'?({TV:'TV',Movie:'映画',OVA:'OVA',ONA:'Web配信'}[typeFilter]||typeJa(typeFilter)):'',mode==='saved'&&statusFilter==='watched'&&unratedOnly?'未評価':'',mode==='saved'&&statusFilter==='watched'&&finishedYearFilter!=='all'?'視聴年':'',mode!=='saved'&&exploreStatusFilter!=='all'?statusLabels[exploreStatusFilter]:''].filter(Boolean);
  $('#filterSummary').textContent=activeFilters.length?'絞り込み · '+activeFilters.join(' / '):'絞り込み';
@@ -9677,6 +9689,7 @@ function render(){
    (query&&!hasNext&&currentScope()!=='all')?emptyCard(`「${fullPeriodLabel()}」に該当する作品がありません`,`選択中の期間（${fullPeriodLabel()}）では「${query}」に一致する作品が見つかりませんでした。全年代に切り替えて検索できます。`,'search',`全年代から「${query}」を検索`,'search-all-years'):
    emptyCard(hasNext?'まだ該当作品を表示できていません':'作品が見つかりません',hasNext?'現在読み込んだ範囲に該当作品がありません。「もっと見る」で続きを取得できます。':'条件を変更するか、タイトルを手動で追加してください。','search');
  }else grid.innerHTML=isSaved?nextWatchGroups(filtered):filtered.map(card).join('');
+ if(isSaved){const nextHead=grid.querySelector('.next-watch-head');if(nextHead&&layoutChoice)nextHead.append(layoutChoice);}
  observeSavedPosters();
  $('#loadMore').classList.toggle('hidden',isSaved||exploreRegistered||!hasNext||loading);
 }
