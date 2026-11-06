@@ -2055,6 +2055,9 @@ select:not([data-status-id]){
   body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty:hover{color:var(--accent);background:var(--accent-soft)}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stream-empty-label{display:inline;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty .ui-icon{flex:0 0 16px}
+  /* A: keep the plain action row; emphasize only the plus and its label. */
+  body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty > .ui-icon{color:var(--accent)}
+  body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty > .grid-stream-empty-label{font-weight:var(--fw-bold)}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-unavailable{display:none}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-line{gap:5px;min-height:24px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-line .review-stars-mini{display:none}
