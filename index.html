@@ -7117,11 +7117,34 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}</a>`).join('')}</div></div>`;
 }
+// Only an explicit direct-title link click may fill an unset saved preference.
+// Keep navigation native and use the existing serialized, conflict-checked save.
+async function saveDetailStreamPreference(id,service,raw,expected){
+ if(mode==='share'||detailActiveItem?.id!==id||!validStatuses.has(saved[id]?.status))return false;
+ const url=streamAllowedUrl(service,raw);
+ if(!url||!streamLooksLikeTitleUrl(service,url))return false;
+ const current=cleanStreamPreference(saved[id].streamPreference);
+ if(current?.service||!sameRecordValue(current,expected))return false;
+ const draft=structuredClone(saved);
+ draft[id].streamPreference={service,url,updatedAt:new Date().toISOString()};
+ if(!await persist(false,draft))return false;
+ render();toast(`${service}を視聴サイトに設定しました`);
+ return true;
+}
+$('#detailContent').addEventListener('click',e=>{
+ const link=e.target.closest('a[data-stream-save]');
+ if(!link||e.defaultPrevented||mode==='share')return;
+ const id=link.dataset.streamRecord;
+ if(detailActiveItem?.id!==id||!validStatuses.has(saved[id]?.status))return;
+ const expected=structuredClone(cleanStreamPreference(saved[id].streamPreference));
+ if(expected?.service)return;
+ void queueRecordWrite(()=>saveDetailStreamPreference(id,link.dataset.streamSave,link.getAttribute('href'),expected));
+});
 function detailStreamingLinks(full,title){
  const unique=streamResolvedLinks([...(Array.isArray(full?.streaming)?full.streaming:[]),...(Array.isArray(full?.external)?full.external:[])]);
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
- return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
+ return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true" data-stream-save="${safeText(x.name)}" data-stream-record="jikan:${safeText(full.mal_id)}">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
 /* Japanese person-name enhancement: view-only, bounded AniList lookup.
    Never infer kanji from romanization or join providers by unrelated person IDs.
@@ -11532,11 +11555,34 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}</a>`).join('')}</div></div>`;
 }
+// Only an explicit direct-title link click may fill an unset saved preference.
+// Keep navigation native and use the existing serialized, conflict-checked save.
+async function saveDetailStreamPreference(id,service,raw,expected){
+ if(mode==='share'||detailActiveItem?.id!==id||!validStatuses.has(saved[id]?.status))return false;
+ const url=streamAllowedUrl(service,raw);
+ if(!url||!streamLooksLikeTitleUrl(service,url))return false;
+ const current=cleanStreamPreference(saved[id].streamPreference);
+ if(current?.service||!sameRecordValue(current,expected))return false;
+ const draft=structuredClone(saved);
+ draft[id].streamPreference={service,url,updatedAt:new Date().toISOString()};
+ if(!await persist(false,draft))return false;
+ render();toast(`${service}を視聴サイトに設定しました`);
+ return true;
+}
+$('#detailContent').addEventListener('click',e=>{
+ const link=e.target.closest('a[data-stream-save]');
+ if(!link||e.defaultPrevented||mode==='share')return;
+ const id=link.dataset.streamRecord;
+ if(detailActiveItem?.id!==id||!validStatuses.has(saved[id]?.status))return;
+ const expected=structuredClone(cleanStreamPreference(saved[id].streamPreference));
+ if(expected?.service)return;
+ void queueRecordWrite(()=>saveDetailStreamPreference(id,link.dataset.streamSave,link.getAttribute('href'),expected));
+});
 function detailStreamingLinks(full,title){
  const unique=streamResolvedLinks([...(Array.isArray(full?.streaming)?full.streaming:[]),...(Array.isArray(full?.external)?full.external:[])]);
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
- return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
+ return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true" data-stream-save="${safeText(x.name)}" data-stream-record="jikan:${safeText(full.mal_id)}">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
 /* Japanese person-name enhancement: view-only, bounded AniList lookup.
    Never infer kanji from romanization or join providers by unrelated person IDs.
