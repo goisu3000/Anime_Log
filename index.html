@@ -3376,26 +3376,67 @@ async function persist(replace=false,recordDraft=null,kind='edit',reAddId=null){
 // refresh can begin before a modal opens, so check both before and AFTER the
 // asynchronous vault refresh. Never persist draft text to localStorage.
 const formalRefreshBlocked=()=>recordWrites>0||!!document.querySelector('dialog[open]')||
+ // Keep an unsaved completion-date draft protected after its input loses focus.
+ !!document.querySelector('#detailContent .detail-date-disclosure[open]')||
  !!document.activeElement?.matches('#detailContent input, #detailContent select, [data-progress-input]');
-let formalRefreshRunning=false,formalRefreshRequest=0;
+// Foreground refresh must never overwrite an editor. A race or resuming tab
+// may temporarily reject it; ONLY those exact two codes permit a bounded retry.
+// Integrity, AEAD, rollback, unknown and render failures must still STOP.
+let formalRefreshRunning=false,formalRefreshRequest=0,formalRefreshRetryTimer=null,formalRefreshRetries=0;
+const FORMAL_REFRESH_RETRY_DELAYS=[250,750];
+const formalRefreshTransientError=error=>error?.message==='FORMAL_STORAGE_STOP:BUSY'||
+ error?.message==='WAL_TAB_PRESENCE_NOT_READY';
+function formalRefreshDiagnostic(error,stage){
+ // Only fixed non-sensitive codes. Never log records, notes, keys, or raw errors.
+ const message=error?.message;
+ const code=message==='FORMAL_STORAGE_STOP:BUSY'?'BUSY':
+  message==='WAL_TAB_PRESENCE_NOT_READY'?'TAB_NOT_READY':
+  message==='V408_STOP_NO_RETRY:HEAD_ROLLBACK'?'HEAD_ROLLBACK':
+  typeof message==='string'&&message.startsWith('V408_STOP_NO_RETRY:')?'WAL_STOP':
+  typeof message==='string'&&message.startsWith('FORMAL_STORAGE_STOP:')?'STORAGE_STOP':'OTHER';
+ try{console.warn('[ANI:LOG] refresh stopped:',stage,code)}catch{}
+}
 async function refreshStoredRecords(){
  const request=++formalRefreshRequest;
- if(formalRefreshRunning||formalRefreshBlocked()){pendingStorageRefresh=true;return}
+ if(formalRefreshRunning||formalRefreshBlocked()||formalRefreshRetryTimer!==null||document.hidden){
+  pendingStorageRefresh=true;return;
+ }
  if(!window.__formalStorage?.ready)return;
  pendingStorageRefresh=false;
  formalRefreshRunning=true;
+ let stage='read',failed=false;
  try{
   const app=await window.__formalStorage.refresh();
-  if(formalRefreshBlocked()||request!==formalRefreshRequest){pendingStorageRefresh=true;return}
+  stage='apply';formalRefreshRetries=0;
+  if(document.hidden||formalRefreshBlocked()||request!==formalRefreshRequest){pendingStorageRefresh=true;return}
   pendingStorageRefresh=false;
   saved=app.records;savedBaseline=structuredClone(app.records);weeklyOptions=app.weeklyOptions;updateCounts();render();
   if(detailActiveItem)renderDetailParts(detailNonce);
- }catch{toast('保存内容の再読み込みを停止しました。表示と入力欄は保持しています。再読み込みの前に未保存の入力をコピーしてください。','error')}
- finally{
+ }catch(error){
+  if(stage==='read'&&formalRefreshTransientError(error)){
+   if(document.hidden||formalRefreshBlocked()){pendingStorageRefresh=true;return}
+   if(formalRefreshRetries<FORMAL_REFRESH_RETRY_DELAYS.length){
+    const delay=FORMAL_REFRESH_RETRY_DELAYS[formalRefreshRetries++];
+    pendingStorageRefresh=true;
+    formalRefreshRetryTimer=setTimeout(()=>{
+     formalRefreshRetryTimer=null;
+     // Waiting for an editor or hidden tab is safer than replacing its draft.
+     if(document.hidden||formalRefreshBlocked()||!window.__formalStorage?.ready){pendingStorageRefresh=true;return}
+     void refreshStoredRecords();
+    },delay);
+    return;
+   }
+  }
+  // Never turn an unknown or genuine integrity failure into an endless retry.
+  failed=true;pendingStorageRefresh=false;formalRefreshRetries=0;
+  formalRefreshDiagnostic(error,stage);
+  toast('保存内容の再読み込みを停止しました。表示と入力欄は保持しています。再読み込みの前に未保存の入力をコピーしてください。','error');
+ }finally{
   formalRefreshRunning=false;
-  // Coalesce multiple focus/visibility requests; only retry after the last
-  // operation has exited and the local editor is no longer active.
-  if(pendingStorageRefresh&&!formalRefreshBlocked()&&window.__formalStorage?.ready)
+  // focus+visibilitychange are coalesced; a scheduled retry has sole ownership
+  // until it fires. After a hard failure, wait for a new explicit wake event.
+  if(!failed&&formalRefreshRetryTimer===null&&pendingStorageRefresh&&
+     !document.hidden&&!formalRefreshBlocked()&&window.__formalStorage?.ready)
    queueMicrotask(refreshStoredRecords);
  }
 }
@@ -3412,6 +3453,11 @@ function queueRecordWrite(task){
 window.addEventListener('focus',refreshStoredRecords);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshStoredRecords()});
 document.addEventListener('focusout',()=>{if(pendingStorageRefresh)setTimeout(refreshStoredRecords,0)});
+// 'toggle' does not bubble; a closed completion-date editor releases its deferred refresh.
+document.addEventListener('toggle',event=>{
+ if(event.target?.matches?.('#detailContent .detail-date-disclosure')&&
+    !event.target.open&&pendingStorageRefresh)setTimeout(refreshStoredRecords,0);
+},true);
 // 'close' does not bubble: capture it to resume a deferred encrypted refresh
 // after a note, review, weekly, stream or other modal editor is dismissed.
 document.addEventListener('close',event=>{
