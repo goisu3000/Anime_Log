@@ -1055,9 +1055,10 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const ownDeviceInfo=el('own-device-info');
   const ownDeviceIdValue=el('own-device-id-value');
   const syncDialog=root.closest('dialog');
-  ownDeviceInfo.hidden=staging||profiles.read().phase!=='connected';
+  ownDeviceInfo.hidden=staging||profiles.read().phase!=='connected'||local.getItem(LOCAL_MODE)!=='sync-enabled';
   let ownDeviceIdRequest=0,ownDeviceIdResolved=false;
   async function refreshOwnDeviceId(){
+   ownDeviceInfo.hidden=staging||profiles.read().phase!=='connected'||local.getItem(LOCAL_MODE)!=='sync-enabled';
    if(ownDeviceInfo.hidden||!syncDialog?.open||ownDeviceIdResolved)return;
    const request=++ownDeviceIdRequest;
    ownDeviceIdValue.textContent='確認中…';
@@ -1433,7 +1434,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   else if(!pauseGuard.paused){pauseGuard.assertAllowed();await running.resumeAutomatic({passphrase:await keys.read()});}
   else showPauseState();
  }else if((!receiver&&setup.readReceipt().v!==2)||await intents.read(restored.passphrase))await action(register);
- else if(!receiver){status.textContent='同期OFF：この端末に暗号化保存しています。';el('retry').hidden=false;el('retry').textContent='端末間同期を始める';}
+ else if(!receiver){status.textContent='同期OFF：この端末に暗号化保存しています。';status.after(el('retry'));el('retry').hidden=false;el('retry').textContent='端末間同期を始める';}
  else status.textContent=invitation?'この端末の記録を保持しています。招待を受け取り、6桁照合後に統合します。':'記録を保持しています。設定元の端末で新しい招待QRを作成し、もう一度読み取ってください。';
  // Also examine a pre-existing WAL on first eligible mount. The private
  // scheduler still waits for UI+Undo+sync idleness; production has no scheduler.
