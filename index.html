@@ -505,6 +505,24 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .insights-selection-close{border:1px solid var(--border-ctrl);background:var(--surface2);color:var(--ink);padding:6px 12px;border-radius:6px;font-size:var(--fs-xs);margin-top:10px}
 
 
+/* PC ranking readability: reuse existing typography tokens; leave <=740px layout unchanged. */
+@media (min-width:741px){
+ #rankingView .section-header p,
+ #rankingView .rank-notice,
+ #rankingView .insights-header p,
+ #rankingView .insights-explain{font-size:var(--fs-md);font-weight:var(--fw-normal)}
+ #rankingView .rank-view-tabs button,
+ #rankingView .rank-controls label,
+ #rankingView .rank-rating-filter-label,
+ #rankingView .rank-actions button,
+ #rankingView .rank-register-control,
+ #rankingView .rank-insights-jump,
+ #rankingView .insights-toggle button{font-size:var(--fs-md);font-weight:var(--fw-semi)}
+ #rankingView .rank-group-heading{font-size:var(--fs-lg);font-weight:var(--fw-bold)}
+ #rankingView .rank-meta,
+ #rankingView .rank-metric small{font-size:var(--fs-md);font-weight:var(--fw-normal)}
+}
+
 /* Series overview: compute a provisional relationship/format breakdown from the fetched graph.
    A low-profile summary beneath the poster; unrelated detail screens remain unchanged. */
 .detail-profile:has(> .detail-series){row-gap:12px}
@@ -2786,7 +2804,7 @@ select:not([data-status-id]){
       <div id="rankResults" class="rank-results" aria-live="polite"></div>
 
       <section id="myInsights" class="insights-root hidden" aria-label="マイランキングの視聴分析">
-        <div class="insights-header"><h3 id="myInsightsTitle" tabindex="-1">あなたの視聴分析</h3><p>「見た」作品を対象に、各シーズンを別作品として集計します。同じシリーズを複数期見ると、その分も加算されます。視聴本数は、好みの広がりと必ずしも一致しません。</p></div>
+        <div class="insights-header"><h3 id="myInsightsTitle" tabindex="-1">あなたの視聴分析</h3><p>「見た」作品を集計します。同じシリーズの第1期・第2期も別々に数えます。</p></div>
         <div id="insightsStatus" class="insights-status" role="status" aria-live="polite"></div>
         <article class="insights-card">
           <div class="insights-card-head"><div><h4>制作会社ランキング</h4><p class="insights-explain">複数社制作の作品は、それぞれの制作会社に1作品として集計します。</p></div><div class="insights-toggle" role="group" aria-label="制作会社の並び順"><button type="button" data-insight-studio-sort="count" class="active">視聴本数順</button><button type="button" data-insight-studio-sort="average">平均<svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-star"/></svg>順</button></div></div>
