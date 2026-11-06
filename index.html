@@ -1949,21 +1949,21 @@ select:not([data-status-id]){
  body.saved-mode:not(.saved-list-view) .pattern-a-card{position:relative;grid-template-columns:88px minmax(0,1fr) 145px;grid-template-rows:minmax(100px,auto) auto;gap:0 12px;align-items:center;min-height:138px;padding:12px 14px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .record-poster{grid-column:1;grid-row:1/3;width:88px;height:116px;align-self:center}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .record-main{grid-column:2;grid-row:1/3;display:block;min-width:0}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .card-title{font-size:var(--fs-md);margin:0 0 7px;line-height:1.4}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-meta{gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;font-size:var(--fs-xs)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .card-title{font-size:var(--fs-lg);margin:0 0 7px;line-height:1.4}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-meta{gap:5px;flex-wrap:nowrap;white-space:nowrap;overflow:hidden;font-size:var(--fs-md)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-meta span{white-space:nowrap}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tags{gap:4px;margin-top:6px;flex-wrap:nowrap;max-width:100%;overflow:hidden}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tags span{white-space:nowrap;padding:3px 6px;font-size:10px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-tags span{white-space:nowrap;padding:3px 6px;font-size:var(--fs-sm)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score{position:absolute;top:11px;right:14px;min-width:0;padding:0;align-items:flex-end}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score .mal-label{font-size:11px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score .mal-label{font-size:var(--fs-sm)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score .mal-value{font-size:19px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-public-score small{display:none}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column{grid-column:3;grid-row:1/3;align-self:stretch;padding:32px 0 0 12px;border-left:1px solid var(--border);gap:5px;align-items:stretch;justify-content:flex-start}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-personal-column{grid-column:3;grid-row:2;align-self:start;padding:4px 0 0 12px;border-left:1px solid var(--border);gap:0;justify-content:flex-start;min-height:0}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-menu,body.saved-mode:not(.saved-list-view) .pattern-a-card .record-primary{width:100%;max-width:none;min-width:0}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-summary,body.saved-mode:not(.saved-list-view) .pattern-a-card .record-primary{height:34px;min-height:34px;font-size:var(--fs-xs)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-status-summary,body.saved-mode:not(.saved-list-view) .pattern-a-card .record-primary{height:34px;min-height:34px;font-size:var(--fs-md)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress{min-width:0}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-top{margin-bottom:3px;font-size:11px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-top{margin-bottom:3px;font-size:var(--fs-sm)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-top>span{display:none}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-track{margin:4px 0 6px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-actions{gap:5px}
@@ -1993,19 +1993,30 @@ select:not([data-status-id]){
   body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty{width:auto;min-width:76px;flex-basis:auto;padding:2px 6px;gap:3px}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty{border-color:transparent;background:transparent;box-shadow:none}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty:hover{color:var(--accent);background:var(--accent-soft)}
-  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stream-empty-label{display:inline;font-size:11px;font-weight:var(--fw-semi);white-space:nowrap}
+  body.saved-mode:not(.saved-list-view) .pattern-a-card .grid-stream-empty-label{display:inline;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .stream-inline-empty .ui-icon{flex:0 0 16px}
   body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-unavailable{display:none}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-line{gap:5px;min-height:24px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-line .review-stars-mini{display:none}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-label,body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-score{font-size:11px}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rate-cta{height:24px;min-height:24px;width:100%;padding:0;border:0;background:none;color:var(--muted);justify-content:flex-start;font-size:11px}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-label,body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rating-score{font-size:var(--fs-sm)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rate-cta{height:24px;min-height:24px;width:100%;padding:0;border:0;background:none;color:var(--muted);justify-content:flex-start;font-size:var(--fs-sm)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-rate-cta .ui-icon{width:13px;height:13px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-main-copy>.pattern-a-date{display:none}
 
 }
 .pattern-a-tools{display:none}
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-tools{display:flex}body.saved-mode:not(.saved-list-view) .pattern-a-main-copy>.stream-inline,body.saved-mode:not(.saved-list-view) .pattern-a-main-copy>.next-watch-toggle{display:none}}
+/* PC My List readability: retain phone layout and existing one-column 18px title. */
+@media (min-width:741px){
+ body.saved-mode .pattern-a-card .pattern-a-meta{font-size:var(--fs-md)}
+ body.saved-mode .pattern-a-card .pattern-a-status-summary,
+ body.saved-mode .pattern-a-card .record-primary{font-size:var(--fs-md)}
+ body.saved-mode .pattern-a-card .pattern-a-date-watch{font-size:var(--fs-md)}
+ body.saved-mode .pattern-a-card .note-preview-quote{font-size:var(--fs-md)}
+ body.saved-mode .pattern-a-card .watch-progress-entry input{font-size:var(--fs-md)}
+ body.saved-mode.saved-list-view .pattern-a-card .watch-progress-top,
+ body.saved-mode.saved-list-view .pattern-a-card .watch-progress-top strong{font-size:var(--fs-md)}
+}
 /* My List two-column: line up title/meta/genre/actions across cards; keep
    public MAL and private 5-star review together on the right of the info area.
    Presentation only: both scores retain their original sources and edit action. */
@@ -2066,11 +2077,11 @@ select:not([data-status-id]){
     keeping the start button and episode controls in equally tall slots. */
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.record-primary{height:64px;min-height:64px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress{height:64px;min-height:64px;gap:4px}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{display:flex;align-items:center;justify-content:space-between;gap:3px;margin:0;min-height:12px;line-height:1.2;font-size:11px;white-space:nowrap}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top>span{display:inline;color:var(--ink);font-size:11px;font-weight:var(--fw-bold)}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{display:flex;align-items:center;justify-content:space-between;gap:3px;margin:0;min-height:12px;line-height:1.2;font-size:var(--fs-sm);white-space:nowrap}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top>span{display:inline;color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-bold)}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-top .progress-label-original{display:none}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .watch-progress-top .progress-label-grid{display:inline}
- body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top strong{font-size:11px;white-space:nowrap}
+ body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top strong{font-size:var(--fs-sm);white-space:nowrap}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions{height:30px;min-height:30px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions button{height:30px}
  body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-entry input{height:30px}
@@ -2115,7 +2126,7 @@ select:not([data-status-id]){
 
 .episode-notice.is-unread{text-decoration:none}
 .episode-notice:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:2px}
-@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:52.25px;left:12px;right:0;font-size:11px;line-height:15px;max-width:none}}
+@media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.episode-notice){position:relative}body.saved-mode:not(.saved-list-view) .pattern-a-card .episode-notice{position:absolute;top:52.25px;left:12px;right:0;font-size:var(--fs-sm);line-height:16px;max-width:none}}
 @media(min-width:1251px){body.saved-mode:not(.saved-list-view) .pattern-a-card .pattern-a-watch-column:has(>.watch-progress[data-progress-total=""])>.episode-notice{top:54.5px}}
 @media(min-width:741px) and (max-width:1250px){body.saved-mode .pattern-a-card:has(.episode-notice){position:relative}body.saved-mode .pattern-a-card .episode-notice{position:absolute;left:132px;bottom:30px;right:auto;top:auto;font-size:10px;line-height:16px;max-width:calc(100% - 144px)}}
 /* Connection reset guidance is local to this device, without changing any record UI. */
@@ -2259,7 +2270,7 @@ select:not([data-status-id]){
   min-height:42px;height:42px;padding:0 9px;
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-top{
-  gap:4px;font-size:10px;
+  gap:4px;font-size:var(--fs-sm);
  }
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-watch-column>.watch-progress .watch-progress-actions{gap:5px}
  body.saved-mode.saved-list-view .pattern-a-card .pattern-a-mobile-score{display:none}
