@@ -212,6 +212,7 @@ svg{stroke-linecap:round;stroke-linejoin:round}
 .collection-eyebrow,.rank-eyebrow,.eyebrow,.annual-kicker,.annual-section-index,.detail-eyebrow,.review-dialog-eyebrow{color:var(--accent);font-size:var(--fs-xs);font-weight:var(--fw-semi);letter-spacing:var(--ls-wider);margin:0 0 8px;display:block}
 .section-header h2{font-size:var(--fs-3xl);font-weight:var(--fw-bold);letter-spacing:var(--ls-heading);line-height:1.4;margin:0}
 .section-header p{font-size:var(--fs-sm);line-height:1.7;color:var(--muted);margin:8px 0 0}
+body.saved-mode #libraryView #sectionDescription{font-size:var(--fs-md);font-weight:var(--fw-normal)}
 .heading-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .share-action{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--accent-border);background:var(--accent-soft);color:var(--accent);border-radius:var(--radius-sm);padding:10px 14px;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
 .add-btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--border-ctrl);background:var(--surface);color:var(--ink);border-radius:var(--radius-sm);padding:10px 14px;font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
@@ -382,7 +383,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .view-annual #libraryView,.view-annual #rankingView,.view-annual #shareView,.view-annual .site-slogan,.view-detail #annualView{display:none!important}
 .view-annual:not(.view-detail) #annualView{display:block!important}
 .annual-back-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 16px}
-.annual-back-row>span{color:var(--subtle);font-weight:var(--fw-bold);font-size:var(--fs-xs);letter-spacing:var(--ls-wider)}
+
 .annual-hero{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;overflow:hidden;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);padding:30px;min-height:190px}
 .annual-hero h1{font-size:clamp(32px,4.5vw,56px);letter-spacing:var(--ls-tight);margin:8px 0;line-height:1.15;font-weight:var(--fw-bold);font-variant-numeric:tabular-nums}
 .annual-heading-unit{font-size:var(--fs-2xl);letter-spacing:var(--ls-heading);margin-left:10px;display:inline-block}
@@ -390,15 +391,17 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .annual-hero-outline{position:absolute;right:8%;bottom:-54px;width:min(360px,28vw);min-width:220px;aspect-ratio:1/1;color:rgba(196,233,149,.055);pointer-events:none;z-index:0}
 .annual-hero-outline svg{display:block;width:100%;height:100%}
 .annual-hero-outline .mascot-line{fill:none;stroke:currentColor;stroke-width:11;stroke-linecap:round;stroke-linejoin:round;vector-effect:non-scaling-stroke}
-.annual-year-control{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:var(--fs-xs);font-weight:var(--fw-semi);z-index:1}
+.annual-year-control{display:flex;flex-direction:column;align-items:flex-end;text-align:right;gap:6px;color:var(--muted);font-size:var(--fs-md);font-weight:var(--fw-semi);z-index:1}
 .annual-year-control select{background:var(--surface2);border:1px solid var(--border-ctrl);color:var(--ink);border-radius:var(--radius-sm);height:44px;min-width:140px;padding:0 12px;font-weight:var(--fw-bold);font-size:var(--fs-md);cursor:pointer}
-.annual-rule{margin:14px 0 20px;color:var(--muted);font-size:var(--fs-sm)}
-.annual-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 20px}
+.annual-rule{margin:14px 0 20px;color:var(--muted);font-size:var(--fs-md)}
+.annual-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin:0 0 20px}
 .annual-stat,.annual-panel,.annual-coverage{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;min-width:0}
-.annual-stat-label{font-size:var(--fs-sm);color:var(--muted);font-weight:var(--fw-semi)}
+.annual-stat{padding:18px 12px}
+.annual-stat-label{display:block;font-size:var(--fs-md);color:var(--muted);font-weight:var(--fw-semi);overflow-wrap:anywhere}
 .annual-stat-value{display:block;font-size:var(--fs-3xl);color:var(--ink);font-weight:var(--fw-bold);letter-spacing:var(--ls-tight);font-variant-numeric:tabular-nums;margin:8px 0 4px}
 .annual-stat-value small{font-size:var(--fs-md);color:var(--muted);letter-spacing:var(--ls-body);margin-left:4px}
 .annual-stat-note,.annual-panel-note,.annual-genre-note,.annual-foot{font-size:var(--fs-xs);color:var(--subtle);line-height:1.7}
+.annual-stat-note,.annual-genre-note,.annual-foot{font-size:var(--fs-md)}
 .annual-panels{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:16px}
 .annual-panel-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;border-bottom:1px solid var(--border);padding-bottom:14px;margin-bottom:16px}
 .annual-panel h2,.annual-coverage h2{font-size:var(--fs-xl);font-weight:var(--fw-bold);margin:4px 0 0}
@@ -407,10 +410,10 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .annual-favorite-pos{color:var(--accent);font-size:var(--fs-lg);font-weight:var(--fw-bold);min-width:22px;text-align:center}
 .annual-favorite-poster{width:44px;height:62px;border-radius:5px;object-fit:cover;flex:0 0 44px;background:var(--surface-input);display:grid;place-items:center}
 .annual-favorite-info{flex:1;min-width:0;display:grid;gap:4px}
-.annual-favorite-name{font-size:var(--fs-sm);font-weight:var(--fw-bold);overflow-wrap:anywhere}
-.annual-favorite-stars{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-size:var(--fs-xs);font-weight:var(--fw-bold)}
+.annual-favorite-name{font-size:var(--fs-lg);font-weight:var(--fw-bold);overflow-wrap:anywhere}
+.annual-favorite-stars{display:inline-flex;align-items:center;gap:6px;color:var(--gold);font-size:var(--fs-md);font-weight:var(--fw-bold)}
 .annual-favorite-chevron{flex-shrink:0;color:var(--muted)}
-.annual-genre-label{display:flex;justify-content:space-between;font-size:var(--fs-sm);font-weight:var(--fw-semi);margin-bottom:6px}
+.annual-genre-label{display:flex;justify-content:space-between;font-size:var(--fs-md);font-weight:var(--fw-semi);margin-bottom:6px}
 .annual-genre-track{height:8px;border-radius:6px;background:var(--surface2);overflow:hidden}
 .annual-genre-fill{height:100%;background:var(--accent)}
 .annual-empty{border:1px dashed var(--border-ctrl);border-radius:var(--radius-sm);padding:24px;text-align:center;color:var(--muted);font-size:var(--fs-sm)}
@@ -420,8 +423,31 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .annual-coverage-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
 .annual-coverage-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px}
 .annual-coverage-item strong{display:block;font-size:var(--fs-lg);margin:0 0 6px}
-.annual-coverage-item p{color:var(--muted);font-size:var(--fs-xs);line-height:1.65;margin:0 0 12px}
-.annual-coverage-item button{background:var(--surface);border:1px solid var(--border-ctrl);color:var(--accent);border-radius:var(--radius-sm);min-height:38px;padding:8px 12px;font-size:var(--fs-xs);font-weight:var(--fw-bold)}
+.annual-coverage-item p{color:var(--muted);font-size:var(--fs-md);line-height:1.65;margin:0 0 12px}
+.annual-coverage-item button{background:var(--surface);border:1px solid var(--border-ctrl);color:var(--accent);border-radius:var(--radius-sm);min-height:38px;padding:8px 12px;font-size:var(--fs-md);font-weight:var(--fw-semi)}
+
+
+/* Annual summary: light local-only charts; no canvas or chart library. */
+.annual-panels-extra{margin-top:16px}
+.annual-month-chart{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:5px;align-items:end}
+.annual-month-col{display:flex;flex-direction:column;align-items:center;gap:7px;min-width:0;font-variant-numeric:tabular-nums}
+.annual-month-count,.annual-month-label{font-size:var(--fs-xs);font-weight:var(--fw-semi);color:var(--muted);line-height:1.2}
+.annual-month-count{color:var(--ink)}
+.annual-month-track{display:flex;align-items:flex-end;justify-content:center;width:100%;max-width:34px;height:126px;border-radius:5px 5px 3px 3px;background:var(--surface2);overflow:hidden}
+.annual-month-fill{display:block;width:100%;height:0;background:var(--accent);border-radius:5px 5px 0 0}
+.annual-chart-note{color:var(--subtle);font-size:var(--fs-xs);line-height:1.6;margin:13px 0 0}
+.annual-rating-list{display:grid;gap:12px}
+.annual-rating-row{display:grid;grid-template-columns:34px minmax(0,1fr) 46px;gap:10px;align-items:center;min-width:0;font-variant-numeric:tabular-nums}
+.annual-rating-label{font-size:var(--fs-md);font-weight:var(--fw-semi);color:var(--gold)}
+.annual-rating-track{height:10px;border-radius:8px;background:var(--surface2);overflow:hidden}
+.annual-rating-fill{display:block;height:100%;width:0;background:var(--gold);border-radius:8px}
+.annual-rating-count{font-size:var(--fs-md);color:var(--muted);text-align:right}
+@media (min-width:741px) and (max-width:1179px){.annual-stats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:740px){
+ .annual-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .annual-stat{padding:14px 12px}
+ .annual-month-chart{gap:3px}
+}
 
 /* Rankings & Insights */
 .view-ranking .stats,.view-ranking #libraryView,.view-ranking #shareView,.view-detail #rankingView{display:none!important}
@@ -446,6 +472,18 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 @media(hover:hover){.rank-insights-jump:hover{background:var(--surface2);border-color:var(--accent-border)}}
 @media(max-width:920px){.rank-rating-filter-options{flex-basis:100%}.rank-insights-jump{min-height:42px}}
 @media(max-width:740px){.rank-rating-filter-options{padding-bottom:12px}}
+
+/* Mobile My Ranking: annual summary next to the existing insights shortcut. */
+.rank-annual-jump{display:none}
+@media (max-width:740px){
+ #rankingView .rank-rating-filter-row{column-gap:8px}
+ #rankingView .rank-rating-filter-row>.rank-insights-jump,
+ #rankingView .rank-rating-filter-row>.rank-annual-jump{display:inline-flex;align-items:center;justify-content:center;gap:6px;flex:1 1 0;min-width:0;min-height:44px;padding:8px 6px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap;cursor:pointer;top:0}
+ #rankingView .rank-rating-filter-row>.rank-annual-jump.active{color:var(--accent);border-color:var(--accent-border)}
+ #rankingView .rank-annual-jump .ui-icon{width:16px;height:16px;flex:0 0 16px;stroke:var(--accent)}
+ #rankingView .rank-annual-jump:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+}
+
 #myInsights{scroll-margin-top:24px}
 .rank-rating-filter-options button{display:flex;flex:0 0 96px;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:62px;padding:8px 10px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-semi);white-space:nowrap}
 .rank-rating-filter-options button[aria-pressed="true"]{border-color:var(--accent-border);background:var(--accent-soft);color:var(--accent)}
@@ -1247,6 +1285,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .detail-journal-review:has(.detail-rating-layout){grid-column:1/-1;grid-row:2}
 }
 @media(max-width:1050px){.annual-panels{grid-template-columns:1fr}}
+@media(max-width:740px){.annual-favorite-name{font-size:var(--fs-md)}}
 @media(max-width:740px){
   .app{display:block}.sidebar,.top-right,.section-header p,.heading-actions .share-action{display:none}
   .main{padding:20px 18px 104px}
@@ -1309,7 +1348,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
   .detail-streaming-card .detail-section-title{font-size:var(--fs-lg);margin-bottom:10px}
   .detail-jp-search{margin-top:12px;padding-top:12px}
   .detail-journal,.detail-credit{margin-top:16px}
-  .detail-journal-grid,.detail-journal-grid.detail-journal-shared,.annual-coverage-grid,.annual-stats{grid-template-columns:1fr}
+  .detail-journal-grid,.detail-journal-grid.detail-journal-shared,.annual-coverage-grid{grid-template-columns:1fr}
   .mobile-bottom{display:flex;position:fixed;bottom:0;left:0;right:0;background:rgba(21,25,28,.96);backdrop-filter:blur(12px);border-top:1px solid var(--border);padding:6px 8px max(6px,env(safe-area-inset-bottom));justify-content:space-around;z-index:50}
   .mobile-bottom button{border:0;background:transparent;color:var(--muted);flex:1;padding:6px 2px;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:var(--fs-xs);font-weight:var(--fw-semi);min-width:0;white-space:nowrap}
   .mobile-bottom button.active{color:var(--accent)}
@@ -2837,9 +2876,9 @@ select:not([data-status-id]){
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はブラウザに保存されます。端末間同期は任意で設定できます。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
     <section id="annualView" class="hidden" aria-label="年間アニメまとめ">
-      <div class="annual-back-row"><button type="button" id="annualBack" class="detail-back"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-back"/></svg> マイリストに戻る</button><span>YOUR ANIME YEAR</span></div>
+      <div class="annual-back-row"><button type="button" id="annualBack" class="detail-back"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-back"/></svg> マイリストに戻る</button></div>
       <header class="annual-hero">
-        <div class="annual-hero-copy"><span class="annual-kicker">MY ANIME YEAR</span><h1><span id="annualHeadingYear">2026</span><span class="annual-heading-unit">年の視聴記録</span></h1><p>見終わった作品と思い出を、一年ごとに。</p></div>
+        <div class="annual-hero-copy"><span class="annual-kicker">MY ANIME YEAR</span><h1><span id="annualHeadingYear">2026</span><span class="annual-heading-unit">年の視聴記録</span></h1><p>毎年刻む、作品と思い出のアニメ総決算</p></div>
         <label class="annual-year-control" for="annualYear">集計する年<select id="annualYear" aria-label="年間まとめの対象年"></select></label>
         <div class="annual-hero-outline" aria-hidden="true"><svg viewBox="0 0 320 320" role="presentation" focusable="false"><circle class="mascot-line" cx="124" cy="75" r="20"/><circle class="mascot-line" cx="240" cy="75" r="20"/><path class="mascot-line" d="M96 92c18-18 42-28 86-28 43 0 68 10 86 28 20 20 31 49 31 83v54c0 24-9 42-26 54-16 12-39 18-63 18H154c-24 0-47-6-63-18-17-12-26-30-26-54v-54c0-34 11-63 31-83Z"/><path class="mascot-line" d="M100 143l10 10"/><path class="mascot-line" d="M262 143l-10 10"/><path class="mascot-line" d="M120 189c8-6 19-9 29-9 14 0 24 5 30 15"/><path class="mascot-line" d="M242 189c-8-6-19-9-29-9-14 0-24 5-30 15"/><circle class="mascot-line" cx="154" cy="195" r="7"/><circle class="mascot-line" cx="210" cy="195" r="7"/><path class="mascot-line" d="M174 221c5-4 10-6 16-6 6 0 12 2 17 6"/><path class="mascot-line" d="M176 232c5 4 10 6 16 6 6 0 12-2 17-6"/><path class="mascot-line" d="M134 223l-8 16"/><path class="mascot-line" d="M146 221l-7 16"/><path class="mascot-line" d="M222 223l8 16"/><path class="mascot-line" d="M234 221l7 16"/><path class="mascot-line" d="M106 247c-23 0-41 18-41 41v12"/><path class="mascot-line" d="M258 247c23 0 41 18 41 41v12"/><path class="mascot-line" d="M66 294v12"/><path class="mascot-line" d="M299 294v12"/></svg></div>
       </header>
@@ -2849,7 +2888,11 @@ select:not([data-status-id]){
         <section class="annual-panel" aria-labelledby="annualFavoritesTitle"><div class="annual-panel-head"><div><span class="annual-section-index">01 / FAVORITES</span><h2 id="annualFavoritesTitle">高評価作品</h2></div><span class="annual-panel-note">自分の★評価</span></div><div id="annualFavorites"></div></section>
         <section class="annual-panel" aria-labelledby="annualGenresTitle"><div class="annual-panel-head"><div><span class="annual-section-index">02 / GENRES</span><h2 id="annualGenresTitle">よく観たジャンル</h2></div><span class="annual-panel-note">複数ジャンル集計</span></div><div id="annualGenres"></div></section>
       </div>
-      <section class="annual-coverage" aria-labelledby="annualCoverageTitle"><div class="annual-coverage-head"><span class="annual-section-index">03 / DATA QUALITY</span><h2 id="annualCoverageTitle">記録の集計について</h2></div><div id="annualCoverage"></div></section>
+      <div class="annual-panels annual-panels-extra">
+        <section class="annual-panel" aria-labelledby="annualMonthsTitle"><div class="annual-panel-head"><div><span class="annual-section-index">03 / MONTHLY</span><h2 id="annualMonthsTitle">月別視聴完了数</h2></div><span class="annual-panel-note">見終わった月</span></div><div id="annualMonths"></div></section>
+        <section class="annual-panel" aria-labelledby="annualRatingsTitle"><div class="annual-panel-head"><div><span class="annual-section-index">04 / RATINGS</span><h2 id="annualRatingsTitle">自分の★評価の分布</h2></div><span class="annual-panel-note">★1〜5</span></div><div id="annualRatings"></div></section>
+      </div>
+      <section class="annual-coverage" aria-labelledby="annualCoverageTitle"><div class="annual-coverage-head"><span class="annual-section-index">05 / DATA QUALITY</span><h2 id="annualCoverageTitle">記録の集計について</h2></div><div id="annualCoverage"></div></section>
       <p class="annual-foot">すべてこの端末に保存された記録から集計しています。視聴完了日が未入力の作品を、自動で今年の作品として扱うことはありません。</p>
     </section>
     <section id="rankingView" class="hidden" aria-label="アニメランキング">
@@ -2869,6 +2912,7 @@ select:not([data-status-id]){
         <div class="rank-rating-filter-row">
           <div id="rankRatingFilterOptions" class="rank-rating-filter-options" role="group" aria-labelledby="rankRatingFilterLabel"></div>
           <button type="button" id="rankInsightsJump" class="rank-insights-jump" aria-controls="myInsights"><svg class="ui-icon rank-insights-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/></svg><span>視聴分析を見る</span></button>
+          <button type="button" class="rank-annual-jump" data-annual-open aria-label="年間まとめを開く"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span>年間まとめ</span></button>
         </div>
         <div id="rankRatingFilterFeedback" class="rank-rating-filter-feedback" role="status" aria-live="polite" hidden></div>
       </div>
@@ -5443,7 +5487,17 @@ function annualData(year){
  const missingDate=all.filter(a=>!validCompletedOn(a.completedOn));
  const missingGenres=works.filter(a=>!(cleanAnalysisMeta(a.analysisMeta)?.genres||[]).length);
  const genres=new Map();
- for(const a of works){const tags=cleanAnalysisMeta(a.analysisMeta)?.genres||[];
+ const monthCounts=Array(12).fill(0),ratingCounts=Array(6).fill(0);
+ let unknownMonth=0,movieCount=0,noteCount=0;
+ for(const a of works){
+  // YYYY is valid for annual totals but cannot be assigned to a month.
+  const month=typeof a.completedOn==='string'?a.completedOn.match(/^\d{4}-(\d{2})(?:-\d{2})?$/):null;
+  if(month)monthCounts[Number(month[1])-1]++;else unknownMonth++;
+  if(String(a.type||'').trim().toLowerCase()==='movie')movieCount++;
+  if(readNote(a)?.text?.trim())noteCount++;
+  const ownRating=readReview(a.review)?.overall;
+  if(ownRating)ratingCounts[ownRating]++;
+  const tags=cleanAnalysisMeta(a.analysisMeta)?.genres||[];
   for(const tag of tags){const key=tag.id?'id:'+tag.id:'name:'+tag.name.trim().toLowerCase();
    if(!genres.has(key))genres.set(key,{name:genreJa(tag.name),count:0});
    genres.get(key).count++;
@@ -5455,7 +5509,7 @@ function annualData(year){
   const ar=Number.isInteger(a.myRankOrder)?a.myRankOrder:999999,br=Number.isInteger(b.myRankOrder)?b.myRankOrder:999999;
   return ar-br||sortByBroadcast(a,b);
  });
- return {all,works,rated,missingDate,missingGenres,ranked,genres:[...genres.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ja'))};
+ return {all,works,rated,missingDate,missingGenres,ranked,monthCounts,ratingCounts,unknownMonth,movieCount,noteCount,genres:[...genres.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ja'))};
 }
 function annualNoContent(title,text){return `<div class="annual-empty"><strong>${safeText(title)}</strong>${safeText(text)}</div>`}
 function renderAnnual(){
@@ -5468,7 +5522,10 @@ function renderAnnual(){
  const metrics=[
   {label:'視聴完了',value:d.works.length,unit:'作品',note:'見終わった年を記録した作品'},
   {label:'評価した作品',value:d.rated.length,unit:'作品',note:`${d.works.length}作品中`},
-  {label:'自分の平均評価',value:average===null?'--':average.toFixed(2),unit:'/ 5',note:average===null?'この年は評価がありません':'★1〜5の平均'}
+  {label:'自分の平均評価',value:average===null?'--':average.toFixed(2),unit:'/ 5',note:average===null?'この年は評価がありません':'★1〜5の平均'},
+  {label:'★5を付けた作品',value:d.ratingCounts[5],unit:'作品',note:'最高評価の作品'},
+  {label:'観た映画',value:d.movieCount,unit:'作品',note:'映画として登録された作品'},
+  {label:'メモを残した作品',value:d.noteCount,unit:'作品',note:'メモが保存されている作品'}
  ];
  $('#annualStats').innerHTML=metrics.map(m=>`<div class="annual-stat"><span class="annual-stat-label">${safeText(m.label)}</span><strong class="annual-stat-value">${safeText(m.value)}<small>${safeText(m.unit)}</small></strong><span class="annual-stat-note">${safeText(m.note)}</span></div>`).join('');
  $('#annualFavorites').innerHTML=d.ranked.length?`<div class="annual-favorite-list">${d.ranked.slice(0,5).map((a,i)=>{
@@ -5479,6 +5536,10 @@ function renderAnnual(){
  }).join('')}</div><p class="annual-genre-note">同じ評価の場合は、マイランキングの順位を優先します。</p>`:annualNoContent('まだ評価した作品がありません',d.works.length?'この年に見終わった作品を★で評価すると、ここに表示されます。':'年を変更するか、作品の見終わった時期を登録してください。');
  const max=d.genres.length?d.genres[0].count:1;
  $('#annualGenres').innerHTML=d.genres.length?`<div class="annual-genre-list">${d.genres.slice(0,7).map(g=>`<div class="annual-genre-item"><div class="annual-genre-label"><span>${safeText(g.name)}</span><span class="annual-genre-count">${g.count}作品</span></div><div class="annual-genre-track"><div class="annual-genre-fill" style="width:${Math.max(0,Math.min(100,g.count/max*100)).toFixed(1)}%"></div></div></div>`).join('')}</div><p class="annual-genre-note">複数のジャンルを持つ作品は、それぞれに1作品として加算します。</p>`:annualNoContent('ジャンルデータがありません',d.works.length?'「マイランキング」の視聴分析で作品情報を取得すると集計できます。':'この年の視聴記録がありません。');
+ const maxMonth=Math.max(1,...d.monthCounts);
+ $('#annualMonths').innerHTML=d.works.length-d.unknownMonth>0?`<div class="annual-month-chart" role="group" aria-label="月別に見終わった作品数">${d.monthCounts.map((count,i)=>`<div class="annual-month-col" role="img" aria-label="${i+1}月：${count}作品"><span class="annual-month-count">${count}</span><span class="annual-month-track"><span class="annual-month-fill" style="height:${(count/maxMonth*100).toFixed(1)}%"></span></span><span class="annual-month-label">${i+1}</span></div>`).join('')}</div>${d.unknownMonth?`<p class="annual-chart-note">見終わった月が未登録の${d.unknownMonth}作品は含めていません。</p>`:''}`:annualNoContent('月別データがありません',d.works.length?'見終わった月を登録すると表示されます。':'この年の視聴記録がありません。');
+ const maxRating=Math.max(1,...d.ratingCounts.slice(1));
+ $('#annualRatings').innerHTML=d.rated.length?`<div class="annual-rating-list">${[5,4,3,2,1].map(star=>`<div class="annual-rating-row" role="img" aria-label="★${star}：${d.ratingCounts[star]}作品"><span class="annual-rating-label">★${star}</span><span class="annual-rating-track"><span class="annual-rating-fill" style="width:${(d.ratingCounts[star]/maxRating*100).toFixed(1)}%"></span></span><span class="annual-rating-count">${d.ratingCounts[star]}作品</span></div>`).join('')}</div>`:annualNoContent('まだ評価の記録がありません',d.works.length?'この年に見終わった作品を評価すると表示されます。':'この年の視聴記録がありません。');
  $('#annualCoverage').innerHTML=`<div class="annual-coverage-grid"><div class="annual-coverage-item"><strong>見終わった年が未登録：${d.missingDate.length}作品</strong><p>これは全期間の「見た」作品のうち、年が不明な件数です。${annualYear}年の作品とは限らないため、年間集計には含めていません。</p><button type="button" data-annual-missing ${d.missingDate.length?'':'disabled'}>未登録の作品を確認</button></div><div class="annual-coverage-item"><strong>ジャンル情報なし：${d.missingGenres.length}作品</strong><p>${annualYear}年に見終わった作品のうち、ジャンルを取得できていない件数です。未登録作品はジャンルランキングに含まれません。</p><button type="button" data-annual-insights ${d.missingGenres.length?'':'disabled'}>視聴分析で作品情報を確認</button></div></div>`;
  $('#breadcrumb').textContent='年間まとめ';
 }
@@ -9830,7 +9891,17 @@ function annualData(year){
  const missingDate=all.filter(a=>!validCompletedOn(a.completedOn));
  const missingGenres=works.filter(a=>!(cleanAnalysisMeta(a.analysisMeta)?.genres||[]).length);
  const genres=new Map();
- for(const a of works){const tags=cleanAnalysisMeta(a.analysisMeta)?.genres||[];
+ const monthCounts=Array(12).fill(0),ratingCounts=Array(6).fill(0);
+ let unknownMonth=0,movieCount=0,noteCount=0;
+ for(const a of works){
+  // YYYY is valid for annual totals but cannot be assigned to a month.
+  const month=typeof a.completedOn==='string'?a.completedOn.match(/^\d{4}-(\d{2})(?:-\d{2})?$/):null;
+  if(month)monthCounts[Number(month[1])-1]++;else unknownMonth++;
+  if(String(a.type||'').trim().toLowerCase()==='movie')movieCount++;
+  if(readNote(a)?.text?.trim())noteCount++;
+  const ownRating=readReview(a.review)?.overall;
+  if(ownRating)ratingCounts[ownRating]++;
+  const tags=cleanAnalysisMeta(a.analysisMeta)?.genres||[];
   for(const tag of tags){const key=tag.id?'id:'+tag.id:'name:'+tag.name.trim().toLowerCase();
    if(!genres.has(key))genres.set(key,{name:genreJa(tag.name),count:0});
    genres.get(key).count++;
@@ -9842,7 +9913,7 @@ function annualData(year){
   const ar=Number.isInteger(a.myRankOrder)?a.myRankOrder:999999,br=Number.isInteger(b.myRankOrder)?b.myRankOrder:999999;
   return ar-br||sortByBroadcast(a,b);
  });
- return {all,works,rated,missingDate,missingGenres,ranked,genres:[...genres.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ja'))};
+ return {all,works,rated,missingDate,missingGenres,ranked,monthCounts,ratingCounts,unknownMonth,movieCount,noteCount,genres:[...genres.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ja'))};
 }
 function annualNoContent(title,text){return `<div class="annual-empty"><strong>${safeText(title)}</strong>${safeText(text)}</div>`}
 function renderAnnual(){
@@ -9855,7 +9926,10 @@ function renderAnnual(){
  const metrics=[
   {label:'視聴完了',value:d.works.length,unit:'作品',note:'見終わった年を記録した作品'},
   {label:'評価した作品',value:d.rated.length,unit:'作品',note:`${d.works.length}作品中`},
-  {label:'自分の平均評価',value:average===null?'--':average.toFixed(2),unit:'/ 5',note:average===null?'この年は評価がありません':'★1〜5の平均'}
+  {label:'自分の平均評価',value:average===null?'--':average.toFixed(2),unit:'/ 5',note:average===null?'この年は評価がありません':'★1〜5の平均'},
+  {label:'★5を付けた作品',value:d.ratingCounts[5],unit:'作品',note:'最高評価の作品'},
+  {label:'観た映画',value:d.movieCount,unit:'作品',note:'映画として登録された作品'},
+  {label:'メモを残した作品',value:d.noteCount,unit:'作品',note:'メモが保存されている作品'}
  ];
  $('#annualStats').innerHTML=metrics.map(m=>`<div class="annual-stat"><span class="annual-stat-label">${safeText(m.label)}</span><strong class="annual-stat-value">${safeText(m.value)}<small>${safeText(m.unit)}</small></strong><span class="annual-stat-note">${safeText(m.note)}</span></div>`).join('');
  $('#annualFavorites').innerHTML=d.ranked.length?`<div class="annual-favorite-list">${d.ranked.slice(0,5).map((a,i)=>{
@@ -9866,6 +9940,10 @@ function renderAnnual(){
  }).join('')}</div><p class="annual-genre-note">同じ評価の場合は、マイランキングの順位を優先します。</p>`:annualNoContent('まだ評価した作品がありません',d.works.length?'この年に見終わった作品を★で評価すると、ここに表示されます。':'年を変更するか、作品の見終わった時期を登録してください。');
  const max=d.genres.length?d.genres[0].count:1;
  $('#annualGenres').innerHTML=d.genres.length?`<div class="annual-genre-list">${d.genres.slice(0,7).map(g=>`<div class="annual-genre-item"><div class="annual-genre-label"><span>${safeText(g.name)}</span><span class="annual-genre-count">${g.count}作品</span></div><div class="annual-genre-track"><div class="annual-genre-fill" style="width:${Math.max(0,Math.min(100,g.count/max*100)).toFixed(1)}%"></div></div></div>`).join('')}</div><p class="annual-genre-note">複数のジャンルを持つ作品は、それぞれに1作品として加算します。</p>`:annualNoContent('ジャンルデータがありません',d.works.length?'「マイランキング」の視聴分析で作品情報を取得すると集計できます。':'この年の視聴記録がありません。');
+ const maxMonth=Math.max(1,...d.monthCounts);
+ $('#annualMonths').innerHTML=d.works.length-d.unknownMonth>0?`<div class="annual-month-chart" role="group" aria-label="月別に見終わった作品数">${d.monthCounts.map((count,i)=>`<div class="annual-month-col" role="img" aria-label="${i+1}月：${count}作品"><span class="annual-month-count">${count}</span><span class="annual-month-track"><span class="annual-month-fill" style="height:${(count/maxMonth*100).toFixed(1)}%"></span></span><span class="annual-month-label">${i+1}</span></div>`).join('')}</div>${d.unknownMonth?`<p class="annual-chart-note">見終わった月が未登録の${d.unknownMonth}作品は含めていません。</p>`:''}`:annualNoContent('月別データがありません',d.works.length?'見終わった月を登録すると表示されます。':'この年の視聴記録がありません。');
+ const maxRating=Math.max(1,...d.ratingCounts.slice(1));
+ $('#annualRatings').innerHTML=d.rated.length?`<div class="annual-rating-list">${[5,4,3,2,1].map(star=>`<div class="annual-rating-row" role="img" aria-label="★${star}：${d.ratingCounts[star]}作品"><span class="annual-rating-label">★${star}</span><span class="annual-rating-track"><span class="annual-rating-fill" style="width:${(d.ratingCounts[star]/maxRating*100).toFixed(1)}%"></span></span><span class="annual-rating-count">${d.ratingCounts[star]}作品</span></div>`).join('')}</div>`:annualNoContent('まだ評価の記録がありません',d.works.length?'この年に見終わった作品を評価すると表示されます。':'この年の視聴記録がありません。');
  $('#annualCoverage').innerHTML=`<div class="annual-coverage-grid"><div class="annual-coverage-item"><strong>見終わった年が未登録：${d.missingDate.length}作品</strong><p>これは全期間の「見た」作品のうち、年が不明な件数です。${annualYear}年の作品とは限らないため、年間集計には含めていません。</p><button type="button" data-annual-missing ${d.missingDate.length?'':'disabled'}>未登録の作品を確認</button></div><div class="annual-coverage-item"><strong>ジャンル情報なし：${d.missingGenres.length}作品</strong><p>${annualYear}年に見終わった作品のうち、ジャンルを取得できていない件数です。未登録作品はジャンルランキングに含まれません。</p><button type="button" data-annual-insights ${d.missingGenres.length?'':'disabled'}>視聴分析で作品情報を確認</button></div></div>`;
  $('#breadcrumb').textContent='年間まとめ';
 }
