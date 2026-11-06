@@ -438,8 +438,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 /* The jump is a separate navigation action placed next to, not inside, the star filters. */
 .rank-rating-filter-row{display:flex;flex-wrap:wrap;align-items:center;column-gap:18px;row-gap:10px;min-width:0}
 .rank-rating-filter-options{display:flex;gap:8px;flex:0 1 auto;min-width:0;max-width:100%;overflow-x:auto;padding:0 0 4px;scrollbar-width:thin;scrollbar-color:var(--border-ctrl) transparent}
-.rank-insights-jump{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-height:62px;padding:8px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap;cursor:pointer}
-.rank-insights-jump .ui-icon{width:16px;height:16px;flex:0 0 16px;fill:none;stroke:currentColor}
+.rank-insights-jump{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex:0 0 auto;min-height:42px;padding:8px 12px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap;cursor:pointer}
+.rank-insights-jump .rank-insights-icon{width:17px;height:17px;flex:0 0 17px;fill:none;stroke:var(--accent);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .rank-insights-jump:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-color:var(--accent)}
 @media(hover:hover){.rank-insights-jump:hover{background:var(--surface2);border-color:var(--accent-border)}}
 @media(max-width:920px){.rank-rating-filter-options{flex-basis:100%}.rank-insights-jump{min-height:42px}}
@@ -2736,7 +2736,7 @@ select:not([data-status-id]){
         <span class="rank-rating-filter-label" id="rankRatingFilterLabel">評価で絞り込む</span>
         <div class="rank-rating-filter-row">
           <div id="rankRatingFilterOptions" class="rank-rating-filter-options" role="group" aria-labelledby="rankRatingFilterLabel"></div>
-          <button type="button" id="rankInsightsJump" class="rank-insights-jump" aria-controls="myInsights">あなたの視聴分析 <svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-down"/></svg></button>
+          <button type="button" id="rankInsightsJump" class="rank-insights-jump" aria-controls="myInsights"><svg class="ui-icon rank-insights-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/></svg><span>視聴分析を見る</span></button>
         </div>
         <div id="rankRatingFilterFeedback" class="rank-rating-filter-feedback" role="status" aria-live="polite" hidden></div>
       </div>
