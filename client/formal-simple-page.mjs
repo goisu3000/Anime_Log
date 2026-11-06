@@ -450,7 +450,6 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const approved=meta('ani-log-formal-production-approval')==='approved-private-production';
  let api;try{api=new URL(meta('ani-log-production-api-origin'));if(api.protocol!=='https:'||api.origin!==meta('ani-log-production-api-origin')||api.origin===location.origin)throw Error()}catch{api=null}
  if(!approved||!api){
-  el('setup').hidden=true;
   // A previously encrypted device must NEVER be presented as an empty,
   // ordinary legacy OFF account when the approved sync configuration is absent.
   // Do not silently read or reset its old localStorage copy.
@@ -513,7 +512,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   ...(productMaintenance?{enableProductWalMaintenance:true,productMaintenanceAuthorization:productAuthorized}:{}),
   ...(maintenanceTest?{enableGateCPrivateMaintenance:gateCHttps,enableTestOnlyProductMaintenance:true,enableTestOnlySameSaltRebase:true,
    enableTestOnlyAnchorRing:true,enableTestOnlyAnchorRefresh:true}:{})}),vault=factory();
- let automatic=null,running=null,busy=false,downloaded=null,recoveryActive=false,activeSyncs=0,syncRunning=false,confirmedConflict=false;
+ let automatic=null,running=null,busy=false,recoveryActive=false,activeSyncs=0,syncRunning=false,confirmedConflict=false;
  // An explicit repair/retry may show one short success notice after the
  // NEXT independently confirmed durable sync. Ordinary background checks
  // just show the quiet current state; no repeating success banners.
@@ -589,6 +588,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // may be waiting behind another tab's exclusive generation cutover.
  const setup=productTabs?Object.freeze({...setupCore,
   begin:args=>privateOperationGate.withForeground(()=>setupCore.begin(args)),
+  initializeLocal:args=>privateOperationGate.withForeground(()=>setupCore.initializeLocal(args)),
   resume:()=>privateOperationGate.withForeground(()=>setupCore.resume()),
   confirmEnabled:args=>privateOperationGate.withForeground(()=>setupCore.confirmEnabled(args))
  }):setupCore;
@@ -599,7 +599,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const qrNext=el('qr-next'),qrTitle=el('qr-step-title'),qrMessage=el('qr-step-message'),qrStepCount=el('qr-step-count'),qrStepDevice=el('qr-step-device'),qrBars=[...(root.querySelectorAll?.('[data-simple="qr-step-bar"]')??[])];
  const qrFlow=Boolean(receiving||window.__anilogSyncQrResume);
  let ownerJourneyActive=false;
- const receiverJourneyActive=Boolean(qrFlow||staging||profileState.phase==='preparing'||local.getItem(LOCAL_MODE)==='encrypted-local');
+ const receiverJourneyActive=Boolean(qrFlow||staging||profileState.phase==='preparing'||(local.getItem(LOCAL_MODE)==='encrypted-local'&&setup.readReceipt()?.role==='receiver'));
  // A resume bit is UI intent, never a replacement for a consumed QR.
  const qrNeedsFreshScan=()=>qrFlow&&!captured&&window.__anilogSyncQrResume===true&&local.getItem(LOCAL_MODE)===null;
  // Presentation only: never derive approval, registration or sync success
@@ -651,36 +651,15 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「同期設定を最初からやり直す」から再確認してください。';
   if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';
   showSyncVisual('error');}
- async function action(fn){if(busy)return;busy=true;el('begin').disabled=true;el('retry').disabled=true;
+ async function action(fn){if(busy)return;busy=true;el('retry').disabled=true;
   try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=recoveryActive||syncRunning;if(productMaintenance)requestPrivateMaintenance()}}
- el('backup').addEventListener('click',()=>{
-  // A previous checkbox confirmation is not proof that a NEW backup was saved.
-  downloaded=null;el('confirmed').checked=false;el('begin').disabled=true;
-  try{
-   const raw=setup.capture(),url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
-   const a=document.createElement('a');a.href=url;a.download='anime-log-before-sync.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-   // The browser does not expose whether the file reached the user's disk.
-   // The user must explicitly confirm it AFTER triggering the download.
-   downloaded=raw;
-  }catch(error){message(error)}
- });
- el('confirmed').addEventListener('change',()=>{el('begin').disabled=!downloaded||!el('confirmed').checked||busy||qrNeedsFreshScan()});
- async function beginOrResume(){
-  const currentMode=local.getItem(LOCAL_MODE);
-  if(qrNeedsFreshScan())throw Error('QR_RESCAN_REQUIRED_KEEP_RECORDS');
-  // A prior attempt can leave a safely fenced preparing state. Complete the
-  // existing transition instead of trying registration with a locked vault.
-  if(currentMode==='preparing'){await setup.resume();location.reload();return}
-  if(currentMode==='encrypted-local'){location.reload();return}
-  if(currentMode!==null||!downloaded||!el('confirmed').checked)throw Error('BACKUP_CONFIRMATION_REQUIRED');
-  const result=await setup.begin({backupRaw:downloaded,backupSaved:true,oldClientsClosed:true,role:receiving?'receiver':'owner'});
-  // New encrypted users do not need the old-WAL upgrade acknowledgement.
+ // A new browser starts locally encrypted without a migration/download flow.
+ let mode=staging?'encrypted-local':local.getItem(LOCAL_MODE);
+ if(mode===null){
+  await setup.initializeLocal({role:receiving?'receiver':'owner'});
+  mode=local.getItem(LOCAL_MODE);
   if(maintenanceTest||productMaintenance)walUpgradeGate.markNewSetup();
-  if(receiving)await invitations.create(captured,result.passphrase);
-  location.reload();
  }
- el('begin').addEventListener('click',()=>action(beginOrResume));
- const mode=staging?'encrypted-local':local.getItem(LOCAL_MODE);
  const ignoredExistingQR=Boolean(receiving&&mode==='sync-enabled'&&profileState.phase==='connected');
  const pauseGuard=createSyncPauseGuard({local,key:SYNC_PAUSE_KEY+profileSuffix(selectedProfile)});
  // A lost revoke response must fence automatic sync until a user-triggered readback.
@@ -692,20 +671,6 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期中です。別の同期先に変えるには、バックアップを保存し「同期設定を最初からやり直す」を選んでください。記録は消えません。';}
   attention(true);
  }
- if(!mode){
-  if(qrNeedsFreshScan()){nextQrStep('QRをもう一度読み取ってください','更新前のQR情報はURLから取り除いているため、この画面では接続を開始しません。PC・スマホ側のQRをもう一度読み取ってください。この端末の記録は変更していません。');el('begin').disabled=true;}
-  else if(qrFlow)nextQrStep('手順1：この端末の記録を保護','下の「バックアップを保存する」を押し、保存を確認してチェックを入れ、「端末間同期を始める」へ進んでください。PC側の6桁承認は後で行います。');
-  // This page is mounted before the first opt-in. A failure may occur after
-  // the durable cutover fence is written, while the current JS mount still
-  // follows the legacy branch. The visible retry must never be inert.
-  el('retry').addEventListener('click',()=>action(async()=>{
-   // A new mount re-reads the durable receipt/mode and resumes the exact
-   // interrupted step. It cannot silently start a new registration.
-   location.reload();
-  }));
-  return {phase:'LEGACY_OFF',storage,vault,setup};
- }
- el('setup').hidden=true;
  if(qrFlow){
   if(profileState.phase==='disconnected'&&!receiving)nextQrStep('QRをもう一度読み取ってください','更新前のQR情報はURLから取り除いているため、接続先IDは表示できません。接続したいPC・スマホのQRをもう一度読み取り、ID照合から進めてください。以前の記録は保持しています。');
   else if(profileState.phase==='disconnected')nextQrStep('手順1：同期先IDを確認','下にQRで読み取った同期先IDが表示されます。PC・スマホ側のIDと一致するか確認し、バックアップを保存して接続を進めてください。');
@@ -741,6 +706,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return {phase:'SAFE_SETUP_RECOVERY_REQUIRED',storage,vault,setup};
  }
  ui.hydrate(restored.app);
+ if((maintenanceTest||productMaintenance)&&setup.readReceipt().v===2&&walUpgradeGate.read()==='PENDING')walUpgradeGate.markNewSetup();
  status.textContent='端末内の記録を復元しました。';
  // Existing encrypted users see this only on their first upgraded launch.
  // Never infer old-tab absence from a checkbox: the production maintenance
@@ -1448,7 +1414,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    successNoticeArmed=true;
    try{await running.resumeAutomatic({passphrase:await keys.read()})}catch(error){successNoticeArmed=false;throw error}return;
   }
-  if(currentMode==='preparing'||currentMode===null){await beginOrResume();return}
+  if(currentMode==='preparing'){await setup.resume();location.reload();return}
+  if(currentMode===null)throw Error('LOCAL_SETUP_REQUIRED');
   if(currentMode==='encrypted-local'){
    const password=await keys.read();
    if(receiver&&!await intents.read(password)){
@@ -1465,7 +1432,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   else if(ignoredExistingQR){attention(true);status.textContent='新しいQRは適用していません。このタブでの自動同期は開始していません。通常の同期を再開するにはページを再読み込みしてください。';}
   else if(!pauseGuard.paused){pauseGuard.assertAllowed();await running.resumeAutomatic({passphrase:await keys.read()});}
   else showPauseState();
- }else if(!receiver||await intents.read(restored.passphrase))await action(register);
+ }else if((!receiver&&setup.readReceipt().v!==2)||await intents.read(restored.passphrase))await action(register);
+ else if(!receiver){status.textContent='同期OFF：この端末に暗号化保存しています。';el('retry').hidden=false;el('retry').textContent='端末間同期を始める';}
  else status.textContent=invitation?'この端末の記録を保持しています。招待を受け取り、6桁照合後に統合します。':'記録を保持しています。設定元の端末で新しい招待QRを作成し、もう一度読み取ってください。';
  // Also examine a pre-existing WAL on first eligible mount. The private
  // scheduler still waits for UI+Undo+sync idleness; production has no scheduler.
@@ -1473,6 +1441,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  return {phase:'FORMAL_OPT_IN_MOUNTED',storage,vault,setup};
 }
 if(typeof document!=='undefined')void mountFormalSimpleSync({productWalMaintenance:true}).catch(()=>{
+ const notice=document.getElementById?.('offlineNotice');
+ if(notice){notice.textContent='暗号化保存を開始できませんでした。保存領域を消去せず、バックアップを保持してください。';notice.classList.remove('hidden');}
  const panel=document.getElementById?.('formal-sync-controls');
  // Prevent uninitialized developer placeholder controls from looking like a
  // meaningful network error or a working QR retry. No data is modified.
