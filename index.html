@@ -1566,13 +1566,13 @@ select:not([data-status-id]){
 .anilog-sync-dialog::backdrop{background:rgba(5,7,10,.82);backdrop-filter:blur(4px)}
 .anilog-sync-dialog-head{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;gap:12px;justify-content:space-between;padding:24px 24px 18px;border-bottom:1px solid var(--border);background:var(--bg-side)}
 .anilog-sync-dialog-head h2{margin:0 0 6px;font-size:var(--fs-2xl);line-height:1.35}
-.anilog-sync-dialog-head p{margin:0;color:var(--muted);font-size:var(--fs-sm);line-height:1.65}
-.anilog-sync-dialog-close{flex:0 0 auto;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);min-width:44px;height:40px;padding:0 12px;font-size:var(--fs-sm);font-weight:var(--fw-semi)}
+.anilog-sync-dialog-head p{margin:0;color:var(--muted);font-size:var(--fs-md);line-height:1.65}
+.anilog-sync-dialog-close{flex:0 0 auto;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);min-width:44px;height:40px;padding:0 12px;font-size:var(--fs-md);font-weight:var(--fw-semi)}
 .anilog-sync-dialog #formal-simple-sync{display:block;padding:20px 24px 24px}
 .anilog-sync-dialog #formal-simple-sync>summary{display:none}
 .anilog-sync-dialog #formal-simple-sync>p[data-simple="status"]{margin:0 0 16px;padding:12px 14px;border:1px solid var(--accent-border);border-radius:var(--radius-sm);background:var(--accent-soft);color:var(--ink);font-size:var(--fs-sm);line-height:1.65}
-.anilog-sync-dialog #formal-simple-sync p{line-height:1.7;font-size:var(--fs-sm)}
-.anilog-sync-dialog #formal-simple-sync button:not([hidden]){display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:4px 6px 6px 0;padding:9px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:1.5;white-space:normal;text-align:center}
+.anilog-sync-dialog #formal-simple-sync p{line-height:1.7;font-size:var(--fs-md)}
+.anilog-sync-dialog #formal-simple-sync button:not([hidden]){display:inline-flex;align-items:center;justify-content:center;min-height:40px;margin:4px 6px 6px 0;padding:9px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font-size:var(--fs-md);font-weight:var(--fw-semi);line-height:1.5;white-space:normal;text-align:center}
 .anilog-sync-dialog #formal-simple-sync button:disabled{opacity:.45;cursor:not-allowed}
 .anilog-sync-dialog #formal-simple-sync button[data-simple="begin"],
 .anilog-sync-dialog #formal-simple-sync button[data-simple="retry"],
@@ -1584,7 +1584,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]{display:grid;gap:10px}
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button,
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button{justify-self:start}
-.anilog-sync-dialog #formal-simple-sync label{display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;color:var(--muted);font-weight:var(--fw-normal);font-size:var(--fs-sm);line-height:1.75}
+.anilog-sync-dialog #formal-simple-sync label{display:flex;gap:8px;align-items:flex-start;margin:0 0 10px;color:var(--muted);font-weight:var(--fw-normal);font-size:var(--fs-md);line-height:1.75}
 .anilog-sync-dialog #formal-simple-sync input[type="checkbox"]{accent-color:var(--accent);width:16px;height:16px;margin:4px 0 0;flex-shrink:0}
 .anilog-sync-dialog #formal-simple-sync input[data-v407="code"]{height:42px;width:min(100%,300px);margin:8px 8px 8px 0;font-size:var(--fs-lg);font-weight:var(--fw-bold);letter-spacing:.16em;text-align:center}
 .anilog-sync-dialog #formal-sync-controls{border-color:transparent!important}
@@ -1623,7 +1623,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-help,
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced{border:1px solid var(--border);border-radius:var(--radius-sm);padding:0;background:var(--surface);margin:8px 0 12px}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary,
-.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary{list-style:none;cursor:pointer;padding:12px 14px;min-height:44px;display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-sm);font-weight:var(--fw-semi);color:var(--muted)}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary{list-style:none;cursor:pointer;padding:12px 14px;min-height:44px;display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-md);font-weight:var(--fw-semi);color:var(--muted)}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary::-webkit-details-marker,
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced>summary::-webkit-details-marker{display:none}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-help>summary::after,
@@ -1640,7 +1640,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="begin"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="resume-sync"],
 .anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="relink-sync"],
-.anilog-sync-dialog #formal-simple-sync button[data-simple="relink-start"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.anilog-sync-dialog #formal-simple-sync button[data-simple="relink-start"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:var(--fw-bold)}
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="backup"],
 .anilog-sync-dialog #formal-simple-sync button[data-simple="relink-backup"]{background:var(--surface2);border-color:var(--border-ctrl)}
 .anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>label,
@@ -1794,7 +1794,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions{padding:12px;gap:12px}
 /* Read-only conflict diagnostics live under advanced recovery, not at the dialog root. */
 /* The registration ID is read-only information, not an action. */
-.anilog-sync-dialog #formal-simple-sync>[data-simple="own-device-info"]:not([hidden]){display:block;margin:4px 0 0;max-width:100%;font-size:var(--fs-xs);font-weight:var(--fw-semi);line-height:1.6;color:var(--muted);white-space:nowrap}
+.anilog-sync-dialog #formal-simple-sync>[data-simple="own-device-info"]:not([hidden]){display:block;margin:4px 0 0;max-width:100%;font-size:var(--fs-md);font-weight:var(--fw-semi);line-height:1.6;color:var(--muted);white-space:nowrap}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-conflict-details{box-sizing:border-box;align-self:stretch;width:100%;max-width:100%;margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-conflict-details>pre{box-sizing:border-box;max-width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
 .anilog-sync-dialog #formal-sync-controls{padding:0!important;border:0!important;margin:0}
@@ -2508,7 +2508,7 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions{display:flex;align-items:center;flex-wrap:wrap;gap:10px;padding-top:2px}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>button:not([hidden]){min-height:44px;padding:10px 16px;margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>[data-simple="manage-devices"][aria-expanded="true"]{border-color:var(--accent-border);background:var(--surface-hover)}
-.anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]:not([hidden]){color:var(--muted);font-size:var(--fs-xs);line-height:1.6;margin:12px 0 4px}
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-info"]:not([hidden]){color:var(--muted);font-size:var(--fs-md);font-weight:var(--fw-semi);line-height:1.6;margin:12px 0 4px}
 /* A connection reset is a recovery choice, not a second green primary CTA. */
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>[data-simple="restart-sync"]:not([hidden]){background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink);margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-restart-confirm:not([hidden]){width:100%}
@@ -2517,6 +2517,33 @@ select:not([data-status-id]){
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>button:not([hidden]){justify-self:stretch;width:100%;min-height:44px}
 }
+
+/* Share dialog typography: role-based scale aligned with device sync. */
+#shareDialog>h3{font-size:var(--fs-2xl);font-weight:var(--fw-bold)}
+#shareDialog>p{font-size:var(--fs-md);font-weight:var(--fw-normal)}
+#shareDialog .share-options>label,
+#shareDialog .share-season-fields label{font-size:var(--fs-md);font-weight:var(--fw-semi)}
+#shareDialog select,
+#shareDialog select + .anilog-mobile-select-trigger{font-size:var(--fs-md);font-weight:var(--fw-semi)}
+#shareDialog .share-permissions h4{font-size:var(--fs-lg);font-weight:var(--fw-bold)}
+#shareDialog .share-required{font-size:var(--fs-md);font-weight:var(--fw-normal)}
+#shareDialog .share-required small{font-size:var(--fs-xs);font-weight:var(--fw-normal)}
+#shareDialog .share-permission{font-size:var(--fs-md);font-weight:var(--fw-semi)}
+#shareDialog .share-description,
+#shareDialog .share-privacy-note,
+#shareDialog .share-help{font-size:var(--fs-xs);font-weight:var(--fw-normal)}
+#shareDialog .share-meta{font-size:var(--fs-md);font-weight:var(--fw-normal)}
+#shareDialog menu button,
+#shareDialog .share-dialog-actions button{font-size:var(--fs-md);font-weight:var(--fw-semi)}
+#shareDialog menu button.primary,
+#shareDialog .share-dialog-actions button.primary{font-weight:var(--fw-bold)}
+/* Primary sync actions stay distinguishable from secondary controls. */
+.anilog-sync-dialog #formal-simple-sync [data-simple="setup"]>button[data-simple="begin"],
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="resume-sync"],
+.anilog-sync-dialog #formal-simple-sync [data-simple="connection-actions"]>button[data-simple="relink-sync"],
+.anilog-sync-dialog #formal-simple-sync button[data-v407="invite"],
+.anilog-sync-dialog #formal-simple-sync button[data-v407="approve"],
+.anilog-sync-dialog #formal-simple-sync button[data-v407="check"]{font-weight:var(--fw-bold)}
 
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
