@@ -1,3 +1,4 @@
+import {createLocalDeviceReset,installLocalDeviceResetUI} from './local-device-reset.mjs';
 import {installConflictRecovery} from './conflict-resolution-integration.mjs';
 import {createFormalProductionANIPrimary} from './v408-https-staging-encrypted-primary.mjs';
 import {createFormalStorage,decodeFormalBackup,createPrivateQuiescentOperationGate} from './formal-storage.mjs';
@@ -355,18 +356,19 @@ export async function compareScannedQrDestination({qrUrl,siteOrigin,apiOrigin,li
 // for its non-configurable, non-writable properties. Keep it untouched and
 // expose only the methods the legacy ANI UI actually uses through an
 // independent, frozen forwarding facade. Its ready getter remains live.
-export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false,canWrite=()=>true,privateOperationGate=null,privateOnUndoExpired=null,exposePrivateMaintenance=false}={}){
+export function createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging=false,canWrite=()=>true,assertAvailable=()=>{},privateOperationGate=null,privateOnUndoExpired=null,exposePrivateMaintenance=false}={}){
  const beforeWrite=()=>{
+  assertAvailable();
   if(!canWrite())throw Error('CONFLICT_REVIEW_WRITE_FENCE');
   const now=profiles.read();
   if(staging||now.active!==selectedProfile||!['connected','disconnected'].includes(now.phase))
    throw Error('PROFILE_CHANGE_UI_EDIT_BLOCKED');
  };
  return Object.freeze({
-  get ready(){return storage.ready},
-  read:(...args)=>storage.read(...args),
+  get ready(){try{assertAvailable();return storage.ready}catch{return false}},
+  read:(...args)=>{assertAvailable();return storage.read(...args)},
   refresh:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>storage.refresh(...args)):storage.refresh(...args),
-  exportBackup:(...args)=>storage.exportBackup(...args),
+  exportBackup:(...args)=>{assertAvailable();return storage.exportBackup(...args)},
   saveRecords:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>{beforeWrite();return storage.saveRecords(...args)}):(beforeWrite(),storage.saveRecords(...args)),
   saveWeekly:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>{beforeWrite();return storage.saveWeekly(...args)}):(beforeWrite(),storage.saveWeekly(...args)),
   restoreBackup:(...args)=>privateOperationGate?privateOperationGate.withForeground(()=>{beforeWrite();return storage.restoreBackup(...args)}):(beforeWrite(),storage.restoreBackup(...args)),
@@ -459,6 +461,22 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }else status.textContent='同期OFF：この端末に自動保存します。同期接続は現在無効です。';
   return;
  }
+ // Enroll every product profile in an origin-wide deletion fence before any
+ // setup, unlock or sync. This does not authorize or change WAL compaction.
+ let pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
+ const reset=createLocalDeviceReset({idb,local,session:window.sessionStorage,locks,events:window,
+  beforeErase:()=>beforeLocalReset(),onFenced:()=>{localResetting=true;stopLocalActivity();localResetUI?.show()}});
+ await reset.join();
+ const assertLocalAvailable=()=>{reset.assertUsable();if(localResetting)throw Error('LOCAL_RESET_STOP:LOCAL_DATA_RESET_RELOAD_REQUIRED')};
+ // Also fence delayed auxiliary-cache opens; they run outside save completion.
+ const originalIDB=idb;
+ idb={open:(...args)=>{assertLocalAvailable();return originalIDB.open(...args)},databases:()=>originalIDB.databases()};
+ const originalBrowserFetch=browserFetch;
+ browserFetch=async(...args)=>{assertLocalAvailable();pendingLocalRequests++;try{return await originalBrowserFetch(...args)}finally{pendingLocalRequests--}};
+ localResetUI=installLocalDeviceResetUI({document,reset,openButton:el('delete-local-data'),
+  onBackup:()=>{assertLocalAvailable();if(window.__formalStorage?.ready!==true)throw Error('BACKUP_NOT_READY');document.getElementById('exportBtn').click()},
+  onFresh:()=>location.replace('/'),siteOrigin:location.origin});
+ if(reset.phase()!==null){localResetUI.show();return {phase:'LOCAL_DATA_RESET_FENCED'}}
  const profiles=createConnectionProfiles({local});
  const initialProfile=profiles.read();
  const revokeJournal=createSelfRevokeJournal(local,initialProfile.active);
@@ -492,7 +510,13 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   withForeground:fn=>rawProductGate.withForeground(()=>productTabs.withForeground(fn)),
   inspect:()=>rawProductGate.inspect()
  });
- const productAuthorized=(requireReservation=true)=>productMaintenance&&!staging&&
+ const foregroundGate=privateOperationGate;
+ privateOperationGate=Object.freeze({
+  ...(foregroundGate??{}),
+  withForeground:fn=>{assertLocalAvailable();const guarded=()=>{assertLocalAvailable();return fn()};return foregroundGate?foregroundGate.withForeground(guarded):guarded()},
+  tryReserveMaintenance:()=>{try{assertLocalAvailable();return foregroundGate?.tryReserveMaintenance?.()??null}catch{return null}}
+ });
+ const productAuthorized=(requireReservation=true)=>!localResetting&&productMaintenance&&!staging&&
   profiles.read().active===selectedProfile&&profiles.read().phase==='connected'&&walUpgradeGate.hasFirstUpgradeAcknowledgement()&&
   productTabs?.isExclusive()===true&&(!requireReservation||rawProductGate?.inspect().maintenance===true)&&
   !busy&&!recoveryActive&&activeSyncs===0&&window.__formalUI?.maintenanceIdle?.()===true;
@@ -524,6 +548,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    !recoveryActive&&!confirmedConflict&&!!automatic,
   setTimer:(fn,ms)=>window.setTimeout(fn,ms),clearTimer:id=>window.clearTimeout(id)
  });
+ stopLocalActivity=()=>{automatic?.stop();automatic=null;successNotice.cancel()};
  document.getElementById('anilog-sync-dialog')?.addEventListener('close',()=>successNotice.close());
  let requestPrivateMaintenance=()=>{};
  const storage=createFormalStorage({vault,independentVault:factory,onCommitted:()=>{
@@ -543,6 +568,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  if(maintenanceTest||productMaintenance){
   let timer=null;
   requestPrivateMaintenance=()=>{
+   if(localResetting)return;
    if(timer!==null)window.clearTimeout(timer);
    timer=window.setTimeout(()=>{
     timer=null;
@@ -651,7 +677,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「同期設定を最初からやり直す」から再確認してください。';
   if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';
   showSyncVisual('error');}
- async function action(fn){if(busy)return;busy=true;el('retry').disabled=true;
+ async function action(fn){if(busy||localResetting)return;assertLocalAvailable();busy=true;el('retry').disabled=true;
   try{await fn()}catch(error){message(error)}finally{busy=false;el('retry').disabled=recoveryActive||syncRunning;if(productMaintenance)requestPrivateMaintenance()}}
  // A new browser starts locally encrypted without a migration/download flow.
  let mode=staging?'encrypted-local':local.getItem(LOCAL_MODE);
@@ -682,7 +708,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Old browser tabs must not keep editing an obsolete profile. A pending
  // switch freezes UI writes; its internal authenticated registration may still
  // commit exclusively to the staging vault, never to the original WAL.
- const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
+ const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive,assertAvailable:assertLocalAvailable,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
  Object.defineProperty(window,'__formalStorage',{value:uiStorage});
  Object.defineProperty(window,'__formalDecodeBackup',{value:decodeFormalBackup});
  const ui=window.__formalUI;if(!ui)throw Error('FORMAL_ENCRYPTED_UI_REQUIRED');
@@ -706,6 +732,14 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return {phase:'SAFE_SETUP_RECOVERY_REQUIRED',storage,vault,setup};
  }
  ui.hydrate(restored.app);
+ beforeLocalReset=async()=>{
+  assertLocalAvailable();
+  const gate=rawProductGate?.inspect();
+  if(busy||recoveryActive||activeSyncs!==0||pendingLocalRequests!==0||syncRunning||gate?.foreground||gate?.waiting||gate?.maintenance||window.__formalUI?.localResetIdle?.()!==true)throw Error('LOCAL_RESET_STOP:LOCAL_OPERATIONS_BUSY');
+  // Stop scheduling before installing the durable fence. In-flight operations
+  // are rejected above; this never aborts a write or sends a remote deletion.
+  localResetting=true;automatic?.stop();automatic=null;successNotice.cancel();
+ };
  if((maintenanceTest||productMaintenance)&&setup.readReceipt().v===2&&walUpgradeGate.read()==='PENDING')walUpgradeGate.markNewSetup();
  status.textContent='端末内の記録を復元しました。';
  // Existing encrypted users see this only on their first upgraded launch.
@@ -1238,8 +1272,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }else{for(const id of ['receiver-code','check','receive','repair'])hide(id)}
  function schedule(_session,fresh){
   automatic?.stop();automatic=null;
-  if(pauseGuard.paused||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile){showPauseState();return;}
-  automatic=createAutomaticSync({syncOnce:async()=>{activeSyncs++;try{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return await s.syncOnce()}finally{activeSyncs--;if(productMaintenance)requestPrivateMaintenance()}},onState:s=>{
+  if(localResetting||pauseGuard.paused||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile){showPauseState();return;}
+  automatic=createAutomaticSync({syncOnce:async()=>{assertLocalAvailable();activeSyncs++;try{pauseGuard.assertAllowed();const s=await fresh();pauseGuard.assertAllowed();return await s.syncOnce()}finally{activeSyncs--;if(productMaintenance)requestPrivateMaintenance()}},onState:s=>{
    if(pauseGuard.paused)return;
    syncRunning=s.phase==='syncing';
    confirmedConflict=s.phase==='conflict';
@@ -1439,6 +1473,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Also examine a pre-existing WAL on first eligible mount. The private
  // scheduler still waits for UI+Undo+sync idleness; production has no scheduler.
  if((maintenanceTest||productMaintenance)&&walUpgradeGate.hasFirstUpgradeAcknowledgement())requestPrivateMaintenance();
+ // Local-only installs hide connection actions, but local deletion must remain available.
+ if(el('connection-actions').hidden){const advanced=el('delete-local-data')?.closest('.anilog-sync-advanced');if(advanced)status.after(advanced)}
  return {phase:'FORMAL_OPT_IN_MOUNTED',storage,vault,setup};
 }
 if(typeof document!=='undefined')void mountFormalSimpleSync({productWalMaintenance:true}).catch(()=>{

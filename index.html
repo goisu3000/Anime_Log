@@ -1613,6 +1613,9 @@ select:not([data-status-id]){
 .anilog-first-wal-upgrade-actions button{min-height:40px;padding:9px 14px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface2);color:var(--ink);font:inherit;font-size:var(--fs-sm);cursor:pointer}
 .anilog-first-wal-upgrade-actions button:first-child{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .anilog-first-wal-upgrade-actions button:disabled{opacity:.45;cursor:default}
+.anilog-local-reset [hidden]{display:none!important}
+.anilog-local-reset .anilog-first-wal-upgrade-actions button:first-child{background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink)}
+.anilog-local-reset .anilog-first-wal-upgrade-actions button:nth-child(2){border-color:var(--danger);color:var(--danger)}
 
 /* ANI:LOG sync settings shell: presentation only. Engine, ids, state and actions are unchanged. */
 .anilog-sync-sidebar{margin-top:8px}
@@ -2769,6 +2772,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
   <div class="anilog-sync-advanced-actions">
    <button type="button" data-simple="pause-sync" hidden>同期を一時停止する</button>
    <button type="button" data-simple="switch-check" hidden>切り替え前の安全確認</button>
+   <button type="button" data-simple="delete-local-data">この端末のデータを削除</button>
    
    <button type="button" data-simple="unlink-sync" hidden aria-hidden="true" tabindex="-1">旧解除操作（無効）</button>
    <button type="button" data-simple="relink-sync" hidden>以前の同期先に戻す</button>
@@ -7938,10 +7942,24 @@ const maintenanceUIIdle=()=>{
    return true;
   }catch{return false}
  };
+// Deletion confirmation is a modal itself. Ignore only the sync/reset panels;
+// all editors, pending writes/refreshes and live Undo still block deletion.
+const localResetUIIdle=()=>{
+ try{
+  if(recordWrites!==0||addingCustom||pendingUndo!==null||pendingStorageRefresh||formalRefreshRunning)return false;
+  if(document.querySelector('dialog[open]:not(#anilog-sync-dialog):not(#anilog-local-reset-dialog),#detailContent .detail-date-disclosure[open]'))return false;
+  for(const field of document.querySelectorAll('[data-progress-input],#completionYear,#completionMonth,#completionDay')){
+   if(field.tagName==='SELECT'){if(!field.options?.length||Array.from(field.options).some(o=>o.selected!==o.defaultSelected))return false;}
+   else if(typeof field.value!=='string'||typeof field.defaultValue!=='string'||field.value!==field.defaultValue)return false;
+  }
+  return true;
+ }catch{return false}
+};
 window.__formalUI=Object.freeze({
  readSaved:()=>structuredClone(saved),readWeeklyOptions:()=>structuredClone(weeklyOptions),
  whenWritesIdle:()=>recordWriteQueue,
  maintenanceIdle:maintenanceUIIdle,
+ localResetIdle:localResetUIIdle,
  maintenanceUndoIdle:()=>pendingUndo===null&&recordWrites===0,
  testOnlyMaintenanceIdle:maintenanceUIIdle,
  hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage;saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);if(!location.hash.startsWith(SHARE_PREFIX)&&mode!=='share'&&(!ANI_PUBLIC.read(location.pathname,location.search)||(!document.body.classList.contains('view-detail')&&mode!=='ranking')))mode='saved';updateCounts();render()},
