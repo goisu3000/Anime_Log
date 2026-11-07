@@ -463,7 +463,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }
  // Enroll every product profile in an origin-wide deletion fence before any
  // setup, unlock or sync. This does not authorize or change WAL compaction.
- let pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
+ let localQrTransition=false,pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
  const reset=createLocalDeviceReset({idb,local,session:window.sessionStorage,locks,events:window,
   beforeErase:()=>beforeLocalReset(),onFenced:()=>{localResetting=true;stopLocalActivity();localResetUI?.show()}});
  await reset.join();
@@ -503,7 +503,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const rawProductGate=!maintenanceTest?createPrivateQuiescentOperationGate():null;
  const productTabs=!maintenanceTest?createProductWalTabCoordinator({locks,events:window,
   lockName:'anilog-private-wal-maintenance:'+selectedProfile,
-  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&window.__formalUI?.maintenanceIdle?.()===true
+  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&(localQrTransition?window.__formalUI?.localResetIdle?.()===true:window.__formalUI?.maintenanceIdle?.()===true)
  }):null;
  if(productTabs)privateOperationGate=Object.freeze({
   tryReserveMaintenance:()=>rawProductGate.tryReserveMaintenance(),
@@ -609,7 +609,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Stage uses the existing encrypted-mode receipt, without modifying the
  // origin-wide legacy cutover marker until a verified profile-pointer commit.
  const setupLocal=staging?createStagedSetupLocal({local,profileId:selectedProfile}):local;
- const setupCore=createFormalSetup({local:setupLocal,locks,storage,vault,independentVault:factory,deviceKeys:keys,origin:location.origin});
+ const setupCore=createFormalSetup({local:setupLocal,locks,storage,vault,independentVault:factory,deviceKeys:keys,origin:location.origin,receiverTransitionAllowed:()=>localQrTransition&&productTabs?.isExclusive()===true&&!staging&&selectedProfile==='legacy'&&profiles.read().phase==='connected'&&profiles.read().active===selectedProfile&&!revokeJournal.read()});
  // Also enroll startup/setup writes before touching a WAL: a newly opened tab
  // may be waiting behind another tab's exclusive generation cutover.
  const setup=productTabs?Object.freeze({...setupCore,
@@ -625,7 +625,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const qrNext=el('qr-next'),qrTitle=el('qr-step-title'),qrMessage=el('qr-step-message'),qrStepCount=el('qr-step-count'),qrStepDevice=el('qr-step-device'),qrBars=[...(root.querySelectorAll?.('[data-simple="qr-step-bar"]')??[])];
  const qrFlow=Boolean(receiving||window.__anilogSyncQrResume);
  let ownerJourneyActive=false;
- const receiverJourneyActive=Boolean(qrFlow||staging||profileState.phase==='preparing'||(local.getItem(LOCAL_MODE)==='encrypted-local'&&setup.readReceipt()?.role==='receiver'));
+ let receiverJourneyActive=Boolean(qrFlow||staging||profileState.phase==='preparing'||(local.getItem(LOCAL_MODE)==='encrypted-local'&&setup.readReceipt()?.role==='receiver'));
  // A resume bit is UI intent, never a replacement for a consumed QR.
  const qrNeedsFreshScan=()=>qrFlow&&!captured&&window.__anilogSyncQrResume===true&&local.getItem(LOCAL_MODE)===null;
  // Presentation only: never derive approval, registration or sync success
@@ -1030,7 +1030,31 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Only a connected management device nests its EXISTING QR form under the
  // owner device list. Moving the node (not cloning it) preserves V407's
  // registered handlers, owner/6-digit authorization and live pairing state.
+ // A browser that already used v2 local-only saving must durably adopt the
+ // receiver purpose before entering the existing QR claim panel. Never infer
+ // server approval from this local purpose; the six-digit flow is unchanged.
+ if(!staging&&selectedProfile==='legacy'&&setup.readReceipt().v===2&&setup.readReceipt().role==='owner'&&mode==='encrypted-local'){
+  const savedInvitation=await invitations.read(restored.passphrase);
+  if(receiving||savedInvitation){
+   if(!productTabs||busy||recoveryActive||activeSyncs||pendingLocalRequests||rawProductGate?.inspect().foreground||rawProductGate?.inspect().waiting||rawProductGate?.inspect().maintenance||window.__formalUI?.localResetIdle?.()!==true)throw Error('LOCAL_RECEIVER_IDLE_AND_TAB_LOCK_REQUIRED');
+   localQrTransition=true;
+   try{
+    const adopted=await privateOperationGate.withForeground(()=>productTabs.withExclusiveIfNoPeers(()=>setupCore.adoptLocalReceiver({invitation:receiving?captured:savedInvitation,invitationStore:invitations,intentStore:intents,
+     sealedCredentials:createV408StagingSealedDeviceCredentials({idb:scopedIDB,locks:scopedLocks})})));
+    if(adopted?.phase!=='LOCAL_RECEIVER_READY')throw Error('LOCAL_RECEIVER_CLOSE_OTHER_TABS');
+    receiverJourneyActive=true;
+   }finally{localQrTransition=false}
+  }else if(qrFlow){
+   // A UI resume bit has no QR credentials. Do not offer owner registration.
+   el('retry').hidden=true;attention(true);
+   status.textContent='QR情報を確認できません。記録は保持しています。元の端末で新しいQRを発行し、もう一度読み取ってください。';
+   nextQrStep('QRをもう一度読み取ってください','6桁コードは、正しい招待QRを受け取ったあとに表示されます。',{force:true,device:'新しい端末で操作'});
+   return {phase:'LOCAL_QR_RESCAN_REQUIRED',storage,vault,setup};
+  }
+ }
  const receiver=staging||selectedProfile!=='legacy'||setup.readReceipt().role==='receiver';
+ // An ineligible QR must never fall through into new-owner registration.
+ if(receiving&&!receiver&&mode!=='sync-enabled')throw Error('LOCAL_RECEIVER_SETUP_NOT_ELIGIBLE');
  // Connected screen: main recovery first, routine device administration second.
  // Existing DOM controls are moved, not duplicated; all registered handlers,
  // authorization, confirmation and encrypted sync data paths remain intact.

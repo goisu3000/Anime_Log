@@ -2,9 +2,10 @@
 import {captureLegacyCopy,decodeFormalBackup,canonical} from './formal-storage.mjs';
 import {createLegacyCutover} from './legacy-cutover.mjs';
 import {digestText} from '../shared/registration-ticket.mjs';
+import {parsePairingUrl} from './pairing-client.mjs';
 export const SETUP_RECEIPT='anilog-sync-setup-receipt-v1';
 export const LOCAL_MODE='anilog-sync-local-mode-v1';
-export function createFormalSetup({local,locks,storage,vault,independentVault,deviceKeys,origin}={}){
+export function createFormalSetup({local,locks,storage,vault,independentVault,deviceKeys,origin,receiverTransitionAllowed=()=>false}={}){
  const captureOptions={allowEmptySource:true},cutover=createLegacyCutover({storage:local,locks,captureOptions});
  const write=(key,value)=>{local.setItem(key,value);if(local.getItem(key)!==value)throw Error('SETUP_STATE_NOT_DURABLE')};
  const capture=()=>captureLegacyCopy(local,captureOptions);
@@ -23,6 +24,41 @@ export function createFormalSetup({local,locks,storage,vault,independentVault,de
   if(!x||typeof x!=='object'||Array.isArray(x)||Object.keys(x).length)throw Error('LOCAL_START_EXISTING_RECORDS');
  };
  return Object.freeze({capture,readReceipt,password,
+  // A v2 local-only install has no server authority, even though its initial
+  // purpose is named "owner". A valid QR may select the receiver purpose under
+  // the caller's live cross-tab exclusive lease. Never change WAL or credentials.
+  async adoptLocalReceiver({invitation,invitationStore,intentStore,sealedCredentials}={}){
+   const assertContext=()=>{
+    const r=readReceipt();
+    if(receiverTransitionAllowed()!==true||local.getItem(LOCAL_MODE)!=='encrypted-local'||r?.v!==2||r.role!=='owner')throw Error('LOCAL_RECEIVER_CONTEXT_REQUIRED');
+    if(!storage.ready||vault.readSyncCheckpoint()!==null)throw Error('LOCAL_RECEIVER_UNCONNECTED_VAULT_REQUIRED');
+    const options=storage.read().weeklyOptions;
+    if(Object.hasOwn(options,'__syncLineage')||Object.hasOwn(options,'__registrationPending'))throw Error('LOCAL_RECEIVER_EXISTING_REGISTRATION');
+    return r;
+   };
+   const receipt=assertContext(),raw=local.getItem(SETUP_RECEIPT);
+   if(!invitation||typeof invitation.href!=='string'||new URL(invitation.href).pathname!=='/'||new URL(invitation.href).hash!==invitation.hash)throw Error('LOCAL_RECEIVER_QR_REQUIRED');
+   const parsed=parsePairingUrl(invitation.href,{allowedOrigin:origin});parsed.masterKey.fill(0);parsed.invitationSecret.fill(0);
+   const pass=await password(),before=canonical(storage.read()),revision=vault.readRevision();
+   const assertUnregistered=async()=>{
+    assertContext();
+    if(await intentStore.read(pass)!==null||(await sealedCredentials.inspect()).phase!=='EMPTY_LOCKED')throw Error('LOCAL_RECEIVER_PENDING_REGISTRATION');
+   };
+   await assertUnregistered();
+   const check=independentVault();await check.unlock(pass);
+   if(canonical(check.readCurrent())!==before||check.readRevision()!==revision||check.readSyncCheckpoint()!==null)throw Error('LOCAL_RECEIVER_INDEPENDENT_READBACK_REQUIRED');
+   const previous=await invitationStore.read(pass);
+   if(previous!==null&&(previous.href!==invitation.href||previous.hash!==invitation.hash))throw Error('LOCAL_RECEIVER_SAVED_INVITATION_DIFFERS');
+   if(previous===null)await invitationStore.create(invitation,pass);
+   const verified=await invitationStore.read(pass);
+   if(verified?.href!==invitation.href||verified?.hash!==invitation.hash)throw Error('LOCAL_RECEIVER_INVITATION_NOT_DURABLE');
+   // Persist the encrypted QR first. A crash before this final purpose CAS is
+   // resumed from that same authenticated invitation, never a fresh owner POST.
+   await assertUnregistered();assertContext();
+   if(local.getItem(SETUP_RECEIPT)!==raw||canonical(storage.read())!==before||vault.readRevision()!==revision)throw Error('LOCAL_RECEIVER_SOURCE_CHANGED');
+   write(SETUP_RECEIPT,JSON.stringify({...receipt,role:'receiver'}));
+   return {phase:'LOCAL_RECEIVER_READY'};
+  },
   async initializeLocal({role='owner'}={}){
    if(!['owner','receiver'].includes(role))throw Error('SETUP_ROLE_REQUIRED');
    if(local.getItem(LOCAL_MODE)!==null)throw Error('SETUP_ALREADY_STARTED');
