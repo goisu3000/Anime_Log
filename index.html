@@ -2755,7 +2755,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 
 /* ANI:LOG My Ranking: reuse the My List tabs, search, select and filter components.
    Keep ranking switching in one PC row and preserve public filters inside disclosure. */
-#rankingView .rank-unified-toolbar{position:relative;display:flex;align-items:center;gap:10px;min-width:0;min-height:52px;margin:0 0 18px;padding:0 0 8px;border-bottom:1px solid var(--border)}
+#rankingView .rank-unified-toolbar{position:relative;display:flex;align-items:center;gap:10px;min-width:0;min-height:52px;margin:0 0 18px;padding:0 0 8px;border-bottom:0}
 #rankingView .rank-unified-toolbar>.rank-rating-filter{flex:0 0 auto;margin:0;min-width:0}
 #rankingView .rank-unified-toolbar .rank-rating-filter-options.stats{display:flex!important;gap:10px;max-width:none;min-width:0;overflow:visible;margin:0;padding:0;border:0}
 #rankingView .rank-unified-toolbar .rank-rating-filter-options.stats>.stat{display:inline-flex;flex-direction:row;align-items:center;justify-content:center;flex:0 0 auto;gap:6px;width:auto;min-height:44px;padding:9px 2px 11px;margin:0;border:0;border-radius:0;background:transparent;color:var(--muted);font-size:var(--fs-md);font-weight:var(--fw-semi);line-height:1.35;white-space:nowrap}
@@ -2802,6 +2802,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
  #rankingView .rank-unified-toolbar>.rank-annual-jump{display:inline-flex;flex:1 1 0;position:static;top:auto;align-items:center;justify-content:center;gap:6px;min-width:0;height:44px;min-height:44px;padding:8px 6px;border:1px solid var(--border-ctrl);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);font-size:var(--fs-sm);font-weight:var(--fw-semi);white-space:nowrap}
  #rankingView .rank-unified-toolbar>.rank-insights-jump,
  #rankingView .rank-unified-toolbar>.rank-annual-jump{flex:1 1 44%;order:4}
+ #rankingView .rank-unified-toolbar>.rank-insights-jump{flex:0 0 auto;order:0}
+ #rankingView .rank-unified-toolbar>.rank-insights-jump:not([hidden])+.rank-search-shell{flex:1 1 0;min-width:0}
  #rankingView .rank-unified-toolbar>.rank-annual-jump .ui-icon{width:16px;height:16px;stroke:var(--accent)}
  #rankingView .rank-unified-toolbar .rank-filter-panel{right:0;max-width:calc(100vw - 32px)}
  #rankingView .rank-unified-toolbar .rank-filter-panel .rank-controls{flex-wrap:wrap;gap:8px}
@@ -3000,6 +3002,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
         <div id="rankRatingFilter" class="rank-rating-filter" hidden>
           <nav id="rankRatingFilterOptions" class="rank-rating-filter-options stats" role="group" aria-label="評価フィルター"></nav>
         </div>
+        <button type="button" id="rankInsightsJump" class="rank-insights-jump" aria-controls="myInsights" hidden><svg class="ui-icon rank-insights-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/></svg><span>視聴分析を見る</span></button>
         <div class="searchbox-shell rank-search-shell">
           <form id="rankSearchForm" class="searchbox rank-searchbox" role="search" autocomplete="off">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><use href="#ui-search"/></svg>
@@ -3031,7 +3034,6 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
             </div>
           </div>
         </details>
-        <button type="button" id="rankInsightsJump" class="rank-insights-jump" aria-controls="myInsights" hidden><svg class="ui-icon rank-insights-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 16v5"/><path d="M16 14v7"/><path d="M20 10v11"/><path d="m22 3-8.646 8.646a.5.5 0 0 1-.708 0L9.354 8.354a.5.5 0 0 0-.707 0L2 15"/><path d="M4 18v3"/><path d="M8 14v7"/></svg><span>視聴分析を見る</span></button>
         <button type="button" class="rank-annual-jump" data-annual-open aria-label="年間まとめを開く"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18"/></svg><span>年間まとめ</span></button>
       </div>
       <div id="rankRatingFilterFeedback" class="rank-rating-filter-feedback" role="status" aria-live="polite" hidden></div>
@@ -5858,8 +5860,7 @@ function renderRanking(){if(mode!=='ranking')return;
    const count=stars?ratingCounts[stars]:rows.length;
    return `<button type="button" class="stat" data-rank-rating="${stars}" aria-pressed="${myRatingFilter===stars}" ${count===0&&myRatingFilter!==stars?'disabled':''}><span>${stars?'★'+stars:'すべて'}</span><span class="rank-rating-filter-count">${count}</span></button>`;
   }).join('');
-  const feedback=$('#rankRatingFilterFeedback');feedback.hidden=myRatingFilter===0;
-  if(myRatingFilter){feedback.innerHTML=`<span>★${myRatingFilter}の作品だけを表示しています（${ratingCounts[myRatingFilter]}作品）</span><span>解除するには「すべて」を選択</span>`}
+  const feedback=$('#rankRatingFilterFeedback');feedback.hidden=true;feedback.textContent='';
   if(!rows.length){$('#rankResults').innerHTML=emptyCard('まだ評価した作品がありません','「見た」に登録した作品を★で評価すると、ここにあなたのランキングが育ちます。','star');return}
   let result='',position=0;for(const stars of [5,4,3,2,1]){const group=visibleRows.filter(a=>readReview(a.review)?.overall===stars);if(!group.length)continue;
    if(myRatingFilter&&stars!==myRatingFilter)continue;
