@@ -92,19 +92,19 @@ export function createLocalDeviceReset({idb,local,session,locks,events,beforeEra
 export function installLocalDeviceResetUI({document,reset,openButton,onBackup,onFresh,siteOrigin=globalThis.location?.origin}={}){
  const dialog=document.createElement('dialog');dialog.id='anilog-local-reset-dialog';dialog.className='anilog-first-wal-upgrade anilog-local-reset';
  dialog.setAttribute('aria-labelledby','anilog-local-reset-title');
- const title=document.createElement('h2');title.id='anilog-local-reset-title';title.textContent='この端末のデータを削除';
+ const title=document.createElement('h2');title.id='anilog-local-reset-title';title.textContent='この端末の記録を削除';
  const description=document.createElement('p');description.textContent='このブラウザ・このサイトの視聴記録、未送信の変更、すべての接続プロフィール、暗号化WAL・鍵・接続情報を削除します。元に戻せません。他端末と同期先の記録・登録は削除しません。';
  const site=document.createElement('p');site.textContent='対象サイト：'+new URL(siteOrigin).host;
  const ownerWarning=document.createElement('p');ownerWarning.textContent='この端末が唯一の管理端末の場合、削除後は元の同期先を管理できなくなります。端末登録の解除は別の操作です。';
  const caveat=document.createElement('p');caveat.textContent='バックアップは任意です。必要な場合だけ保存してください。このサイトの他のタブを閉じてください。古い版のタブの有無は自動確認できません。';
- const label=document.createElement('label'),check=document.createElement('input'),ack=document.createElement('span');check.type='checkbox';check.dataset.localReset='confirm';ack.textContent='他のタブを閉じ、この端末のデータを削除することを確認しました';label.append(check,ack);
+ const label=document.createElement('label'),check=document.createElement('input'),ack=document.createElement('span');check.type='checkbox';check.dataset.localReset='confirm';ack.textContent='他のタブを閉じ、この端末の記録を削除することを確認しました';label.append(check,ack);
  const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
  const backup=document.createElement('button'),accept=document.createElement('button'),cancel=document.createElement('button'),fresh=document.createElement('button');
  for(const b of [backup,accept,cancel,fresh])b.type='button';
- backup.textContent='バックアップを書き出す（任意）';accept.textContent='この端末のデータを削除する';cancel.textContent='キャンセル';fresh.textContent='空の状態で使い始める';fresh.hidden=true;accept.disabled=true;
+ backup.textContent='バックアップを書き出す（任意）';accept.textContent='この端末の記録を削除する';cancel.textContent='キャンセル';fresh.textContent='空の状態で使い始める';fresh.hidden=true;accept.disabled=true;
  actions.append(backup,accept,cancel,fresh);const status=document.createElement('p');status.setAttribute('role','status');status.dataset.localReset='status';
  dialog.append(title,site,description,ownerWarning,caveat,label,actions,status);document.body.append(dialog);let running=false;
- const show=()=>{check.checked=false;accept.disabled=true;const p=reset.phase();fresh.hidden=p!=='complete';accept.hidden=p==='complete';label.hidden=p==='complete';backup.hidden=p!==null;cancel.hidden=p!==null;status.textContent=p==='complete'?'この端末のデータを削除しました。':p==='pending'?'前回の削除が完了していません。通常の保存・同期は停止しています。確認して削除を再開してください。':'';if(!dialog.open)dialog.showModal()};
+ const show=()=>{check.checked=false;accept.disabled=true;const p=reset.phase();fresh.hidden=p!=='complete';accept.hidden=p==='complete';label.hidden=p==='complete';backup.hidden=p!==null;cancel.hidden=p!==null;status.textContent=p==='complete'?'この端末の記録を削除しました。':p==='pending'?'前回の削除が完了していません。通常の保存・同期は停止しています。確認して削除を再開してください。':'';if(!dialog.open)dialog.showModal()};
  openButton?.addEventListener('click',show);
  check.addEventListener('change',()=>{accept.disabled=!check.checked||running});
  cancel.addEventListener('click',()=>{if(!running)dialog.close()});

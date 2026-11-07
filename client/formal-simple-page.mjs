@@ -674,7 +674,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  function message(error){successNotice.cancel();successNoticeArmed=false;status.classList.remove('anilog-sync-status-quiet');attention(true);status.textContent='接続を確認できません。記録はそのままです。';el('retry').hidden=false;
   if(qrFlow)nextQrStep('接続を停止しました','以前の記録は残しています。下の状態表示と案内を確認し、必要ならPC側で新しいQRを作成してください。初期化や削除はしないでください。');
   // No exception object, credentials, QR URL or source records enter logs/DOM.
-  if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「同期設定を最初からやり直す」から再確認してください。';
+  if(String(error?.message).includes('SELF_REVOKE')||revokeJournal.read()==='pending')status.textContent='端末の登録解除を確認できません。同期は保護のため停止中です。バックアップを保持し、「この端末の同期登録を解除」から再確認してください。';
   if(String(error?.message).includes('CONFLICT')||String(error?.message).includes('DIFFERS'))status.textContent='異なる記録があるため設定を停止しました。原本とバックアップを保持し、上書きはしていません。';
   showSyncVisual('error');}
  async function action(fn){if(busy||localResetting)return;assertLocalAvailable();busy=true;el('retry').disabled=true;
@@ -694,14 +694,14 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
   const notice=el('pairing-notice');
-  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期中です。別の同期先に変えるには、バックアップを保存し「同期設定を最初からやり直す」を選んでください。記録は消えません。';}
+  if(notice){notice.hidden=false;notice.textContent='この端末はすでに同期中です。別の同期先に変えるには、バックアップを保存し「この端末の同期登録を解除」を選んでください。記録は消えません。';}
   attention(true);
  }
  if(qrFlow){
   if(profileState.phase==='disconnected'&&!receiving)nextQrStep('QRをもう一度読み取ってください','更新前のQR情報はURLから取り除いているため、接続先IDは表示できません。接続したいPC・スマホのQRをもう一度読み取り、ID照合から進めてください。以前の記録は保持しています。');
   else if(profileState.phase==='disconnected')nextQrStep('手順1：同期先IDを確認','下にQRで読み取った同期先IDが表示されます。PC・スマホ側のIDと一致するか確認し、バックアップを保存して接続を進めてください。');
   else if(staging)nextQrStep('PCで6桁コードを承認してください','新しい端末の6桁をPCで入力して承認し、次にこの端末で状態を確認してください。',{step:2,device:'QRを表示した端末で操作'});
-  else if(ignoredExistingQR)nextQrStep('接続先を確認してください','この端末は既に別の同期設定を使用しています。QRだけでは切り替えません。「同期設定を最初からやり直す」で解除してから新しいQRを読み取ってください。');
+  else if(ignoredExistingQR)nextQrStep('接続先を確認してください','この端末は既に別の同期設定を使用しています。QRだけでは切り替えません。「この端末の同期登録を解除」で解除してから新しいQRを読み取ってください。');
   else if(mode==='encrypted-local')nextQrStep('PCで6桁コードを承認してください','この端末に表示された6桁をPCで入力して承認し、次にこの端末で状態を確認してください。',{step:2,device:'QRを表示した端末で操作'});
   else nextQrStep('同期の状態を確認','下の「同期済み」表示と同期先IDを確認してください。まだ承認中の場合は画面の案内に従ってください。');
  }
@@ -767,7 +767,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     lineage:storage.read().weeklyOptions.__syncLineage});
    notice.textContent=x.sameDestination?
     '読み取ったQRとこの端末は同じ同期先ID（'+x.currentID+'）です。新しい端末の承認は行っていません。この端末の元の同期を続けるには再読み込みしてください。':
-    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「詳細設定・復旧」から「同期設定を最初からやり直す」を選び、バックアップを保存して安全に再接続してください。視聴記録は消えません。';
+    '読み取ったQRの同期先ID（'+x.scannedID+'）と、この端末の同期先ID（'+x.currentID+'）が異なります。新しいQRはまだ適用していません。切り替えるには「詳細設定・復旧」から「この端末の同期登録を解除」を選び、バックアップを保存して安全に再接続してください。視聴記録は消えません。';
   }catch{notice.textContent='QRの接続先を安全に照合できません。接続先は変更していません。記録を初期化・削除しないでください。';}
  }
  // The old profile's WAL/credentials remain independent from every new profile.
@@ -800,7 +800,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   targetLabel.hidden=state.phase!=='disconnected'||!receiving;
   cancelReconnection.hidden=!['preparing','ready'].includes(state.phase);
   if(revokeJournal.read()==='pending'){
-   attention(true);status.textContent='サーバー側の登録解除が完了したか確認できません。同期は安全のため停止中です。「同期設定を最初からやり直す」から解除結果を再確認してください。記録は保存されています。';
+   attention(true);status.textContent='サーバー側の登録解除が完了したか確認できません。同期は安全のため停止中です。「この端末の同期登録を解除」から解除結果を再確認してください。記録は保存されています。';
   }
   if(state.phase==='disconnected'){
    pauseButton.hidden=true;resumeButton.hidden=true;
@@ -878,7 +878,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   showPauseState();showConnectionActions();void showDestination();
   switchResult.hidden=false;switchResult.textContent='この端末の登録解除をサーバーで確認しました。登録数：'+result.activeDevices+' / 4台。記録は保持しています。再接続する場合は管理端末で新しいQRを表示してください。';
  }))); 
- unlink.addEventListener('click',()=>{switchResult.hidden=false;switchResult.textContent='登録枠を残す旧解除方法は廃止しました。「同期設定を最初からやり直す」を使ってください。';});
+ unlink.addEventListener('click',()=>{switchResult.hidden=false;switchResult.textContent='登録枠を残す旧解除方法は廃止しました。「この端末の同期登録を解除」を使ってください。';});
  relink.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
   if(revokeJournal.read()==='confirmed')throw Error('REVOKED_CONNECTION_CANNOT_RESUME');
   if(staging||profiles.read().phase!=='disconnected')throw Error('RECONNECT_NOT_AVAILABLE');
@@ -954,7 +954,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const recoveryEntry=el('resolve-conflict');
   if(recoveryEntry)recoveryEntry.hidden=!canRepair||!confirmedConflict||recoveryActive;
   showConnectionActions();
-  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「同期設定を最初からやり直す」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を解消」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「この端末の同期登録を解除」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を解消」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
  }
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
@@ -1066,7 +1066,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   // Potentially destructive connection reset belongs behind the existing
   // explicit disclosure, without removing its backup/revoke confirmation.
   const advancedActions=connectionActions.querySelector('.anilog-sync-advanced-actions');
-  advancedActions.append(el('restart-sync'),restartConfirm);
+  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm);
   if(!receiver&&selectedProfile){
    primaryActions.append(manageDevices);
    primaryActions.after(deviceManagement);
@@ -1441,7 +1441,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   if(retryKind!=='NOT_APPLICABLE'&&retryKind!=='EXISTING_CONNECTION_ONLY'){
    automatic?.stop();automatic=null;el('retry').hidden=true;attention(true);showConnectionActions();
    status.textContent=retryKind==='QR_REQUIRES_EXPLICIT_SWITCH'
-    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「詳細設定・復旧」の「同期設定を最初からやり直す」から進み、バックアップを保存してください。視聴記録は消えません。'
+    ?'新しいQRはまだ適用していません。元の同期先を続けるにはページを再読み込みしてください。別の同期先へ変更するには「詳細設定・復旧」の「この端末の同期登録を解除」から進み、バックアップを保存してください。視聴記録は消えません。'
     :'この端末は接続解除または再接続準備中です。通常の「再同期」では古い同期先へ通信しません。画面に表示されたバックアップ・QR接続手順を進めてください。記録は保持されています。';
    return;
   }

@@ -2606,6 +2606,8 @@ select:not([data-status-id]){
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>[data-simple="restart-sync"]:not([hidden]){background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink);margin:0}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>.anilog-sync-restart-confirm:not([hidden]){width:100%}
 .anilog-sync-dialog #formal-simple-sync .anilog-sync-advanced-actions>button:not([hidden]){margin:0}
+.anilog-sync-dialog #formal-simple-sync .anilog-sync-action-description{margin:0;color:var(--muted);font-size:var(--fs-md);line-height:1.6}
+.anilog-sync-dialog #formal-simple-sync button[hidden]+.anilog-sync-action-description{display:none}
 @media(max-width:480px){
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
  .anilog-sync-dialog #formal-simple-sync .anilog-sync-primary-actions>button:not([hidden]){justify-self:stretch;width:100%;min-height:44px}
@@ -2832,7 +2834,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 <p data-simple="pairing-notice" hidden></p>
 <div data-simple="connection-actions" hidden>
  <button type="button" data-simple="resume-sync" hidden>同期を再開する</button>
- <button type="button" data-simple="restart-sync" hidden>同期設定を最初からやり直す</button>
+ <button type="button" data-simple="restart-sync" hidden>この端末の同期登録を解除</button>
+ <p class="anilog-sync-action-description" data-simple="restart-description">視聴記録を残したまま同期登録を解除します。登録枠が1台空きます。</p>
  <button type="button" data-simple="manage-devices" hidden aria-expanded="false" aria-controls="anilog-device-management">登録済み端末を管理</button>
  <div class="anilog-sync-restart-confirm" data-simple="restart-confirm" hidden>
   <p>この端末の登録を解除し、空き枠を1台増やします。<strong>元の接続には戻れません。</strong> 再接続には新しいQRが必要です。記録は消えません。</p>
@@ -2865,7 +2868,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
   <div class="anilog-sync-advanced-actions">
    <button type="button" data-simple="pause-sync" hidden>同期を一時停止する</button>
    <button type="button" data-simple="switch-check" hidden>切り替え前の安全確認</button>
-   <button type="button" data-simple="delete-local-data">この端末のデータを削除</button>
+   <button type="button" data-simple="delete-local-data">この端末の記録を削除</button>
+   <p class="anilog-sync-action-description">この端末の視聴記録・評価・メモをすべて削除します。他の端末の記録は消えません。</p>
    
    <button type="button" data-simple="unlink-sync" hidden aria-hidden="true" tabindex="-1">旧解除操作（無効）</button>
    <button type="button" data-simple="relink-sync" hidden>以前の同期先に戻す</button>
