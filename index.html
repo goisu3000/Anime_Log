@@ -2811,6 +2811,39 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
  #rankingView .rank-unified-toolbar .rank-filter-panel .rank-controls{flex-wrap:wrap;gap:8px}
  #rankingView .rank-unified-toolbar .rank-filter-panel .rank-controls select{min-width:120px}
 }
+/* Ranking period-only controls: move the existing public controls beside search.
+   The same nodes return to the unchanged all-time ranking filter popup. */
+#rankingView .rank-unified-toolbar>.rank-period-inline-slot{display:flex;flex:0 0 auto;align-items:center;min-width:0}
+#rankingView .rank-unified-toolbar>.rank-period-inline-slot[hidden]{display:none!important}
+#rankingView .rank-unified-toolbar.is-period .rank-search-shell{flex:1 1 142px;min-width:125px}
+#rankingView .rank-unified-toolbar.is-period .rank-mode-select{flex:0 0 136px;width:136px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{display:flex;flex-wrap:nowrap;align-items:center;gap:7px;margin:0;min-width:0}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls label{min-width:0;flex:0 0 auto}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField{width:86px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot #rankSeasonField{width:79px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:124px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select{width:100%;min-width:0;height:44px;padding-inline:8px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{min-height:44px;gap:5px;white-space:nowrap;font-size:var(--fs-sm)}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold input{flex:0 0 17px}
+/* Mobile custom-select proxies are reused with their original selects. */
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select + .anilog-mobile-select-trigger{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px}
+@media(min-width:1100px){
+ #rankingView .rank-unified-toolbar.is-period{gap:7px;flex-wrap:nowrap}
+}
+@media(min-width:741px) and (max-width:1099px){
+ #rankingView .rank-unified-toolbar.is-period{flex-wrap:wrap}
+ #rankingView .rank-unified-toolbar.is-period>.rank-period-inline-slot{flex:1 1 100%}
+}
+@media(max-width:740px){
+ #rankingView .rank-unified-toolbar.is-period>.rank-period-inline-slot{flex:1 1 100%;min-width:0}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:100%}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls label,
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField,
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankSeasonField,
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:100%;min-width:0}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:normal;min-height:44px}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select + .anilog-mobile-select-trigger{min-width:0}
+}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -3014,17 +3047,20 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
             <button type="submit" id="rankSearchBtn">検索</button>
           </form>
         </div>
+        <div id="rankPeriodInlineSlot" class="rank-period-inline-slot" hidden></div>
         <select id="rankModeSelect" class="control-select rank-mode-select" aria-label="ランキングの種類を切り替える">
           <option value="period">年代・シーズン別</option><option value="top">歴代</option><option value="mine">マイランキング</option>
         </select>
         <details id="rankFilterDisclosure" class="filter-disclosure rank-filter-disclosure">
           <summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>絞り込み</span></summary>
           <div class="filter-panel rank-filter-panel">
-            <div id="rankPublicControls" class="rank-controls">
-              <label id="rankYearField"><select id="rankYear" aria-label="ランキングの年"></select></label>
-              <label id="rankSeasonField"><select id="rankSeason" aria-label="ランキングのシーズン"><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option><option value="winter">冬</option></select></label>
-              <label><select id="rankSort" aria-label="ランキングの並び順"><option value="score">高評価順</option><option value="members">人気順（登録者数）</option></select></label>
-              <label class="rank-threshold"><input type="checkbox" id="rankMinVotes" checked> 評価人数100人以上</label>
+            <div id="rankPublicFilterSlot">
+              <div id="rankPublicControls" class="rank-controls">
+                <label id="rankYearField"><select id="rankYear" aria-label="ランキングの年"></select></label>
+                <label id="rankSeasonField"><select id="rankSeason" aria-label="ランキングのシーズン"><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option><option value="winter">冬</option></select></label>
+                <label class="rank-sort-field"><select id="rankSort" aria-label="ランキングの並び順"><option value="score">高評価順</option><option value="members">人気順（登録者数）</option></select></label>
+                <label class="rank-threshold"><input type="checkbox" id="rankMinVotes" checked> 評価人数100人以上</label>
+              </div>
             </div>
             <div id="rankMineControls" class="explore-type-row" hidden>
               <span class="explore-filter-label">作品形式</span>
@@ -5845,8 +5881,19 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#mobileRanking').classList.add('active');
  $$('[data-rank-open]').forEach(b=>b.classList.toggle('rank-selected',b.dataset.rankOpen===rankingTab));
  $('#rankModeSelect').value=rankingTab;
- const mine=rankingTab==='mine';$('#myInsights').classList.toggle('hidden',!mine);$('#rankPublicControls').hidden=mine;$('#rankMineControls').hidden=!mine;$('#rankRatingFilter').hidden=!mine;$('#rankInsightsJump').hidden=!mine;$('#rankMinVotes').closest('label').hidden=rankingSort==='members';
- $('#rankFilterDisclosure').classList.toggle('has-filters',mine&&rankingTypeFilter!=='all');
+ const mine=rankingTab==='mine',period=rankingTab==='period';
+ const publicControls=$('#rankPublicControls');
+ const publicDestination=period?$('#rankPeriodInlineSlot'):$('#rankPublicFilterSlot');
+ if(publicControls.parentElement!==publicDestination)publicDestination.append(publicControls);
+ $('#rankToolbar').classList.toggle('is-period',period);
+ $('#rankPeriodInlineSlot').hidden=!period;
+ $('#myInsights').classList.toggle('hidden',!mine);publicControls.hidden=mine;
+ // Share exactly the same existing type filter buttons, not a duplicate UI.
+ $('#rankMineControls').hidden=!(mine||period);
+ $('#rankTypeOptions').setAttribute('aria-label',period?'年代・シーズン別ランキングの作品形式':'マイランキングの作品形式');
+ $('#rankRatingFilter').hidden=!mine;$('#rankInsightsJump').hidden=!mine;
+ $('#rankMinVotes').closest('label').hidden=rankingSort==='members';
+ $('#rankFilterDisclosure').classList.toggle('has-filters',(mine||period)&&rankingTypeFilter!=='all');
  $$('#rankTypeOptions [data-rank-type]').forEach(b=>{const active=b.dataset.rankType===rankingTypeFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
  const names={period:'年代・シーズン別ランキング',top:'歴代アニメランキング',mine:'マイランキング'};
@@ -5873,7 +5920,7 @@ function renderRanking(){if(mode!=='ranking')return;
   $('#rankResults').innerHTML=result||emptyCard('条件に合う作品がありません','検索・作品形式・★評価を変更してください。','search');return;
  }
  const min=$('#rankMinVotes').checked;
- const filtered=rankingData.filter(a=>(!min||rankingSort==='members'||Number(a.scoredBy||0)>=100)&&localTitleMatch(a,rankingSearch));
+ const filtered=rankingData.filter(a=>(!min||rankingSort==='members'||Number(a.scoredBy||0)>=100)&&(rankingTab!=='period'||rankingTypeFilter==='all'||String(a.type||'').toUpperCase()===rankingTypeFilter.toUpperCase())&&localTitleMatch(a,rankingSearch));
  $('#rankResults').innerHTML=rankingBusy&&!rankingData.length?emptyCard('ランキングを取得中…','公開アニメデータベースから読み込んでいます。','loading'):filtered.length?Array.from({length:Math.ceil(filtered.length/10)},(_,b)=>{const chunk=filtered.slice(b*10,b*10+10),start=b*10+1,end=b*10+chunk.length;return `<div class="rank-chunk-block"><div class="rank-chunk-head"><span>${start}〜${end}位</span></div><div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${Math.ceil(chunk.length/2)}">${chunk.map((a,j)=>makeRankRow(a,start+j)).join('')}</div></div>`}).join(''):emptyCard('条件に合う作品がありません',rankingData.length?'評価人数の条件を外すと表示できる場合があります。':'ランキングを取得できませんでした。','search');
 }
 function showRanking(tab='period'){
@@ -6056,7 +6103,7 @@ $$('[data-rank-open]').forEach(b=>b.addEventListener('click',()=>{
 $('#rankModeSelect').addEventListener('change',e=>{if(['period','top','mine'].includes(e.target.value))showRanking(e.target.value)});
 $('#rankSearchForm').addEventListener('submit',e=>{e.preventDefault();rankingSearch=$('#rankSearchInput').value.trim();renderRanking()});
 $('#rankSearchInput').addEventListener('input',e=>{if(!e.target.value.trim()){rankingSearch='';renderRanking()}});
-$('#rankTypeOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-type]');if(!button||rankingTab!=='mine')return;rankingTypeFilter=button.dataset.rankType;$$('#rankTypeOptions [data-rank-type]').forEach(b=>{const selected=b===button;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected))});renderRanking()});
+$('#rankTypeOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-type]');if(!button||!['mine','period'].includes(rankingTab))return;rankingTypeFilter=button.dataset.rankType;$$('#rankTypeOptions [data-rank-type]').forEach(b=>{const selected=b===button;b.classList.toggle('active',selected);b.setAttribute('aria-pressed',String(selected))});renderRanking()});
 $('#rankRatingFilterOptions').addEventListener('click',e=>{const button=e.target.closest('[data-rank-rating]');if(!button||button.disabled||rankingTab!=='mine')return;myRatingFilter=Number(button.dataset.rankRating);renderRanking();aniHistorySave();scheduleMalMetricEnrichment()});
 document.addEventListener('click',e=>{const panel=$('#rankFilterDisclosure');if(panel.open&&!panel.contains(e.target))panel.open=false});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('#rankFilterDisclosure').open){$('#rankFilterDisclosure').open=false;$('#rankFilterDisclosure summary').focus()}});
