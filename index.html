@@ -1473,6 +1473,7 @@ select:not([data-status-id]){
 .anilog-select-option[aria-selected="true"]:hover{background:var(--accent-hover)}
 .anilog-select-option:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .anilog-select-option>span:first-child{min-width:0;overflow-wrap:anywhere}
+.anilog-select-menu[aria-label="ランキングの年"] .anilog-select-option>span:first-child{white-space:nowrap;overflow-wrap:normal}
 .anilog-select-option-mark{color:var(--accent);font-size:15px;line-height:1;flex-shrink:0}
 .anilog-select-option:not([aria-selected="true"]) .anilog-select-option-mark{visibility:hidden}
 .anilog-select-option[aria-disabled="true"]{opacity:.4;cursor:not-allowed}
@@ -2823,7 +2824,7 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
 #rankingView .rank-unified-toolbar .rank-sort-field select{width:100%;min-width:184px;white-space:nowrap}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{display:flex;flex-wrap:nowrap;align-items:center;gap:7px;margin:0;min-width:0}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls label{min-width:0;flex:0 0 auto}
-#rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField{width:116px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField{width:144px}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankSeasonField{width:79px}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:184px}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select{width:100%;min-width:0;height:44px;padding-inline:8px 32px}
