@@ -2816,21 +2816,24 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 #rankingView .rank-unified-toolbar>.rank-period-inline-slot{display:flex;flex:0 0 auto;align-items:center;min-width:0}
 #rankingView .rank-unified-toolbar>.rank-period-inline-slot[hidden]{display:none!important}
 #rankingView .rank-unified-toolbar.is-period .rank-search-shell{flex:1 1 142px;min-width:125px}
-#rankingView .rank-unified-toolbar.is-period .rank-mode-select{flex:0 0 136px;width:136px}
+#rankingView .rank-unified-toolbar .rank-mode-select{flex:0 0 188px;width:188px;min-width:188px;white-space:nowrap}
+#rankingView .rank-unified-toolbar .rank-mode-select + .anilog-mobile-select-trigger{flex:0 0 188px;width:188px;min-width:188px;white-space:nowrap}
+#rankingView .rank-unified-toolbar .rank-sort-field{width:184px}
+#rankingView .rank-unified-toolbar .rank-sort-field select{width:100%;min-width:184px;white-space:nowrap}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{display:flex;flex-wrap:nowrap;align-items:center;gap:7px;margin:0;min-width:0}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls label{min-width:0;flex:0 0 auto}
-#rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField{width:86px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField{width:116px}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankSeasonField{width:79px}
-#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:124px}
-#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select{width:100%;min-width:0;height:44px;padding-inline:8px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:184px}
+#rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select{width:100%;min-width:0;height:44px;padding-inline:8px 32px}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{min-height:44px;gap:5px;white-space:nowrap;font-size:var(--fs-sm)}
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold input{flex:0 0 17px}
 /* Mobile custom-select proxies are reused with their original selects. */
 #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select + .anilog-mobile-select-trigger{box-sizing:border-box;width:100%;min-width:0;max-width:100%;height:44px}
-@media(min-width:1100px){
+@media(min-width:1280px){
  #rankingView .rank-unified-toolbar.is-period{gap:7px;flex-wrap:nowrap}
 }
-@media(min-width:741px) and (max-width:1099px){
+@media(min-width:741px) and (max-width:1279px){
  #rankingView .rank-unified-toolbar.is-period{flex-wrap:wrap}
  #rankingView .rank-unified-toolbar.is-period>.rank-period-inline-slot{flex:1 1 100%}
 }
@@ -2841,6 +2844,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
  #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField,
  #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankSeasonField,
  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:100%;min-width:0}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{grid-column:1 / -1}
  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:normal;min-height:44px}
  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select + .anilog-mobile-select-trigger{min-width:0}
 }
@@ -5779,7 +5783,7 @@ let rankingSearch='',rankingTypeFilter='all'; // view-only, never sent to Tenrai
 try{const c=JSON.parse(localStorage.getItem(RANK_CACHE_KEY)||'{}');if(c&&typeof c==='object'&&!Array.isArray(c))rankingCache=c}catch{}
 for(let y=new Date().getFullYear()+1;y>=1970;y--){const op=document.createElement('option');op.value=String(y);op.textContent=y+'年';$('#rankYear').append(op)}
 $('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-function exitRanking(){$('#mobileRanking').classList.remove('active');if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
+function exitRanking(){$$('[data-rank-open]').forEach(b=>b.classList.remove('rank-selected'));$('#mobileRanking').classList.remove('active');if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
 function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watched'&&readReview(a.review)).sort((a,b)=>{
  const ar=readReview(a.review).overall,br=readReview(b.review).overall;if(ar!==br)return br-ar;
  const an=Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0?a.myRankOrder:999999;
@@ -5892,7 +5896,7 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#rankMineControls').hidden=!(mine||period);
  $('#rankTypeOptions').setAttribute('aria-label',period?'年代・シーズン別ランキングの作品形式':'マイランキングの作品形式');
  $('#rankRatingFilter').hidden=!mine;$('#rankInsightsJump').hidden=!mine;
- $('#rankMinVotes').closest('label').hidden=rankingSort==='members';
+ $('#rankMinVotes').closest('label').hidden=false;
  $('#rankFilterDisclosure').classList.toggle('has-filters',(mine||period)&&rankingTypeFilter!=='all');
  $$('#rankTypeOptions [data-rank-type]').forEach(b=>{const active=b.dataset.rankType===rankingTypeFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
