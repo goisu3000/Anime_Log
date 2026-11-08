@@ -742,6 +742,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .annual-e
 .watch-date-title{display:none}
 .watch-date-help,.watch-date-hint{font-size:var(--fs-xs);line-height:1.65;color:var(--muted);margin:0 0 8px}
 .watch-date-hint{margin-top:2px}
+.detail-date-disclosure .watch-date-actions+.watch-date-hint{margin-top:var(--sp-3)}
 .watch-date-fields{display:grid;grid-template-columns:minmax(0,1.14fr) minmax(0,.93fr) minmax(0,.93fr);gap:8px;margin:0 0 10px}
 .watch-date-field{display:flex;flex-direction:column;gap:4px;font-size:var(--fs-md);color:var(--muted)}
 .watch-date-fields input,.watch-date-fields select{width:100%;min-height:40px;padding:6px 8px;background:var(--surface-input);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:6px;font-size:var(--fs-md)}
@@ -1473,6 +1474,8 @@ select:not([data-status-id]){
 .anilog-select-option[aria-selected="true"]:hover{background:var(--accent-hover)}
 .anilog-select-option:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .anilog-select-option>span:first-child{min-width:0;overflow-wrap:anywhere}
+.anilog-select-compact-date .anilog-select-option{padding-inline:6px;gap:6px}
+.anilog-select-compact-date .anilog-select-option>span:first-child{white-space:nowrap;overflow-wrap:normal;flex-shrink:0}
 .anilog-select-menu[aria-label="ランキングの年"] .anilog-select-option>span:first-child{white-space:nowrap;overflow-wrap:normal}
 .anilog-select-option-mark{color:var(--accent);font-size:15px;line-height:1;flex-shrink:0}
 .anilog-select-option:not([aria-selected="true"]) .anilog-select-option-mark{visibility:hidden}
@@ -8312,6 +8315,7 @@ if(topBtn){
   owner=s;options=[...s.options];
   const popup=document.createElement('div');
   popup.className='anilog-select-menu';popup.setAttribute('role','listbox');
+  if(s.id==='completionMonth'||s.id==='completionDay')popup.classList.add('anilog-select-compact-date');
   popup.id='anilog-select-popup';
   popup.setAttribute('aria-label',s.getAttribute('aria-label') || s.labels?.[0]?.textContent?.trim() || '項目を選択');
   options.forEach((opt,i)=>{
