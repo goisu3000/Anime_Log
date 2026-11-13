@@ -2,6 +2,7 @@
 // record tombstones, or storage.clear(). Other sites and downloads are untouched.
 import {createProductWalTabCoordinator} from './private-wal-tab-fence.mjs';
 import {readOwnerCloseIntent} from './owner-group-close.mjs';
+import {readOwnerAuthorityMarker} from './owner-authority.mjs';
 export const LOCAL_RESET_KEY='anilog-local-data-reset-v1';
 export const LOCAL_GENERATION_KEY='anilog-local-data-generation-v1';
 const fail=code=>{throw Error('LOCAL_RESET_STOP:'+code)};
@@ -10,6 +11,7 @@ const databases=[
  new RegExp('^anilog-FORMAL-PRODUCTION-ENCRYPTED-PRIMARY'+profile+'(?:-RECOVERY-ANCHORS-v1|-PHASE4I-RECOVERY-PRIVATE-ONLY|-VERIFIED-2A-CACHE-POC-v1)?$'),
  new RegExp('^anilog-FORMAL-PRODUCTION-SEALED-CREDENTIALS'+profile+'$'),
  new RegExp('^formal-production:(?:receiver:)?anilog-FORMAL-REGISTRATION-INTENT'+profile+'$'),
+ new RegExp('^formal-production:anilog-FORMAL-OWNER-AUTHORITY-INTENT'+profile+'$'),
  /^formal-production:anilog-FORMAL-AUTOMATIC-DEVICE-KEY$/
 ];
 export const isLocalDeviceDatabase=name=>typeof name==='string'&&databases.some(re=>re.test(name));
@@ -20,7 +22,7 @@ const exactKeys=new Set(['anilog-v1','anilog-weekly-options-v1','anilog-weekly-a
 export const isLocalDeviceKey=key=>exactKeys.has(key)||
  /^anilog-sync-local-mode-v1(?:-p[1-9][0-9]?)?$/.test(key)||
  /^anilog-sync-manual-pause-v1(?:-p[1-9][0-9]?)?$/.test(key)||
- /^anilog-(?:wal-first-upgrade|local-device-names|self-revoke-intent|owner-close-intent)-v1:(?:legacy|p[1-9][0-9]?)$/.test(key);
+ /^anilog-(?:wal-first-upgrade|local-device-names|self-revoke-intent|owner-close-intent|owner-authority)-v1:(?:legacy|p[1-9][0-9]?)$/.test(key);
 
 // Whole-browser erasure is broader than the selected connection. Every local
 // profile must be either unregistered or durably self-revoked. No network and
@@ -28,19 +30,22 @@ export const isLocalDeviceKey=key=>exactKeys.has(key)||
 export async function assertLocalResetRegistrationsReleased({local,idb,inspectUnregistered}={}){
  if(typeof idb?.databases!=='function'||typeof inspectUnregistered!=='function')fail('REGISTRATION_STATE_REQUIRED');
  const snapshot=()=>{
-  const rows=[];for(let i=0;i<local.length;i++){const k=local.key(i);if(k==='anilog-sync-connection-profile-v1'||k==='anilog-sync-setup-receipt-v1'||/^anilog-sync-local-mode-v1(?:-p[1-9][0-9]?)?$/.test(k)||/^anilog-(self-revoke|owner-close)-intent-v1:/.test(k))rows.push([k,local.getItem(k)]);}
+  const rows=[];for(let i=0;i<local.length;i++){const k=local.key(i);if(k==='anilog-sync-connection-profile-v1'||k==='anilog-sync-setup-receipt-v1'||/^anilog-sync-local-mode-v1(?:-p[1-9][0-9]?)?$/.test(k)||/^anilog-(self-revoke|owner-close)-intent-v1:/.test(k)||/^anilog-owner-authority-v1:/.test(k))rows.push([k,local.getItem(k)]);}
   return JSON.stringify(rows.sort(([a],[b])=>a.localeCompare(b)));
  };
  const before=snapshot(),rows=await idb.databases();
  if(!Array.isArray(rows)||rows.some(x=>typeof x?.name!=='string'))fail('REGISTRATION_STATE_REQUIRED');
  const names=rows.map(x=>x.name).filter(isLocalDeviceDatabase).sort(),ids=new Set(['legacy']);
  for(const name of names){const m=name.match(/-p([1-9][0-9]?)(?:$|-)/);if(m)ids.add('p'+m[1]);}
- for(let i=0;i<local.length;i++){const k=local.key(i),m=k?.match(/^anilog-sync-local-mode-v1-(p[1-9][0-9]?)$/)||k?.match(/^anilog-(?:self-revoke|owner-close)-intent-v1:(p[1-9][0-9]?)$/);if(m)ids.add(m[1]);}
+ for(let i=0;i<local.length;i++){const k=local.key(i),m=k?.match(/^anilog-sync-local-mode-v1-(p[1-9][0-9]?)$/)||k?.match(/^anilog-(?:self-revoke|owner-close)-intent-v1:(p[1-9][0-9]?)$/)||k?.match(/^anilog-owner-authority-v1:(p[1-9][0-9]?)$/);if(m)ids.add(m[1]);}
  for(const id of ids){
   const suffix=id==='legacy'?'':'-'+id,mode=local.getItem('anilog-sync-local-mode-v1'+suffix),journal=local.getItem('anilog-self-revoke-intent-v1:'+id);
   if(mode!==null&&!['encrypted-local','sync-enabled'].includes(mode))fail('REGISTRATION_STATE_REQUIRED');
   if(journal!==null&&!['pending','confirmed'].includes(journal))fail('REGISTRATION_STATE_REQUIRED');
   const closed=readOwnerCloseIntent(local,id);
+  const authority=readOwnerAuthorityMarker(local,id);
+  if(authority?.phase==='pending')fail('SERVER_RELEASE_REQUIRED');
+  if(authority?.phase==='completed'&&authority.role==='owner'&&closed?.phase!=='confirmed')fail('SERVER_RELEASE_REQUIRED');
   if(journal==='pending'||closed?.phase==='pending')fail('SERVER_RELEASE_REQUIRED');
   if(journal==='confirmed'||closed?.phase==='confirmed')continue;
   if(journal==='pending'||mode==='sync-enabled')fail('SERVER_RELEASE_REQUIRED');

@@ -1,0 +1,125 @@
+// Product candidate. Credentials stay in the browser's existing encrypted stores.
+import {freshSecret,secretToUrl,shaHex} from './pairing-client.mjs';
+import {createOwnerRecoveryKit,decodeOwnerRecoveryKit} from './recovery-kit.mjs';
+const TOKEN=/^[A-Za-z0-9_-]{43}$/,ID=/^[A-Za-z0-9_-]{22,43}$/,HASH=/^[a-f0-9]{64}$/;
+const fail=x=>{throw Error('OWNER_AUTHORITY_UI:'+x)};
+export function authorityFailureLabel(error){
+ const code=String(error?.message??'');
+ if(/^(?:OWNER_AUTHORITY_UI:(?:EXCLUSIVE_LEASE_REQUIRED|EXCLUSIVE_NOT_GRANTED)|AUTHORITY_IDLE_REQUIRED|WAL_TAB_PRESENCE_NOT_READY)$/.test(code))return '端末の排他・待機状態を確認できません。他のQAタブや編集中の画面を確認してください。';
+ if(/^OWNER_AUTHORITY_UI:(?:CLEAN_VERIFIED_CHECKPOINT_REQUIRED|SOURCE_CHANGED_KEEP_RECORDS)$/.test(code))return '未送信変更または保存内容の一致を確認できません。記録を保持して停止しています。';
+ if(code==='OWNER_AUTHORITY_UI:AUTHENTICATION_UNCONFIRMED')return 'この端末の認証結果を確認できません。';
+ if(code==='OWNER_AUTHORITY_UI:SERVER_RESULT_UNCONFIRMED')return 'サーバーの完了確認を取得できません。';
+ if(code==='OWNER_AUTHORITY_UI:RATE_LIMITED')return '通信回数の制限により確認を停止しました。';
+ if(/^OWNER_AUTHORITY_UI:(?:JOURNAL_INVALID|JOURNAL_MISSING|JOURNAL_NOT_DURABLE)$/.test(code))return '端末内の操作記録を認証・確認できません。';
+ return '操作結果を確認できません。';
+}
+const markerKey=id=>{if(!/^(legacy|p[1-9][0-9]?)$/.test(id))fail('PROFILE_REQUIRED');return 'anilog-owner-authority-v1:'+id};
+export function readOwnerAuthorityMarker(local,id){const raw=local.getItem(markerKey(id));if(raw===null)return null;let x;try{x=JSON.parse(raw)}catch{fail('JOURNAL_INVALID')}
+ if(!x||Object.keys(x).sort().join('|')!=='phase|role|v'||x.v!==1||!['pending','completed','cancelled'].includes(x.phase)||(x.phase==='completed'?!['owner','released'].includes(x.role):x.role!==null))fail('JOURNAL_INVALID');return x;
+}
+export function ownerAuthorityWriteBlocked(local,id,profilePhase){const x=readOwnerAuthorityMarker(local,id);return x?.phase==='pending'||x?.phase==='completed'&&x.role==='released'&&profilePhase!=='disconnected';}
+function scope(t){if(!t||typeof t.fetcher!=='function'||!ID.test(t.boxId)||!ID.test(t.device?.deviceId)||!TOKEN.test(t.device.deviceToken)||!(t.masterKey instanceof Uint8Array)||t.masterKey.length!==32)fail('TRANSPORT_REQUIRED');for(const origin of [t.apiRoot,t.origin]){let u;try{u=new URL(origin)}catch{fail('SCOPE_REQUIRED')}if(u.protocol!=='https:'||u.origin!==origin||u.username||u.password)fail('SCOPE_REQUIRED')}if(t.apiRoot===t.origin)fail('SCOPE_REQUIRED');return t;}
+export function createOwnerAuthorityFlow({local,profileId,store,inspect,transport,exclusive,fenceWrites,onReleased,getInitialRecoveryToken,recoveryFetch=globalThis.fetch}={}){
+ markerKey(profileId);if(!store?.read||!store?.create||!store?.replace||![inspect,transport,exclusive,fenceWrites,onReleased,getInitialRecoveryToken].every(x=>typeof x==='function'))fail('INTEGRATION_REQUIRED');
+ let busy=false;
+ const check=(x,retainDirty=false)=>{if(x?.ready!==true||(!retainDirty&&x.clean!==true)||typeof x.clean!=='boolean'||x.profileId!==profileId||!HASH.test(x.scopeDigest)||!HASH.test(x.snapshotDigest)||!Number.isSafeInteger(x.checkpointRevision)||x.checkpointRevision<1)fail('CLEAN_VERIFIED_CHECKPOINT_REQUIRED');return x;};
+ const validate=j=>{if(j!==null&&(!j||j.v!==1||!['offer','accept','recover','release'].includes(j.kind)||!['pending','completed','cancelled'].includes(j.phase)||!TOKEN.test(j.operationId)||!HASH.test(j.scopeDigest)||!HASH.test(j.snapshotDigest)||!Number.isSafeInteger(j.checkpointRevision)||j.checkpointRevision<1||!ID.test(j.targetDeviceId)||['accept','recover'].includes(j.kind)&&!TOKEN.test(j.nextRecoveryToken)||j.kind==='recover'&&!TOKEN.test(j.oldRecoveryToken)))fail('JOURNAL_INVALID');return j;};
+ const read=async()=>validate(await store.read());
+ function mark(j){const x={v:1,phase:j.phase,role:j.phase==='completed'?(['offer','release'].includes(j.kind)?'released':'owner'):null};local.setItem(markerKey(profileId),JSON.stringify(x));if(JSON.stringify(readOwnerAuthorityMarker(local,profileId))!==JSON.stringify(x))fail('JOURNAL_NOT_DURABLE');}
+ async function save(previous,next){const written=previous?await store.replace(previous,next):await store.create(next);if(JSON.stringify(written)!==JSON.stringify(next)||JSON.stringify(await read())!==JSON.stringify(next))fail('JOURNAL_NOT_DURABLE');mark(next);return next;}
+ async function same(j){const p=check(await inspect(),j.kind==='release');if(p.scopeDigest!==j.scopeDigest||p.snapshotDigest!==j.snapshotDigest||p.checkpointRevision!==j.checkpointRevision)fail('SOURCE_CHANGED_KEEP_RECORDS');return p;}
+ async function send(action,body={},recoveryToken){const t=scope(await transport());try{
+  const p=check(await inspect(),action==='release'),digest=await shaHex(JSON.stringify([t.apiRoot,t.origin,t.boxId,t.device.deviceId]));if(p.scopeDigest!==digest)fail('TRANSPORT_SCOPE_MISMATCH');
+  const url=t.apiRoot+'/v1/boxes/'+t.boxId+'/owner-authority/'+action,headers={Origin:t.origin,Authorization:'Bearer '+t.device.deviceToken,'X-Device-Id':t.device.deviceId,...(action!=='pending'?{'Content-Type':'application/json'}:{})};
+  let r;
+  if(action==='recover'){
+   // A separate exact-route recovery adapter; the ordinary browser transport's
+   // privileged-header prohibition remains unchanged. Never follows redirects.
+   if(!TOKEN.test(recoveryToken)||typeof recoveryFetch!=='function')fail('RECOVERY_CREDENTIAL_REQUIRED');
+   delete headers.Origin;headers['X-Recovery-Token']=recoveryToken;
+   r=await recoveryFetch(url,{method:'POST',headers,body:JSON.stringify(body),mode:'cors',credentials:'omit',redirect:'error',cache:'no-store',referrerPolicy:'no-referrer'});
+  }else r=await t.fetcher(url,{method:['pending','release'].includes(action)?'GET':'POST',headers,...(['pending','release'].includes(action)?{}:{body:JSON.stringify(body)})});
+  let data;try{data=await r.json()}catch{fail('SERVER_RESPONSE_INVALID')}
+  if(r.status!==200)fail(r.status===401?'AUTHENTICATION_UNCONFIRMED':r.status===429?'RATE_LIMITED':'SERVER_RESULT_UNCONFIRMED');return data;
+ }finally{t.masterKey.fill(0)}}
+ async function run(fn){if(busy)fail('ALREADY_RUNNING');busy=true;try{let entered=false;const answer=await exclusive(async lease=>{if(lease?.exclusive!==true)fail('EXCLUSIVE_LEASE_REQUIRED');entered=true;return fn()});if(!entered)fail('EXCLUSIVE_NOT_GRANTED');return answer;}finally{busy=false}}
+ async function prepare(kind,targetDeviceId,operationId,kit){const p=check(await inspect(),kind==='release'),previous=await read();if(p.phase!=='connected')fail('CONNECTED_PROFILE_REQUIRED');if(previous?.phase==='pending')fail('RESUME_PENDING_OPERATION');
+  const t=scope(await transport());let nextRecoveryToken=null,oldRecoveryToken=null,ownerRecoveryToken=previous?.nextRecoveryToken??previous?.ownerRecoveryToken??null;
+  try{
+   if(!ID.test(targetDeviceId))targetDeviceId=t.device.deviceId;
+   if(kind==='recover'){
+    const decoded=await decodeOwnerRecoveryKit(kit);try{if(decoded.boxId!==t.boxId||decoded.masterKey.length!==t.masterKey.length||decoded.masterKey.some((v,i)=>v!==t.masterKey[i]))fail('RECOVERY_KEY_SCOPE_MISMATCH');oldRecoveryToken=decoded.recoveryToken}finally{decoded.masterKey.fill(0)}
+   }
+   if(kind==='offer'&&!ownerRecoveryToken)ownerRecoveryToken=await getInitialRecoveryToken();
+   if(['accept','recover'].includes(kind))nextRecoveryToken=secretToUrl(freshSecret());
+   const j={v:1,kind,phase:'pending',operationId:operationId??secretToUrl(freshSecret()),targetDeviceId,scopeDigest:p.scopeDigest,snapshotDigest:p.snapshotDigest,checkpointRevision:p.checkpointRevision,nextRecoveryToken,oldRecoveryToken,ownerRecoveryToken};
+   validate(j);await save(previous,j);fenceWrites(true);return j;
+  }finally{t.masterKey.fill(0)}
+ }
+ async function finish(j,answer){await same(j);
+  if(answer.operationId!==j.operationId||answer.targetDeviceId!==j.targetDeviceId||!['pending','completed','cancelled','expired'].includes(answer.state))fail('SERVER_SCOPE_MISMATCH');
+  if(answer.state==='pending'||answer.state==='expired')return {phase:answer.state==='pending'?'AWAITING_TARGET':'EXPIRED_KEEP_FENCED'};
+  if(answer.state==='cancelled'){await save(j,{...j,phase:'cancelled'});fenceWrites(false);return {phase:'CANCELLED_RECORDS_RETAINED'};}
+  if(answer.role!==(j.kind==='offer'?'released':'owner'))fail('SERVER_ROLE_UNCONFIRMED');
+  await save(j,{...j,phase:'completed'});if(j.kind==='offer')await onReleased();fenceWrites(false);return {phase:j.kind==='offer'?'OLD_OWNER_RELEASED_RECORDS_RETAINED':'NEW_OWNER_AUTHENTICATED'};
+ }
+ function releaseProof(answer){if(answer?.revoked!==true||answer.role!=='released'||Object.keys(answer).sort().join('|')!=='revoked|role')fail('SERVER_ROLE_UNCONFIRMED');return answer;}
+ async function finishRelease(j){releaseProof(await send('release'));await same(j);await save(j,{...j,phase:'completed'});await onReleased();fenceWrites(false);return {phase:'FORMER_OWNER_RELEASED_RECORDS_RETAINED'};}
+ async function resume(){const j=await read();if(!j||j.phase==='cancelled')fail('PENDING_OPERATION_REQUIRED');fenceWrites(true);await same(j);
+  if(j.kind==='release')return finishRelease(j);
+  const body={operationId:j.operationId,...(j.kind!=='offer'?{nextRecoveryHash:await shaHex(j.nextRecoveryToken)}:{})};
+  return finish(j,await send(j.kind==='offer'?'status':j.kind,body,j.oldRecoveryToken));
+ }
+ return Object.freeze({read,async recoverPendingFence(){const j=await read(),m=readOwnerAuthorityMarker(local,profileId);if(!j&&m)fail('JOURNAL_MISSING');if(j){mark(j);if(j.phase==='pending')fenceWrites(true);}return j;},
+  async releasedStatus(){return releaseProof(await send('release'));},
+  async releaseFormerOwner({confirmed=false}={}){if(confirmed!==true)fail('FINAL_CONFIRMATION_REQUIRED');return run(async()=>{releaseProof(await send('release'));const j=await prepare('release');return finishRelease(j);});},
+  async offer({targetDeviceId,confirmed=false}={}){if(confirmed!==true||!ID.test(targetDeviceId))fail('FINAL_CONFIRMATION_REQUIRED');return run(async()=>{const j=await prepare('offer',targetDeviceId);await same(j);return finish(j,await send('offer',{operationId:j.operationId,targetDeviceId}))})},
+  async pending(){const x=await send('pending');if(!['none','pending'].includes(x.state)||!['owner','member'].includes(x.role)||x.state==='pending'&&(!TOKEN.test(x.operationId)||!ID.test(x.targetDeviceId)))fail('SERVER_RESPONSE_INVALID');return x;},
+  async accept({operationId,confirmed=false}={}){if(confirmed!==true||!TOKEN.test(operationId))fail('FINAL_CONFIRMATION_REQUIRED');return run(async()=>{const offered=await send('pending');if(offered.operationId!==operationId||offered.role!=='member')fail('OFFER_CHANGED');const j=await prepare('accept',offered.targetDeviceId,operationId);return finish(j,await send('accept',{operationId:j.operationId,nextRecoveryHash:await shaHex(j.nextRecoveryToken)}))})},
+  async recover({kit,confirmed=false}={}){if(confirmed!==true)fail('FINAL_CONFIRMATION_REQUIRED');return run(async()=>{const j=await prepare('recover',null,null,kit);await same(j);return finish(j,await send('recover',{operationId:j.operationId,nextRecoveryHash:await shaHex(j.nextRecoveryToken)},j.oldRecoveryToken))})},
+  resume:()=>run(resume),
+  async cancel({confirmed=false}={}){if(confirmed!==true)fail('FINAL_CONFIRMATION_REQUIRED');return run(async()=>{const j=await read();if(!j||j.kind!=='offer'||j.phase!=='pending')fail('OWNER_OFFER_REQUIRED');await same(j);return finish(j,await send('cancel',{operationId:j.operationId}))})},
+  async recoveryKit(){const t=scope(await transport());try{const j=await read(),recoveryToken=j?.phase==='completed'&&j.kind!=='offer'?j.nextRecoveryToken:j?.ownerRecoveryToken??await getInitialRecoveryToken();if(!TOKEN.test(recoveryToken))fail('RECOVERY_KEY_UNAVAILABLE');const proof=await send('proof',{recoveryHash:await shaHex(recoveryToken)});if(proof.verified!==true||proof.role!=='owner')fail('RECOVERY_KEY_UNCONFIRMED');return await createOwnerRecoveryKit({boxId:t.boxId,recoveryToken,masterKey:t.masterKey});}finally{t.masterKey.fill(0)}}
+ });
+}
+
+export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMembers,prepareUI=async()=>false,onComplete=()=>{},reload=()=>{}}={}){
+ const dialog=document.createElement('dialog');dialog.className='anilog-first-wal-upgrade';dialog.id='anilog-owner-authority-dialog';dialog.setAttribute('aria-label','管理端末の変更・復旧');
+ const title=document.createElement('h2');title.textContent='管理端末の変更・復旧';
+ const status=document.createElement('p');status.setAttribute('role','status');
+ const target=document.createElement('select');target.setAttribute('aria-label','引き継ぎ先の端末');
+ const keyInput=document.createElement('textarea');keyInput.setAttribute('aria-label','保存してある管理端末の復旧キー');keyInput.autocomplete='off';keyInput.spellcheck=false;
+ const keyOutput=document.createElement('textarea');keyOutput.setAttribute('aria-label','管理端末の復旧キー');keyOutput.readOnly=true;keyOutput.autocomplete='off';keyOutput.spellcheck=false;
+ const warning=document.createElement('p');warning.textContent='記録は削除しません。ほかのANI:LOGタブを閉じて操作してください。引き継ぎ完了後、この端末の同期登録は解除されます。';
+ const label=document.createElement('label'),confirmed=document.createElement('input');confirmed.type='checkbox';label.append(confirmed,document.createTextNode('操作対象と管理権限の変更を確認しました'));
+ const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
+ const button=text=>{const b=document.createElement('button');b.type='button';b.textContent=text;actions.append(b);return b;};
+ const offer=button('引き継ぎを依頼する'),refresh=button('引き継ぎ依頼を確認'),accept=button('この端末を管理端末にする'),recover=button('復旧キーで管理端末を復旧'),release=button('解除済みの登録を確認して記録を残す'),resume=button('前回の結果を確認する'),cancel=button('引き継ぎを中止する'),showKey=button('復旧キーを控える（任意）'),update=button('画面を更新'),close=button('閉じる');
+ const mutation=[offer,accept,recover,release,resume,cancel],all=[...mutation,refresh,showKey,update,close];let running=false,opening=false,pendingOperation=null;
+ dialog.append(title,status,warning,target,keyInput,keyOutput,label,actions);document.body.append(dialog);
+ function disabled(){for(const b of mutation)b.disabled=running||!confirmed.checked;for(const b of [refresh,showKey,update,close])b.disabled=running;}
+ function hide(){for(const e of [target,keyInput,keyOutput,...all])e.hidden=true;close.hidden=false;pendingOperation=null;confirmed.checked=false;label.hidden=false;disabled();}
+ function result(x){const messages={AWAITING_TARGET:'引き継ぎ先の端末で「引き継ぎ依頼を確認」から承認してください。',EXPIRED_KEEP_FENCED:'依頼の期限が切れました。「引き継ぎを中止する」で記録を保持したまま終了してください。',OLD_OWNER_RELEASED_RECORDS_RETAINED:'管理端末を引き継ぎ、この端末の同期登録を解除しました。記録は残っています。',FORMER_OWNER_RELEASED_RECORDS_RETAINED:'この端末の登録解除をサーバーで確認しました。未送信の変更を含め、記録はこの端末に残っています。',CANCELLED_RECORDS_RETAINED:'引き継ぎを中止しました。記録は残っています。',NEW_OWNER_AUTHENTICATED:'この端末の管理者権限を確認しました。画面を更新してください。'};
+  if(!Object.hasOwn(messages,x?.phase))fail('RESULT_INVALID');status.textContent=messages[x.phase];if(['OLD_OWNER_RELEASED_RECORDS_RETAINED','FORMER_OWNER_RELEASED_RECORDS_RETAINED','NEW_OWNER_AUTHENTICATED','CANCELLED_RECORDS_RETAINED'].includes(x.phase)){for(const b of mutation)b.hidden=true;update.hidden=false;onComplete(x);}}
+ async function action(fn){if(running)return;running=true;status.textContent='操作・完了結果を確認中です。画面を閉じずにお待ちください。';disabled();try{await fn()}catch(error){status.textContent=authorityFailureLabel(error)+' 記録・接続情報は保持しています。再登録や削除はしないでください。';const j=await flow.read().catch(()=>null);resume.hidden=!j;cancel.hidden=j?.kind!=='offer'||j?.phase!=='pending';}finally{running=false;disabled()}}
+ async function show(){if(opening||running||dialog.open)return;opening=true;try{hide();keyInput.value=keyOutput.value='';status.textContent='管理権限を確認中…';let prepared=false;try{prepared=await prepareUI()===true}catch{}dialog.showModal();if(!prepared){status.textContent='画面更新・保存・入力の待機状態を確認できません。入力は保持しています。ほかの編集を終了してから、この画面を開き直してください。';label.hidden=true;return;}await action(async()=>{
+  const j=await flow.read();if(j?.phase==='pending'||j?.phase==='completed'&&['offer','release'].includes(j.kind)){resume.hidden=false;cancel.hidden=j.phase!=='pending'||j.kind!=='offer';status.textContent='前回の操作結果を確認してください。記録は保持しています。';return;}
+  let role;try{role=await getRole()}catch{await flow.releasedStatus();release.hidden=false;warning.textContent='この端末の管理権限は既に失効しています。登録解除の確認後も、未送信の変更を含む記録は残します。';status.textContent='サーバーでこの端末の登録解除を確認しました。記録を残して同期OFFにできます。';return;}
+  if(role==='owner'){
+   const members=await listMembers();target.replaceChildren();for(const m of members){const o=document.createElement('option');o.value=m.deviceId;o.textContent=m.label;target.append(o);}target.hidden=members.length===0;offer.hidden=members.length===0;showKey.hidden=false;status.textContent=members.length?'引き継ぎ先の端末本人の承認後に、管理権限を移します。':'引き継ぎ先の登録端末がありません。';
+  }else if(role==='member'){refresh.hidden=recover.hidden=keyInput.hidden=false;status.textContent='引き継ぎ依頼を確認するか、保存してある復旧キーを入力してください。復旧キーがない場合、故障した管理端末の権限は復旧できません。';}
+  else throw Error('ROLE_REQUIRED');
+ });}finally{opening=false}}
+ confirmed.addEventListener('change',disabled);
+ offer.addEventListener('click',()=>{if(!confirmed.checked)return;void action(async()=>{result(await flow.offer({targetDeviceId:target.value,confirmed:true}));offer.hidden=true;resume.hidden=cancel.hidden=false;})});
+ refresh.addEventListener('click',()=>void action(async()=>{const x=await flow.pending();pendingOperation=x.state==='pending'?x.operationId:null;accept.hidden=!pendingOperation;status.textContent=pendingOperation?'この端末への引き継ぎ依頼があります。承認すると管理端末になります。':'この端末への引き継ぎ依頼はありません。';confirmed.checked=false;}));
+ accept.addEventListener('click',()=>{if(!confirmed.checked||!pendingOperation)return;void action(async()=>result(await flow.accept({operationId:pendingOperation,confirmed:true}))) });
+ recover.addEventListener('click',()=>{if(!confirmed.checked)return;const kit=keyInput.value.trim();keyInput.value='';void action(async()=>result(await flow.recover({kit,confirmed:true}))) });
+ release.addEventListener('click',()=>{if(confirmed.checked)void action(async()=>result(await flow.releaseFormerOwner({confirmed:true}))) });
+ resume.addEventListener('click',()=>{if(confirmed.checked)void action(async()=>result(await flow.resume()))});
+ cancel.addEventListener('click',()=>{if(confirmed.checked)void action(async()=>result(await flow.cancel({confirmed:true})))});
+ showKey.addEventListener('click',()=>void action(async()=>{keyOutput.value=await flow.recoveryKit();keyOutput.hidden=false;status.textContent='このキーを持つ人は管理端末を復旧できます。保管は任意です。ダウンロードは不要で、他人には渡さないでください。';}));
+ update.addEventListener('click',()=>{if(!running)reload()});close.addEventListener('click',()=>{if(!running)dialog.close()});
+ dialog.addEventListener('cancel',e=>{if(running)e.preventDefault()});dialog.addEventListener('close',()=>{keyInput.value=keyOutput.value='';confirmed.checked=false;});
+ openButton.addEventListener('click',()=>void show());return {dialog,show};
+}

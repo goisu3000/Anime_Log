@@ -1,6 +1,7 @@
 import {createLocalDeviceReset,installLocalDeviceResetUI,assertLocalResetRegistrationsReleased} from './local-device-reset.mjs';
 import {createOwnerCloseFlow,installOwnerCloseDialog,readOwnerCloseIntent} from './owner-group-close.mjs';
 import {digestText} from '../shared/registration-ticket.mjs';
+import {createOwnerAuthorityFlow,installOwnerAuthorityUI,ownerAuthorityWriteBlocked} from './owner-authority.mjs';
 import {installConflictRecovery} from './conflict-resolution-integration.mjs';
 import {createFormalProductionANIPrimary} from './v408-https-staging-encrypted-primary.mjs';
 import {createFormalStorage,decodeFormalBackup,createPrivateQuiescentOperationGate} from './formal-storage.mjs';
@@ -465,7 +466,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }
  // Enroll every product profile in an origin-wide deletion fence before any
  // setup, unlock or sync. This does not authorize or change WAL compaction.
- let localQrTransition=false,ownerCloseTransition=false,ownerClosing=false,readOwnerClosure=()=>null,pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
+ let localQrTransition=false,ownerCloseTransition=false,authorityTransition=false,ownerClosing=false,readOwnerClosure=()=>null,authorityBlocked=()=>false,pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
  const reset=createLocalDeviceReset({idb,local,session:window.sessionStorage,locks,events:window,
   beforeErase:()=>beforeLocalReset(),onFenced:()=>{localResetting=true;stopLocalActivity();localResetUI?.show()}});
  await reset.join();
@@ -488,6 +489,15 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const profileExclusive=fn=>locks.request('anilog-formal-connection-profile-cutover',{mode:'exclusive'},fn);
  const staging=profileState.phase==='ready',selectedProfile=getSelectedProfile(profileState);
  readOwnerClosure=()=>readOwnerCloseIntent(local,selectedProfile);
+ authorityBlocked=()=>ownerAuthorityWriteBlocked(local,selectedProfile,profiles.read().phase);
+ const beforeAuthorityFetch=browserFetch;
+ browserFetch=(url,options={})=>{
+  if(authorityBlocked()){
+   const u=new URL(url),valid=/^\/v1\/boxes\/[A-Za-z0-9_-]{22,43}\/owner-authority\/(offer|pending|status|accept|cancel|recover|proof|release)$/.exec(u.pathname);
+   if(u.origin!==api.origin||u.search||u.hash||!valid||options.method!==(['pending','release'].includes(valid[1])?'GET':'POST'))throw Error('OWNER_AUTHORITY_NETWORK_FENCED');
+  }
+  return beforeAuthorityFetch(url,options);
+ };
  const isProfileReleased=()=>revokeJournal.read()==='confirmed'||readOwnerClosure()?.phase==='confirmed';
  const ownerCloseLocallyComplete=()=>readOwnerClosure()?.phase==='confirmed'&&['disconnected','preparing'].includes(profiles.read().phase);
  const walUpgradeGate=createFirstWalUpgradeGate({local,profileId:selectedProfile});
@@ -508,7 +518,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const rawProductGate=!maintenanceTest?createPrivateQuiescentOperationGate():null;
  const productTabs=!maintenanceTest?createProductWalTabCoordinator({locks,events:window,
   lockName:'anilog-private-wal-maintenance:'+selectedProfile,
-  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&((localQrTransition||ownerCloseTransition)?window.__formalUI?.localResetIdle?.()===true:window.__formalUI?.maintenanceIdle?.()===true)
+  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&((localQrTransition||ownerCloseTransition||authorityTransition)?window.__formalUI?.localResetIdle?.()===true:window.__formalUI?.maintenanceIdle?.()===true)
  }):null;
  if(productTabs)privateOperationGate=Object.freeze({
   tryReserveMaintenance:()=>rawProductGate.tryReserveMaintenance(),
@@ -521,7 +531,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   withForeground:fn=>{assertLocalAvailable();const guarded=()=>{assertLocalAvailable();return fn()};return foregroundGate?foregroundGate.withForeground(guarded):guarded()},
   tryReserveMaintenance:()=>{try{assertLocalAvailable();return foregroundGate?.tryReserveMaintenance?.()??null}catch{return null}}
  });
- const productAuthorized=(requireReservation=true)=>!localResetting&&!readOwnerClosure()&&productMaintenance&&!staging&&
+ const productAuthorized=(requireReservation=true)=>!localResetting&&!readOwnerClosure()&&!authorityBlocked()&&productMaintenance&&!staging&&
   profiles.read().active===selectedProfile&&profiles.read().phase==='connected'&&walUpgradeGate.hasFirstUpgradeAcknowledgement()&&
   productTabs?.isExclusive()===true&&(!requireReservation||rawProductGate?.inspect().maintenance===true)&&
   !busy&&!recoveryActive&&activeSyncs===0&&window.__formalUI?.maintenanceIdle?.()===true;
@@ -694,7 +704,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const ignoredExistingQR=Boolean(receiving&&mode==='sync-enabled'&&profileState.phase==='connected');
  const pauseGuard=createSyncPauseGuard({local,key:SYNC_PAUSE_KEY+profileSuffix(selectedProfile)});
  // A lost revoke response must fence automatic sync until a user-triggered readback.
- if(revokeJournal.read()==='pending'||readOwnerClosure())pauseGuard.pause();
+ if(revokeJournal.read()==='pending'||readOwnerClosure()||authorityBlocked())pauseGuard.pause();
  // An already linked device cannot accept a second QR in this release.
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
@@ -713,7 +723,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Old browser tabs must not keep editing an obsolete profile. A pending
  // switch freezes UI writes; its internal authenticated registration may still
  // commit exclusively to the staging vault, never to the original WAL.
- const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive&&!ownerClosing&&(!readOwnerClosure()||(readOwnerClosure().phase==='confirmed'&&profiles.read().phase==='disconnected')),assertAvailable:assertLocalAvailable,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
+ const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive&&!ownerClosing&&!authorityBlocked()&&(!readOwnerClosure()||(readOwnerClosure().phase==='confirmed'&&profiles.read().phase==='disconnected')),assertAvailable:assertLocalAvailable,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
  Object.defineProperty(window,'__formalStorage',{value:uiStorage});
  Object.defineProperty(window,'__formalDecodeBackup',{value:decodeFormalBackup});
  const ui=window.__formalUI;if(!ui)throw Error('FORMAL_ENCRYPTED_UI_REQUIRED');
@@ -828,6 +838,33 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   detachLocal:async()=>{const p=profiles.read();if(p.active!==selectedProfile||!['connected','disconnected'].includes(p.phase))throw Error('OWNER_CLOSE_PROFILE_CHANGED');if(p.phase==='connected')profiles.disconnect();showConnectionActions();}
  });
  const ownerCloseUI=installOwnerCloseDialog({document,flow:ownerCloseFlow,openButton:ownerCloseOpen,onEraseRequested:()=>localResetUI.show()});
+ const authorityStoreRaw=createRegistrationIntentStore({idb:{open:(_name,...args)=>scopedIDB.open('anilog-FORMAL-OWNER-AUTHORITY-INTENT',...args)},locks:scopedLocks,origin:location.origin});
+ const authorityStore={read:async()=>authorityStoreRaw.read(await keys.read()),create:async x=>authorityStoreRaw.create(x,await keys.read()),replace:async(a,b)=>authorityStoreRaw.replace(a,b,await keys.read())};
+ const authorityOpen=document.createElement('button');authorityOpen.type='button';authorityOpen.textContent='管理端末の変更・復旧';authorityOpen.hidden=staging||local.getItem(LOCAL_MODE)!=='sync-enabled'||profiles.read().phase!=='connected';ownerCloseOpen.after(authorityOpen);
+ const authorityFlow=createOwnerAuthorityFlow({local,profileId:selectedProfile,store:authorityStore,
+  inspect:async()=>{
+   assertLocalAvailable();if(staging||profiles.read().active!==selectedProfile||!['connected','disconnected'].includes(profiles.read().phase))throw Error('AUTHORITY_PROFILE_CHANGED');
+   const proof=inspectConnectionSwitch({storage,vault,apiOrigin:api.origin}),pass=await keys.read(),check=factory();await check.unlock(pass);
+   if(canonical(check.readCurrent())!==canonical(storage.read())||check.readRevision()!==vault.readRevision())throw Error('AUTHORITY_WAL_READBACK_REQUIRED');
+   const t=await getRegisteredTransport();try{return {ready:true,profileId:selectedProfile,phase:profiles.read().phase,clean:!proof.localDiffersFromCheckpoint,checkpointRevision:vault.readSyncCheckpoint()?.serverRevision,scopeDigest:await digestText(JSON.stringify([t.apiRoot,t.origin,t.boxId,t.device.deviceId])),snapshotDigest:await digestText(canonical(appToSnapshot(storage.read())))}}finally{t.masterKey.fill(0)}
+  },transport:getRegisteredTransport,recoveryFetch:browserFetch,
+  exclusive:async fn=>{
+   if(!productTabs||busy||recoveryActive||activeSyncs||pendingLocalRequests||syncRunning||window.__formalUI?.localResetIdle?.()!==true)throw Error('AUTHORITY_IDLE_REQUIRED');
+   authorityTransition=true;try{return await privateOperationGate.withForeground(()=>productTabs.withExclusiveIfNoPeers(()=>profileExclusive(()=>fn({exclusive:productTabs.isExclusive()===true}))))}finally{authorityTransition=false}
+  },fenceWrites:value=>{ownerClosing=value;if(value){pauseGuard.pause();automatic?.stop();automatic=null;successNotice.cancel()}},
+  onReleased:async()=>{const p=profiles.read();if(p.active!==selectedProfile||!['connected','disconnected'].includes(p.phase))throw Error('AUTHORITY_PROFILE_CHANGED');if(revokeJournal.read()===null)revokeJournal.pending();if(revokeJournal.read()==='pending')revokeJournal.confirmed();if(p.phase==='connected')profiles.disconnect();showConnectionActions();},
+  getInitialRecoveryToken:async()=>{const j=await intents.read(await keys.read());return j?.api===api.origin&&j?.origin===location.origin&&j?.boxId===vault.readCurrent().weeklyOptions.__syncLineage?.boxId?j.recoveryToken??null:null;}
+ });
+ const authorityUI=installOwnerAuthorityUI({document,flow:authorityFlow,openButton:authorityOpen,
+  prepareUI:async()=>{
+   if(!productTabs||busy||recoveryActive||activeSyncs||pendingLocalRequests||syncRunning)return false;
+   return await window.__formalUI?.prepareAuthorityDialog?.()===true;
+  },
+  getRole:async()=>{const t=await getRegisteredTransport();try{return await getOwnRole(t)}finally{t.masterKey.fill(0)}},
+  listMembers:async()=>{const t=await getRegisteredTransport();try{return (await listOwnerDevices(t)).devices.filter(x=>x.role==='member'&&!x.isThisDevice).map(x=>({deviceId:x.deviceId,label:shortDeviceId(x.deviceId)}))}finally{t.masterKey.fill(0)}},
+  onComplete:()=>{showConnectionActions();status.textContent='管理権限の変更結果を確認しました。記録は保持しています。画面を更新してください。';},reload:()=>location.reload()
+ });
+ await authorityFlow.recoverPendingFence();
  const manageDevices=el('manage-devices'),deviceManagement=el('device-management'),deviceList=el('device-list'),deviceCount=el('device-count'),deviceManagementStatus=el('device-management-status');
  let revokeSnapshot=null;
  const backupButton=el('relink-backup'),confirmReconnection=el('relink-confirm'),startReconnection=el('relink-start'),cancelReconnection=el('relink-cancel');
@@ -1115,7 +1152,12 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
    return {phase:'LOCAL_QR_RESCAN_REQUIRED',storage,vault,setup};
   }
  }
- const receiver=staging||selectedProfile!=='legacy'||setup.readReceipt().role==='receiver';
+ let authorityRole=null;
+ if(!staging&&mode==='sync-enabled'&&profiles.read().phase==='connected'&&!authorityBlocked()&&!readOwnerClosure()&&!revokeJournal.read()){
+  const credentials=createV408StagingSealedDeviceCredentials({idb:scopedIDB,locks:scopedLocks});let t;
+  try{const line=checkLineage(storage.read().weeklyOptions.__syncLineage);t=await credentials.resume({vault,passphrase:await keys.read(),fetcher:createV405BrowserWorkerFetch({apiOrigin:api.origin,siteOrigin:location.origin,pageOrigin:location.origin,browserFetch}),expectedApiRoot:api.origin,expectedOrigin:location.origin,expectedBoxId:line.boxId});authorityRole=await getOwnRole(t)}catch{pauseGuard.pause();attention(true);}finally{t?.masterKey?.fill(0)}
+ }
+ const receiver=staging||(authorityRole!==null?authorityRole==='member':selectedProfile!=='legacy'||setup.readReceipt().role==='receiver');
  // An ineligible QR must never fall through into new-owner registration.
  if(receiving&&!receiver&&mode!=='sync-enabled')throw Error('LOCAL_RECEIVER_SETUP_NOT_ELIGIBLE');
  // Connected screen: main recovery first, routine device administration second.
@@ -1443,7 +1485,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     await register({fromPairing:true});
     return {phase:'FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED',serverRevision:vault.readSyncCheckpoint().serverRevision,records:Object.keys(storage.read().records).length};
    }finally{masterKey.fill(0)}
-  },withSyncOperation:privateOperationGate?fn=>privateOperationGate.withForeground(fn).finally(()=>{if(productMaintenance)requestPrivateMaintenance()}):undefined,beforeSync:()=>{if(readOwnerClosure())throw Error('OWNER_CLOSE_NOT_RESUMABLE');if(!staging&&revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+  },withSyncOperation:privateOperationGate?fn=>privateOperationGate.withForeground(fn).finally(()=>{if(productMaintenance)requestPrivateMaintenance()}):undefined,beforeSync:()=>{if(authorityBlocked())throw Error('OWNER_AUTHORITY_NOT_RESUMABLE');if(readOwnerClosure())throw Error('OWNER_CLOSE_NOT_RESUMABLE');if(!staging&&revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
  if(!staging&&profiles.read().phase==='connected')installConflictRecovery({root,locks,scope:suffix,vault,isEligible:()=>local.getItem(LOCAL_MODE)==='sync-enabled'&&confirmedConflict,
   isPaused:()=>pauseGuard.paused,isQuiescent:()=>activeSyncs===0,
   assertContext:()=>{if(!recoveryActive||!pauseGuard.paused||activeSyncs||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile||local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('REVIEW_CONTEXT_CHANGED');const line=vault.readCurrent().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})},
@@ -1485,6 +1527,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return result;
  }
  el('retry').addEventListener('click',()=>action(async()=>{
+  if(authorityBlocked()){authorityOpen.hidden=false;await authorityUI.show();return;}
   if(readOwnerClosure()){ownerCloseOpen.hidden=false;await ownerCloseUI.show();return;}
   successNotice.cancel();status.classList.remove('anilog-sync-status-quiet');
   const currentMode=local.getItem(LOCAL_MODE);
@@ -1549,7 +1592,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }
   throw Error('UNKNOWN_SETUP_STATE_KEEP_ORIGINAL');
  }));
- if(readOwnerClosure()){showConnectionActions();el('retry').hidden=true;if(!ownerCloseLocallyComplete())status.textContent=readOwnerClosure().phase==='confirmed'?'同期グループの終了は確認済みです。記録を残した利用への切替を「管理端末の同期グループを終了」から確認してください。':'同期グループの終了結果が未確認です。保存・同期を停止し、記録と鍵は保持しています。「管理端末の同期グループを終了」から結果を確認してください。';}
+ if(authorityBlocked()){showConnectionActions();authorityOpen.hidden=false;el('retry').hidden=true;status.textContent='管理権限の変更結果が未確認です。記録・接続情報を保持し、自動同期を停止しています。「管理端末の変更・復旧」から結果を確認してください。';}
+ else if(readOwnerClosure()){showConnectionActions();el('retry').hidden=true;if(!ownerCloseLocallyComplete())status.textContent=readOwnerClosure().phase==='confirmed'?'同期グループの終了は確認済みです。記録を残した利用への切替を「管理端末の同期グループを終了」から確認してください。':'同期グループの終了結果が未確認です。保存・同期を停止し、記録と鍵は保持しています。「管理端末の同期グループを終了」から結果を確認してください。';}
  else if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')await action(()=>finishStagedCutover(restored.passphrase));
  else if(mode==='sync-enabled'){
   if(['disconnected','preparing'].includes(profiles.read().phase)){showConnectionActions();}

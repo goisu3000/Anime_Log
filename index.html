@@ -3599,6 +3599,7 @@ async function refreshStoredRecords(){
   pendingStorageRefresh=false;
   saved=app.records;savedBaseline=structuredClone(app.records);weeklyOptions=app.weeklyOptions;updateCounts();render();
   if(detailActiveItem)renderDetailParts(detailNonce);
+  return true; // Explicit authenticated read+UI apply result for authority preparation.
  }catch(error){
   if(stage==='read'&&formalRefreshTransientError(error)){
    if(document.hidden||formalRefreshBlocked()){pendingStorageRefresh=true;return}
@@ -8155,10 +8156,10 @@ const maintenanceUIIdle=()=>{
  };
 // Deletion confirmation is a modal itself. Ignore only the sync/reset panels;
 // all editors, pending writes/refreshes and live Undo still block deletion.
-const localResetUIIdle=()=>{
+const localResetInputIdle=()=>{
  try{
-  if(recordWrites!==0||addingCustom||pendingUndo!==null||pendingStorageRefresh||formalRefreshRunning)return false;
-  if(document.querySelector('dialog[open]:not(#anilog-sync-dialog):not(#anilog-local-reset-dialog):not(#anilog-owner-close-dialog),#detailContent .detail-date-disclosure[open]'))return false;
+  if(recordWrites!==0||addingCustom||pendingUndo!==null)return false;
+  if(document.querySelector('dialog[open]:not(#anilog-sync-dialog):not(#anilog-local-reset-dialog):not(#anilog-owner-close-dialog):not(#anilog-owner-authority-dialog),#detailContent .detail-date-disclosure[open]'))return false;
   for(const field of document.querySelectorAll('[data-progress-input],#completionYear,#completionMonth,#completionDay')){
    if(field.tagName==='SELECT'){if(!field.options?.length||Array.from(field.options).some(o=>o.selected!==o.defaultSelected))return false;}
    else if(typeof field.value!=='string'||typeof field.defaultValue!=='string'||field.value!==field.defaultValue)return false;
@@ -8166,11 +8167,29 @@ const localResetUIIdle=()=>{
   return true;
  }catch{return false}
 };
+const localResetUIIdle=()=>!pendingStorageRefresh&&!formalRefreshRunning&&localResetInputIdle();
+// Settle an already deferred authenticated read BEFORE the authority key editor
+// opens. Never clear its pending bit, save drafts, or relax the final idle gate.
+async function prepareAuthorityDialog(){
+ if(document.hidden||formalRefreshRunning||!localResetInputIdle())return false;
+ if(!pendingStorageRefresh)return localResetUIIdle();
+ const parent=document.getElementById('anilog-sync-dialog'),authority=document.getElementById('anilog-owner-authority-dialog');
+ if(authority?.open)return false; // Never close an entered recovery-key editor.
+ const reopen=parent?.open===true;if(reopen)parent.close();
+ try{
+  await new Promise(resolve=>setTimeout(resolve,0));
+  if(formalRefreshRunning||await refreshStoredRecords()!==true)return false;
+  const deadline=Date.now()+5000;
+  while((pendingStorageRefresh||formalRefreshRunning)&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,50));
+  return !document.hidden&&localResetUIIdle();
+ }finally{if(reopen&&parent.isConnected&&!parent.open)parent.showModal();}
+}
 window.__formalUI=Object.freeze({
  readSaved:()=>structuredClone(saved),readWeeklyOptions:()=>structuredClone(weeklyOptions),
  whenWritesIdle:()=>recordWriteQueue,
  maintenanceIdle:maintenanceUIIdle,
  localResetIdle:localResetUIIdle,
+ prepareAuthorityDialog,
  maintenanceUndoIdle:()=>pendingUndo===null&&recordWrites===0,
  testOnlyMaintenanceIdle:maintenanceUIIdle,
  hydrate(app){if(!window.__formalStorage?.ready)throw Error('FORMAL_UNLOCK_REQUIRED');noticeHydratedStorage=window.__formalStorage;saved=structuredClone(app.records);savedBaseline=structuredClone(saved);weeklyOptions=structuredClone(app.weeklyOptions);if(!location.hash.startsWith(SHARE_PREFIX)&&mode!=='share'&&(!ANI_PUBLIC.read(location.pathname,location.search)||(!document.body.classList.contains('view-detail')&&mode!=='ranking')))mode='saved';updateCounts();render()},
