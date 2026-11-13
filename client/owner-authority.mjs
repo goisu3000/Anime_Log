@@ -102,7 +102,7 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
  const keyInput=document.createElement('textarea');keyInput.setAttribute('aria-label','保存してある管理端末の復旧キー');keyInput.autocomplete='off';keyInput.spellcheck=false;
  const keyOutput=document.createElement('textarea');keyOutput.setAttribute('aria-label','管理端末の復旧キー');keyOutput.readOnly=true;keyOutput.autocomplete='off';keyOutput.spellcheck=false;
  const warning=document.createElement('p');warning.textContent='引き継ぎ完了後、この端末の同期登録は解除されます。\n※記録は消えません。';
- const keyHelp=document.createElement('p');keyHelp.textContent='※キーの保管は任意です。保管していない場合、この方法では復旧できません。';
+ const keyHelp=document.createElement('p');keyHelp.textContent='※キーがわからない場合、この方法では復旧できません。';
  const recoveryHelp=document.createElement('p');recoveryHelp.textContent='復旧には、この同期先に接続済みの端末と、事前に控えた復旧キーが必要です。復旧すると旧管理端末の同期登録は解除されます。旧端末内の記録は削除されません。';
  status.style.whiteSpace=warning.style.whiteSpace=keyHelp.style.whiteSpace='pre-line';
  const label=document.createElement('label'),confirmed=document.createElement('input');confirmed.type='checkbox';label.append(confirmed,document.createTextNode('操作対象と管理権限の変更を確認しました'));
