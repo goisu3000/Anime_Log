@@ -95,14 +95,14 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
   if(announce){try{status.focus?.({preventScroll:true});status.scrollIntoView?.({block:'nearest',behavior:'auto'});}catch{ /* Display support must never change an authority operation result. */ }}
  }
  const choices=document.createElement('div');choices.className='anilog-first-wal-upgrade-actions';choices.setAttribute('role','group');choices.setAttribute('aria-label','管理端末の操作を選択');
- const changeView=document.createElement('button'),recoveryView=document.createElement('button');changeView.type=recoveryView.type='button';changeView.textContent='管理端末を変更する';recoveryView.textContent='故障・紛失から復旧する';choices.append(changeView,recoveryView);
+ const changeView=document.createElement('button'),recoveryView=document.createElement('button');changeView.type=recoveryView.type='button';changeView.textContent='管理端末を変更する';recoveryView.textContent='管理権限を復旧する';choices.append(changeView,recoveryView);
  let currentRole=null,hasMembers=false,currentView=null;
  const target=document.createElement('select');target.id='anilog-authority-target';target.setAttribute('aria-label','引き継ぎ先の端末');
  const targetField=document.createElement('div');targetField.className='anilog-authority-target-field';const targetLabel=document.createElement('label');targetLabel.htmlFor=target.id;targetLabel.textContent='引き継ぎ先の端末';targetField.append(targetLabel,target);
  const keyInput=document.createElement('textarea');keyInput.setAttribute('aria-label','保存してある管理端末の復旧キー');keyInput.autocomplete='off';keyInput.spellcheck=false;
  const keyOutput=document.createElement('textarea');keyOutput.setAttribute('aria-label','管理端末の復旧キー');keyOutput.readOnly=true;keyOutput.autocomplete='off';keyOutput.spellcheck=false;
  const warning=document.createElement('p');warning.textContent='引き継ぎ完了後、この端末の同期登録は解除されます。\n※記録は消えません。';
- const keyHelp=document.createElement('p');keyHelp.textContent='管理端末が故障・紛失した場合、接続済みの別端末と、復旧キーで管理権限を復旧できます。\n※復旧キーは事前に控えておく必要があります。';
+ const keyHelp=document.createElement('p');keyHelp.textContent='※キーの保管は任意です。保管していない場合、この方法では復旧できません。';
  const recoveryHelp=document.createElement('p');recoveryHelp.textContent='復旧には、この同期先に接続済みの端末と、事前に控えた復旧キーが必要です。復旧すると旧管理端末の同期登録は解除されます。旧端末内の記録は削除されません。';
  status.style.whiteSpace=warning.style.whiteSpace=keyHelp.style.whiteSpace='pre-line';
  const label=document.createElement('label'),confirmed=document.createElement('input');confirmed.type='checkbox';label.append(confirmed,document.createTextNode('操作対象と管理権限の変更を確認しました'));
@@ -120,7 +120,7 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
   confirmed.checked=false;pendingOperation=null;keyInput.value=keyOutput.value='';label.hidden=recovery&&currentRole==='owner';
   for(const [b,selected] of [[changeView,!recovery],[recoveryView,recovery]]){b.setAttribute('aria-pressed',String(selected));b.style.borderColor=selected?'var(--accent-border)':'var(--border-ctrl)';b.style.background=selected?'var(--accent-soft)':'var(--surface2)';b.style.color=selected?'var(--accent)':'var(--ink)';}
   if(recovery){
-   if(currentRole==='owner'){keyHelp.hidden=showKey.hidden=false;feedback('管理端末が使えなくなる前に、復旧キーを控えられます。保管は任意です。','neutral',false);}
+   if(currentRole==='owner'){keyHelp.hidden=showKey.hidden=false;feedback('管理端末が使えなくなったときに備えて、復旧キーを確認できます。\n復旧には、このキーと別の同期済み端末が必要です。','neutral',false);}
    else{recoveryHelp.hidden=keyInput.hidden=recover.hidden=false;feedback('管理端末が故障・紛失して使えない場合に、事前に控えた復旧キーで復旧します。','neutral',false);}
   }else if(currentRole==='owner'){warning.hidden=false;target.hidden=offer.hidden=!hasMembers;feedback(hasMembers?'引き継ぎ先の端末本人の承認後に、管理権限を移します。':'引き継ぎ先の登録端末がありません。','neutral',false);}
   else{refresh.hidden=false;feedback('現在の管理端末から依頼された引き継ぎを確認します。復旧キーは不要です。','neutral',false);}
@@ -136,7 +136,7 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
   if(role==='owner'){
    const members=await listMembers();target.replaceChildren();for(const m of members){const o=document.createElement('option');o.value=m.deviceId;o.textContent=m.label;target.append(o);}hasMembers=members.length>0;
   }else if(role!=='member')throw Error('ROLE_REQUIRED');
-  currentRole=role;choices.hidden=false;
+  currentRole=role;recoveryView.textContent=role==='owner'?'復旧キーを確認する':'管理権限を復旧する';choices.hidden=false;
  },null,false);
  if(currentRole&&!choices.hidden)selectView(false);}finally{opening=false}}
  confirmed.addEventListener('change',disabled);
