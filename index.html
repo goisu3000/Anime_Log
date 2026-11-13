@@ -1647,7 +1647,6 @@ select:not([data-status-id]){
  #anilog-sync-dialog[data-sync-pointer-focus="true"]:focus-visible,
  #anilog-sync-dialog[data-sync-pointer-focus="true"] #anilogSyncDialogClose:focus-visible{outline:none}
  #anilog-sync-dialog #v407-pairing > [data-v407="invite"]:disabled{display:none}
- #shareDialog>h3:focus{outline:none}
 }
 .anilog-sync-dialog::backdrop{background:rgba(5,7,10,.82);backdrop-filter:blur(4px)}
 .anilog-sync-dialog-head{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;gap:12px;justify-content:space-between;padding:24px 24px 18px;border-bottom:1px solid var(--border);background:var(--bg-side)}
@@ -2626,6 +2625,7 @@ select:not([data-status-id]){
 }
 
 /* Share dialog typography: role-based scale aligned with device sync. */
+#shareDialog>h3:focus{outline:none}
 #shareDialog>h3{font-size:var(--fs-2xl);font-weight:var(--fw-bold)}
 #shareDialog>p{font-size:var(--fs-md);font-weight:var(--fw-normal)}
 #shareDialog .share-options>label,
@@ -6345,8 +6345,8 @@ function showShareDialog(){
  $('#shareYear').value=String(todayYear);
  $('#shareSeason').value=['winter','spring','summer','fall'][Math.floor(current.getMonth()/3)];
  $('#shareScope').value='all';clearDialogNotice($('#shareDialog'));updateShareDialog();$('#shareDialog').showModal();
- // Start phone dialogs at their heading, not at an unedited selection field.
- if(window.matchMedia('(max-width:740px)').matches){const heading=$('#shareDialog').querySelector('h3');heading.tabIndex=-1;heading.focus({preventScroll:true});}
+ // Start the share dialog at its heading, not at an unedited selection field.
+ const heading=$('#shareDialog').querySelector('h3');heading.tabIndex=-1;heading.focus({preventScroll:true});
 }
 function updateShareDialog(){
  clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value;$('#shareSeasonFields').hidden=scope!=='season';const list=selectedForShare(scope),count=list.length;
