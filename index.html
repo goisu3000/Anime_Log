@@ -2849,9 +2849,19 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
  #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankYearField,
  #rankingView .rank-unified-toolbar .rank-period-inline-slot #rankSeasonField,
  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{width:100%;min-width:0}
- #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{grid-column:1 / -1}
- #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:normal;min-height:44px}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{grid-template-columns:minmax(0,1fr) max-content}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field{grid-column:auto}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field select,
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-sort-field select + .anilog-mobile-select-trigger{font-size:var(--fs-sm);padding-inline:8px 28px}
+ #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:nowrap;min-height:44px;gap:4px}
  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls select + .anilog-mobile-select-trigger{min-width:0}
+ #rankingView #rankingCopyLink{display:none}
+ #rankingView #rankTypeOptions{flex-wrap:nowrap;gap:4px}
+ #rankingView #rankTypeOptions button{min-width:0;white-space:nowrap;padding-inline:8px}
+ @media(max-width:350px){
+  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{grid-template-columns:minmax(160px,1fr) minmax(0,1fr)}
+  #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:normal}
+ }
 }
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
