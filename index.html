@@ -2739,11 +2739,12 @@ select:not([data-status-id]){
 
 /* My List: keep related navigation and search together without an empty row. */
 .saved-library-tools{display:contents}
+body.saved-mode #libraryView .saved-library-tools>.stats{border-bottom:0}
 @media(min-width:741px){
  body.saved-mode #libraryView>.section-header>div:first-child{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:baseline;column-gap:20px}
  body.saved-mode #libraryView .collection-eyebrow{grid-column:1/-1}
  body.saved-mode #libraryView #sectionDescription{margin:0}
- body.saved-mode #libraryView .saved-library-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;border-bottom:1px solid var(--border);margin-bottom:20px;padding-bottom:8px}
+ body.saved-mode #libraryView .saved-library-tools{display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px;border-bottom:0;margin-bottom:20px;padding-bottom:8px}
  body.saved-mode #libraryView .saved-library-tools>.stats{flex:0 1 auto;max-width:100%;margin:0;border-bottom:0}
  body.saved-mode #libraryView .saved-library-tools>.library-toolbar{flex:1 1 440px;min-width:0;margin:0}
  body.saved-mode #libraryView .saved-library-tools .searchbox-shell{min-width:140px}
