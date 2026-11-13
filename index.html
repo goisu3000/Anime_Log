@@ -1632,6 +1632,21 @@ select:not([data-status-id]){
 .anilog-local-reset .anilog-first-wal-upgrade-actions button:first-child{background:var(--surface2);border-color:var(--border-ctrl);color:var(--ink)}
 .anilog-local-reset .anilog-first-wal-upgrade-actions button:nth-child(2){border-color:var(--danger);color:var(--danger)}
 
+/* Owner authority layout: consistent vertical rhythm and clear field grouping. */
+#anilog-owner-authority-dialog[open]{display:flex;flex-direction:column;gap:16px}
+#anilog-owner-authority-dialog>h2{margin:0 0 4px}
+#anilog-owner-authority-dialog>p,
+#anilog-owner-authority-dialog>label,
+#anilog-owner-authority-dialog>textarea{margin:0}
+#anilog-owner-authority-dialog>[role="group"]{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#anilog-owner-authority-dialog>[role="group"] button{min-width:0;line-height:1.6;padding:10px 12px}
+#anilog-owner-authority-dialog>.anilog-authority-target-field{display:grid;gap:8px;min-width:0}
+#anilog-owner-authority-dialog .anilog-authority-target-field>label{display:block;margin:0;font-weight:var(--fw-semi)}
+#anilog-owner-authority-dialog .anilog-authority-target-field>select,
+#anilog-owner-authority-dialog .anilog-authority-target-field>.anilog-mobile-select-trigger{width:100%;min-width:0;margin:0}
+#anilog-owner-authority-dialog>label{align-items:flex-start;gap:8px}
+#anilog-owner-authority-dialog>.anilog-first-wal-upgrade-actions:last-child{gap:12px;margin-top:4px}
+
 /* ANI:LOG sync settings shell: presentation only. Engine, ids, state and actions are unchanged. */
 .anilog-sync-sidebar{margin-top:8px}
 .anilog-sync-sidebar .anilog-sync-entry{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--ink);text-align:left;font-size:var(--fs-md);font-weight:var(--fw-semi)}
