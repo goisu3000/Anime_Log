@@ -1,4 +1,6 @@
-import {createLocalDeviceReset,installLocalDeviceResetUI} from './local-device-reset.mjs';
+import {createLocalDeviceReset,installLocalDeviceResetUI,assertLocalResetRegistrationsReleased} from './local-device-reset.mjs';
+import {createOwnerCloseFlow,installOwnerCloseDialog,readOwnerCloseIntent} from './owner-group-close.mjs';
+import {digestText} from '../shared/registration-ticket.mjs';
 import {installConflictRecovery} from './conflict-resolution-integration.mjs';
 import {createFormalProductionANIPrimary} from './v408-https-staging-encrypted-primary.mjs';
 import {createFormalStorage,decodeFormalBackup,createPrivateQuiescentOperationGate} from './formal-storage.mjs';
@@ -190,8 +192,8 @@ export function createConnectionProfiles({local}={}){
  return Object.freeze({read,
   disconnect(){const x=read();if(x.phase!=='connected')profileFail('NOT_CONNECTED');return write(x,{v:1,active:x.active,phase:'disconnected',nextId:x.nextId})},
   reconnectSame(){const x=read();if(x.phase!=='disconnected')profileFail('NOT_DISCONNECTED');return write(x,{v:1,active:x.active,phase:'connected',nextId:x.nextId})},
-  begin({sourceRevision,oldTabsClosed=false,backupSaved=false}={}){
-   const x=read();if(x.phase!=='disconnected'||oldTabsClosed!==true||backupSaved!==true)profileFail('BACKUP_AND_DISCONNECT_REQUIRED');
+  begin({sourceRevision,oldTabsClosed=false,confirmed=false}={}){
+   const x=read();if(x.phase!=='disconnected'||oldTabsClosed!==true||confirmed!==true)profileFail('CONFIRMATION_AND_DISCONNECT_REQUIRED');
    if(!Number.isSafeInteger(sourceRevision)||sourceRevision<0)profileFail('SOURCE_REVISION_REQUIRED');
    const n=x.nextId;if(n>99)profileFail('PROFILE_LIMIT_REACHED');
    return write(x,{v:1,active:x.active,phase:'preparing',staging:'p'+n,sourceRevision,nextId:n+1});
@@ -463,7 +465,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  }
  // Enroll every product profile in an origin-wide deletion fence before any
  // setup, unlock or sync. This does not authorize or change WAL compaction.
- let localQrTransition=false,pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
+ let localQrTransition=false,ownerCloseTransition=false,ownerClosing=false,readOwnerClosure=()=>null,pendingLocalRequests=0,localResetting=false,localResetUI,stopLocalActivity=()=>{},beforeLocalReset=async()=>{throw Error('LOCAL_RESET_STOP:STARTUP_NOT_READY')};
  const reset=createLocalDeviceReset({idb,local,session:window.sessionStorage,locks,events:window,
   beforeErase:()=>beforeLocalReset(),onFenced:()=>{localResetting=true;stopLocalActivity();localResetUI?.show()}});
  await reset.join();
@@ -472,7 +474,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const originalIDB=idb;
  idb={open:(...args)=>{assertLocalAvailable();return originalIDB.open(...args)},databases:()=>originalIDB.databases()};
  const originalBrowserFetch=browserFetch;
- browserFetch=async(...args)=>{assertLocalAvailable();pendingLocalRequests++;try{return await originalBrowserFetch(...args)}finally{pendingLocalRequests--}};
+ browserFetch=async(...args)=>{assertLocalAvailable();const closing=readOwnerClosure();if(closing){const u=new URL(args[0]);if(closing.phase!=='pending'||args[1]?.method!=='POST'||u.origin!==api.origin||!/^\/v1\/boxes\/[A-Za-z0-9_-]{22,43}\/close$/.test(u.pathname)||u.search||u.hash)throw Error('OWNER_CLOSE_NETWORK_FENCED')};pendingLocalRequests++;try{return await originalBrowserFetch(...args)}finally{pendingLocalRequests--}};
  localResetUI=installLocalDeviceResetUI({document,reset,openButton:el('delete-local-data'),
   onBackup:()=>{assertLocalAvailable();if(window.__formalStorage?.ready!==true)throw Error('BACKUP_NOT_READY');document.getElementById('exportBtn').click()},
   onFresh:()=>location.replace('/'),siteOrigin:location.origin});
@@ -485,6 +487,9 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const profileState=profiles.read();
  const profileExclusive=fn=>locks.request('anilog-formal-connection-profile-cutover',{mode:'exclusive'},fn);
  const staging=profileState.phase==='ready',selectedProfile=getSelectedProfile(profileState);
+ readOwnerClosure=()=>readOwnerCloseIntent(local,selectedProfile);
+ const isProfileReleased=()=>revokeJournal.read()==='confirmed'||readOwnerClosure()?.phase==='confirmed';
+ const ownerCloseLocallyComplete=()=>readOwnerClosure()?.phase==='confirmed'&&['disconnected','preparing'].includes(profiles.read().phase);
  const walUpgradeGate=createFirstWalUpgradeGate({local,profileId:selectedProfile});
  // This injection point is deliberately unreachable in the ordinary auto-mount.
  // A test runner must explicitly inject BOTH a gate and the experiment consent.
@@ -503,7 +508,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const rawProductGate=!maintenanceTest?createPrivateQuiescentOperationGate():null;
  const productTabs=!maintenanceTest?createProductWalTabCoordinator({locks,events:window,
   lockName:'anilog-private-wal-maintenance:'+selectedProfile,
-  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&(localQrTransition?window.__formalUI?.localResetIdle?.()===true:window.__formalUI?.maintenanceIdle?.()===true)
+  localIdle:()=>!busy&&!recoveryActive&&activeSyncs===0&&((localQrTransition||ownerCloseTransition)?window.__formalUI?.localResetIdle?.()===true:window.__formalUI?.maintenanceIdle?.()===true)
  }):null;
  if(productTabs)privateOperationGate=Object.freeze({
   tryReserveMaintenance:()=>rawProductGate.tryReserveMaintenance(),
@@ -516,7 +521,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   withForeground:fn=>{assertLocalAvailable();const guarded=()=>{assertLocalAvailable();return fn()};return foregroundGate?foregroundGate.withForeground(guarded):guarded()},
   tryReserveMaintenance:()=>{try{assertLocalAvailable();return foregroundGate?.tryReserveMaintenance?.()??null}catch{return null}}
  });
- const productAuthorized=(requireReservation=true)=>!localResetting&&productMaintenance&&!staging&&
+ const productAuthorized=(requireReservation=true)=>!localResetting&&!readOwnerClosure()&&productMaintenance&&!staging&&
   profiles.read().active===selectedProfile&&profiles.read().phase==='connected'&&walUpgradeGate.hasFirstUpgradeAcknowledgement()&&
   productTabs?.isExclusive()===true&&(!requireReservation||rawProductGate?.inspect().maintenance===true)&&
   !busy&&!recoveryActive&&activeSyncs===0&&window.__formalUI?.maintenanceIdle?.()===true;
@@ -689,7 +694,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const ignoredExistingQR=Boolean(receiving&&mode==='sync-enabled'&&profileState.phase==='connected');
  const pauseGuard=createSyncPauseGuard({local,key:SYNC_PAUSE_KEY+profileSuffix(selectedProfile)});
  // A lost revoke response must fence automatic sync until a user-triggered readback.
- if(revokeJournal.read()==='pending')pauseGuard.pause();
+ if(revokeJournal.read()==='pending'||readOwnerClosure())pauseGuard.pause();
  // An already linked device cannot accept a second QR in this release.
  // Show the limitation; do not overwrite credentials, vault or sync lineage.
  if(ignoredExistingQR){
@@ -708,7 +713,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Old browser tabs must not keep editing an obsolete profile. A pending
  // switch freezes UI writes; its internal authenticated registration may still
  // commit exclusively to the staging vault, never to the original WAL.
- const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive,assertAvailable:assertLocalAvailable,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
+ const uiStorage=createGuardedFormalUIStorage({storage,profiles,selectedProfile,staging,canWrite:()=>!recoveryActive&&!ownerClosing&&(!readOwnerClosure()||(readOwnerClosure().phase==='confirmed'&&profiles.read().phase==='disconnected')),assertAvailable:assertLocalAvailable,privateOperationGate,privateOnUndoExpired:maintenanceTest?requestPrivateMaintenance:null,exposePrivateMaintenance:maintenanceTest});
  Object.defineProperty(window,'__formalStorage',{value:uiStorage});
  Object.defineProperty(window,'__formalDecodeBackup',{value:decodeFormalBackup});
  const ui=window.__formalUI;if(!ui)throw Error('FORMAL_ENCRYPTED_UI_REQUIRED');
@@ -734,11 +739,40 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  ui.hydrate(restored.app);
  beforeLocalReset=async()=>{
   assertLocalAvailable();
-  const gate=rawProductGate?.inspect();
-  if(busy||recoveryActive||activeSyncs!==0||pendingLocalRequests!==0||syncRunning||gate?.foreground||gate?.waiting||gate?.maintenance||window.__formalUI?.localResetIdle?.()!==true)throw Error('LOCAL_RESET_STOP:LOCAL_OPERATIONS_BUSY');
+  const assertIdle=(reserved=false)=>{const gate=rawProductGate?.inspect();if((busy&&!reserved)||recoveryActive||activeSyncs!==0||pendingLocalRequests!==0||syncRunning||gate?.foreground||gate?.waiting||(gate?.maintenance&&!reserved)||window.__formalUI?.localResetIdle?.()!==true)throw Error('LOCAL_RESET_STOP:LOCAL_OPERATIONS_BUSY')};
+  assertIdle();
+  // Hold the existing single-realm gate while asynchronous read-only checks
+  // run. New save/sync work must wait; if it arrives, refuse this deletion.
+  const reservation=rawProductGate?.tryReserveMaintenance();if(!reservation)throw Error('LOCAL_RESET_STOP:LOCAL_OPERATIONS_BUSY');
+  busy=true;
+  try{
+  const state=profiles.read();if(!['connected','disconnected'].includes(state.phase)||state.active!==selectedProfile)throw Error('LOCAL_RESET_STOP:REGISTRATION_STATE_REQUIRED');
+  await assertLocalResetRegistrationsReleased({local,idb:originalIDB,inspectUnregistered:async(id,names)=>{
+   // Historical profiles with no release proof are conservatively blocked.
+   // Never open/create an absent database merely to inspect its state.
+   const sfx=profileSuffix(id),primary='anilog-FORMAL-PRODUCTION-ENCRYPTED-PRIMARY'+sfx;
+   if(id!==selectedProfile&&names.includes(primary))return {unregistered:false};
+   if(id===selectedProfile&&(vault.readSyncCheckpoint()!==null||Object.hasOwn(storage.read().weeklyOptions,'__syncLineage')||Object.hasOwn(storage.read().weeklyOptions,'__registrationPending')))return {unregistered:false};
+   const creds='anilog-FORMAL-PRODUCTION-SEALED-CREDENTIALS'+sfx;
+   if(names.includes(creds)){
+    const state=await createV408StagingSealedDeviceCredentials({idb:{open:(_name,...args)=>originalIDB.open(creds,...args)},locks:scopedLocks}).inspect();
+    if(state.phase!=='EMPTY_LOCKED')return {unregistered:false};
+   }
+   for(const prefix of ['formal-production:','formal-production:receiver:']){
+    const db=prefix+'anilog-FORMAL-REGISTRATION-INTENT'+sfx;
+    if(names.includes(db)){
+     const pass=await keys.read();if(!pass)return {unregistered:false};
+     if(await createRegistrationIntentStore({idb:{open:(_name,...args)=>originalIDB.open(db,...args)},locks:scopedLocks,origin:location.origin}).read(pass)!==null)return {unregistered:false};
+    }
+   }
+   return {unregistered:true};
+  }});
+  assertIdle(true);if(reservation.hasForegroundWaiters())throw Error('LOCAL_RESET_STOP:LOCAL_OPERATIONS_BUSY');
+  if(canonical(profiles.read())!==canonical(state))throw Error('LOCAL_RESET_STOP:REGISTRATION_STATE_CHANGED');
   // Stop scheduling before installing the durable fence. In-flight operations
   // are rejected above; this never aborts a write or sends a remote deletion.
   localResetting=true;automatic?.stop();automatic=null;successNotice.cancel();
+  }finally{busy=false;reservation.release()}
  };
  if((maintenanceTest||productMaintenance)&&setup.readReceipt().v===2&&walUpgradeGate.read()==='PENDING')walUpgradeGate.markNewSetup();
  status.textContent='端末内の記録を復元しました。';
@@ -777,15 +811,39 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const unlink=el('unlink-sync'),relink=el('relink-sync'),relinkActions=el('relink-qr-actions');
  const restart=el('restart-sync'),restartConfirm=el('restart-confirm'),restartAccept=el('restart-accept'),restartDismiss=el('restart-dismiss'),restartGuide=el('restart-guide'),targetLabel=el('relink-target');
  const revokeBackup=el('revoke-backup'),revokeBackupConfirmed=el('revoke-backup-confirmed'),revokeWarning=el('revoke-warning');
+ const ownerCloseOpen=document.createElement('button');ownerCloseOpen.type='button';ownerCloseOpen.textContent='管理端末の同期グループを終了';ownerCloseOpen.hidden=!readOwnerClosure();restart.after(ownerCloseOpen);
+ const ownerCloseFlow=createOwnerCloseFlow({local,profileId:selectedProfile,
+  inspect:async({remotePreflight})=>{
+   if(staging||profiles.read().active!==selectedProfile||recoveryActive)throw Error('OWNER_CLOSE_PROFILE_REQUIRED');
+   const proof=inspectConnectionSwitch({storage,vault,apiOrigin:api.origin}),t=await getRegisteredTransport();
+   const p={ready:storage.ready,profileId:selectedProfile,phase:profiles.read().phase,revision:vault.readRevision(),checkpointRevision:proof.serverRevision,clean:!proof.localDiffersFromCheckpoint,
+    scopeDigest:await digestText(JSON.stringify([t.apiRoot,t.origin,t.boxId,t.device.deviceId])),snapshotDigest:await digestText(canonical(appToSnapshot(storage.read())))};
+   if(remotePreflight){const r=await t.fetcher(t.apiRoot+'/v1/boxes/'+t.boxId+'/close',{method:'GET',headers:{Origin:t.origin,Authorization:'Bearer '+t.device.deviceToken,'X-Device-Id':t.device.deviceId}});if(r.status!==200)throw Error('OWNER_CLOSE_PREFLIGHT_REQUIRED');const b=await r.json();Object.assign(p,{role:b.role,activeDevices:b.activeDevices,noPendingInvitations:b.noPendingInvitations,serverRevision:b.revision});}
+   return p;
+  },transport:getRegisteredTransport,
+  exclusive:async fn=>{
+   if(!productTabs||busy||recoveryActive||activeSyncs||pendingLocalRequests||syncRunning||window.__formalUI?.localResetIdle?.()!==true)throw Error('OWNER_CLOSE_IDLE_REQUIRED');
+   ownerCloseTransition=true;try{return await privateOperationGate.withForeground(()=>productTabs.withExclusiveIfNoPeers(()=>profileExclusive(()=>fn({exclusive:productTabs.isExclusive()===true}))))}finally{ownerCloseTransition=false}
+  },fenceWrites:value=>{ownerClosing=value;if(value){pauseGuard.pause();automatic?.stop();automatic=null;successNotice.cancel()}},
+  detachLocal:async()=>{const p=profiles.read();if(p.active!==selectedProfile||!['connected','disconnected'].includes(p.phase))throw Error('OWNER_CLOSE_PROFILE_CHANGED');if(p.phase==='connected')profiles.disconnect();showConnectionActions();}
+ });
+ const ownerCloseUI=installOwnerCloseDialog({document,flow:ownerCloseFlow,openButton:ownerCloseOpen,onEraseRequested:()=>localResetUI.show()});
  const manageDevices=el('manage-devices'),deviceManagement=el('device-management'),deviceList=el('device-list'),deviceCount=el('device-count'),deviceManagementStatus=el('device-management-status');
- let savedRevokeBackup=false,backupFingerprint=null;
+ let revokeSnapshot=null;
  const backupButton=el('relink-backup'),confirmReconnection=el('relink-confirm'),startReconnection=el('relink-start'),cancelReconnection=el('relink-cancel');
  let restartGuideOpen=revokeJournal.read()==='confirmed';
- let newBackupDownloaded=false,backupRevision=null,qrTargetAllowed=!receiving;
+ let reconnectionRevision=null,qrTargetAllowed=!receiving;
  const oldConnectionKey=SYNC_PAUSE_KEY+profileSuffix(profileState.active);
  const oldPause=createSyncPauseGuard({local,key:oldConnectionKey});
  function showConnectionActions(){
   const state=profiles.read();connectionActions.hidden=false;connectionActions.dataset.syncPhase=state.phase;
+  if(readOwnerClosure()){
+   unlink.hidden=relink.hidden=restart.hidden=restartConfirm.hidden=pauseButton.hidden=resumeButton.hidden=true;ownerCloseOpen.hidden=ownerCloseLocallyComplete();manageDevices.hidden=deviceManagement.hidden=true;
+   const panel=document.getElementById('formal-sync-controls');if(panel)panel.hidden=true;
+   relinkActions.hidden=!receiving||readOwnerClosure().phase!=='confirmed';targetLabel.hidden=relinkActions.hidden;
+   restartGuide.hidden=true;cancelReconnection.hidden=!['preparing','ready'].includes(state.phase);
+   status.textContent=ownerCloseLocallyComplete()?'同期OFF：同期グループを終了しました。この端末に暗号化保存しています。':readOwnerClosure().phase==='pending'?'同期グループの終了結果が未確認です。記録と鍵を保持し、保存・同期を停止しています。':'同期グループの終了は確認済みです。この端末の記録は保持しています。';return;
+  }
   el('own-device-info').hidden=staging||state.phase!=='connected';
   if(state.phase==='disconnected'||state.phase==='preparing'){
    const existingPanel=document.getElementById('formal-sync-controls');if(existingPanel)existingPanel.hidden=true;
@@ -815,26 +873,24 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  // Restart is an explicit local-profile transition, not deletion of sync data.
  // For an already-disconnected device it only reveals the new-QR workflow.
  revokeBackup.addEventListener('click',()=>{
-  savedRevokeBackup=false;backupFingerprint=null;revokeBackupConfirmed.checked=false;restartAccept.disabled=true;
   try{
-   const snapshot=canonical(appToSnapshot(storage.read()));
    const raw=storage.exportBackup(),url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
    const a=document.createElement('a');a.href=url;a.download='anime-log-before-device-revoke.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-   backupFingerprint=snapshot;savedRevokeBackup=true;
   }catch(e){message(e)}
  });
- revokeBackupConfirmed.addEventListener('change',()=>{restartAccept.disabled=!(savedRevokeBackup&&revokeBackupConfirmed.checked)});
+ revokeBackupConfirmed.addEventListener('change',()=>{restartAccept.disabled=!revokeBackupConfirmed.checked||revokeSnapshot===null});
  restart.addEventListener('click',()=>{
   const state=profiles.read();
   if(staging||!['connected','disconnected'].includes(state.phase))return;
   if(state.phase==='disconnected'){
    restartGuideOpen=true;showConnectionActions();return;
   }
-  savedRevokeBackup=false;backupFingerprint=null;revokeBackupConfirmed.checked=false;restartAccept.disabled=true;
+  revokeSnapshot=null;revokeBackupConfirmed.checked=false;restartAccept.disabled=true;el('revoke-delete-records').checked=false;
   try{
    const x=inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
-   revokeWarning.textContent=x.localDiffersFromCheckpoint?'未送信の変更がある可能性があります。先に再同期するか、バックアップを保存してください。解除後は他端末に自動反映されません。':'バックアップを保存してから解除してください。';
-  }catch{revokeWarning.textContent='同期の確認状態が不明です。記録を消さず、独立バックアップを保存してから進んでください。';}
+   revokeSnapshot=canonical(appToSnapshot(storage.read()));
+   revokeWarning.textContent=x.localDiffersFromCheckpoint?'未送信の変更はこの端末に残ります。解除後は他端末に自動反映されません。記録も削除する場合は失われます。バックアップは任意です。':'解除後も記録はこの端末に残ります。バックアップは任意です。';
+  }catch{revokeWarning.textContent='同期の確認状態が不明です。解除・削除は実行しません。記録は保持されています。';}
   restartConfirm.hidden=false;restart.hidden=true;
  });
  restartDismiss.addEventListener('click',()=>{
@@ -848,7 +904,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return running.sealedCredentials.resume({vault,passphrase,fetcher,expectedApiRoot:api.origin,expectedOrigin:location.origin,expectedBoxId:scope.boxId});
  }
  restartAccept.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
-  if(staging||profiles.read().phase!=='connected'||!savedRevokeBackup||!revokeBackupConfirmed.checked)throw Error('REVOKE_BACKUP_OR_CONNECTION_REQUIRED');
+  if(staging||profiles.read().phase!=='connected'||revokeSnapshot===null||!revokeBackupConfirmed.checked)throw Error('REVOKE_CONFIRMATION_OR_CONNECTION_REQUIRED');
+  const deleteAfterRevoke=el('revoke-delete-records').checked;
   // Do not interrupt an owner connection or silently revoke its authority.
   // Role is checked first; after a lost response the journal permits self-retry
   // even though the old member no longer authenticates for GET /me.
@@ -864,19 +921,21 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     role='previously-revoked-member-or-invalid';
    }
    if(role==='owner'){
-    switchResult.hidden=false;switchResult.textContent='この端末は管理端末です。現在の登録を解除すると他端末が管理不能になるため、この操作はできません。';
-    restartConfirm.hidden=true;showConnectionActions();return;
+    restartConfirm.hidden=true;showConnectionActions();ownerCloseOpen.hidden=false;await ownerCloseUI.show();return;
    }
   }
   oldPause.pause();automatic?.stop();automatic=null;
   await ui.whenWritesIdle();if(activeSyncs!==0)throw Error('SYNC_IN_FLIGHT_RETRY_AFTER_COMPLETION');
-  if(backupFingerprint!==canonical(appToSnapshot(storage.read())))throw Error('BACKUP_STALE_SAVE_NEW_BACKUP');
+  if(revokeSnapshot!==canonical(appToSnapshot(storage.read())))throw Error('REVOKE_STATE_CHANGED_RECONFIRM');
   if(revokeJournal.read()!=='pending')revokeJournal.pending();
   const result=await revokeThisMember(transport);
   revokeJournal.confirmed(); // durable before local pointer move
   profiles.disconnect();restartConfirm.hidden=true;restartGuideOpen=true;
   showPauseState();showConnectionActions();void showDestination();
   switchResult.hidden=false;switchResult.textContent='この端末の登録解除をサーバーで確認しました。登録数：'+result.activeDevices+' / 4台。記録は保持しています。再接続する場合は管理端末で新しいQRを表示してください。';
+  // The whole-browser eraser has its OWN final confirmation and checks every
+  // profile again. A lost remote ACK or failed pointer move never reaches it.
+  if(deleteAfterRevoke)localResetUI.show();
  }))); 
  unlink.addEventListener('click',()=>{switchResult.hidden=false;switchResult.textContent='登録枠を残す旧解除方法は廃止しました。「この端末の同期登録を解除」を使ってください。';});
  relink.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
@@ -891,27 +950,30 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   location.reload();
  })));
  backupButton.addEventListener('click',()=>{
-  newBackupDownloaded=false;backupRevision=null;confirmReconnection.checked=false;startReconnection.disabled=true;
   try{
    const raw=storage.exportBackup();const url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
    const a=document.createElement('a');a.href=url;a.download='anime-log-before-reconnect.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
-   backupRevision=vault.readRevision();newBackupDownloaded=true;
-   if(receiving&&qrTargetAllowed)nextQrStep('バックアップを保存したか確認してください','ダウンロードしたファイルが保存されたこと、同期先IDが正しいこと、ほかのタブを閉じたことを確認し、チェックを入れてください。',{step:1,device:'この端末で操作'});
   }catch(e){message(e)}
  });
- confirmReconnection.addEventListener('change',()=>{startReconnection.disabled=!(newBackupDownloaded&&confirmReconnection.checked&&qrTargetAllowed);if(receiving&&qrTargetAllowed&&newBackupDownloaded&&confirmReconnection.checked)nextQrStep('この端末で接続を開始してください','下の「この端末を接続する」を押してください。続いてPCで6桁コードを承認します。',{step:1,device:'この端末で操作'});});
+ confirmReconnection.addEventListener('change',()=>{
+  reconnectionRevision=null;
+  if(confirmReconnection.checked){try{if(!storage.ready)throw Error();reconnectionRevision=vault.readRevision()}catch{confirmReconnection.checked=false}}
+  startReconnection.disabled=!(confirmReconnection.checked&&qrTargetAllowed&&reconnectionRevision!==null);
+  if(receiving&&qrTargetAllowed&&confirmReconnection.checked)nextQrStep('この端末で接続を開始してください','下の「この端末を接続する」を押してください。続いてPCで6桁コードを承認します。',{step:1,device:'この端末で操作'});
+ });
  startReconnection.addEventListener('click',()=>action(()=>profileExclusive(async()=>{
-  if(!receiving||!captured?.href||!qrTargetAllowed||!newBackupDownloaded||!confirmReconnection.checked||profiles.read().phase!=='disconnected'||!oldPause.paused)throw Error('CONFIRMED_BACKUP_AND_QR_REQUIRED');
+  if(!receiving||!captured?.href||!qrTargetAllowed||reconnectionRevision===null||!confirmReconnection.checked||profiles.read().phase!=='disconnected'||!oldPause.paused)throw Error('CONFIRMED_CONNECTION_AND_QR_REQUIRED');
+  if(!isProfileReleased())throw Error('SERVER_RELEASE_REQUIRED_BEFORE_NEW_GROUP');
   const source=storage.read(),lineage=source.weeklyOptions.__syncLineage;
   const comparison=await compareScannedQrDestination({qrUrl:captured.href,siteOrigin:location.origin,apiOrigin:api.origin,lineage});
   if(comparison.sameDestination&&revokeJournal.read()!=='confirmed')throw Error('SAME_DESTINATION_USE_RECONNECT');
   inspectConnectionSwitch({storage,vault,apiOrigin:api.origin});
   await storage.refresh();const original=storage.read(),sourceRevision=vault.readRevision();
-  if(sourceRevision!==backupRevision)throw Error('BACKUP_STALE_DOWNLOAD_NEW_COPY');
+  if(sourceRevision!==reconnectionRevision)throw Error('SOURCE_CHANGED_RECONFIRM_CONNECTION');
   // Keep the full current WAL/checkpoint in the original database. A separate
   // encrypted genesis is an independent, durable copy, not an in-place rebind.
   const password=await keys.read();if(!password)throw Error('SOURCE_KEY_REQUIRED');
-  const progress=profiles.begin({sourceRevision,oldTabsClosed:true,backupSaved:true});
+  const progress=profiles.begin({sourceRevision,oldTabsClosed:true,confirmed:true});
   const stageFactory=()=>createFormalProductionANIPrimary({idb,locks,profileId:progress.staging});
   const stageVault=stageFactory();const stageStorage=createFormalStorage({vault:stageVault,independentVault:stageFactory});
   // In this restart workflow, adopt the established group's records without
@@ -954,7 +1016,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   const recoveryEntry=el('resolve-conflict');
   if(recoveryEntry)recoveryEntry.hidden=!canRepair||!confirmedConflict||recoveryActive;
   showConnectionActions();
-  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。解除前のバックアップを保持し、「この端末の同期登録を解除」から解除結果を確認してください。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を解消」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
+  if(paused&&profiles.read().phase==='connected'){attention(true);status.textContent=revokeJournal.read()==='pending'?'サーバー登録解除の結果が未確認です。自動同期を安全停止しています。「この端末の同期登録を解除」から解除結果を確認してください。記録は保持されています。':(confirmedConflict?'記録に不一致があるため、同期を一時停止しています。記録は保護されています。「不一致を解消」から残す内容を選べます。':'同期は一時停止中です。記録と接続情報はそのままです。');showSyncVisual('warning');}
  }
  showPauseState();
  if(profiles.read().phase==='disconnected'&&receiving){
@@ -967,7 +1029,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     lineage:storage.read().weeklyOptions.__syncLineage});
    targetLabel.textContent='読み取ったQRの同期先ID：'+comparison.scannedID+'。接続したいPCまたはスマホ側の「同期先ID」と必ず比較してください。'+(comparison.sameDestination?(revokeJournal.read()==='confirmed'?' この端末の旧登録は失効済みです。新しいQRで改めて登録できます。':' このQRは以前の同期先です。別の同期先に変更する場合は、新しいQRを読み取ってください。'):'');
    targetLabel.hidden=false;
-   qrTargetAllowed=!comparison.sameDestination||revokeJournal.read()==='confirmed';startReconnection.disabled=!(qrTargetAllowed&&newBackupDownloaded&&confirmReconnection.checked);
+   qrTargetAllowed=isProfileReleased();startReconnection.disabled=!(qrTargetAllowed&&reconnectionRevision!==null&&confirmReconnection.checked);
+   if(!comparison.sameDestination&&!qrTargetAllowed)nextQrStep('以前の同期登録の解除が必要です','以前の同期先に戻して登録解除を完了してから、新しいQRを読み取ってください。記録は保持されています。');
    if(comparison.sameDestination&&revokeJournal.read()!=='confirmed')nextQrStep('以前の同期先と同じQRです','元の同期先に戻したい場合は「詳細設定・復旧」の「以前の同期先に戻す」を使います。別の同期先に変更したい場合はPCから新しいQRを作成し、もう一度読み取ってください。');
   }catch{
    nextQrStep('QRの同期先を確認できません','この接続は進めず、元のPCで新しいQRを作成して読み取ってください。視聴記録は保護されています。');
@@ -1066,7 +1129,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   // Potentially destructive connection reset belongs behind the existing
   // explicit disclosure, without removing its backup/revoke confirmation.
   const advancedActions=connectionActions.querySelector('.anilog-sync-advanced-actions');
-  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm);
+  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm,ownerCloseOpen);
   if(!receiver&&selectedProfile){
    primaryActions.append(manageDevices);
    primaryActions.after(deviceManagement);
@@ -1380,7 +1443,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
     await register({fromPairing:true});
     return {phase:'FIRST_RECEIVER_AND_SEALED_DEVICE_VERIFIED',serverRevision:vault.readSyncCheckpoint().serverRevision,records:Object.keys(storage.read().records).length};
    }finally{masterKey.fill(0)}
-  },withSyncOperation:privateOperationGate?fn=>privateOperationGate.withForeground(fn).finally(()=>{if(productMaintenance)requestPrivateMaintenance()}):undefined,beforeSync:()=>{if(!staging&&revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
+  },withSyncOperation:privateOperationGate?fn=>privateOperationGate.withForeground(fn).finally(()=>{if(productMaintenance)requestPrivateMaintenance()}):undefined,beforeSync:()=>{if(readOwnerClosure())throw Error('OWNER_CLOSE_NOT_RESUMABLE');if(!staging&&revokeJournal.read())throw Error('SELF_REVOKE_NOT_RESUMABLE');pauseGuard.assertAllowed();if(profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile)throw Error('PROFILE_NOT_ACTIVE');const line=storage.read().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})}});
  if(!staging&&profiles.read().phase==='connected')installConflictRecovery({root,locks,scope:suffix,vault,isEligible:()=>local.getItem(LOCAL_MODE)==='sync-enabled'&&confirmedConflict,
   isPaused:()=>pauseGuard.paused,isQuiescent:()=>activeSyncs===0,
   assertContext:()=>{if(!recoveryActive||!pauseGuard.paused||activeSyncs||profiles.read().phase!=='connected'||profiles.read().active!==selectedProfile||local.getItem(LOCAL_MODE)!=='sync-enabled')throw Error('REVIEW_CONTEXT_CHANGED');const line=vault.readCurrent().weeklyOptions.__syncLineage;storage.assertSyncHistory({api:api.origin,boxId:line?.boxId})},
@@ -1422,6 +1485,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   return result;
  }
  el('retry').addEventListener('click',()=>action(async()=>{
+  if(readOwnerClosure()){ownerCloseOpen.hidden=false;await ownerCloseUI.show();return;}
   successNotice.cancel();status.classList.remove('anilog-sync-status-quiet');
   const currentMode=local.getItem(LOCAL_MODE);
   // A staged switch has its own durable registration/confirmation. Do not
@@ -1485,7 +1549,8 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }
   throw Error('UNKNOWN_SETUP_STATE_KEEP_ORIGINAL');
  }));
- if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')await action(()=>finishStagedCutover(restored.passphrase));
+ if(readOwnerClosure()){showConnectionActions();el('retry').hidden=true;if(!ownerCloseLocallyComplete())status.textContent=readOwnerClosure().phase==='confirmed'?'同期グループの終了は確認済みです。記録を残した利用への切替を「管理端末の同期グループを終了」から確認してください。':'同期グループの終了結果が未確認です。保存・同期を停止し、記録と鍵は保持しています。「管理端末の同期グループを終了」から結果を確認してください。';}
+ else if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')await action(()=>finishStagedCutover(restored.passphrase));
  else if(mode==='sync-enabled'){
   if(['disconnected','preparing'].includes(profiles.read().phase)){showConnectionActions();}
   else if(ignoredExistingQR){attention(true);status.textContent='新しいQRは適用していません。このタブでの自動同期は開始していません。通常の同期を再開するにはページを再読み込みしてください。';}

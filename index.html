@@ -2901,11 +2901,12 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
  <p class="anilog-sync-action-description" data-simple="restart-description">視聴記録を残したまま同期登録を解除します。登録枠が1台空きます。</p>
  <button type="button" data-simple="manage-devices" hidden aria-expanded="false" aria-controls="anilog-device-management">登録済み端末を管理</button>
  <div class="anilog-sync-restart-confirm" data-simple="restart-confirm" hidden>
-  <p>この端末の登録を解除し、空き枠を1台増やします。<strong>元の接続には戻れません。</strong> 再接続には新しいQRが必要です。記録は消えません。</p>
-  <p data-simple="revoke-warning">未送信の変更がある場合は、先に同期またはバックアップで保護してください。</p>
-  <button type="button" data-simple="revoke-backup">解除前のバックアップを保存する</button>
-  <label><input type="checkbox" data-simple="revoke-backup-confirmed">バックアップを保存し、ほかのタブを閉じました。新しいQRで再接続することを確認しました。</label>
-  <div class="anilog-sync-restart-buttons"><button type="button" data-simple="restart-accept" disabled>登録を解除してやり直す</button><button type="button" data-simple="restart-dismiss">キャンセル</button></div>
+  <p>この端末の同期登録を解除します。再接続には管理端末の新しいQRが必要です。ほかの端末の記録・登録は削除しません。</p>
+  <p data-simple="revoke-warning">解除後も記録はこの端末に残ります。バックアップは任意です。</p>
+  <button type="button" data-simple="revoke-backup">バックアップを書き出す（任意）</button>
+  <label><input type="checkbox" data-simple="revoke-delete-records">解除後、このブラウザの記録も削除する（別途最終確認）</label>
+  <label><input type="checkbox" data-simple="revoke-backup-confirmed">ほかのANI:LOGタブを閉じ、この端末の同期登録を解除することを確認しました。</label>
+  <div class="anilog-sync-restart-buttons"><button type="button" data-simple="restart-accept" disabled>同期登録を解除する</button><button type="button" data-simple="restart-dismiss">キャンセル</button></div>
  </div>
  <div class="anilog-sync-restart-guide" data-simple="restart-guide" hidden>
   <p><strong>この端末の再接続手順</strong></p>
@@ -2916,9 +2917,9 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
  </div>
  <p class="anilog-sync-target" data-simple="relink-target" hidden></p>
  <div data-simple="relink-qr-actions" hidden>
-  <p class="anilog-sync-lead">接続先の記録をこの端末に受け取ります。以前の記録は保管し、接続先には送りません。先にバックアップを保存してください。</p>
-  <button type="button" data-simple="relink-backup">バックアップを保存する</button>
-  <label><input type="checkbox" data-simple="relink-confirm">バックアップを保存し、ほかのタブを閉じました。同期先IDの一致と、以前の記録が送信されないことを確認しました。</label>
+  <p class="anilog-sync-lead">接続先の記録をこの端末に受け取ります。以前の記録は保管し、接続先には送りません。バックアップは任意です。</p>
+  <button type="button" data-simple="relink-backup">バックアップを書き出す（任意）</button>
+  <label><input type="checkbox" data-simple="relink-confirm">ほかのANI:LOGタブを閉じ、同期先IDと、以前の記録が送信されないことを確認しました。</label>
   <details class="anilog-sync-help"><summary>詳しい統合ルールと注意事項</summary>
    <p>再接続では接続先の記録・削除履歴・設定を受け取ります。この端末の以前の記録は統合せず、暗号化領域とバックアップに残します。</p>
    <p>以前の記録を確認するときはバックアップを使ってください。エラー時は記録を守って停止します。</p>
@@ -8157,7 +8158,7 @@ const maintenanceUIIdle=()=>{
 const localResetUIIdle=()=>{
  try{
   if(recordWrites!==0||addingCustom||pendingUndo!==null||pendingStorageRefresh||formalRefreshRunning)return false;
-  if(document.querySelector('dialog[open]:not(#anilog-sync-dialog):not(#anilog-local-reset-dialog),#detailContent .detail-date-disclosure[open]'))return false;
+  if(document.querySelector('dialog[open]:not(#anilog-sync-dialog):not(#anilog-local-reset-dialog):not(#anilog-owner-close-dialog),#detailContent .detail-date-disclosure[open]'))return false;
   for(const field of document.querySelectorAll('[data-progress-input],#completionYear,#completionMonth,#completionDay')){
    if(field.tagName==='SELECT'){if(!field.options?.length||Array.from(field.options).some(o=>o.selected!==o.defaultSelected))return false;}
    else if(typeof field.value!=='string'||typeof field.defaultValue!=='string'||field.value!==field.defaultValue)return false;

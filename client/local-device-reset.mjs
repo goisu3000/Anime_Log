@@ -1,6 +1,7 @@
 // Local, origin-scoped erasure only. No transport, server revoke, sync commit,
 // record tombstones, or storage.clear(). Other sites and downloads are untouched.
 import {createProductWalTabCoordinator} from './private-wal-tab-fence.mjs';
+import {readOwnerCloseIntent} from './owner-group-close.mjs';
 export const LOCAL_RESET_KEY='anilog-local-data-reset-v1';
 export const LOCAL_GENERATION_KEY='anilog-local-data-generation-v1';
 const fail=code=>{throw Error('LOCAL_RESET_STOP:'+code)};
@@ -19,7 +20,39 @@ const exactKeys=new Set(['anilog-v1','anilog-weekly-options-v1','anilog-weekly-a
 export const isLocalDeviceKey=key=>exactKeys.has(key)||
  /^anilog-sync-local-mode-v1(?:-p[1-9][0-9]?)?$/.test(key)||
  /^anilog-sync-manual-pause-v1(?:-p[1-9][0-9]?)?$/.test(key)||
- /^anilog-(?:wal-first-upgrade|local-device-names|self-revoke-intent)-v1:(?:legacy|p[1-9][0-9]?)$/.test(key);
+ /^anilog-(?:wal-first-upgrade|local-device-names|self-revoke-intent|owner-close-intent)-v1:(?:legacy|p[1-9][0-9]?)$/.test(key);
+
+// Whole-browser erasure is broader than the selected connection. Every local
+// profile must be either unregistered or durably self-revoked. No network and
+// no role inferred from a setup receipt; an owner cannot obtain a revoke ACK.
+export async function assertLocalResetRegistrationsReleased({local,idb,inspectUnregistered}={}){
+ if(typeof idb?.databases!=='function'||typeof inspectUnregistered!=='function')fail('REGISTRATION_STATE_REQUIRED');
+ const snapshot=()=>{
+  const rows=[];for(let i=0;i<local.length;i++){const k=local.key(i);if(k==='anilog-sync-connection-profile-v1'||k==='anilog-sync-setup-receipt-v1'||/^anilog-sync-local-mode-v1(?:-p[1-9][0-9]?)?$/.test(k)||/^anilog-(self-revoke|owner-close)-intent-v1:/.test(k))rows.push([k,local.getItem(k)]);}
+  return JSON.stringify(rows.sort(([a],[b])=>a.localeCompare(b)));
+ };
+ const before=snapshot(),rows=await idb.databases();
+ if(!Array.isArray(rows)||rows.some(x=>typeof x?.name!=='string'))fail('REGISTRATION_STATE_REQUIRED');
+ const names=rows.map(x=>x.name).filter(isLocalDeviceDatabase).sort(),ids=new Set(['legacy']);
+ for(const name of names){const m=name.match(/-p([1-9][0-9]?)(?:$|-)/);if(m)ids.add('p'+m[1]);}
+ for(let i=0;i<local.length;i++){const k=local.key(i),m=k?.match(/^anilog-sync-local-mode-v1-(p[1-9][0-9]?)$/)||k?.match(/^anilog-(?:self-revoke|owner-close)-intent-v1:(p[1-9][0-9]?)$/);if(m)ids.add(m[1]);}
+ for(const id of ids){
+  const suffix=id==='legacy'?'':'-'+id,mode=local.getItem('anilog-sync-local-mode-v1'+suffix),journal=local.getItem('anilog-self-revoke-intent-v1:'+id);
+  if(mode!==null&&!['encrypted-local','sync-enabled'].includes(mode))fail('REGISTRATION_STATE_REQUIRED');
+  if(journal!==null&&!['pending','confirmed'].includes(journal))fail('REGISTRATION_STATE_REQUIRED');
+  const closed=readOwnerCloseIntent(local,id);
+  if(journal==='pending'||closed?.phase==='pending')fail('SERVER_RELEASE_REQUIRED');
+  if(journal==='confirmed'||closed?.phase==='confirmed')continue;
+  if(journal==='pending'||mode==='sync-enabled')fail('SERVER_RELEASE_REQUIRED');
+  const primary='anilog-FORMAL-PRODUCTION-ENCRYPTED-PRIMARY'+suffix;
+  if(mode===null&&names.includes(primary))fail('REGISTRATION_STATE_REQUIRED');
+  const proof=await inspectUnregistered(id,names);
+  if(proof?.unregistered!==true)fail('SERVER_RELEASE_REQUIRED');
+ }
+ const after=await idb.databases();
+ if(snapshot()!==before||JSON.stringify(after.map(x=>x.name).filter(isLocalDeviceDatabase).sort())!==JSON.stringify(names))fail('REGISTRATION_STATE_CHANGED');
+ return {phase:'ALL_LOCAL_PROFILES_RELEASED'};
+}
 
 // A durable fence survives partial deletion and a reload. The generation stays
 // after a successful reset so a BFCache tab cannot write its old in-memory WAL
@@ -95,7 +128,7 @@ export function installLocalDeviceResetUI({document,reset,openButton,onBackup,on
  const title=document.createElement('h2');title.id='anilog-local-reset-title';title.textContent='この端末の記録を削除';
  const description=document.createElement('p');description.textContent='このブラウザ・このサイトの視聴記録、未送信の変更、すべての接続プロフィール、暗号化WAL・鍵・接続情報を削除します。元に戻せません。他端末と同期先の記録・登録は削除しません。';
  const site=document.createElement('p');site.textContent='対象サイト：'+new URL(siteOrigin).host;
- const ownerWarning=document.createElement('p');ownerWarning.textContent='この端末が唯一の管理端末の場合、削除後は元の同期先を管理できなくなります。端末登録の解除は別の操作です。';
+ const ownerWarning=document.createElement('p');ownerWarning.textContent='同期登録が残るプロフィールがある場合は削除できません。管理端末の引き継ぎ・同期グループ全体の終了は現在未対応です。';
  const caveat=document.createElement('p');caveat.textContent='バックアップは任意です。必要な場合だけ保存してください。このサイトの他のタブを閉じてください。古い版のタブの有無は自動確認できません。';
  const label=document.createElement('label'),check=document.createElement('input'),ack=document.createElement('span');check.type='checkbox';check.dataset.localReset='confirm';ack.textContent='他のタブを閉じ、この端末の記録を削除することを確認しました';label.append(check,ack);
  const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
@@ -114,7 +147,8 @@ export function installLocalDeviceResetUI({document,reset,openButton,onBackup,on
   if(running||!check.checked)return;running=true;accept.disabled=true;backup.disabled=true;cancel.disabled=true;
   try{await reset.erase({confirmed:check.checked,otherTabsClosed:check.checked});show()}
   catch(error){const code=String(error?.message??'');status.textContent=reset.phase()===null?
-   code.endsWith(':CLOSE_OTHER_TABS')?'他のANI:LOGタブを閉じてから、もう一度確認してください。データは削除していません。':'保存・同期・編集中の操作を終えてから、もう一度確認してください。データは削除していません。':
+   code.endsWith(':CLOSE_OTHER_TABS')?'他のANI:LOGタブを閉じてから、もう一度確認してください。データは削除していません。':
+   /:(?:SERVER_RELEASE_REQUIRED|REGISTRATION_STATE_REQUIRED|REGISTRATION_STATE_CHANGED)$/.test(code)?'同期登録の解除完了を、すべてのプロフィールで確認する必要があります。管理端末は現在解除できません。データは削除していません。':'保存・同期・編集中の操作を終えてから、もう一度確認してください。データは削除していません。':
    '削除を完了できませんでした。一部のデータが削除されている可能性があります。他のタブを閉じ、確認して削除を再開してください。';cancel.hidden=reset.phase()!==null;backup.hidden=reset.phase()!==null;check.checked=false;}
   finally{running=false;backup.disabled=false;cancel.disabled=false;accept.disabled=!check.checked;}
  });
