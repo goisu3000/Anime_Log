@@ -1641,6 +1641,14 @@ select:not([data-status-id]){
 .anilog-sync-entry .anilog-sync-chevron{color:var(--muted);width:16px;height:16px}
 .anilog-sync-mobile-entry{display:none}
 .anilog-sync-dialog{width:min(620px,calc(100% - 32px));max-width:620px;max-height:calc(100dvh - 48px);padding:0;overflow:auto;background:var(--bg-side);color:var(--ink);border:1px solid var(--border-ctrl);border-radius:var(--radius);box-shadow:0 24px 80px rgba(0,0,0,.7);scrollbar-width:thin}
+/* Phone: restored focus must not outline the entire non-interactive sync dialog.
+   Control-level keyboard focus stays intact. Keep usable Owner invitations. */
+@media(max-width:740px){
+ #anilog-sync-dialog[data-sync-pointer-focus="true"]:focus-visible,
+ #anilog-sync-dialog[data-sync-pointer-focus="true"] #anilogSyncDialogClose:focus-visible{outline:none}
+ #anilog-sync-dialog #v407-pairing > [data-v407="invite"]:disabled{display:none}
+ #shareDialog>h3:focus{outline:none}
+}
 .anilog-sync-dialog::backdrop{background:rgba(5,7,10,.82);backdrop-filter:blur(4px)}
 .anilog-sync-dialog-head{position:sticky;top:0;z-index:1;display:flex;align-items:flex-start;gap:12px;justify-content:space-between;padding:24px 24px 18px;border-bottom:1px solid var(--border);background:var(--bg-side)}
 .anilog-sync-dialog-head h2{margin:0 0 6px;font-size:var(--fs-2xl);line-height:1.35}
@@ -6338,6 +6346,8 @@ function showShareDialog(){
  $('#shareYear').value=String(todayYear);
  $('#shareSeason').value=['winter','spring','summer','fall'][Math.floor(current.getMonth()/3)];
  $('#shareScope').value='all';clearDialogNotice($('#shareDialog'));updateShareDialog();$('#shareDialog').showModal();
+ // Start phone dialogs at their heading, not at an unedited selection field.
+ if(window.matchMedia('(max-width:740px)').matches){const heading=$('#shareDialog').querySelector('h3');heading.tabIndex=-1;heading.focus({preventScroll:true});}
 }
 function updateShareDialog(){
  clearDialogNotice($('#shareDialog'));const scope=$('#shareScope').value;$('#shareSeasonFields').hidden=scope!=='season';const list=selectedForShare(scope),count=list.length;
@@ -8544,10 +8554,19 @@ if(topBtn){
  const mobile=document.getElementById('anilogSyncMobileOpen');
  const close=document.getElementById('anilogSyncDialogClose');
  if(!dialog||!root||!pc||!close)return;
- let opener=null;
+ let opener=null,pointerInput=false;
+ // Touch/mouse modal focus restoration is not keyboard navigation.
+ document.addEventListener('pointerdown',()=>{
+   pointerInput=true;if(dialog.open)dialog.setAttribute('data-sync-pointer-focus','true');
+ },true);
+ document.addEventListener('keydown',()=>{
+   pointerInput=false;dialog.removeAttribute('data-sync-pointer-focus');
+ },true);
  function show(source){
    if(dialog.open)return;
    opener=source??null;
+   if(pointerInput)dialog.setAttribute('data-sync-pointer-focus','true');
+   else dialog.removeAttribute('data-sync-pointer-focus');
    // Existing <details> and ALL of its event listeners remain unchanged.
    root.open=true;
    dialog.showModal();
