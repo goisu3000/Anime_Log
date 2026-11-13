@@ -3570,6 +3570,7 @@ const formalRefreshBlocked=()=>recordWrites>0||!!document.querySelector('dialog[
 // may temporarily reject it; ONLY those exact two codes permit a bounded retry.
 // Integrity, AEAD, rollback, unknown and render failures must still STOP.
 let formalRefreshRunning=false,formalRefreshRequest=0,formalRefreshRetryTimer=null,formalRefreshRetries=0;
+let formalAuthorityPreparing=false;
 const FORMAL_REFRESH_RETRY_DELAYS=[250,750];
 const formalRefreshTransientError=error=>error?.message==='FORMAL_STORAGE_STOP:BUSY'||
  error?.message==='WAL_TAB_PRESENCE_NOT_READY';
@@ -3583,7 +3584,8 @@ function formalRefreshDiagnostic(error,stage){
   typeof message==='string'&&message.startsWith('FORMAL_STORAGE_STOP:')?'STORAGE_STOP':'OTHER';
  try{console.warn('[ANI:LOG] refresh stopped:',stage,code)}catch{}
 }
-async function refreshStoredRecords(){
+async function refreshStoredRecords(authorityPreparation=false){
+ if(formalAuthorityPreparing&&authorityPreparation!==true){pendingStorageRefresh=true;return;}
  const request=++formalRefreshRequest;
  if(formalRefreshRunning||formalRefreshBlocked()||formalRefreshRetryTimer!==null||document.hidden){
   pendingStorageRefresh=true;return;
@@ -8171,18 +8173,18 @@ const localResetUIIdle=()=>!pendingStorageRefresh&&!formalRefreshRunning&&localR
 // Settle an already deferred authenticated read BEFORE the authority key editor
 // opens. Never clear its pending bit, save drafts, or relax the final idle gate.
 async function prepareAuthorityDialog(){
- if(document.hidden||formalRefreshRunning||!localResetInputIdle())return false;
+ if(document.hidden||formalRefreshRunning||formalAuthorityPreparing||!localResetInputIdle())return false;
  if(!pendingStorageRefresh)return localResetUIIdle();
  const parent=document.getElementById('anilog-sync-dialog'),authority=document.getElementById('anilog-owner-authority-dialog');
  if(authority?.open)return false; // Never close an entered recovery-key editor.
- const reopen=parent?.open===true;if(reopen)parent.close();
+ const reopen=parent?.open===true;formalAuthorityPreparing=true;
  try{
+  if(reopen)parent.close();
+  // Drain close/focusout callbacks without letting them start a competing read.
   await new Promise(resolve=>setTimeout(resolve,0));
-  if(formalRefreshRunning||await refreshStoredRecords()!==true)return false;
-  const deadline=Date.now()+5000;
-  while((pendingStorageRefresh||formalRefreshRunning)&&Date.now()<deadline)await new Promise(resolve=>setTimeout(resolve,50));
-  return !document.hidden&&localResetUIIdle();
- }finally{if(reopen&&parent.isConnected&&!parent.open)parent.showModal();}
+  if(document.hidden||!localResetInputIdle()||formalRefreshRunning)return false;
+  return await refreshStoredRecords(true)===true&&!document.hidden&&localResetUIIdle();
+ }finally{formalAuthorityPreparing=false;if(reopen&&parent.isConnected&&!parent.open)parent.showModal();}
 }
 window.__formalUI=Object.freeze({
  readSaved:()=>structuredClone(saved),readWeeklyOptions:()=>structuredClone(weeklyOptions),

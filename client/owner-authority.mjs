@@ -90,9 +90,10 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
  const target=document.createElement('select');target.setAttribute('aria-label','引き継ぎ先の端末');
  const keyInput=document.createElement('textarea');keyInput.setAttribute('aria-label','保存してある管理端末の復旧キー');keyInput.autocomplete='off';keyInput.spellcheck=false;
  const keyOutput=document.createElement('textarea');keyOutput.setAttribute('aria-label','管理端末の復旧キー');keyOutput.readOnly=true;keyOutput.autocomplete='off';keyOutput.spellcheck=false;
- const warning=document.createElement('p');warning.textContent='記録は削除しません。ほかのANI:LOGタブを閉じて操作してください。引き継ぎ完了後、この端末の同期登録は解除されます。';
- const keyHelp=document.createElement('p');keyHelp.textContent='管理端末が故障・紛失した場合、接続済みの別端末と、この復旧キーで管理権限を復旧できます。復旧キーは事前に控えてください。保管は任意です。';
+ const warning=document.createElement('p');warning.textContent='引き継ぎ完了後、この端末の同期登録は解除されます。\n※記録は消えません。';
+ const keyHelp=document.createElement('p');keyHelp.textContent='管理端末が故障・紛失した場合、接続済みの別端末と、復旧キーで管理権限を復旧できます。\n※復旧キーは事前に控えておく必要があります。';
  const recoveryHelp=document.createElement('p');recoveryHelp.textContent='復旧には、この同期先に接続済みの端末と、事前に控えた復旧キーが必要です。復旧すると旧管理端末の同期登録は解除されます。旧端末内の記録は削除されません。';
+ warning.style.whiteSpace=keyHelp.style.whiteSpace='pre-line';
  const label=document.createElement('label'),confirmed=document.createElement('input');confirmed.type='checkbox';label.append(confirmed,document.createTextNode('操作対象と管理権限の変更を確認しました'));
  const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
  const button=text=>{const b=document.createElement('button');b.type='button';b.textContent=text;actions.append(b);return b;};

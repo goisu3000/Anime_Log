@@ -841,6 +841,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
  const authorityStoreRaw=createRegistrationIntentStore({idb:{open:(_name,...args)=>scopedIDB.open('anilog-FORMAL-OWNER-AUTHORITY-INTENT',...args)},locks:scopedLocks,origin:location.origin});
  const authorityStore={read:async()=>authorityStoreRaw.read(await keys.read()),create:async x=>authorityStoreRaw.create(x,await keys.read()),replace:async(a,b)=>authorityStoreRaw.replace(a,b,await keys.read())};
  const authorityOpen=document.createElement('button');authorityOpen.type='button';authorityOpen.textContent='管理端末の変更・復旧';authorityOpen.hidden=staging||local.getItem(LOCAL_MODE)!=='sync-enabled'||profiles.read().phase!=='connected';ownerCloseOpen.after(authorityOpen);
+ const authorityDescription=document.createElement('p');authorityDescription.textContent='管理端末を別の端末へ引き継ぐか、故障・紛失時に復旧キーで管理権限を復旧します。';authorityDescription.hidden=authorityOpen.hidden;
  const authorityFlow=createOwnerAuthorityFlow({local,profileId:selectedProfile,store:authorityStore,
   inspect:async()=>{
    assertLocalAvailable();if(staging||profiles.read().active!==selectedProfile||!['connected','disconnected'].includes(profiles.read().phase))throw Error('AUTHORITY_PROFILE_CHANGED');
@@ -1171,7 +1172,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   // Potentially destructive connection reset belongs behind the existing
   // explicit disclosure, without removing its backup/revoke confirmation.
   const advancedActions=connectionActions.querySelector('.anilog-sync-advanced-actions');
-  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm,ownerCloseOpen,authorityOpen);
+  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm,ownerCloseOpen,authorityOpen,authorityDescription);
   if(!receiver&&selectedProfile){
    primaryActions.append(manageDevices);
    primaryActions.after(deviceManagement);
