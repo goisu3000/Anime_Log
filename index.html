@@ -2858,6 +2858,17 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
  #rankingView #rankingCopyLink{display:none}
  #rankingView #rankTypeOptions{flex-wrap:nowrap;gap:4px}
  #rankingView #rankTypeOptions button{min-width:0;white-space:nowrap;padding-inline:8px}
+ #rankingView #rankToolbar:not(.is-public){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+ #rankingView #rankToolbar:not(.is-public)>.rank-rating-filter{grid-column:1 / -1;order:0}
+ #rankingView #rankToolbar:not(.is-public)>.rank-rating-filter .stats{padding-bottom:8px}
+ #rankingView #rankToolbar:not(.is-public)>.rank-search-shell{grid-column:1 / -1;order:1;width:100%;min-width:0}
+ #rankingView #rankToolbar:not(.is-public)>.rank-mode-select,
+ #rankingView #rankToolbar:not(.is-public)>.rank-mode-select + .anilog-mobile-select-trigger{grid-column:1;order:2;width:100%;min-width:0;max-width:100%}
+ #rankingView #rankToolbar:not(.is-public)>.rank-filter-disclosure{grid-column:2;order:2;width:100%;min-width:0}
+ #rankingView #rankToolbar:not(.is-public)>.rank-filter-disclosure>summary{justify-content:center;width:100%}
+ #rankingView #rankToolbar:not(.is-public)>.rank-insights-jump{grid-column:1;order:3;width:100%;min-width:0}
+ #rankingView #rankToolbar:not(.is-public)>.rank-annual-jump{grid-column:2;order:3;width:100%;min-width:0}
+
  @media(max-width:350px){
   #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-controls{grid-template-columns:minmax(160px,1fr) minmax(0,1fr)}
   #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:normal}
