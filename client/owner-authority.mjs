@@ -91,14 +91,16 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
  const keyInput=document.createElement('textarea');keyInput.setAttribute('aria-label','保存してある管理端末の復旧キー');keyInput.autocomplete='off';keyInput.spellcheck=false;
  const keyOutput=document.createElement('textarea');keyOutput.setAttribute('aria-label','管理端末の復旧キー');keyOutput.readOnly=true;keyOutput.autocomplete='off';keyOutput.spellcheck=false;
  const warning=document.createElement('p');warning.textContent='記録は削除しません。ほかのANI:LOGタブを閉じて操作してください。引き継ぎ完了後、この端末の同期登録は解除されます。';
+ const keyHelp=document.createElement('p');keyHelp.textContent='管理端末が故障・紛失した場合、接続済みの別端末と、この復旧キーで管理権限を復旧できます。復旧キーは事前に控えてください。保管は任意です。';
+ const recoveryHelp=document.createElement('p');recoveryHelp.textContent='復旧には、この同期先に接続済みの端末と、事前に控えた復旧キーが必要です。復旧すると旧管理端末の同期登録は解除されます。旧端末内の記録は削除されません。';
  const label=document.createElement('label'),confirmed=document.createElement('input');confirmed.type='checkbox';label.append(confirmed,document.createTextNode('操作対象と管理権限の変更を確認しました'));
  const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
  const button=text=>{const b=document.createElement('button');b.type='button';b.textContent=text;actions.append(b);return b;};
  const offer=button('引き継ぎを依頼する'),refresh=button('引き継ぎ依頼を確認'),accept=button('この端末を管理端末にする'),recover=button('復旧キーで管理端末を復旧'),release=button('解除済みの登録を確認して記録を残す'),resume=button('前回の結果を確認する'),cancel=button('引き継ぎを中止する'),showKey=button('復旧キーを控える（任意）'),update=button('画面を更新'),close=button('閉じる');
  const mutation=[offer,accept,recover,release,resume,cancel],all=[...mutation,refresh,showKey,update,close];let running=false,opening=false,pendingOperation=null;
- dialog.append(title,status,warning,target,keyInput,keyOutput,label,actions);document.body.append(dialog);
+ dialog.append(title,status,warning,target,keyHelp,recoveryHelp,keyInput,keyOutput,label,actions);document.body.append(dialog);
  function disabled(){for(const b of mutation)b.disabled=running||!confirmed.checked;for(const b of [refresh,showKey,update,close])b.disabled=running;}
- function hide(){for(const e of [target,keyInput,keyOutput,...all])e.hidden=true;close.hidden=false;pendingOperation=null;confirmed.checked=false;label.hidden=false;disabled();}
+ function hide(){for(const e of [target,keyHelp,recoveryHelp,keyInput,keyOutput,...all])e.hidden=true;close.hidden=false;pendingOperation=null;confirmed.checked=false;label.hidden=false;disabled();}
  function result(x){const messages={AWAITING_TARGET:'引き継ぎ先の端末で「引き継ぎ依頼を確認」から承認してください。',EXPIRED_KEEP_FENCED:'依頼の期限が切れました。「引き継ぎを中止する」で記録を保持したまま終了してください。',OLD_OWNER_RELEASED_RECORDS_RETAINED:'管理端末を引き継ぎ、この端末の同期登録を解除しました。記録は残っています。',FORMER_OWNER_RELEASED_RECORDS_RETAINED:'この端末の登録解除をサーバーで確認しました。未送信の変更を含め、記録はこの端末に残っています。',CANCELLED_RECORDS_RETAINED:'引き継ぎを中止しました。記録は残っています。',NEW_OWNER_AUTHENTICATED:'この端末の管理者権限を確認しました。画面を更新してください。'};
   if(!Object.hasOwn(messages,x?.phase))fail('RESULT_INVALID');status.textContent=messages[x.phase];if(['OLD_OWNER_RELEASED_RECORDS_RETAINED','FORMER_OWNER_RELEASED_RECORDS_RETAINED','NEW_OWNER_AUTHENTICATED','CANCELLED_RECORDS_RETAINED'].includes(x.phase)){for(const b of mutation)b.hidden=true;update.hidden=false;onComplete(x);}}
  async function action(fn){if(running)return;running=true;status.textContent='操作・完了結果を確認中です。画面を閉じずにお待ちください。';disabled();try{await fn()}catch(error){status.textContent=authorityFailureLabel(error)+' 記録・接続情報は保持しています。再登録や削除はしないでください。';const j=await flow.read().catch(()=>null);resume.hidden=!j;cancel.hidden=j?.kind!=='offer'||j?.phase!=='pending';}finally{running=false;disabled()}}
@@ -106,8 +108,8 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
   const j=await flow.read();if(j?.phase==='pending'||j?.phase==='completed'&&['offer','release'].includes(j.kind)){resume.hidden=false;cancel.hidden=j.phase!=='pending'||j.kind!=='offer';status.textContent='前回の操作結果を確認してください。記録は保持しています。';return;}
   let role;try{role=await getRole()}catch{await flow.releasedStatus();release.hidden=false;warning.textContent='この端末の管理権限は既に失効しています。登録解除の確認後も、未送信の変更を含む記録は残します。';status.textContent='サーバーでこの端末の登録解除を確認しました。記録を残して同期OFFにできます。';return;}
   if(role==='owner'){
-   const members=await listMembers();target.replaceChildren();for(const m of members){const o=document.createElement('option');o.value=m.deviceId;o.textContent=m.label;target.append(o);}target.hidden=members.length===0;offer.hidden=members.length===0;showKey.hidden=false;status.textContent=members.length?'引き継ぎ先の端末本人の承認後に、管理権限を移します。':'引き継ぎ先の登録端末がありません。';
-  }else if(role==='member'){refresh.hidden=recover.hidden=keyInput.hidden=false;status.textContent='引き継ぎ依頼を確認するか、保存してある復旧キーを入力してください。復旧キーがない場合、故障した管理端末の権限は復旧できません。';}
+   const members=await listMembers();target.replaceChildren();for(const m of members){const o=document.createElement('option');o.value=m.deviceId;o.textContent=m.label;target.append(o);}target.hidden=members.length===0;offer.hidden=members.length===0;showKey.hidden=keyHelp.hidden=false;status.textContent=members.length?'引き継ぎ先の端末本人の承認後に、管理権限を移します。':'引き継ぎ先の登録端末がありません。';
+  }else if(role==='member'){refresh.hidden=recover.hidden=keyInput.hidden=recoveryHelp.hidden=false;status.textContent='引き継ぎ依頼を確認するか、保存してある復旧キーを入力してください。復旧キーがない場合、故障した管理端末の権限は復旧できません。';}
   else throw Error('ROLE_REQUIRED');
  });}finally{opening=false}}
  confirmed.addEventListener('change',disabled);
@@ -118,7 +120,7 @@ export function installOwnerAuthorityUI({document,flow,openButton,getRole,listMe
  release.addEventListener('click',()=>{if(confirmed.checked)void action(async()=>result(await flow.releaseFormerOwner({confirmed:true}))) });
  resume.addEventListener('click',()=>{if(confirmed.checked)void action(async()=>result(await flow.resume()))});
  cancel.addEventListener('click',()=>{if(confirmed.checked)void action(async()=>result(await flow.cancel({confirmed:true})))});
- showKey.addEventListener('click',()=>void action(async()=>{keyOutput.value=await flow.recoveryKit();keyOutput.hidden=false;status.textContent='このキーを持つ人は管理端末を復旧できます。保管は任意です。ダウンロードは不要で、他人には渡さないでください。';}));
+ showKey.addEventListener('click',()=>void action(async()=>{keyOutput.value=await flow.recoveryKit();keyOutput.hidden=false;status.textContent='この同期先に接続済みの端末と、このキーの両方で管理端末を復旧できます。保管は任意です。ダウンロードは不要で、他人には渡さないでください。';}));
  update.addEventListener('click',()=>{if(!running)reload()});close.addEventListener('click',()=>{if(!running)dialog.close()});
  dialog.addEventListener('cancel',e=>{if(running)e.preventDefault()});dialog.addEventListener('close',()=>{keyInput.value=keyOutput.value='';confirmed.checked=false;});
  openButton.addEventListener('click',()=>void show());return {dialog,show};

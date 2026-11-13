@@ -1171,7 +1171,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   // Potentially destructive connection reset belongs behind the existing
   // explicit disclosure, without removing its backup/revoke confirmation.
   const advancedActions=connectionActions.querySelector('.anilog-sync-advanced-actions');
-  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm,ownerCloseOpen);
+  advancedActions.append(el('restart-sync'),el('restart-description'),restartConfirm,ownerCloseOpen,authorityOpen);
   if(!receiver&&selectedProfile){
    primaryActions.append(manageDevices);
    primaryActions.after(deviceManagement);
@@ -1592,7 +1592,7 @@ export async function mountFormalSimpleSync({document=globalThis.document,window
   }
   throw Error('UNKNOWN_SETUP_STATE_KEEP_ORIGINAL');
  }));
- if(authorityBlocked()){showConnectionActions();authorityOpen.hidden=false;el('retry').hidden=true;status.textContent='管理権限の変更結果が未確認です。記録・接続情報を保持し、自動同期を停止しています。「管理端末の変更・復旧」から結果を確認してください。';}
+ if(authorityBlocked()){showConnectionActions();authorityOpen.hidden=false;status.after(authorityOpen);el('retry').hidden=true;status.textContent='管理権限の変更結果が未確認です。記録・接続情報を保持し、自動同期を停止しています。「管理端末の変更・復旧」から結果を確認してください。';}
  else if(readOwnerClosure()){showConnectionActions();el('retry').hidden=true;if(!ownerCloseLocallyComplete())status.textContent=readOwnerClosure().phase==='confirmed'?'同期グループの終了は確認済みです。記録を残した利用への切替を「管理端末の同期グループを終了」から確認してください。':'同期グループの終了結果が未確認です。保存・同期を停止し、記録と鍵は保持しています。「管理端末の同期グループを終了」から結果を確認してください。';}
  else if(staging&&setupLocal.getItem(LOCAL_MODE)==='sync-enabled')await action(()=>finishStagedCutover(restored.passphrase));
  else if(mode==='sync-enabled'){
