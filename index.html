@@ -2899,6 +2899,41 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
   #rankingView .rank-unified-toolbar .rank-period-inline-slot .rank-threshold{white-space:normal}
  }
 }
+
+/* Shared Discover/period-ranking mobile toolbar; existing select/filter controls. */
+#rankingView #rankPeriodSecondary:not([hidden]){display:contents}
+@media(min-width:741px){#rankingView #rankToolbar.is-public .rank-search-shell{flex:1 1 230px}}
+@media(max-width:740px){
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content;gap:8px;align-items:center}
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period)>.controls{display:contents}
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-year-control,:is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-year-control+.anilog-mobile-select-trigger{grid-column:1;grid-row:2;width:100%;min-width:0}
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-season-control,:is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-season-control+.anilog-mobile-select-trigger{grid-column:2;grid-row:2;width:100%;min-width:0}
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-filter-control{grid-column:3;grid-row:2;justify-self:start}
+ #rankingView #rankToolbar.is-period>.rank-search-shell{grid-column:1/-1;grid-row:1;width:100%;min-width:0}
+ #rankingView #rankToolbar.is-period>.rank-period-inline-slot,
+ #rankingView #rankToolbar.is-period .rank-period-inline-slot>.rank-controls{display:contents}
+ #rankingView #rankToolbar.is-period .rank-controls .season-year-control,
+ #rankingView #rankToolbar.is-period .rank-controls .season-season-control{width:100%;min-width:0}
+ #rankingView #rankToolbar.is-period .rank-controls .season-year-control,
+ #rankingView #rankToolbar.is-period .rank-controls .season-season-control{display:block}
+ #rankingView #rankToolbar.is-period .season-year-control>select,
+ #rankingView #rankToolbar.is-period .season-season-control>select,
+ #rankingView #rankToolbar.is-period .season-year-control>.anilog-mobile-select-trigger,
+ #rankingView #rankToolbar.is-period .season-season-control>.anilog-mobile-select-trigger{box-sizing:border-box;flex:none;width:100%;min-width:0;height:44px;background-color:var(--surface);border-color:var(--border);font-size:var(--fs-sm);font-weight:var(--fw-semi)}
+ #rankingView #rankToolbar.is-period #rankPeriodSecondary:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;grid-column:1/-1;grid-row:3;min-width:0}
+ #rankingView #rankPeriodSecondary .rank-sort-field,
+ #rankingView #rankPeriodSecondary .rank-mode-select,
+ #rankingView #rankPeriodSecondary .rank-mode-select+.anilog-mobile-select-trigger{width:100%;min-width:0;max-width:100%;margin:0}
+ #rankingView #rankPeriodSecondary .rank-sort-field select,
+ #rankingView #rankPeriodSecondary .rank-sort-field select+.anilog-mobile-select-trigger{width:100%;min-width:0;max-width:100%;height:44px;margin:0}
+ #rankingView #rankToolbar.is-period>.rank-annual-jump{grid-column:1/-1;grid-row:4;width:100%;margin:0}
+}
+@media(max-width:359px){
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-season-control,:is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-season-control+.anilog-mobile-select-trigger{grid-column:2/4}
+ :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-filter-control{grid-column:3;grid-row:3;justify-self:end}
+ #rankingView #rankToolbar.is-period #rankPeriodSecondary:not([hidden]){grid-row:4}
+ #rankingView #rankToolbar.is-period>.rank-annual-jump{grid-row:5}
+}
 </style>
 <!-- ANI:LOG WEEKLY ROW COMPACT APPLIED -->
 </head>
@@ -3049,8 +3084,8 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
       <button type="button" class="weekly-mobile-annual" data-annual-open>年間まとめを見る →</button>
     </section>
     <div class="saved-library-tools"><nav class="stats" aria-label="マイリストの視聴状況"><button type="button" class="stat" data-stat-filter="all"><span>すべて</span><span class="stat-count" id="countAll">0</span></button><button type="button" class="stat" data-stat-filter="watching"><span>見てる</span><span class="stat-count" id="countWatching">0</span></button><button type="button" class="stat" data-stat-filter="planned"><span>見たい</span><span class="stat-count" id="countPlanned">0</span></button><button type="button" class="stat" data-stat-filter="watched"><span>見た</span><span class="stat-count" id="countWatched">0</span></button><button type="button" class="stat" data-stat-filter="paused"><span>一時中断</span><span class="stat-count" id="countPaused">0</span></button><button type="button" class="stat" data-stat-filter="dropped"><span>視聴中止</span><span class="stat-count" id="countDropped">0</span></button></nav>
-<div class="library-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-search"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
-<details class="filter-disclosure" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">選択中の放送年・シーズン（または全年代）から作品名で検索します。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
+<div class="library-toolbar season-toolbar">      <div class="controls"><div class="searchbox-shell"><form class="searchbox" id="searchForm" autocomplete="off"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-search"/></svg><input id="searchInput" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="searchSuggest" placeholder="作品名・略称・一部分で検索（例：ガンダム / まどマギ）" aria-label="作品を検索"><button type="submit" id="searchBtn">検索</button></form><div id="searchSuggest" class="search-suggest hidden" role="listbox" aria-label="作品名の検索候補"></div></div><select class="control-select season-year-control" id="yearSelect" aria-label="検索する年代・放送年"></select><select class="control-select season-season-control" id="seasonSelect" aria-label="放送シーズン"><option value="all">通年（春夏秋冬すべて）</option><option value="spring">春（4〜6月）</option><option value="summer">夏（7〜9月）</option><option value="fall">秋（10〜12月）</option><option value="winter">冬（1〜3月）</option></select></div>
+<details class="filter-disclosure season-filter-control" id="filterDisclosure"><summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span id="filterSummary">絞り込み</span></summary><div class="filter-panel">      <p class="search-guide" id="searchGuide" aria-live="polite">選択中の放送年・シーズン（または全年代）から作品名で検索します。見つからない日本語の別名は、必要な場合だけWikipediaで補います。</p>
       <div class="explore-status-row" id="exploreStatusTabs" role="group" aria-label="アニメを探す：視聴状況で絞り込み">
         <span class="explore-filter-label">視聴状況 <span class="mobile-swipe-hint">横にスワイプ ↔</span></span>
         <div class="explore-status-buttons">
@@ -3103,18 +3138,18 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
           </form>
         </div>
         <div id="rankPeriodInlineSlot" class="rank-period-inline-slot" hidden></div>
+        <div id="rankPeriodSecondary" class="rank-period-secondary" hidden></div>
         <select id="rankModeSelect" class="control-select rank-mode-select" aria-label="ランキングの種類を切り替える">
           <option value="period">年代・シーズン別</option><option value="top">歴代</option><option value="mine">マイランキング</option>
         </select>
-        <details id="rankFilterDisclosure" class="filter-disclosure rank-filter-disclosure">
+        <details id="rankFilterDisclosure" class="filter-disclosure rank-filter-disclosure season-filter-control">
           <summary><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="M4 7h16M7 12h10M10 17h4"/></svg><span>絞り込み</span></summary>
           <div class="filter-panel rank-filter-panel">
             <div id="rankPublicFilterSlot">
-              <div id="rankPublicControls" class="rank-controls">
-                <label id="rankYearField"><select id="rankYear" aria-label="ランキングの年"></select></label>
-                <label id="rankSeasonField"><select id="rankSeason" aria-label="ランキングのシーズン"><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option><option value="winter">冬</option></select></label>
-                <label class="rank-sort-field"><select id="rankSort" aria-label="ランキングの並び順"><option value="score">高評価順</option><option value="members">人気順（登録者数）</option></select></label>
-                <label class="rank-threshold"><input type="checkbox" id="rankMinVotes" checked> 評価人数100人以上</label>
+              <div id="rankPublicControls" class="rank-controls controls">
+                <label id="rankYearField" class="season-year-control"><select class="control-select" id="rankYear" aria-label="ランキングの年"></select></label>
+                <label id="rankSeasonField" class="season-season-control"><select class="control-select" id="rankSeason" aria-label="ランキングのシーズン"><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option><option value="winter">冬</option></select></label>
+                <label class="rank-sort-field"><select class="control-select" id="rankSort" aria-label="ランキングの並び順"><option value="score">高評価順</option><option value="members">人気順（登録者数）</option></select></label>
               </div>
             </div>
             <div id="rankMineControls" class="explore-type-row" hidden>
@@ -3272,7 +3307,7 @@ window.__aniPublicRoutes=Object.freeze((()=>{
    return {kind:'ranking',rank:{tab,sort:sorts.has(p.get('sort'))?p.get('sort'):'score',
     ...(Number.isInteger(year)&&year>=1970&&year<=maxYear?{year}:{}),
     ...(seasons.has(p.get('season'))?{season:p.get('season')}:{}),
-    minVotes:p.get('minVotes')==='1',rating:tab==='mine'&&Number.isInteger(rating)&&rating>=1&&rating<=5?rating:0}};
+    rating:tab==='mine'&&Number.isInteger(rating)&&rating>=1&&rating<=5?rating:0}};
   }
   const m=/^\/anime\/([1-9][0-9]{0,9})\/?$/.exec(pathname);
   if(m)return {kind:'anime',id:'jikan:'+m[1]};
@@ -3299,7 +3334,6 @@ window.__aniPublicRoutes=Object.freeze((()=>{
    }
    if(tab!=='mine'){
     p.set('sort',sorts.has(r.sort)?r.sort:'score');
-    if(r.minVotes===true)p.set('minVotes','1');
    }else if(Number.isInteger(r.rating)&&r.rating>=1&&r.rating<=5)p.set('rating',String(r.rating));
    return '/ranking?'+p.toString();
   }
@@ -5939,6 +5973,12 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#rankModeSelect').value=rankingTab;
  const mine=rankingTab==='mine',period=rankingTab==='period';
  const publicControls=$('#rankPublicControls');
+ const rankToolbar=$('#rankToolbar'),secondary=$('#rankPeriodSecondary'),sortField=$('#rankSort').closest('label'),modeSelect=$('#rankModeSelect');
+ const modeProxy=modeSelect.nextElementSibling?.classList.contains('anilog-mobile-select-trigger')?modeSelect.nextElementSibling:null;
+ rankToolbar.classList.toggle('is-period',period);rankToolbar.classList.toggle('season-toolbar',period);secondary.hidden=!period;
+ if(period){secondary.append(sortField,modeSelect);if(modeProxy)secondary.append(modeProxy);}
+ else{publicControls.append(sortField);$('#rankFilterDisclosure').before(modeSelect);if(modeProxy)modeSelect.after(modeProxy);}
+
  const publicDestination=!mine?$('#rankPeriodInlineSlot'):$('#rankPublicFilterSlot');
  if(publicControls.parentElement!==publicDestination)publicDestination.append(publicControls);
  $('#rankToolbar').classList.toggle('is-public',!mine);
@@ -5948,7 +5988,6 @@ function renderRanking(){if(mode!=='ranking')return;
  $('#rankMineControls').hidden=false;
  $('#rankTypeOptions').setAttribute('aria-label',period?'年代・シーズン別ランキングの作品形式':mine?'マイランキングの作品形式':'歴代アニメランキングの作品形式');
  $('#rankRatingFilter').hidden=!mine;$('#rankInsightsJump').hidden=!mine;
- $('#rankMinVotes').closest('label').hidden=false;
  $('#rankFilterDisclosure').classList.toggle('has-filters',rankingTypeFilter!=='all');
  $$('#rankTypeOptions [data-rank-type]').forEach(b=>{const active=b.dataset.rankType===rankingTypeFilter;b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active))});
  $('#rankYearField').hidden=rankingTab!=='period';$('#rankSeasonField').hidden=rankingTab!=='period';
@@ -5975,8 +6014,7 @@ function renderRanking(){if(mode!=='ranking')return;
    for(let c=0;c<group.length;c+=10){const chunk=group.slice(c,c+10),rowsCount=Math.ceil(chunk.length/2),head=group.length>10?`<div class="rank-chunk-head"><span>${c+1}〜${c+chunk.length}位</span></div>`:'';result+=`<div class="rank-chunk-block">${head}<div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${rowsCount}">`;chunk.forEach((a,j)=>{result+=makeRankRow(a,c+j+1,'mine',c+j,group)});result+='</div></div>'}}
   $('#rankResults').innerHTML=result||emptyCard('条件に合う作品がありません','検索・作品形式・★評価を変更してください。','search');return;
  }
- const min=$('#rankMinVotes').checked;
- const filtered=rankingData.filter(a=>(!min||rankingSort==='members'||Number(a.scoredBy||0)>=100)&&(rankingTypeFilter==='all'||String(a.type||'').toUpperCase()===rankingTypeFilter.toUpperCase())&&localTitleMatch(a,rankingSearch));
+ const filtered=rankingData.filter(a=>(rankingTypeFilter==='all'||String(a.type||'').toUpperCase()===rankingTypeFilter.toUpperCase())&&localTitleMatch(a,rankingSearch));
  $('#rankResults').innerHTML=rankingBusy&&!rankingData.length?emptyCard('ランキングを取得中…','公開アニメデータベースから読み込んでいます。','loading'):filtered.length?Array.from({length:Math.ceil(filtered.length/10)},(_,b)=>{const chunk=filtered.slice(b*10,b*10+10),start=b*10+1,end=b*10+chunk.length;return `<div class="rank-chunk-block"><div class="rank-chunk-head"><span>${start}〜${end}位</span></div><div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${Math.ceil(chunk.length/2)}">${chunk.map((a,j)=>makeRankRow(a,start+j)).join('')}</div></div>`}).join(''):emptyCard('条件に合う作品がありません',rankingData.length?'評価人数の条件を外すと表示できる場合があります。':'ランキングを取得できませんでした。','search');
 }
 function showRanking(tab='period'){
@@ -6167,7 +6205,6 @@ $('#rankInsightsJump').addEventListener('click',()=>{if(mode!=='ranking'||rankin
 $('#rankSort').addEventListener('change',e=>{rankingSort=e.target.value;aniHistorySave();loadRanking(true)});
 $('#rankYear').addEventListener('change',e=>{rankingYear=Number(e.target.value);aniHistorySave();loadRanking(true)});
 $('#rankSeason').addEventListener('change',e=>{rankingSeason=e.target.value;aniHistorySave();loadRanking(true)});
-$('#rankMinVotes').addEventListener('change',()=>{renderRanking();aniHistorySave()});
 $('#rankLoadMore').addEventListener('click',()=>loadRanking(false));
 $('#rankResults').addEventListener('click',e=>{const add=e.target.closest('[data-rank-add]');if(add){const id=add.dataset.rankAdd;setStatus(id,saved[id]?.status==='planned'?'':'planned');return}const move=e.target.closest('[data-rank-move]');if(move){moveRank(move.dataset.rankId,move.dataset.rankMove==='up'?-1:1);return}
  const rate=e.target.closest('[data-rate-id]');if(rate){openRating(rate.dataset.rateId);return}
@@ -8001,7 +8038,7 @@ function aniHistorySnapshot(){
   scrollY:window.scrollY,
   saved:{filter:statusFilter,unrated:unratedOnly,finishedYear:finishedYearFilter,order:$('#savedOrder').value,search:$('#searchInput').value,type:typeFilter},
   season:{year:curYear,season:curSeason,yearValue:years.value,seasonValue:$('#seasonSelect').value,touched:periodTouched,exploreStatus:exploreStatusFilter,search:exploreStatusFilter==='all'?query:$('#searchInput').value,query,searchSort,type:typeFilter},
-  rank:{tab:rankingTab,sort:rankingSort,year:rankingYear,season:rankingSeason,rating:myRatingFilter,minVotes:$('#rankMinVotes').checked},
+  rank:{tab:rankingTab,sort:rankingSort,year:rankingYear,season:rankingSeason,rating:myRatingFilter},
   annualYear
  };
 }
@@ -8092,7 +8129,7 @@ async function aniHistoryRestore(state){
    const prevKey=rankKey(),prevTab=rankingTab;
    rankingSort=x.sort||rankingSort;rankingYear=x.year||rankingYear;rankingSeason=x.season||rankingSeason;
    $('#rankSort').value=rankingSort;$('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-   $('#rankMinVotes').checked=!!x.minVotes;myRatingFilter=x.rating||0;
+   myRatingFilter=x.rating||0;
    const nextTab=['period','top','mine'].includes(x.tab)?x.tab:'period';
    rankingTab=nextTab;
    if(nextTab!=='mine'&&!rankingBusy&&rankingData.length>0&&prevTab===nextTab&&prevKey===rankKey()){
