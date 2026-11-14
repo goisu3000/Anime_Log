@@ -5077,7 +5077,7 @@ function nextWatchGroups(list){
  if(!pinned.length)return savedGroups(list);
  const ordinary=list.filter(a=>!pinnedNextWatch(a));
  const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head">${uiIcon('pin')}<h3>次に観る</h3><span class="next-watch-count">${pinned.length}作品</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
- return heading+(ordinary.length?'<div class="next-watch-other">その他の作品</div>'+savedGroups(ordinary):'');
+ return heading+(ordinary.length?savedGroups(ordinary):'');
 }
 
 function savedGroups(list){
