@@ -300,7 +300,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint
 /* My List (Pattern A) & Next Watch */
 .cards.saved-grid{display:block}
 .next-watch-section,.pattern-a-year{margin:0 0 20px}
-.next-watch-head{display:flex;align-items:center;gap:8px;padding:2px 0 12px;border-bottom:1px solid var(--border);margin-bottom:12px}
+.next-watch-head{display:flex;align-items:center;gap:8px;padding:2px 0 12px;border-bottom:0;margin-bottom:12px}
 .next-watch-head .ui-icon{width:18px;height:18px;color:var(--accent)}
 .next-watch-head h3{font-size:var(--fs-xl);font-weight:var(--fw-bold);color:var(--ink);margin:0}
 .next-watch-count{font-size:var(--fs-xs);font-weight:var(--fw-semi);color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:3px 8px}
@@ -2754,8 +2754,8 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #resultInfo{di
 body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{display:none!important;margin:0 0 12px}
 @media(min-width:1251px){
  body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) #libraryView .list-caption:has(>.saved-layout-choice){display:flex!important;justify-content:flex-end;margin-top:0}
- body.saved-mode #libraryView .next-watch-head{align-items:flex-end;min-height:34px;padding-top:0}
- body.saved-mode #libraryView .next-watch-head>.ui-icon{margin-bottom:5px}
+ body.saved-mode #libraryView .next-watch-head{align-items:center;min-height:34px;padding-top:0}
+ body.saved-mode #libraryView .next-watch-head>.ui-icon{margin-bottom:0}
  body.saved-mode #libraryView .next-watch-head .saved-layout-choice .ui-icon{width:16px;height:16px;color:inherit}
 }
 
