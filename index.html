@@ -2902,7 +2902,10 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
 
 /* Shared Discover/period-ranking mobile toolbar; existing select/filter controls. */
 #rankingView #rankPeriodSecondary:not([hidden]){display:contents}
-@media(min-width:741px){#rankingView #rankToolbar.is-public .rank-search-shell{flex:1 1 230px}}
+@media(min-width:741px){
+ #rankingView #rankToolbar.is-public .rank-search-shell{flex:1 1 230px}
+ #rankingView #rankToolbar.is-period .rank-period-inline-slot #rankSeasonField{width:190px}
+}
 @media(max-width:740px){
  :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content;gap:8px;align-items:center}
  :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period)>.controls{display:contents}
@@ -2919,13 +2922,19 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
  :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-date-select+.anilog-mobile-select-trigger{box-sizing:border-box;flex:none;width:100%;min-width:0;height:44px;padding:0 34px 0 12px;margin:0;background-color:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--ink);font-family:inherit;font-size:var(--fs-sm);font-weight:var(--fw-semi);line-height:normal;letter-spacing:normal}
  :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-select+.anilog-mobile-select-trigger{padding-left:6px}
  :is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-select+.anilog-mobile-select-trigger .anilog-mobile-season-label{display:block;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- #rankingView #rankToolbar.is-period #rankPeriodSecondary:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;grid-column:1/-1;grid-row:3;min-width:0}
+ #rankingView #rankToolbar.is-public #rankPeriodSecondary:not([hidden]){display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;grid-column:1/-1;grid-row:3;min-width:0}
  #rankingView #rankPeriodSecondary .rank-sort-field,
  #rankingView #rankPeriodSecondary .rank-mode-select,
- #rankingView #rankPeriodSecondary .rank-mode-select+.anilog-mobile-select-trigger{width:100%;min-width:0;max-width:100%;margin:0}
+ #rankingView #rankPeriodSecondary .rank-mode-select+.anilog-mobile-select-trigger{width:100%;min-width:0;max-width:100%;height:44px;margin:0}
  #rankingView #rankPeriodSecondary .rank-sort-field select,
  #rankingView #rankPeriodSecondary .rank-sort-field select+.anilog-mobile-select-trigger{width:100%;min-width:0;max-width:100%;height:44px;margin:0}
  #rankingView #rankToolbar.is-period>.rank-annual-jump{grid-column:1/-1;grid-row:4;width:100%;margin:0}
+ #rankingView #rankToolbar.is-top{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) max-content;gap:8px;align-items:center}
+ #rankingView #rankToolbar.is-top>.rank-search-shell{grid-column:1/3;grid-row:1;width:100%;min-width:0}
+ #rankingView #rankToolbar.is-top>.rank-filter-disclosure{grid-column:3;grid-row:1;justify-self:start}
+ #rankingView #rankToolbar.is-top>.rank-period-inline-slot{display:none}
+ #rankingView #rankToolbar.is-top #rankPeriodSecondary:not([hidden]){grid-row:2}
+ #rankingView #rankToolbar.is-top>.rank-annual-jump{grid-column:1/-1;grid-row:3;width:100%;margin:0}
 }
 @media(min-width:360px) and (max-width:389px){:is(body:not(.saved-mode) #libraryView .season-toolbar, #rankingView #rankToolbar.is-period) .season-select+.anilog-mobile-select-trigger{font-size:11px}}
 @media(max-width:359px){
@@ -5977,8 +5986,8 @@ function renderRanking(){if(mode!=='ranking')return;
  const publicControls=$('#rankPublicControls');
  const rankToolbar=$('#rankToolbar'),secondary=$('#rankPeriodSecondary'),sortField=$('#rankSort').closest('label'),modeSelect=$('#rankModeSelect');
  const modeProxy=modeSelect.nextElementSibling?.classList.contains('anilog-mobile-select-trigger')?modeSelect.nextElementSibling:null;
- rankToolbar.classList.toggle('is-period',period);rankToolbar.classList.toggle('season-toolbar',period);secondary.hidden=!period;
- if(period){secondary.append(sortField,modeSelect);if(modeProxy)secondary.append(modeProxy);}
+ rankToolbar.classList.toggle('is-period',period);rankToolbar.classList.toggle('is-top',!mine&&!period);rankToolbar.classList.toggle('season-toolbar',period);secondary.hidden=mine;
+ if(!mine){secondary.append(sortField,modeSelect);if(modeProxy)secondary.append(modeProxy);}
  else{publicControls.append(sortField);$('#rankFilterDisclosure').before(modeSelect);if(modeProxy)modeSelect.after(modeProxy);}
 
  const publicDestination=!mine?$('#rankPeriodInlineSlot'):$('#rankPublicFilterSlot');
