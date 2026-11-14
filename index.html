@@ -300,12 +300,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint
 /* My List (Pattern A) & Next Watch */
 .cards.saved-grid{display:block}
 .next-watch-section,.pattern-a-year{margin:0 0 20px}
-.next-watch-head{display:flex;align-items:center;gap:8px;padding:2px 0 12px;border-bottom:0;margin-bottom:12px}
-.next-watch-head .ui-icon{width:18px;height:18px;color:var(--accent)}
-.next-watch-head h3{font-size:var(--fs-xl);font-weight:var(--fw-bold);color:var(--ink);margin:0}
-.next-watch-count{font-size:var(--fs-xs);font-weight:var(--fw-semi);color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:3px 8px;transform:translateY(-2px)}
-@media(max-width:740px){.next-watch-count{transform:translateY(-1px)}}
-.next-watch-desc{margin-left:auto;font-size:var(--fs-xs);color:var(--muted)}
+.next-watch-head.rank-chunk-head{padding:0}
+.next-watch-head.rank-chunk-head::after{order:1}
+.next-watch-head.rank-chunk-head>.saved-layout-choice{order:2;flex-shrink:0}
 .next-watch-other{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-semi);margin:12px 0}
 .next-watch-other::after{content:"";height:1px;background:var(--border);flex:1}
 .saved-period-heading{width:100%;background:none;border:0;color:var(--ink);text-align:left;padding:6px 0;margin:0 0 10px;font-size:var(--fs-lg);font-weight:var(--fw-bold);display:flex;gap:8px;align-items:center}
@@ -2757,7 +2754,6 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView .list-caption{
 @media(min-width:1251px){
  body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) #libraryView .list-caption:has(>.saved-layout-choice){display:flex!important;justify-content:flex-end;margin-top:0}
  body.saved-mode #libraryView .next-watch-head{align-items:center;min-height:34px;padding-top:0}
- body.saved-mode #libraryView .next-watch-head>.ui-icon{margin-bottom:0}
  body.saved-mode #libraryView .next-watch-head .saved-layout-choice .ui-icon{width:16px;height:16px;color:inherit}
 }
 
@@ -5077,7 +5073,7 @@ function nextWatchGroups(list){
  const pinned=list.filter(pinnedNextWatch).sort((a,b)=>(Date.parse(b.nextWatchPinnedAt)||0)-(Date.parse(a.nextWatchPinnedAt)||0)||sortByBroadcast(a,b));
  if(!pinned.length)return savedGroups(list);
  const ordinary=list.filter(a=>!pinnedNextWatch(a));
- const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head">${uiIcon('pin')}<h3>次に観る</h3><span class="next-watch-count">${pinned.length}作品</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
+ const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head rank-chunk-head"><span role="heading" aria-level="3">次に観る ${pinned.length}作品</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
  return heading+(ordinary.length?savedGroups(ordinary):'');
 }
 
