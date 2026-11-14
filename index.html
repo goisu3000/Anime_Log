@@ -300,7 +300,9 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint
 /* My List (Pattern A) & Next Watch */
 .cards.saved-grid{display:block}
 .next-watch-section,.pattern-a-year{margin:0 0 20px}
-.next-watch-head.rank-chunk-head{padding:0}
+.next-watch-head.rank-chunk-head{gap:8px;padding:2px 0 12px;margin:0 0 12px}
+.next-watch-head>.ui-icon{width:18px;height:18px;color:var(--accent)}
+.next-watch-head h3{font-size:var(--fs-xl);font-weight:var(--fw-bold);color:var(--ink);margin:0}
 .next-watch-head.rank-chunk-head::after{order:1}
 .next-watch-head.rank-chunk-head>.saved-layout-choice{order:2;flex-shrink:0}
 .next-watch-other{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-semi);margin:12px 0}
@@ -3179,7 +3181,7 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
 <dialog id="addDialog"><form method="dialog" id="addForm"><h3 tabindex="-1" autofocus>作品を手動で追加</h3><p>APIで見つからない作品も、自由に記録できます。</p><label for="customTitle">アニメ作品名 <span style="color:var(--accent)">*</span></label><input type="text" id="customTitle" required maxlength="140" placeholder="作品名を入力"><label for="customStatus">視聴状況</label><select id="customStatus"><option value="watching">見てる</option><option value="planned">見たい</option><option value="watched">見た</option><option value="paused">一時中断</option><option value="dropped">視聴中止</option></select><menu><button class="secondary" value="cancel" type="button" id="cancelDialog">キャンセル</button><button class="primary" type="submit" value="ok">追加する</button></menu></form></dialog>
 <dialog id="backupDialog"><h3>バックアップ</h3><p>記録はこのブラウザに保存されています。データ消去や機種変更に備えて書き出しておくと安心です。</p><menu class="backup-dialog-actions"><button type="button" class="primary" id="mobileDownloadBtn">書き出す</button><button type="button" class="secondary" id="mobileImportBtn">読み込む</button></menu><menu class="backup-dialog-close"><button type="button" class="secondary" id="mobileCloseBackup">閉じる</button></menu></dialog>
 <dialog id="shareDialog"><h3><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><use href="#ui-share"/></svg> 視聴リストを共有</h3><p>URLを知っている人なら誰でも閲覧できます。</p>
-  <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="season">年・シーズンを指定して見てる作品</option><option value="watching">見てる作品すべて</option><option value="all">マイリストすべて（全5種類の状態）</option></select></div>
+  <div class="share-options"><label for="shareScope">共有する範囲</label><select id="shareScope"><option value="all">マイリストすべて（全5種類の状態）</option><option value="season">年・シーズンを指定して見てる作品</option><option value="watching">見てる作品すべて</option></select></div>
   <div class="share-season-fields" id="shareSeasonFields" hidden><label for="shareYear">年<select id="shareYear"></select></label><label for="shareSeason">シーズン<select id="shareSeason"><option value="winter">冬</option><option value="spring">春</option><option value="summer">夏</option><option value="fall">秋</option></select></label></div>
   <div class="share-permissions" role="group" aria-labelledby="sharePermissionsTitle">
     <h4 id="sharePermissionsTitle">共有する情報を選択</h4>
@@ -5073,7 +5075,7 @@ function nextWatchGroups(list){
  const pinned=list.filter(pinnedNextWatch).sort((a,b)=>(Date.parse(b.nextWatchPinnedAt)||0)-(Date.parse(a.nextWatchPinnedAt)||0)||sortByBroadcast(a,b));
  if(!pinned.length)return savedGroups(list);
  const ordinary=list.filter(a=>!pinnedNextWatch(a));
- const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head rank-chunk-head"><span role="heading" aria-level="3">次に観る ${pinned.length}作品</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
+ const heading=`<section class="next-watch-section" aria-label="次に観る"><div class="next-watch-head rank-chunk-head">${uiIcon('pin')}<h3>次に観る</h3><span>${pinned.length}作品</span></div><div class="saved-items pattern-a-list">${pinned.map(recordCard).join('')}</div></section>`;
  return heading+(ordinary.length?savedGroups(ordinary):'');
 }
 
