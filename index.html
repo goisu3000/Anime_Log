@@ -303,7 +303,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint
 .next-watch-head{display:flex;align-items:center;gap:8px;padding:2px 0 12px;border-bottom:0;margin-bottom:12px}
 .next-watch-head .ui-icon{width:18px;height:18px;color:var(--accent)}
 .next-watch-head h3{font-size:var(--fs-xl);font-weight:var(--fw-bold);color:var(--ink);margin:0}
-.next-watch-count{font-size:var(--fs-xs);font-weight:var(--fw-semi);color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:3px 8px}
+.next-watch-count{font-size:var(--fs-xs);font-weight:var(--fw-semi);color:var(--accent);background:var(--accent-soft);border-radius:6px;padding:3px 8px;transform:translateY(-2px)}
 .next-watch-desc{margin-left:auto;font-size:var(--fs-xs);color:var(--muted)}
 .next-watch-other{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:var(--fs-sm);font-weight:var(--fw-semi);margin:12px 0}
 .next-watch-other::after{content:"";height:1px;background:var(--border);flex:1}
@@ -3070,7 +3070,6 @@ html:has(>body.view-ranking){scrollbar-gutter:stable}
       <p class="disclaimer">作品情報提供：<a href="https://api.tenrai.org/documentation" target="_blank" rel="noopener noreferrer">Tenrai API</a>（非公式MyAnimeListデータ）。情報には欠落・誤表記が含まれる場合があります。作品検索で結果が少ない場合は、検索語を日本語Wikipediaへ送って別名を調べることがあります（視聴履歴は送信しません）。視聴履歴はブラウザに保存されます。端末間同期は任意で設定できます。<a href="https://tenrai.org/terms" target="_blank" rel="noopener noreferrer">データ提供元について</a></p>
     </section>
     <section id="annualView" class="hidden" aria-label="年間アニメまとめ">
-      <div class="annual-back-row"><button type="button" id="annualBack" class="detail-back"><svg class="ui-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><use href="#ui-back"/></svg> マイリストに戻る</button></div>
       <header class="annual-hero">
         <div class="annual-hero-copy"><span class="annual-kicker">MY ANIME YEAR</span><h1><span id="annualHeadingYear">2026</span><span class="annual-heading-unit">年の視聴記録</span></h1><p>毎年刻む、作品と思い出のアニメ総決算</p></div>
         <label class="annual-year-control" for="annualYear">集計する年<select id="annualYear" aria-label="年間まとめの対象年"></select></label>
@@ -5822,7 +5821,6 @@ function showAnnual(){
  renderAnnual();window.scrollTo({top:0,behavior:'instant'});
 }
 $$('[data-annual-open]').forEach(b=>b.addEventListener('click',()=>showAnnual()));
-$('#annualBack').addEventListener('click',()=>showSaved());
 $('#annualYear').addEventListener('change',e=>{const y=Number(e.target.value);if(annualYears().includes(y)){annualYear=y;renderAnnual();aniHistorySave()}});
 $('#annualView').addEventListener('click',e=>{
  const b=e.target.closest('[data-detail-id]');if(b){openDetail(detailSource(b.dataset.detailId));return}
