@@ -7470,14 +7470,15 @@ function jpStreamingSearchLinks(title,linkedNames=new Set()){
  if(!title)return '';
  return `<div class="detail-jp-search"><span class="detail-jp-search-label">日本の配信サービスで検索</span><div class="detail-links">${JP_STREAM_SITES.filter(s=>!linkedNames.has(s.name)).map(s=>`<a href="${safeText(jpStreamSearchUrl(s.searchDomain||s.domain,title))}" target="_blank" rel="noopener noreferrer" data-stream-link="true">${safeText(s.name)}</a>`).join('')}</div></div>`;
 }
-// Only an explicit direct-title link click may fill an unset saved preference.
+// Only an explicit direct-title link click may update a saved preference.
 // Keep navigation native and use the existing serialized, conflict-checked save.
-async function saveDetailStreamPreference(id,service,raw,expected){
+async function saveDetailStreamPreference(id,service,raw){
  if(mode==='share'||detailActiveItem?.id!==id||!validStatuses.has(saved[id]?.status))return false;
  const url=streamAllowedUrl(service,raw);
  if(!url||!streamLooksLikeTitleUrl(service,url))return false;
  const current=cleanStreamPreference(saved[id].streamPreference);
- if(current?.service||!sameRecordValue(current,expected))return false;
+ // Read after earlier queued writes: the last valid click wins, including A -> B -> A.
+ if(current?.service===service&&current.url===url)return false;
  const draft=structuredClone(saved);
  draft[id].streamPreference={service,url,updatedAt:new Date().toISOString()};
  if(!await persist(false,draft))return false;
@@ -7489,9 +7490,11 @@ $('#detailContent').addEventListener('click',e=>{
  if(!link||e.defaultPrevented||mode==='share')return;
  const id=link.dataset.streamRecord;
  if(detailActiveItem?.id!==id||!validStatuses.has(saved[id]?.status))return;
- const expected=structuredClone(cleanStreamPreference(saved[id].streamPreference));
- if(expected?.service)return;
- void queueRecordWrite(()=>saveDetailStreamPreference(id,link.dataset.streamSave,link.getAttribute('href'),expected));
+ const service=link.dataset.streamSave,url=streamAllowedUrl(service,link.getAttribute('href'));
+ if(!url||!streamLooksLikeTitleUrl(service,url))return;
+ const current=cleanStreamPreference(saved[id].streamPreference);
+ if(!recordWrites&&current?.service===service&&current.url===url)return;
+ void queueRecordWrite(()=>saveDetailStreamPreference(id,service,url));
 });
 function detailStreamingLinks(full,title){
  const unique=streamResolvedLinks([...(Array.isArray(full?.streaming)?full.streaming:[]),...(Array.isArray(full?.external)?full.external:[])]);
