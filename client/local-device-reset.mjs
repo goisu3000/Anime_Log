@@ -133,7 +133,7 @@ export function installLocalDeviceResetUI({document,reset,openButton,onBackup,on
  const title=document.createElement('h2');title.id='anilog-local-reset-title';title.textContent='この端末の記録を削除';
  const description=document.createElement('p');description.textContent='このブラウザ・このサイトの視聴記録、未送信の変更、すべての接続プロフィール、暗号化WAL・鍵・接続情報を削除します。元に戻せません。他端末と同期先の記録・登録は削除しません。';
  const site=document.createElement('p');site.textContent='対象サイト：'+new URL(siteOrigin).host;
- const ownerWarning=document.createElement('p');ownerWarning.textContent='同期登録が残るプロフィールがある場合は削除できません。管理端末の引き継ぎ・同期グループ全体の終了は現在未対応です。';
+ const ownerWarning=document.createElement('p');ownerWarning.textContent='同期登録が残るプロフィールがある場合は削除できません。先に同期登録の解除、管理端末の引き継ぎ、または同期グループの終了を完了してください。';
  const caveat=document.createElement('p');caveat.textContent='バックアップは任意です。必要な場合だけ保存してください。このサイトの他のタブを閉じてください。古い版のタブの有無は自動確認できません。';
  const label=document.createElement('label'),check=document.createElement('input'),ack=document.createElement('span');check.type='checkbox';check.dataset.localReset='confirm';ack.textContent='他のタブを閉じ、この端末の記録を削除することを確認しました';label.append(check,ack);
  const actions=document.createElement('div');actions.className='anilog-first-wal-upgrade-actions';
@@ -153,7 +153,7 @@ export function installLocalDeviceResetUI({document,reset,openButton,onBackup,on
   try{await reset.erase({confirmed:check.checked,otherTabsClosed:check.checked});show()}
   catch(error){const code=String(error?.message??'');status.textContent=reset.phase()===null?
    code.endsWith(':CLOSE_OTHER_TABS')?'他のANI:LOGタブを閉じてから、もう一度確認してください。データは削除していません。':
-   /:(?:SERVER_RELEASE_REQUIRED|REGISTRATION_STATE_REQUIRED|REGISTRATION_STATE_CHANGED)$/.test(code)?'同期登録の解除完了を、すべてのプロフィールで確認する必要があります。管理端末は現在解除できません。データは削除していません。':'保存・同期・編集中の操作を終えてから、もう一度確認してください。データは削除していません。':
+   /:(?:SERVER_RELEASE_REQUIRED|REGISTRATION_STATE_REQUIRED|REGISTRATION_STATE_CHANGED)$/.test(code)?'同期登録の解除完了を、すべてのプロフィールで確認する必要があります。同期解除・管理端末の変更・同期終了の結果を確認してください。データは削除していません。':'保存・同期・編集中の操作を終えてから、もう一度確認してください。データは削除していません。':
    '削除を完了できませんでした。一部のデータが削除されている可能性があります。他のタブを閉じ、確認して削除を再開してください。';cancel.hidden=reset.phase()!==null;backup.hidden=reset.phase()!==null;check.checked=false;}
   finally{running=false;backup.disabled=false;cancel.disabled=false;accept.disabled=!check.checked;}
  });

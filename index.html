@@ -5885,7 +5885,7 @@ for(let y=new Date().getFullYear()+1;y>=1970;y--){const op=document.createElemen
 // Reuse the exact season choices from Discover, including the all-year option.
 $('#rankSeason').replaceChildren(...Array.from($('#seasonSelect').options,option=>option.cloneNode(true)));
 $('#rankYear').value=String(rankingYear);$('#rankSeason').value=rankingSeason;
-function exitRanking(){$$('[data-rank-open]').forEach(b=>b.classList.remove('rank-selected'));$('#mobileRanking').classList.remove('active');if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
+function exitRanking(){$$('[data-rank-open]').forEach(b=>b.classList.remove('rank-selected'));$('#mobileRanking').classList.remove('active');if(mode==='ranking'){analysisGeneration++;malMetricGeneration++;rankingRequestId++;rankingBusy=false;activeRankingKey='';document.body.classList.remove('view-ranking');$('#rankingView').classList.add('hidden')}}
 function myRatedItems(){return Object.values(saved).filter(a=>a?.status==='watched'&&readReview(a.review)).sort((a,b)=>{
  const ar=readReview(a.review).overall,br=readReview(b.review).overall;if(ar!==br)return br-ar;
  const an=Number.isInteger(a.myRankOrder)&&a.myRankOrder>=0?a.myRankOrder:999999;
@@ -6032,13 +6032,13 @@ function renderRanking(){if(mode!=='ranking')return;
   $('#rankResults').innerHTML=result||emptyCard('条件に合う作品がありません','検索・作品形式・★評価を変更してください。','search');return;
  }
  const filtered=rankingData.filter(a=>(rankingTypeFilter==='all'||String(a.type||'').toUpperCase()===rankingTypeFilter.toUpperCase())&&localTitleMatch(a,rankingSearch));
- $('#rankResults').innerHTML=rankingBusy&&!rankingData.length?emptyCard('ランキングを取得中…','公開アニメデータベースから読み込んでいます。','loading'):filtered.length?Array.from({length:Math.ceil(filtered.length/10)},(_,b)=>{const chunk=filtered.slice(b*10,b*10+10),start=b*10+1,end=b*10+chunk.length;return `<div class="rank-chunk-block"><div class="rank-chunk-head"><span>${start}〜${end}位</span></div><div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${Math.ceil(chunk.length/2)}">${chunk.map((a,j)=>makeRankRow(a,start+j)).join('')}</div></div>`}).join(''):emptyCard('条件に合う作品がありません',rankingData.length?'評価人数の条件を外すと表示できる場合があります。':'ランキングを取得できませんでした。','search');
+ $('#rankResults').innerHTML=rankingBusy&&!rankingData.length?emptyCard('ランキングを取得中…','公開アニメデータベースから読み込んでいます。','loading'):filtered.length?Array.from({length:Math.ceil(filtered.length/10)},(_,b)=>{const chunk=filtered.slice(b*10,b*10+10),start=b*10+1,end=b*10+chunk.length;return `<div class="rank-chunk-block"><div class="rank-chunk-head"><span>${start}〜${end}位</span></div><div class="rank-two-col${chunk.length>1?' has-right-col':''}" style="--rank-rows:${Math.ceil(chunk.length/2)}">${chunk.map((a,j)=>makeRankRow(a,start+j)).join('')}</div></div>`}).join(''):emptyCard('条件に合う作品がありません',rankingData.length?'検索条件や作品形式を変更してください。':'ランキングを取得できませんでした。','search');
 }
 function showRanking(tab='period'){
  if(!['period','top','mine'].includes(tab))tab='period';
  exitAnnual();closeSuggestions();closeDetail(false);exitSharedView();activeController?.abort();requestCounter++;loading=false;
  if(tab==='mine'&&rankingTab!=='mine')myRatingFilter=0;
- if(tab!==rankingTab){rankingSearch='';rankingTypeFilter='all';$('#rankSearchInput').value='';$('#rankFilterDisclosure').open=false}
+ if(tab!==rankingTab){rankingRequestId++;rankingBusy=false;activeRankingKey='';rankingSearch='';rankingTypeFilter='all';$('#rankSearchInput').value='';$('#rankFilterDisclosure').open=false}
  mode='ranking';rankingTab=tab;document.body.classList.add('view-ranking');$('#rankingView').classList.remove('hidden');
  $('#rankingDisclosure').setAttribute('aria-expanded','true');$('#rankingSubnav').hidden=false;
  $$('[data-view]').forEach(b=>b.classList.remove('active'));$$('[data-status-filter]').forEach(b=>b.classList.remove('active'));
@@ -6177,7 +6177,7 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
   if(rankingBusy&&activeRankingKey===key)return;
   if(!rankingBusy&&rankingData.length>0&&activeRankingKey===key){renderRanking();return;}
   rankingRequestId++;rankingData=[];rankingPage=1;rankingHasNext=false;
-  const cached=rankingCache[key];if(cached&&Date.now()-cached.time<3*3600000&&Array.isArray(cached.rows)){
+  const cached=rankingCache[key];if(cached?.version===2&&Date.now()-cached.time<3*3600000&&Array.isArray(cached.rows)){
    const restored=normalizeRankingRows(cached.rows);
    if(restored.length){rankingData=restored;rankingPage=cached.next||1;rankingHasNext=Boolean(cached.hasNext);rankingBusy=false;activeRankingKey=key;renderRanking();return;}
   }
@@ -6194,7 +6194,9 @@ async function loadRanking(reset=true){if(mode!=='ranking'||rankingTab==='mine')
   const entries=normalizeRankingRows(allowedRows);
   rankingData=[...new Map([...rankingData,...entries].map(a=>[a.id,a])).values()];rankingHasNext=Boolean(payload.pagination?.has_next_page);rankingPage++;
 
-  rankingCache[key]={time:Date.now(),rows:rankingData.slice(0,96),next:rankingPage,hasNext:rankingHasNext};
+  // Keep only complete fetched prefixes. Trimming rows while advancing next
+  // would skip discarded works when this cache is reopened.
+  if(rankingData.length<=96)rankingCache[key]={version:2,time:Date.now(),rows:rankingData.slice(),next:rankingPage,hasNext:rankingHasNext};
   try{const keys=Object.entries(rankingCache).sort((a,b)=>b[1].time-a[1].time).slice(0,9);localStorage.setItem(RANK_CACHE_KEY,JSON.stringify(Object.fromEntries(keys)))}catch{}
   rankingBusy=false;renderRanking();
  }catch(err){if(requestId!==rankingRequestId)return;rankingBusy=false;activeRankingKey='';rankingHasNext=false;renderRanking();
