@@ -1274,9 +1274,12 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .pattern-a-tools .stream-rental-label{margin-inline:5px}
 @media(max-width:740px){
  body.saved-mode #cards .pattern-a-mobile-score .pattern-a-public-score small{display:none}
- body.saved-mode #cards .pattern-a-personal-column .pattern-a-rating{text-align:right}
- body.saved-mode #cards .pattern-a-personal-column .pattern-a-rating-line{justify-content:flex-end}
- body.saved-mode #cards .pattern-a-personal-column .pattern-a-rate-cta{margin-left:auto}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rating{text-align:left}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rating-line{display:flex;justify-content:flex-start;width:100%}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rate-edit{margin-left:auto;flex-shrink:0}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rate-cta{margin-left:0}
+ body.saved-mode #cards .pattern-a-status-menu{transform:translateY(10px)}
+ body.saved-mode #cards .pattern-a-watch-column:has(>.watch-progress)>.pattern-a-status-menu{margin-bottom:10px}
  body.saved-mode #cards .pattern-a-main-copy>.stream-inline{flex-wrap:nowrap;width:100%}
  body.saved-mode #cards .pattern-a-main-copy>.stream-inline .stream-inline-link{min-width:0;max-width:calc(100% - 36px);white-space:nowrap;overflow:hidden}
  body.saved-mode #cards .stream-service-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
