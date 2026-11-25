@@ -92,7 +92,7 @@
   --border:#303b43;--border-ctrl:#485864;
   --ink:#f0f4f2;--muted:#c2d0da;--subtle:#a8b8c4;
   --accent:#c4e995;--accent-soft:rgba(196,233,149,.10);--accent-hover:rgba(196,233,149,.18);--accent-border:rgba(196,233,149,.40);--accent-ink:#182414;
-  --gold:#f2c86c;--danger:#e6a5a5;--cyan:#88dcee;--pink:#edb6dc;
+  --gold:#f2c86c;--mal-gold:#f0c766;--danger:#e6a5a5;--cyan:#88dcee;--pink:#edb6dc;
   --radius:12px;--radius-sm:8px;
   --fs-xs:12px;--fs-sm:12px;--fs-md:13px;--fs-lg:15px;--fs-xl:18px;--fs-2xl:22px;--fs-3xl:30px;
   --fw-normal:500;--fw-semi:600;--fw-bold:700;
@@ -320,7 +320,7 @@ body.saved-mode:not(.view-detail):not(.view-ranking) #libraryView #listOrderHint
 .pattern-a-card .card-title{font-size:var(--fs-xl);font-weight:var(--fw-bold);line-height:1.45;margin:0 0 8px;min-width:0}
 .pattern-a-card .title-button{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;-webkit-line-clamp:unset}
 .pattern-a-public-score{display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px;min-width:150px;padding-left:10px;text-align:right}
-.pattern-a-public-score strong{display:inline-flex;align-items:baseline;gap:5px;line-height:1.1;color:#f0c766;white-space:nowrap}
+.pattern-a-public-score strong{display:inline-flex;align-items:baseline;gap:5px;line-height:1.1;color:var(--mal-gold);white-space:nowrap}
 .pattern-a-public-score .mal-label{font-size:14px;font-weight:var(--fw-semi);letter-spacing:var(--ls-body)}
 .pattern-a-public-score .mal-value{font-size:24px;font-weight:var(--fw-bold);letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .pattern-a-public-score small{display:block;font-size:var(--fs-sm);color:var(--subtle);font-weight:var(--fw-semi);white-space:nowrap}
@@ -1269,6 +1269,21 @@ body.saved-mode:not(.view-detail):not(.view-ranking):not(.view-annual) .weekly-c
 .stream-inline-empty > svg{position:relative;top:1px} /* Optical alignment: label text only; button and icon unchanged. */
 .stream-inline-edit{display:inline-flex;align-items:center;justify-content:center;border:1px solid transparent;background:transparent;color:var(--muted);border-radius:6px;width:28px;height:28px;padding:4px}
 .stream-inline-edit .ui-icon{width:14px;height:14px}
+.stream-rental-label{color:var(--mal-gold);font-size:var(--fs-xs);font-weight:var(--fw-semi);white-space:nowrap;flex:0 0 auto}
+.stream-rental-icon{display:none}
+.pattern-a-tools .stream-rental-label{margin-inline:5px}
+@media(max-width:740px){
+ body.saved-mode #cards .pattern-a-mobile-score .pattern-a-public-score small{display:none}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rating{text-align:right}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rating-line{justify-content:flex-end}
+ body.saved-mode #cards .pattern-a-personal-column .pattern-a-rate-cta{margin-left:auto}
+ body.saved-mode #cards .pattern-a-main-copy>.stream-inline{flex-wrap:nowrap;width:100%}
+ body.saved-mode #cards .pattern-a-main-copy>.stream-inline .stream-inline-link{min-width:0;max-width:calc(100% - 36px);white-space:nowrap;overflow:hidden}
+ body.saved-mode #cards .stream-service-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ body.saved-mode #cards .stream-inline-link.has-rental .stream-service-label{display:none}
+ body.saved-mode #cards .stream-rental-icon{display:inline-flex;flex:0 0 24px}
+ body.saved-mode #cards .pattern-a-main-copy>.stream-inline .stream-inline-edit{flex:0 0 28px}
+}
 .stream-inline-link:hover,.stream-inline-empty:hover,.stream-inline-edit:hover{color:var(--accent);border-color:var(--accent);background:var(--accent-hover)}
 .stream-inline-link:focus-visible,.stream-inline-empty:focus-visible,.stream-inline-edit:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .stream-dialog-intro{color:var(--muted);font-size:var(--fs-sm);line-height:1.65;margin:6px 0 12px}
@@ -4596,10 +4611,11 @@ function streamServiceIconMarkup(service){
 }
 function gridStreamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
+ const rental=selected&&streamPreferenceIsRental(a.id,pref);
  const action=selected
   ?`<a class="stream-inline-link stream-icon-link" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(selected+'：'+(pref.url?'登録された作品ページを開く':'作品を検索する（配信保証なし）'))}" aria-label="${safeText(a.title+'を'+selected+'で'+(pref.url?'見る':'探す'))}">${streamServiceIconMarkup(selected)}</a>`
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}" title="視聴サイトを設定" aria-label="${safeText(a.title)}の視聴サイトを設定">${uiIcon('plus')}<span class="grid-stream-empty-label">視聴先</span></button>`;
- return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('chevron-down')}</button>`:''}</div>`;
+ return `<div class="stream-inline">${action}${rental?'<span class="stream-rental-label">レンタル</span>':''}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('chevron-down')}</button>`:''}</div>`;
 }
 function patternAGridTools(a){const status=saved[a.id]?.status;return `<div class="pattern-a-tools" aria-label="作品の操作">${gridStreamRowMarkup(a)}${status==='planned'?nextWatchToggleMarkup(a):''}${noteMarkup(a)}${patternACompactReview(a)}</div>`}
 function patternARecordMeta(a){const pieces=[Number.isInteger(a.year)?`${a.year}年`:'放送年未登録',a.type?typeJa(a.type):'',Number.isInteger(a.episodes)&&a.episodes>0?`全${a.episodes}話`:''].filter(Boolean);
@@ -4705,12 +4721,63 @@ function streamResolveRegisteredLink(entry){
  return null;
 }
 function streamResolvedLinks(entries){
- const found=new Map();
+ const found=new Map(),included=new Set();
  for(const raw of entries){
   const match=streamResolveRegisteredLink(raw);
-  if(match&&!found.has(match.name))found.set(match.name,match);
+  if(!match)continue;
+  const offer=streamJapaneseOffer(raw,match);
+  if(['flatrate','free','ads'].includes(offer))included.add(match.name);
+  if(!found.has(match.name))found.set(match.name,offer==='rent'?{...match,rental:true}:match);
  }
+ for(const name of included){const match=found.get(name);if(match)delete match.rental;}
  return [...found.values()].sort((a,b)=>STREAM_SERVICE_PRIORITY.get(a.name)-STREAM_SERVICE_PRIORITY.get(b.name));
+}
+// Optional display hints only. Never use clickout metadata to authorize a URL,
+// change a saved record, or infer a subscription from the absence of a rental tag.
+function streamJapaneseOffer(raw,match){
+ try{
+  if(typeof raw?.url!=='string'||raw.url.length>4096||!match)return '';
+  const u=new URL(raw.url);
+  if(u.protocol!=='https:'||u.hostname!=='click.justwatch.com'||u.pathname!=='/a'||u.username||u.password||u.port)return '';
+  if(u.searchParams.getAll('uct_country').length!==1||u.searchParams.get('uct_country').toLowerCase()!=='jp'||u.searchParams.getAll('cx').length!==1||u.searchParams.getAll('r').length!==1)return '';
+  if(streamAllowedUrl(match.name,raw.url)!==match.url)return '';
+  const encoded=u.searchParams.get('cx');
+  if(!encoded||encoded.length>3072||!/^[A-Za-z0-9+/_-]+={0,2}$/.test(encoded))return '';
+  const bytes=Uint8Array.from(atob(encoded.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+  const payload=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(bytes));
+  if(payload?.schema!=='iglu:com.snowplowanalytics.snowplow/contexts/jsonschema/1-0-0'||!Array.isArray(payload.data)||payload.data.length>8)return '';
+  const offers=payload.data.filter(x=>x?.schema==='iglu:com.justwatch/clickout_context/jsonschema/1-3-2');
+  const titles=payload.data.filter(x=>x?.schema==='iglu:com.justwatch/title_context/jsonschema/1-3-0');
+  if(offers.length!==1||titles.length!==1)return '';
+  const offer=offers[0].data,title=titles[0].data;
+  if(!offer||offer.currency!=='JPY'||streamCanonicalName(offer.provider)!==match.name||!['movie','show'].includes(title?.objectType)||title.episodeNumber!=null)return '';
+  return ['rent','buy','flatrate','free','ads'].includes(offer.monetizationType)?offer.monetizationType:'';
+ }catch{return '';}
+}
+const STREAM_OFFER_CACHE_KEY='anilog-stream-offer-cache-v1',STREAM_OFFER_CACHE_TTL=3*3600000;
+const streamOfferCache=new Map();
+function validStreamOfferCache(id,row){
+ return /^jikan:[1-9]\d{0,9}$/.test(id)&&row&&Number.isFinite(row.at)&&row.at<=Date.now()&&Date.now()-row.at<STREAM_OFFER_CACHE_TTL&&Array.isArray(row.offers)&&row.offers.length<=STREAM_SERVICES.length&&row.offers.every(x=>streamService(x?.service)&&typeof x.url==='string'&&streamAllowedUrl(x.service,x.url)===x.url&&streamLooksLikeTitleUrl(x.service,x.url));
+}
+try{
+ const raw=localStorage.getItem(STREAM_OFFER_CACHE_KEY);
+ if(raw&&raw.length<=200000){const rows=JSON.parse(raw);if(Array.isArray(rows))for(const [id,row] of rows.slice(0,100))if(validStreamOfferCache(id,row))streamOfferCache.set(id,row);}
+}catch{}
+function rememberStreamOffers(id,entries){
+ if(!/^jikan:[1-9]\d{0,9}$/.test(id)||!Array.isArray(entries))return;
+ const offers=streamResolvedLinks(entries).filter(x=>x.rental===true).map(x=>({service:x.name,url:x.url}));
+ streamOfferCache.set(id,{at:Date.now(),offers});
+ for(const [key,row] of streamOfferCache)if(!validStreamOfferCache(key,row))streamOfferCache.delete(key);
+ while(streamOfferCache.size>100)streamOfferCache.delete(streamOfferCache.keys().next().value);
+ try{
+  let json=JSON.stringify([...streamOfferCache]);
+  while(json.length>200000&&streamOfferCache.size){streamOfferCache.delete(streamOfferCache.keys().next().value);json=JSON.stringify([...streamOfferCache]);}
+  localStorage.setItem(STREAM_OFFER_CACHE_KEY,json);
+ }catch{}
+}
+function streamPreferenceIsRental(id,pref){
+ const row=streamOfferCache.get(id);
+ return !!pref?.url&&validStreamOfferCache(id,row)&&row.offers.some(x=>x.service===pref.service&&x.url===pref.url);
 }
 function cleanStreamPreference(x){
  if(!x||typeof x!=='object'||typeof x.updatedAt!=='string'||!Number.isFinite(Date.parse(x.updatedAt)))return null;
@@ -4721,9 +4788,10 @@ function cleanStreamPreference(x){
 }
 function streamRowMarkup(a){
  const pref=cleanStreamPreference(saved[a.id]?.streamPreference),selected=pref&&pref.service;
+ const rental=selected&&streamPreferenceIsRental(a.id,pref);
  const label=selected?`${selected}で${pref.url?'見る':'探す'}`:'視聴サイトを設定';
  const action=selected
-  ?`<a class="stream-inline-link" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(pref.url?'登録された作品ページを開く':'Googleでこのサービスの作品を検索する（配信保証なし）')}">${safeText(label)}</a>`
+  ?`<a class="stream-inline-link${rental?' has-rental':''}" href="${safeText(pref.url||jpStreamSearchUrl(streamService(selected).domain,a.title))}" target="_blank" rel="noopener noreferrer" title="${safeText(label+(rental?'（レンタル）':''))}" aria-label="${safeText(label+(rental?'（レンタル）':''))}"><span class="stream-service-label">${safeText(label)}</span>${rental?`<span class="stream-rental-icon">${streamServiceIconMarkup(selected)}</span><span class="stream-rental-label">レンタル</span>`:''}</a>`
   :`<button type="button" class="stream-inline-empty" data-stream-edit="${safeText(a.id)}">${uiIcon('plus')}<span>${label}</span></button>`;
  return `<div class="stream-inline">${action}${selected?`<button type="button" class="stream-inline-edit" data-stream-edit="${safeText(a.id)}" title="視聴サイトを変更" aria-label="${safeText(a.title)}の視聴サイトを変更">${uiIcon('edit')}</button>`:''}</div>`;
 }
@@ -4770,6 +4838,7 @@ async function streamFetchLinks(id,service){
     if(!response?.data||typeof response.data!=='object')throw Error('作品詳細が取得できませんでした');
     const entry=detailCache.get(id)||{};
     detailCache.set(id,{...entry,full:response.data});
+    if(response.data.mal_id===Number(malId))rememberStreamOffers(id,response.data.streaming||[]);
     fullLinks=Array.isArray(response.data.streaming)?response.data.streaming:[];
    }catch(e){fullError=e}
   }
@@ -4782,6 +4851,7 @@ async function streamFetchLinks(id,service){
    if(!Array.isArray(response?.data))throw Error('配信リンク情報が取得できませんでした');
    const entry=detailCache.get(id)||{};
    detailCache.set(id,{...entry,streamLinks:response.data});
+   rememberStreamOffers(id,response.data);
    return streamKnownLinks(id)||[];
   }catch(e){
    if(fullError&&fullLinks===null)throw e;
@@ -7421,7 +7491,7 @@ function detailStreamingLinks(full,title){
  const unique=streamResolvedLinks([...(Array.isArray(full?.streaming)?full.streaming:[]),...(Array.isArray(full?.external)?full.external:[])]);
  const jpSearch=jpStreamingSearchLinks(title,new Set(unique.map(p=>p.name)));
  if(!unique.length&&!jpSearch)return '';
- return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true" data-stream-save="${safeText(x.name)}" data-stream-record="jikan:${safeText(full.mal_id)}">${safeText(x.name||'サイトを開く')}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
+ return `<div class="detail-streaming-card"><h2 class="detail-section-title">配信先リンク</h2>${unique.length?`<div class="detail-links">${unique.slice(0,25).map(x=>`<a href="${safeText(safeLink(x.url))}" target="_blank" rel="noopener noreferrer" data-stream-link="true" data-stream-save="${safeText(x.name)}" data-stream-record="jikan:${safeText(full.mal_id)}">${safeText(x.name||'サイトを開く')}${x.rental?'<span class="stream-rental-label">（レンタル）</span>':''}</a>`).join('')}</div>`:''}${jpSearch}<p class="detail-info-note">公式リンクの登録状況・検索結果は、日本国内での配信可否を保証しません。</p></div>`;
 }
 /* Japanese person-name enhancement: view-only, bounded AniList lookup.
    Never infer kanji from romanization or join providers by unrelated person IDs.
@@ -7659,6 +7729,7 @@ async function fetchAnimeFullShared(id,useThrottle=false){
   if(!data||typeof data!=='object')throw Error('作品詳細データが空です');
   const prev=detailCache.get(id)||{};
   detailCache.set(id,{...prev,full:data,fullFetchedAt:Date.now(),loading:false,fullError:''});
+  if(data.mal_id===Number(malId))rememberStreamOffers(id,data.streaming||[]);
   cacheMalMetric(id,data);
   if(saved[id]?.status==='watched'&&extractAnalysisMeta(data))await storeAnalysisMeta(id,data);
   return data;

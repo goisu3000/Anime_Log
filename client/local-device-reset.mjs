@@ -17,7 +17,7 @@ const databases=[
 export const isLocalDeviceDatabase=name=>typeof name==='string'&&databases.some(re=>re.test(name));
 const exactKeys=new Set(['anilog-v1','anilog-weekly-options-v1','anilog-weekly-api-cache-v1','anilog-weekly-episodes-cache-v1',
  'anilog-search-sort-v1','anilog-last-backup-v1','anilog-backup-notified-v1','anilog-collapsed-periods-v1','anilog-titles-cache-v1',
- 'anilog-wikipedia-alias-v1','anilog-wikimedia-advanced-v174','anilog-ranking-cache-v1','anilog-mal-metrics-v1',
+ 'anilog-wikipedia-alias-v1','anilog-wikimedia-advanced-v174','anilog-ranking-cache-v1','anilog-mal-metrics-v1','anilog-stream-offer-cache-v1',
  'anilog-series-relations-v1','anilog-series-ja-titles-v1','anilog-sync-connection-profile-v1','anilog-sync-setup-receipt-v1']);
 export const isLocalDeviceKey=key=>exactKeys.has(key)||
  /^anilog-sync-local-mode-v1(?:-p[1-9][0-9]?)?$/.test(key)||
